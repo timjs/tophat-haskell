@@ -1,0 +1,14 @@
+- FRP was invented originally by Conal Elliott and Paul Hudak
+- http://conal.net/papers/frp.html
+- The original paper seems to be "Functional Reactive Animation"
+  http://conal.net/papers/icfp97/
+- Elliott's latest paper "Push-pull functional reactive programming" is about
+  efficient implementation of FRP, but also has a short introduction to FRP
+
+- There is a book about FRP
+  https://www.manning.com/books/functional-reactive-programming
+  The introduction chapter is available online
+  https://livebook.manning.com/#!/book/functional-reactive-programming/chapter-1/1
+
+- Collection of papers:
+  https://github.com/papers-we-love/papers-we-love/tree/master/paradigms/functional_reactive_programming
