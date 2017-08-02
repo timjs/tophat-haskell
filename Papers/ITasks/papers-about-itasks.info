@@ -1,0 +1,4 @@
+- Koopman 2010, 2009: two papers that have a semantics of iTasks
+- Reynolds 1972, 1998: the same paper, 1998 is TeX. About defining the semantics of
+  PLs using an interpreter in a better understood language. In my opinion the
+  semantics that Pieter makes are definitional interpreters.
