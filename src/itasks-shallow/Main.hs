@@ -30,12 +30,16 @@ editor taskId value = Task ui value step
     step _ = editor taskId value
 
 
-bind :: ID -> (Task a) -> (Value a -> Task b) -> (Task b)
-bind taskId lhs@(Task uiLhs valueLhs stepLhs) rhs = Task ui NoValue step
+bind :: ID -> (Task a) -> (a -> Task b) -> (Task b)
+bind taskId lhs@(Task uiLhs valueLhs stepLhs) rhs = Task ui value step
   where
-    ui = uiLhs ++ "step " ++ taskId ++ "\n"
-    step e@(StepEvent evId)
-      | evId == taskId = rhs (valueLhs)
+    ui = uiLhs ++ case valueLhs of
+      (JustValue _) -> "step " ++ taskId ++ "\n"
+      NoValue -> "(disabled) step " ++ taskId ++ "\n"
+    value = NoValue
+    step e@(StepEvent evId) | evId == taskId = case valueLhs of
+      (JustValue v) -> rhs v
+      NoValue -> bind taskId lhs rhs
     step e = bind taskId (stepLhs e) rhs
 
 
@@ -76,15 +80,12 @@ getEvent = do
 singleEditor :: Task Int
 singleEditor = editor "0" NoValue
 oneStep :: Task String
-oneStep = bind "1" (editor "0" (NoValue::Value Int)) (\x -> editor "2" $ case x of
-  NoValue -> JustValue ("WTF???")
-  JustValue v -> JustValue (show v ++ "w00t")
-  )
+oneStep = bind "1" (editor "0" (NoValue::Value Int)) (\x -> editor "2" (JustValue $ show x ++ "w00t"))
 onePara = parAnd (editor "0" (NoValue::Value Int)) (editor "1" (NoValue::Value String))
-paraThenStep = bind "2" onePara (\x -> editor "3" x)
+paraThenStep = bind "2" onePara (\x -> editor "3" (JustValue x))
 twoStepsInPara =
   parAnd
-    (bind "0" (editor "1" (NoValue::Value Int)) (\x -> editor "2" x))
-    (bind "3" (editor "4" (NoValue::Value Int)) (\x -> editor "5" x))
+    (bind "0" (editor "1" (NoValue::Value Int)) (\x -> editor "2" (JustValue x)))
+    (bind "3" (editor "4" (NoValue::Value Int)) (\x -> editor "5" (JustValue x)))
 
 main = runTask twoStepsInPara
