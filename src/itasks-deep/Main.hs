@@ -14,7 +14,7 @@ data Value
 -- Assumption: all IDs in one TaskTree are unique
 data TaskTree
   = Editor ID Value
-  | Bind ID TaskTree (Value -> TaskTree)
+  | Bind ID TaskTree (Value -> TaskTree) -- This arrow can be any user-defined Haskell code
   | ParAnd TaskTree TaskTree
 
 data Event
@@ -23,7 +23,7 @@ data Event
   deriving Show
 
 -- Evaluation semantics
-sem :: Event -> TaskTree -> (Value, TaskTree)
+sem :: Event -> TaskTree -> (Value, TaskTree) -- This arrow is completely defined by the semantics
 
 -- Editors change their value with an appropriate event
 sem (EditorEvent evId newVal) (Editor taskId oldVal)
