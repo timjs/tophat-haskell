@@ -11,6 +11,9 @@ data Value a
   | JustValue a
   deriving Show
 
+-- Every task has a UI, a current value, and a continuation function
+-- This data type should be abstract. The only way to create tasks for a
+-- user should be the functions editor, bind, and parAnd.
 data Task a = Task UI (Value a) (Event -> Task a)
 
 data Event
