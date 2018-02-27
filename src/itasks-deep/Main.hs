@@ -9,9 +9,9 @@ module Main where
 -- semantics, the value semantics and the ui semantics. They come as separate
 -- functions which _interpret_ tasks.
 --
---   TaskTree -> Value
---   TaskTree -> UI
---   TaskTree -> Event -> TaskTree
+--   Task -> Value
+--   Task -> UI
+--   Task -> Event -> Task
 --
 -- In a shallow embedding, all semantics are combined into one data type, which
 -- _is_ the task. The type must be recursive.
@@ -21,7 +21,7 @@ module Main where
 -- Note how the arrow of the step semantics is inside the tuple.
 --
 -- Bas says: the real iTasks implementation is neither deep nor shallow, it
--- uses a different technique. Tasks never change, they never rewrite. TaskTree
+-- uses a different technique. Tasks never change, they never rewrite. Task
 -- is not the same as the AST of a deep embedding.
 -- iTasks is shallow-ish in the sense that the arrow _is_ the task.
 --
@@ -39,11 +39,11 @@ data Value
   | JustValue String
   deriving Show
 
--- Assumption: all IDs in one TaskTree are unique
-data TaskTree
+-- Assumption: all IDs in one Task are unique
+data Task
   = Editor ID Value
-  | Bind ID TaskTree (Value -> TaskTree) -- This arrow can be any user-defined Haskell code
-  | ParAnd TaskTree TaskTree
+  | Bind ID Task (Value -> Task) -- This arrow can be any user-defined Haskell code
+  | ParAnd Task Task
 
 data Event
   = EditorEvent ID Value
@@ -52,14 +52,14 @@ data Event
 
 
 -- Evaluation semantics
-value :: TaskTree -> Value
+value :: Task -> Value
 value (Editor _ v) = v
 value (Bind _ _ _) = NoValue
 value (ParAnd lhs rhs) = JustValue $ "(" ++ show (value lhs) ++ "," ++ show (value rhs) ++ ")"
 
 
 -- Step semantics
-step :: Event -> TaskTree -> TaskTree -- This arrow is completely defined by the semantics
+step :: Event -> Task -> Task -- This arrow is completely defined by the semantics
 
 -- Editors change their value with an appropriate event
 step (EditorEvent evId newVal) (Editor taskId _)
@@ -82,7 +82,7 @@ step e (ParAnd lhs rhs) =
 
 
 -- User interface semantics
-ui :: TaskTree -> UI
+ui :: Task -> UI
 ui (Editor id val) = "editor " ++ id ++ " " ++ show val ++ "\n"
 ui (Bind id lhs _) = ui lhs ++ "step " ++ id ++ "\n"
 ui (ParAnd lhs rhs) = ui lhs ++ ui rhs
