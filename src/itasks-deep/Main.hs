@@ -22,6 +22,7 @@ data Event
   | StepEvent ID
   deriving Show
 
+
 -- Evaluation semantics
 sem :: Event -> TaskTree -> (Value, TaskTree) -- This arrow is completely defined by the semantics
 
@@ -51,16 +52,19 @@ sem e (ParAnd lhs rhs) =
   in
     (JustValue $ "(" ++ show lVal ++ "," ++ show rVal ++ ")", ParAnd newLhs newRhs)
 
+
 -- User interface semantics
 ui :: TaskTree -> String
 ui (Editor id val) = "editor " ++ id ++ " " ++ show val ++ "\n"
 ui (Bind id lhs _) = ui lhs ++ "step " ++ id ++ "\n"
 ui (ParAnd lhs rhs) = ui lhs ++ ui rhs
 
+
 runTask task = do
   putStrLn $ ui task
   ev <- getEvent
   runTask $ snd $ sem ev task
+
 
 -- "ed 0 fooo" for an editor event with id 0 and value foo
 -- "st 0" for a step event with id 0
@@ -74,6 +78,7 @@ getEvent = do
     ["st",id]     -> return (StepEvent id)
     _             -> putStrLn "parse error" >> getEvent
 
+
 -- Example tasks
 oneStep = Bind "1" (Editor "0" NoValue) (\x -> Editor "2" $ case x of
   NoValue -> JustValue ("WTF???")
@@ -85,5 +90,6 @@ twoStepsInPara =
   ParAnd
     (Bind "0" (Editor "1" NoValue) (\x -> Editor "2" x))
     (Bind "3" (Editor "4" NoValue) (\x -> Editor "5" x))
+
 
 main = runTask oneStep
