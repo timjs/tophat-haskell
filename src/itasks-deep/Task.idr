@@ -53,23 +53,19 @@ unit =
 
 -- Semantics -------------------------------------------------------------------
 
-ui : Task a -> UI
-ui t =
-  ?ui
-
 normalise : Task a -> State -> ( Task a, State )
 normalise task state =
   case task of
     -- Combinators
-    Seq id left func =>
+    Seq id left cont =>
       let
         ( newLeft, newState ) = Task.normalise left state
       in
       case newLeft of
         Pure a =>
-          ( func a, newState )
+          ( cont a, newState )
         _ =>
-          ( Seq id newLeft func, newState )
+          ( Seq id newLeft cont, newState )
     Par id left right =>
       let
         ( newLeft, newState ) = Task.normalise left state
@@ -90,19 +86,42 @@ normalise task state =
     _ =>
       ( task, state )
 
-value : Task a -> State -> ( Value a, State )
-value task state =
+ui : Task a -> State -> UI
+ui task state =
   let
+    -- Drawing the UI needs normalisation first
     ( newTask, newState ) = normalise task state
   in
-  case newTask of
-    Pure val =>
-      ( JustValue val, newState )
+  ?ui
+
+value : Task a -> Value a
+value task =
+  case task of
+    Pure x =>
+      JustValue x
     Edit id val =>
-      ( val, newState )
+      val
     _ =>
-      ( NoValue, newState )
+      NoValue
 
 step : Task a -> State -> Event b -> ( Task a, State )
-step state event task =
-  ?step
+step task state event =
+  case ( task, event ) of
+    ( Seq id left cont, Continue eventId ) =>
+      ?h1
+      -- if id == eventId then
+      --   -- If we pressed Continue, and the id's match, we get on with the continuation.
+      --   ( cont (value left), state )
+      -- else
+      --   -- Otherwise we pass stay put
+      --   ( newTask, state )
+    ( Par id left right, e ) =>
+      ?h2
+    ( Pure x, e ) =>
+      ?h3
+    ( Edit x y, e ) =>
+      ?h4
+    ( Get x, e ) =>
+      ?h5
+    ( Put x y, e ) =>
+      ?h6
