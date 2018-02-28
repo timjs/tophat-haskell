@@ -57,52 +57,52 @@ ui : Task a -> UI
 ui t =
   ?ui
 
-normalise : State -> Task a -> ( State, Task a )
-normalise state task =
+normalise : Task a -> State -> ( Task a, State )
+normalise task state =
   case task of
     -- Combinators
     Seq id left func =>
       let
-        ( newState, newLeft ) = Task.normalise state left
+        ( newLeft, newState ) = Task.normalise left state
       in
       case newLeft of
         Pure a =>
-          ( newState, func a )
+          ( func a, newState )
         _ =>
-          ( newState, Seq id newLeft func )
+          ( Seq id newLeft func, newState )
     Par id left right =>
       let
-        ( newState, newLeft ) = Task.normalise state left
-        ( newerState, newRight ) = Task.normalise newState right
+        ( newLeft, newState ) = Task.normalise left state
+        ( newRight, newerState ) = Task.normalise right newState
       in
       case ( newLeft, newRight ) of
         ( Pure a, Pure b ) =>
-          ( newerState, Pure ( a, b ) )
+          ( Pure ( a, b ), newerState )
         ( newLeft, newRight ) =>
-          ( newerState, Par id newLeft newRight )
+          ( Par id newLeft newRight, newerState )
     -- State
     Get id =>
-      ( state, pure state )
+      ( pure state, state )
 
-    Put id val =>
-      ( val, unit )
+    Put id newState =>
+      ( unit, newState )
     -- Pure and Edit are values
     _ =>
-      ( state, task )
+      ( task, state )
 
-value : State -> Task a -> ( State, Value a )
-value state task =
+value : Task a -> State -> ( Value a, State )
+value task state =
   let
-    ( newState, newTask ) = normalise state task
+    ( newTask, newState ) = normalise task state
   in
   case newTask of
     Pure val =>
-      ( newState, JustValue val )
+      ( JustValue val, newState )
     Edit id val =>
-      ( newState, val )
+      ( val, newState )
     _ =>
-      ( newState, NoValue )
+      ( NoValue, newState )
 
-step : State -> Event b -> Task a -> ( State, Task a )
+step : Task a -> State -> Event b -> ( Task a, State )
 step state event task =
   ?step
