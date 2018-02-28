@@ -1,6 +1,6 @@
 module Task
 
--- %default total
+%default total
 
 
 -- Universe --------------------------------------------------------------------
@@ -15,7 +15,7 @@ valueOf UNIT       = ()
 valueOf INT        = Int
 valueOf (PAIR a b) = ( valueOf a, valueOf b )
 
-snd_neq : (contr : (y = y') -> Void) -> (PAIR x y = PAIR x y') -> Void
+snd_neq : (contra : (y = y') -> Void) -> (PAIR x y = PAIR x y') -> Void
 snd_neq contra Refl = contra Refl
 
 fst_neq : (contra : (x = x') -> Void) -> (PAIR x y = PAIR x' y) -> Void
@@ -24,14 +24,14 @@ fst_neq contra Refl = contra Refl
 both_neq : (contra_x : (x = x') -> Void) -> (contra_y : (y = y') -> Void) -> (PAIR x y = PAIR x' y') -> Void
 both_neq contra_x contra_y Refl = contra_x Refl
 
-unit_not_int : (UNIT = INT) -> Void
-unit_not_int Refl impossible
+Uninhabited (UNIT = INT) where
+            uninhabited Refl impossible
 
-unit_not_pair : (UNIT = PAIR x y) -> Void
-unit_not_pair Refl impossible
+Uninhabited (UNIT = PAIR x y) where
+            uninhabited Refl impossible
 
-int_not_pair : (INT = PAIR x y) -> Void
-int_not_pair Refl impossible
+Uninhabited (INT = PAIR x y) where
+            uninhabited Refl impossible
 
 DecEq TaskType where
       decEq UNIT       UNIT                                             = Yes Refl
@@ -43,21 +43,18 @@ DecEq TaskType where
         decEq (PAIR x y) (PAIR x' y')   | (No contra) with (decEq y y')
           decEq (PAIR x y) (PAIR x' y)  | (No contra) | (Yes Refl)      = No (fst_neq contra)
           decEq (PAIR x y) (PAIR x' y') | (No contra) | (No contra')    = No (both_neq contra contra')
-      decEq UNIT       INT                                              = No unit_not_int
-      decEq INT        UNIT                                             = No (negEqSym unit_not_int)
-      decEq UNIT       (PAIR x y)                                       = No unit_not_pair
-      decEq (PAIR x y) UNIT                                             = No (negEqSym unit_not_pair)
-      decEq INT        (PAIR x y)                                       = No int_not_pair
-      decEq (PAIR x y) INT                                              = No (negEqSym int_not_pair)
+      decEq UNIT       INT                                              = No absurd
+      decEq INT        UNIT                                             = No (negEqSym absurd)
+      decEq UNIT       (PAIR x y)                                       = No absurd
+      decEq (PAIR x y) UNIT                                             = No (negEqSym absurd)
+      decEq INT        (PAIR x y)                                       = No absurd
+      decEq (PAIR x y) INT                                              = No (negEqSym absurd)
 
 
 -- Types -----------------------------------------------------------------------
 
 Id : Type
 Id = Int
-
-UI : Type
-UI = String
 
 State : Type
 State = Int
@@ -68,6 +65,9 @@ State = Int
 data Value : TaskType -> Type where
      NoValue   : Value a
      JustValue : {a : TaskType} -> valueOf a -> Value a
+
+coerce : (a = b) -> Value a -> Value b
+coerce Refl x = x
 
 
 -- Events --
@@ -146,7 +146,6 @@ normalise (Put x) state =
 normalise task state =
           ( task, state )
 
-
 handle : Task a -> Event -> State -> ( Task a, State )
 handle task@(Seq id left cont) event@(Continue eventId) state =
        -- If we pressed Continue...
@@ -172,10 +171,10 @@ handle task@(Par left right) event state =
        in
        ( Par newLeft newRight, newerState )
 handle task@(Edit {a} id val) (Change eventId (b ** newVal)) state =
-       case decEq a b of
+       case decEq b a of
             Yes prf =>
                  if id == eventId then
-                      ( Edit id ?new_value, state )
+                      ( Edit id (coerce prf newVal), state )
                  else
                       ( task, state )
             No _ =>
