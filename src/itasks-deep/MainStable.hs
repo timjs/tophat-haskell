@@ -46,12 +46,22 @@ data Task
   = Editor ID Value
   | Bind ID Task (String -> Task) -- This arrow can be any user-defined Haskell code
   | ParAnd Task Task
+  | Const String
 
 data Event
   = EditorEvent ID Value
   | StepEvent ID
   deriving Show
 
+
+mkBind :: ID -> Task -> (String -> Task) -> Task
+mkBind taskId lhs rhs =
+  case value lhs of
+    (JustValue True v) -> rhs v
+    _ -> Bind taskId lhs rhs
+
+mkEditor :: ID -> String -> Task
+mkEditor taskId val = Editor taskId (JustValue True val)
 
 -- Evaluation semantics
 value :: Task -> Value
@@ -61,6 +71,7 @@ value (ParAnd lhs rhs) =
   case (value lhs, value rhs) of
     (JustValue stblLhs valLhs, JustValue stblRhs valRhs) ->
       JustValue (stblLhs && stblRhs) $ "(" ++ show valLhs ++ "," ++ show valRhs ++ ")"
+value (Const v) = (JustValue True v)
 
 
 -- Step semantics
@@ -77,7 +88,7 @@ step e@(StepEvent evId) t@(Bind taskId lhs rhs)
       NoValue -> t
       (JustValue _ val) -> rhs val
 step e (Bind taskId lhs rhs) =
-    Bind taskId (step e lhs) rhs
+    mkBind taskId (step e lhs) rhs
 
 -- Parallel distributes the event to the subtasks
 step e (ParAnd lhs rhs) =
@@ -87,12 +98,15 @@ step e (ParAnd lhs rhs) =
   in
     ParAnd newLhs newRhs
 
+step e t@(Const _) = t
+
 
 -- User interface semantics
 ui :: Task -> UI
 ui (Editor id val) = "editor " ++ id ++ " " ++ show val ++ "\n"
 ui (Bind id lhs _) = ui lhs ++ "step " ++ id ++ "\n"
 ui (ParAnd lhs rhs) = ui lhs ++ ui rhs
+ui (Const _) = undefined
 
 
 runTask task = do
@@ -115,13 +129,15 @@ getEvent = do
 
 
 -- Example tasks
-oneStep = Bind "1" (Editor "0" NoValue) (\x -> Editor "2" (JustValue False $ x ++ "w00t"))
--- onePara = ParAnd (Editor "0" NoValue) (Editor "1" NoValue)
--- paraThenStep = Bind "2" onePara (\x -> Editor "3" x)
--- twoStepsInPara =
-  -- ParAnd
-    -- (Bind "0" (Editor "1" NoValue) (\x -> Editor "2" x))
-    -- (Bind "3" (Editor "4" NoValue) (\x -> Editor "5" x))
+oneStep = mkBind "1" (Editor "0" NoValue) (\x -> Editor "2" (JustValue False $ x ++ "w00t"))
 
+constStep = mkBind "1" (Const "foo") (\x -> mkEditor "2" x)
 
-main = runTask oneStep
+manyConstSteps =
+  mkBind "1" (Const "foo") (\x ->
+    mkBind "2" (Const "bar") (\y ->
+      mkEditor "3" (x ++ y)
+    )
+  )
+
+main = runTask manyConstSteps
