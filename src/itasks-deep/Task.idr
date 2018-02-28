@@ -50,7 +50,45 @@ unit =
   pure ()
 
 
+-- Showing ---------------------------------------------------------------------
+
+Show a => Show (Value a) where
+  show value =
+    case value of
+      NoValue =>
+        "<no value>"
+      JustValue x =>
+        show x
+
+Show a => Show (Task a) where
+  show task =
+    case task of
+      Seq id left _ =>
+        -- show left ++
+        " =>_" ++ show id ++ " <cont>"
+      Par left right =>
+        -- show left ++ " || " ++ show' right where
+        "<par>"
+      Edit id val =>
+        "<edit_" ++ show id ++ " " ++ show val ++ ">"
+      Pure x =>
+        show x
+      Get =>
+        "<get>"
+      Put x =>
+        "<put " ++ show x ++ ">"
+
 -- Semantics -------------------------------------------------------------------
+
+value : Task a -> Value a
+value task =
+  case task of
+    Pure x =>
+      JustValue x
+    Edit _ val =>
+      val
+    _ =>
+      NoValue
 
 normalise : Task a -> State -> ( Task a, State )
 normalise task state =
@@ -85,24 +123,6 @@ normalise task state =
     -- Pure and Edit are values
     _ =>
       ( task, state )
-
-ui : Task a -> UI
-ui task =
-  -- let
-  --   -- Drawing the UI needs normalisation first
-  --   ( newTask, newState ) = normalise task state
-  -- in
-  ?ui
-
-value : Task a -> Value a
-value task =
-  case task of
-    Pure x =>
-      JustValue x
-    Edit _ val =>
-      val
-    _ =>
-      NoValue
 
 handle : Task a -> State -> Event b -> ( Task a, State )
 handle task state event =
