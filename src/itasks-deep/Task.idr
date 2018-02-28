@@ -24,7 +24,6 @@ data Value : Type -> Type where
 
 data Event : Type -> Type where
   Change : ID -> Value a -> Event a
-  Commit : ID -> Event a
   Continue : ID -> Event a
 
 
@@ -59,17 +58,18 @@ normalise task state =
     -- Combinators
     Seq id left cont =>
       let
-        ( newLeft, newState ) = Task.normalise left state
+        ( newLeft, newState ) = normalise left state
       in
       case newLeft of
         Pure a =>
+          --FIXME: add a normalise here???
           ( cont a, newState )
         _ =>
           ( Seq id newLeft cont, newState )
     Par id left right =>
       let
-        ( newLeft, newState ) = Task.normalise left state
-        ( newRight, newerState ) = Task.normalise right newState
+        ( newLeft, newState ) = normalise left state
+        ( newRight, newerState ) = normalise right newState
       in
       case ( newLeft, newRight ) of
         ( Pure a, Pure b ) =>
@@ -86,12 +86,12 @@ normalise task state =
     _ =>
       ( task, state )
 
-ui : Task a -> State -> UI
-ui task state =
-  let
-    -- Drawing the UI needs normalisation first
-    ( newTask, newState ) = normalise task state
-  in
+ui : Task a -> UI
+ui task =
+  -- let
+  --   -- Drawing the UI needs normalisation first
+  --   ( newTask, newState ) = normalise task state
+  -- in
   ?ui
 
 value : Task a -> Value a
@@ -99,7 +99,7 @@ value task =
   case task of
     Pure x =>
       JustValue x
-    Edit id val =>
+    Edit _ val =>
       val
     _ =>
       NoValue
