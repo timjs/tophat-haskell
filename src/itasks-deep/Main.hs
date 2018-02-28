@@ -42,7 +42,7 @@ data Value
 -- Assumption: all IDs in one Task are unique
 data Task
   = Editor ID Value
-  | Bind ID Task (Value -> Task) -- This arrow can be any user-defined Haskell code
+  | Bind ID Task (String -> Task) -- This arrow can be any user-defined Haskell code
   | ParAnd Task Task
 
 data Event
@@ -67,8 +67,10 @@ step (EditorEvent evId newVal) (Editor taskId _)
 step _ t@(Editor _ _) = t
 
 -- Bind takes a step when its button is pressed
-step e@(StepEvent evId) (Bind taskId lhs rhs)
-  | evId == taskId = rhs (value lhs) -- The step semantics uses the value semantics. Weird.
+step e@(StepEvent evId) t@(Bind taskId lhs rhs)
+  | evId == taskId = case value lhs of
+      NoValue -> t
+      (JustValue v) -> rhs v
 step e (Bind taskId lhs rhs) =
     Bind taskId (step e lhs) rhs
 
@@ -108,16 +110,5 @@ getEvent = do
 
 
 -- Example tasks
-oneStep = Bind "1" (Editor "0" NoValue) (\x -> Editor "2" $ case x of
-  NoValue -> JustValue ("WTF???")
-  JustValue v -> JustValue (v ++ "w00t")
-  )
-onePara = ParAnd (Editor "0" NoValue) (Editor "1" NoValue)
-paraThenStep = Bind "2" onePara (\x -> Editor "3" x)
-twoStepsInPara =
-  ParAnd
-    (Bind "0" (Editor "1" NoValue) (\x -> Editor "2" x))
-    (Bind "3" (Editor "4" NoValue) (\x -> Editor "5" x))
-
-
+oneStep = Bind "1" (Editor "0" NoValue) (\x -> Editor "2" (JustValue $ x ++ "w00t"))
 main = runTask oneStep
