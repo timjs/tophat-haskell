@@ -104,24 +104,46 @@ value task =
     _ =>
       NoValue
 
-step : Task a -> State -> Event b -> ( Task a, State )
-step task state event =
+handle : Task a -> State -> Event b -> ( Task a, State )
+handle task state event =
   case ( task, event ) of
     ( Seq id left cont, Continue eventId ) =>
-      ?h1
-      -- if id == eventId then
-      --   -- If we pressed Continue, and the id's match, we get on with the continuation.
-      --   ( cont (value left), state )
-      -- else
-      --   -- Otherwise we pass stay put
-      --   ( newTask, state )
+      -- If we pressed Continue...
+      if id == eventId then
+        -- ...and the id's match...
+        case value left of
+          -- ...and we have a value: we get on with the continuation
+          JustValue v =>
+            ( cont v, state )
+          -- ...withaout a value: we stay put.
+          NoValue =>
+            ( task, state )
+      else
+        -- ...but the id's dont' match: we bubble the event down.
+        -- This covers the case that `left` consists of parallels containing `Seq`!
+        let
+          ( newTask, newState ) = handle task state event
+        in
+        ( newTask, newState )
     ( Par id left right, e ) =>
-      ?h2
+      -- We pass on the event to left and right in sequence
+      let
+        ( newLeft, newState ) = handle left state event
+        ( newRight, newerState ) = handle right newState event
+      in
+      ( Par id newLeft newRight, newerState )
+    ( Edit id val, Change eventId newVal ) =>
+      if id == eventId then
+        ( ?newEdit , state ) --Edit id newVal, state )
+      else
+        ( task, state )
     ( Pure x, e ) =>
-      ?h3
-    ( Edit x y, e ) =>
-      ?h4
+      -- In this case evaluation terminated
+      ( task, state )
     ( Get x, e ) =>
-      ?h5
+      -- This case can't happen, it is already evaluated by `normalise`
+      --FIXME: express this in the type system
+      ( task, state )
     ( Put x y, e ) =>
-      ?h6
+      -- This case can't happen
+      ( task, state )
