@@ -3,8 +3,8 @@ module Task
 
 -- Types -----------------------------------------------------------------------
 
-ID : Type
-ID = Int
+Id : Type
+Id = Int
 
 UI : Type
 UI = String
@@ -23,8 +23,8 @@ data Value : Type -> Type where
 -- Events --
 
 data Event : Type -> Type where
-  Change : ID -> Value a -> Event a
-  Continue : ID -> Event a
+  Change : Id -> Value a -> Event a
+  Continue : Id -> Event a
 
 
 -- Tasks --
@@ -33,13 +33,13 @@ data Task : Type -> Type where
   -- Lifting
   Pure : a -> Task a
   -- Primitive combinators
-  Seq : ID -> Task a -> (a -> Task b) -> Task b
-  Par : ID -> Task a -> Task b -> Task ( a, b )
+  Seq : Id -> Task a -> (a -> Task b) -> Task b
+  Par : Task a -> Task b -> Task ( a, b )
   -- User interaction
-  Edit : ID -> Value a -> Task a
+  Edit : Id -> Value a -> Task a
   -- Share interaction
-  Get : ID -> Task State
-  Put : ID -> State -> Task ()
+  Get : Task State
+  Put : State -> Task ()
 
 pure : a -> Task a
 pure x =
@@ -66,7 +66,7 @@ normalise task state =
           ( cont a, newState )
         _ =>
           ( Seq id newLeft cont, newState )
-    Par id left right =>
+    Par left right =>
       let
         ( newLeft, newState ) = normalise left state
         ( newRight, newerState ) = normalise right newState
@@ -75,12 +75,12 @@ normalise task state =
         ( Pure a, Pure b ) =>
           ( Pure ( a, b ), newerState )
         ( newLeft, newRight ) =>
-          ( Par id newLeft newRight, newerState )
+          ( Par newLeft newRight, newerState )
     -- State
-    Get id =>
+    Get =>
       ( pure state, state )
 
-    Put id newState =>
+    Put newState =>
       ( unit, newState )
     -- Pure and Edit are values
     _ =>
@@ -125,25 +125,25 @@ handle task state event =
           ( newTask, newState ) = handle task state event
         in
         ( newTask, newState )
-    ( Par id left right, e ) =>
+    ( Par left right, e ) =>
       -- We pass on the event to left and right in sequence
       let
         ( newLeft, newState ) = handle left state event
         ( newRight, newerState ) = handle right newState event
       in
-      ( Par id newLeft newRight, newerState )
+      ( Par newLeft newRight, newerState )
     ( Edit id val, Change eventId newVal ) =>
       if id == eventId then
         ( ?newEdit , state ) --Edit id newVal, state )
       else
         ( task, state )
-    ( Pure x, e ) =>
+    ( Pure _, _ ) =>
       -- In this case evaluation terminated
       ( task, state )
-    ( Get x, e ) =>
+    ( Get, _ ) =>
       -- This case can't happen, it is already evaluated by `normalise`
       --FIXME: express this in the type system
       ( task, state )
-    ( Put x y, e ) =>
+    ( Put _, _ ) =>
       -- This case can't happen
       ( task, state )
