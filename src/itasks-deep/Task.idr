@@ -9,6 +9,9 @@ ID = Int
 UI : Type
 UI = String
 
+State : Type
+State = Int
+
 
 -- Values --
 
@@ -34,10 +37,18 @@ data Task : Type -> Type where
     Par : ID -> Task a -> Task b -> Task (a, b)
     -- User interaction
     Edit : ID -> Value a -> Task a
-    View : ID -> Value a -> Task ()
+    View : ID -> Task a
     -- Share interaction
-    Get : ID -> Task a
-    Put : ID -> a -> Task ()
+    Get : ID -> Task State
+    Put : ID -> State -> Task ()
+
+pure : a -> Task a
+pure x =
+    Pure x
+
+unit : Task ()
+unit =
+    pure ()
 
 
 -- Semantics -------------------------------------------------------------------
@@ -54,6 +65,37 @@ value : Task a -> Value a
 value task =
     ?value
 
-normalise : Task a -> Task a
-normalise task =
-    ?normalise
+normalise : State -> Task a -> (State, Task a)
+normalise state task =
+    case task of
+
+        -- Combinators
+        Seq id left func =>
+            let
+                ( newState, newLeft ) = Task.normalise state left
+            in
+            case newLeft of
+                Pure a =>
+                    ( newState, func a )
+                _ =>
+                    ( newState, Seq id newLeft func )
+        Par id left right =>
+            let
+                ( newState, newLeft ) = Task.normalise state left
+                ( newerState, newRight ) = Task.normalise newState right
+            in
+            case ( newLeft, newRight ) of
+                ( Pure a, Pure b ) =>
+                    ( newerState, Pure ( a, b ) )
+                ( newLeft, newRight ) =>
+                    ( newerState, Par id newLeft newRight )
+
+        -- State
+        Get id =>
+            ( state, pure state )
+        Put id val =>
+            ( val, unit )
+
+        -- Pure, Edit and View are values
+        _ =>
+            ( state, task )
