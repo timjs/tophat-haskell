@@ -7,31 +7,48 @@ module Task
 
 data TaskType
      = UNIT
-     | BOOL
      | INT
-     | STRING
      | PAIR TaskType TaskType
 
 valueOf : TaskType -> Type
 valueOf UNIT       = ()
-valueOf BOOL       = Bool
 valueOf INT        = Int
-valueOf STRING     = String
 valueOf (PAIR a b) = ( valueOf a, valueOf b )
 
+snd_neq : (contr : (y = y') -> Void) -> (PAIR x y = PAIR x y') -> Void
+snd_neq contra Refl = contra Refl
+
+fst_neq : (contra : (x = x') -> Void) -> (PAIR x y = PAIR x' y) -> Void
+fst_neq contra Refl = contra Refl
+
+both_neq : (contra_x : (x = x') -> Void) -> (contra_y : (y = y') -> Void) -> (PAIR x y = PAIR x' y') -> Void
+both_neq contra_x contra_y Refl = contra_x Refl
+
+unit_not_int : (UNIT = INT) -> Void
+unit_not_int Refl impossible
+
+unit_not_pair : (UNIT = PAIR x y) -> Void
+unit_not_pair Refl impossible
+
+int_not_pair : (INT = PAIR x y) -> Void
+int_not_pair Refl impossible
+
 DecEq TaskType where
-      decEq UNIT       UNIT                                            = Yes Refl
-      decEq BOOL       BOOL                                            = Yes Refl
-      decEq INT        INT                                             = Yes Refl
-      decEq STRING     STRING                                          = Yes Refl
+      decEq UNIT       UNIT                                             = Yes Refl
+      decEq INT        INT                                              = Yes Refl
       decEq (PAIR x y) (PAIR x' y')     with (decEq x x')
-        decEq (PAIR x y) (PAIR x y')    | (Yes Refl) with (decEq y y')
-          decEq (PAIR x y) (PAIR x y)   | (Yes Refl) | (Yes Refl)      = Yes Refl
-          decEq (PAIR x y) (PAIR x y')  | (Yes Refl) | (No contr)      = No ?snd_neq
-        decEq (PAIR x y) (PAIR x' y')   | (No contr) with (decEq y y')
-          decEq (PAIR x y) (PAIR x' y)  | (No contr) | (Yes Refl)      = No ?fst_neq
-          decEq (PAIR x y) (PAIR x' y') | (No contr) | (No p')         = No ?both_neq
-      decEq _            _                                             = No ?neq
+        decEq (PAIR x y) (PAIR x y')    | (Yes Refl)  with (decEq y y')
+          decEq (PAIR x y) (PAIR x y)   | (Yes Refl)  | (Yes Refl)      = Yes Refl
+          decEq (PAIR x y) (PAIR x y')  | (Yes Refl)  | (No contra)     = No (snd_neq contra)
+        decEq (PAIR x y) (PAIR x' y')   | (No contra) with (decEq y y')
+          decEq (PAIR x y) (PAIR x' y)  | (No contra) | (Yes Refl)      = No (fst_neq contra)
+          decEq (PAIR x y) (PAIR x' y') | (No contra) | (No contra')    = No (both_neq contra contra')
+      decEq UNIT       INT                                              = No unit_not_int
+      decEq INT        UNIT                                             = No (negEqSym unit_not_int)
+      decEq UNIT       (PAIR x y)                                       = No unit_not_pair
+      decEq (PAIR x y) UNIT                                             = No (negEqSym unit_not_pair)
+      decEq INT        (PAIR x y)                                       = No int_not_pair
+      decEq (PAIR x y) INT                                              = No (negEqSym int_not_pair)
 
 
 -- Types -----------------------------------------------------------------------
