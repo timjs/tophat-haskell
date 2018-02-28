@@ -31,13 +31,13 @@ data Event : Type -> Type where
 -- Tasks --
 
 data Task : Type -> Type where
-  -- Primitive combinators
+  -- Lifting
   Pure : a -> Task a
+  -- Primitive combinators
   Seq : ID -> Task a -> (a -> Task b) -> Task b
   Par : ID -> Task a -> Task b -> Task ( a, b )
   -- User interaction
-  Enter : ID -> Value a -> Task a
-  Show : ID -> Task a
+  Edit : ID -> Value a -> Task a
   -- Share interaction
   Get : ID -> Task State
   Put : ID -> State -> Task ()
@@ -86,13 +86,22 @@ normalise state task =
 
     Put id val =>
       ( val, unit )
-    -- Pure, Enter and Show are values
+    -- Pure and Edit are values
     _ =>
       ( state, task )
 
 value : State -> Task a -> ( State, Value a )
 value state task =
-  ?value
+  let
+    ( newState, newTask ) = normalise state task
+  in
+  case newTask of
+    Pure val =>
+      ( newState, JustValue val )
+    Edit id val =>
+      ( newState, val )
+    _ =>
+      ( newState, NoValue )
 
 step : State -> Event b -> Task a -> ( State, Task a )
 step state event task =
