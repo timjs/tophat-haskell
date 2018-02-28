@@ -36,8 +36,8 @@ data Task : Type -> Type where
   Seq : ID -> Task a -> (a -> Task b) -> Task b
   Par : ID -> Task a -> Task b -> Task ( a, b )
   -- User interaction
-  Edit : ID -> Value a -> Task a
-  View : ID -> Task a
+  Enter : ID -> Value a -> Task a
+  Show : ID -> Task a
   -- Share interaction
   Get : ID -> Task State
   Put : ID -> State -> Task ()
@@ -57,18 +57,9 @@ ui : Task a -> UI
 ui t =
   ?ui
 
-step : Event b -> Task a -> Task a
-step event task =
-  ?step
-
-value : Task a -> Value a
-value task =
-  ?value
-
 normalise : State -> Task a -> ( State, Task a )
 normalise state task =
   case task of
-
     -- Combinators
     Seq id left func =>
       let
@@ -89,13 +80,20 @@ normalise state task =
           ( newerState, Pure ( a, b ) )
         ( newLeft, newRight ) =>
           ( newerState, Par id newLeft newRight )
-
     -- State
     Get id =>
       ( state, pure state )
+
     Put id val =>
       ( val, unit )
-
-    -- Pure, Edit and View are values
+    -- Pure, Enter and Show are values
     _ =>
       ( state, task )
+
+value : State -> Task a -> ( State, Value a )
+value state task =
+  ?value
+
+step : State -> Event b -> Task a -> ( State, Task a )
+step state event task =
+  ?step
