@@ -34,9 +34,11 @@ type ID = String
 
 type UI = String
 
+type Stability = Bool
+
 data Value
   = NoValue -- required for step combinator
-  | JustValue String
+  | JustValue Stability String
   deriving Show
 
 -- Assumption: all IDs in one Task are unique
@@ -44,6 +46,7 @@ data Task
   = Editor ID Value
   | Bind ID Task (String -> Task) -- This arrow can be any user-defined Haskell code
   | ParAnd Task Task
+  | Const String
 
 data Event
   = EditorEvent ID Value
@@ -51,15 +54,28 @@ data Event
   deriving Show
 
 
+mkBind :: ID -> Task -> (String -> Task) -> Task
+mkBind taskId lhs rhs =
+  case value lhs of
+    (JustValue True v) -> rhs v
+    _ -> Bind taskId lhs rhs
+
+mkEditor :: ID -> String -> Task
+mkEditor taskId val = Editor taskId (JustValue True val)
+
 -- Evaluation semantics
 value :: Task -> Value
 value (Editor _ v) = v
 value (Bind _ _ _) = NoValue
-value (ParAnd lhs rhs) = JustValue $ "(" ++ show (value lhs) ++ "," ++ show (value rhs) ++ ")"
+value (ParAnd lhs rhs) =
+  case (value lhs, value rhs) of
+    (JustValue stblLhs valLhs, JustValue stblRhs valRhs) ->
+      JustValue (stblLhs && stblRhs) $ "(" ++ show valLhs ++ "," ++ show valRhs ++ ")"
+value (Const v) = (JustValue True v)
 
 
 -- Step semantics
-step :: Event -> Task -> Task -- This arrow is completely defined by the semantics
+step :: Event -> Task -> Task
 
 -- Editors change their value with an appropriate event
 step (EditorEvent evId newVal) (Editor taskId _)
@@ -70,9 +86,9 @@ step _ t@(Editor _ _) = t
 step e@(StepEvent evId) t@(Bind taskId lhs rhs)
   | evId == taskId = case value lhs of
       NoValue -> t
-      (JustValue v) -> rhs v
+      (JustValue _ val) -> rhs val
 step e (Bind taskId lhs rhs) =
-    Bind taskId (step e lhs) rhs
+    mkBind taskId (step e lhs) rhs
 
 -- Parallel distributes the event to the subtasks
 step e (ParAnd lhs rhs) =
@@ -82,12 +98,15 @@ step e (ParAnd lhs rhs) =
   in
     ParAnd newLhs newRhs
 
+step e t@(Const _) = t
+
 
 -- User interface semantics
 ui :: Task -> UI
 ui (Editor id val) = "editor " ++ id ++ " " ++ show val ++ "\n"
 ui (Bind id lhs _) = ui lhs ++ "step " ++ id ++ "\n"
 ui (ParAnd lhs rhs) = ui lhs ++ ui rhs
+ui (Const _) = undefined
 
 
 runTask task = do
@@ -103,12 +122,22 @@ getEvent = do
   putStr "event? "
   input <- getLine
   case words input of
-    ["ed",id,val] -> return (EditorEvent id (JustValue val))
+    ["ed",id,val] -> return (EditorEvent id (JustValue False val))
     ["ed",id]     -> return (EditorEvent id NoValue)
     ["st",id]     -> return (StepEvent id)
     _             -> putStrLn "parse error" >> getEvent
 
 
 -- Example tasks
-oneStep = Bind "1" (Editor "0" NoValue) (\x -> Editor "2" (JustValue $ x ++ "w00t"))
-main = runTask oneStep
+oneStep = mkBind "1" (Editor "0" NoValue) (\x -> Editor "2" (JustValue False $ x ++ "w00t"))
+
+constStep = mkBind "1" (Const "foo") (\x -> mkEditor "2" x)
+
+manyConstSteps =
+  mkBind "1" (Const "foo") (\x ->
+    mkBind "2" (Const "bar") (\y ->
+      mkEditor "3" (x ++ y)
+    )
+  )
+
+main = runTask manyConstSteps

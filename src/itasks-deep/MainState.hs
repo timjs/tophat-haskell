@@ -44,6 +44,7 @@ data Task
   = Editor ID Value
   | Bind ID Task (String -> Task) -- This arrow can be any user-defined Haskell code
   | ParAnd Task Task
+  | Pure String
 
 data Event
   = EditorEvent ID Value
@@ -56,6 +57,23 @@ value :: Task -> Value
 value (Editor _ v) = v
 value (Bind _ _ _) = NoValue
 value (ParAnd lhs rhs) = JustValue $ "(" ++ show (value lhs) ++ "," ++ show (value rhs) ++ ")"
+value (Pure v) = JustValue v
+
+
+-- Normalization semantics
+normalize :: Task -> Task
+
+normalize t@(Editor _ _) = t
+
+normalize t@(Bind taskId lhs rhs) = case normalize lhs of
+  (Pure v) -> normalize $ rhs v
+  newLhs -> Bind taskId newLhs rhs
+
+normalize (ParAnd lhs rhs) = case (normalize lhs, normalize rhs) of
+  (Pure valLhs, Pure valRhs) -> Pure $ "(" ++ valLhs ++ "," ++ valRhs ++ ")"
+  (newLhs, newRhs) -> ParAnd newLhs newRhs
+
+normalize t@(Pure _) = t
 
 
 -- Step semantics
@@ -82,15 +100,19 @@ step e (ParAnd lhs rhs) =
   in
     ParAnd newLhs newRhs
 
+step _ t@(Pure _) = t
+
 
 -- User interface semantics
 ui :: Task -> UI
 ui (Editor id val) = "editor " ++ id ++ " " ++ show val ++ "\n"
 ui (Bind id lhs _) = ui lhs ++ "step " ++ id ++ "\n"
 ui (ParAnd lhs rhs) = ui lhs ++ ui rhs
+ui (Pure v) = "pure " ++ v
 
 
-runTask task = do
+runTask task_ = do
+  let task = normalize task_
   putStrLn $ ui task
   ev <- getEvent
   runTask $ step ev task
@@ -111,4 +133,16 @@ getEvent = do
 
 -- Example tasks
 oneStep = Bind "1" (Editor "0" NoValue) (\x -> Editor "2" (JustValue $ x ++ "w00t"))
-main = runTask oneStep
+
+pureStep = Bind "1" (Pure "foo") (\x -> Editor "2" (JustValue $ x ++ "w00t"))
+
+twoPureSteps =
+  Bind "1" (Pure "foo") (\x ->
+    Bind "2" (Pure "bar") (\y ->
+      Editor "3" (JustValue $ x ++ y)
+    )
+  )
+
+pure = Pure "blah"
+
+main = runTask pure
