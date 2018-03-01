@@ -71,9 +71,6 @@ DecEq TaskType where
 
 -- Types -----------------------------------------------------------------------
 
-Id : Type
-Id = Int
-
 State : Type
 State = Int
 
@@ -91,18 +88,20 @@ coerce Refl x = x
 -- Events --
 
 data Event : Type where
-    Change   : Id -> (a ** Value a) -> Event
-    Continue : Id -> Event
+    Change   : (a ** Value a) -> Event
+    Continue : Event
+    First    : Event -> Event
+    Second   : Event -> Event
 
 
 -- Tasks --
 
 data Task : TaskType -> Type where
     -- Primitive combinators
-    Seq  : Id -> Task a -> (valueOf a -> Task b) -> Task b
+    Seq  : Task a -> (valueOf a -> Task b) -> Task b
     Par  : Task a -> Task b -> Task (PAIR a b)
     -- User interaction
-    Edit : Id -> Value a -> Task a
+    Edit : Value a -> Task a
     -- Share interaction
     Get  : Task INT
     Put  : valueOf INT -> Task UNIT
@@ -120,12 +119,12 @@ Show (valueOf a) => Show (Value a) where
     show (JustValue x) = show x
 
 Show (valueOf a) => Show (Task a) where
-    show (Seq id left cont) = "=>_" ++ show id ++ " <cont>"
-    show (Par left right)   = "<par>"
-    show (Edit id val)      = "<edit_" ++ show id ++ " " ++ show val ++ ">"
-    show (Get)              = "<get>"
-    show (Put x)            = "<put " ++ show x ++ ">"
-    show (Pure x)           = show x
+    show (Seq left cont)  = "=>_" ++ " <cont>"
+    show (Par left right) = "<par>"
+    show (Edit val)       = "<edit_" ++ " " ++ show val ++ ">"
+    show (Get)            = "<get>"
+    show (Put x)          = "<put " ++ show x ++ ">"
+    show (Pure x)         = show x
 
 show_seq : Show (valueOf b) => Task b -> String
 show_seq task = "" --FIXME
@@ -137,20 +136,20 @@ show_par left right = "" --FIXME
 -- Semantics -------------------------------------------------------------------
 
 value : Task a -> Value a
-value (Pure x)     = JustValue x
-value (Edit _ val) = val
-value _            = NoValue
+value (Pure x)   = JustValue x
+value (Edit val) = val
+value _          = NoValue
 
 normalise : Task a -> State -> ( Task a, State )
 -- Combinators
-normalise (Seq id left cont) state =
+normalise (Seq left cont) state =
     let
     ( newLeft, newState ) = normalise left state
     in
     case newLeft of
         --FIXME: maybe add a normalise here
         Pure a => ( cont a, newState )
-        _      => ( Seq id newLeft cont, newState )
+        _      => ( Seq newLeft cont, newState )
 normalise (Par left right) state =
     let
     ( newLeft, newState )    = normalise left state
@@ -169,56 +168,42 @@ normalise task state =
     ( task, state )
 
 handle : Task a -> Event -> State -> ( Task a, State )
-handle task@(Seq id left cont) event@(Continue eventId) state =
+handle task@(Seq left cont) Continue state =
     -- If we pressed Continue...
-    if id == eventId then
-        -- ...and the id's match...
-        case value left of
-            -- ...and we have a value: we get on with the continuation
-            JustValue v => ( cont v, state )
-            -- ...without a value: we stay put.
-            NoValue     => ( task, state )
-    else
-        -- ...but the id's dont' match: we bubble the event down.
-        -- This covers the case that `left` consists of parallels containing `Seq`!
-        let
-        ( newLeft, newState ) = handle left event state
-        in
-        ( Seq id newLeft cont, newState )
-handle task@(Seq id left cont) event state =
+    case value left of
+        -- ...and we have a value: we get on with the continuation
+        JustValue v => ( cont v, state )
+        -- ...without a value: we stay put and have to wait for a value to appear.
+        NoValue     => ( task, state )
+handle task@(Seq left cont) event state =
     let
     ( newLeft, newState ) = handle left event state
     in
-    ( Seq id newLeft cont, newState )
-handle task@(Par left right) event state =
-    -- We pass on the event to left and right in sequence
+    ( Seq newLeft cont, newState )
+handle task@(Par left right) (First event) state =
+    -- We pass on the event to left
     let
     ( newLeft, newState )    = handle left event state
-    ( newRight, newerState ) = handle right event newState
     in
-    ( Par newLeft newRight, newerState )
-handle task@(Edit {a} id val) (Change eventId (b ** newVal)) state =
+    ( Par newLeft right, newState )
+handle task@(Par left right) (Second event) state =
+    -- We pass on the event to right
+    let
+    ( newRight, newState )    = handle right event state
+    in
+    ( Par left newRight, newState )
+handle task@(Edit {a} val) (Change (b ** newVal)) state =
     case decEq b a of
         Yes prf =>
-            if id == eventId then
-                ( Edit id (coerce prf newVal), state )
-            else
-                ( task, state )
+            ( Edit (coerce prf newVal), state )
         No _ =>
             ( task, state )
-handle task@(Edit {a} id val) _ state =
+-- FIXME: Should pass more unhandled events down or not...
+handle task _ state =
     ( task, state )
-handle task@(Pure _) _ state =
-    -- In this case evaluation terminated
-    ( task, state )
-handle task@(Get) _ state =
-    -- This case can't happen, it is already evaluated by `normalise`
-    --FIXME: express this in the type system
-    ( task, state )
-handle task@(Put _) _ state =
-    -- This case can't happen
-    --FIXME: express this in the type system
-    ( task, state )
+    -- Case Pure: evaluation terminated
+    -- Cases Get and Put: this case can't happen, it is already evaluated by `normalise`
+    -- FIXME: express this in the type system...
 
 
 -- Tests -----------------------------------------------------------------------
@@ -230,44 +215,63 @@ str : Task STRING
 str = Pure "Hello"
 
 edit : Task INT
-edit = Edit 0 (JustValue 0)
+edit = Edit (JustValue 0)
 
 add : Int -> Task INT
-add x = Edit 2 (JustValue $ x + 1)
+add x = Edit (JustValue $ x + 1)
 
 append : String -> String -> Task STRING
-append x y = Edit 2 (JustValue $ x ++ y)
+append x y = Edit (JustValue $ x ++ y)
 
 pureStep : Task INT
-pureStep = Seq 1 int add
+pureStep = Seq int add
 
 oneStep : Task INT
-oneStep = Seq 1 edit add
+oneStep = Seq edit add
 
 
 -- Running ---------------------------------------------------------------------
 
+usage : String
+usage = unlines
+    [ ":: Possible events are:"
+    , "    change <val> : change current value to <val> "
+    , "    clear        : clear current value"
+    , "    cont         : continue with the next task"
+    , "    fst <event>  : send <event> to the first task"
+    , "    snd <event>  : send <event> to the second task"
+    , "    help         : show this message"
+    ]
+
+parse : List String -> Either String Event
+parse ["change", val] = Right $ Change (INT ** JustValue (cast val))
+parse ["clear"]       = Right $ Change (INT ** NoValue)
+parse ["cont"]        = Right $ Continue
+parse ("fst" :: rest) = map First $ parse rest
+parse ("snd" :: rest) = map Second $ parse rest
+parse ["help"]        = Left usage
+parse other           = Left $ "!! '" ++ unwords other ++ "' is not a valid command"
+
 %default covering
 
-getEvent : IO Event
-getEvent = do
-    putStr "event? "
+get : IO Event
+get = do
+    putStr "tasks> "
     input <- getLine
-    case words input of
-        ["ed", id, val] => pure (Change (cast id) (INT ** JustValue (cast val)))
-        ["ed", id]      => pure (Change (cast id) (INT ** NoValue))
-        ["st", id]      => pure (Continue (cast id))
-        _               => do
-            putStrLn "parse error!"
-            getEvent
+    case parse (words input) of
+        Right event => do
+            pure event
+        Left msg => do
+            putStrLn msg
+            get
 
-runTask : Show (valueOf a) => Task a -> State -> IO ()
-runTask task_ state = do
+run : Show (valueOf a) => Task a -> State -> IO ()
+run task_ state = do
     let ( normalisedTask, newState ) = normalise task_ state
     putStrLn $ show normalisedTask
-    event <- getEvent
+    event <- get
     let ( nextTask, nextState ) = handle normalisedTask event newState
-    runTask nextTask nextState
+    run nextTask nextState
 
 main : IO ()
-main = runTask oneStep 0
+main = run oneStep 0
