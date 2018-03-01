@@ -91,11 +91,8 @@ data Task : TaskType -> Type where
      -- Lifting
      Pure : {a : TaskType} -> valueOf a -> Task a
 
-pure : {a : TaskType} -> valueOf a -> Task a
-pure = Pure
-
 unit : Task UNIT
-unit = pure ()
+unit = Pure ()
 
 
 -- Showing ---------------------------------------------------------------------
@@ -105,12 +102,19 @@ Show (valueOf a) => Show (Value a) where
      show (JustValue x) = show x
 
 Show (valueOf a) => Show (Task a) where
-     show (Seq id left cont) = ?show_seq ++ " =>_" ++ show id ++ " <cont>"
-     show (Par left right)   = ?show_par ++ "<par>"
+     show (Seq id left cont) = "=>_" ++ show id ++ " <cont>"
+     show (Par left right)   = "<par>"
      show (Edit id val)      = "<edit_" ++ show id ++ " " ++ show val ++ ">"
      show (Get)              = "<get>"
      show (Put x)            = "<put " ++ show x ++ ">"
      show (Pure x)           = show x
+
+show_seq : Show (valueOf b) => Task b -> String
+show_seq task = "" --FIXME
+
+show_par : (Show (valueOf a), Show (valueOf b)) => Task a -> Task b -> String
+show_par left right = "" --FIXME
+
 
 -- Semantics -------------------------------------------------------------------
 
@@ -139,7 +143,7 @@ normalise (Par left right) state =
                ( newLeft, newRight ) => ( Par newLeft newRight, newerState )
 -- State
 normalise (Get) state =
-          ( pure state, state )
+          ( Pure state, state )
 normalise (Put x) state =
           ( unit, x )
 -- Values
@@ -163,6 +167,11 @@ handle task@(Seq id left cont) event@(Continue eventId) state =
                  ( newLeft, newState ) = handle left event state
             in
             ( Seq id newLeft cont, newState )
+handle task@(Seq id left cont) event state =
+       let
+            ( newLeft, newState ) = handle left event state
+       in
+       ( Seq id newLeft cont, newState )
 handle task@(Par left right) event state =
        -- We pass on the event to left and right in sequence
        let
@@ -179,6 +188,8 @@ handle task@(Edit {a} id val) (Change eventId (b ** newVal)) state =
                       ( task, state )
             No _ =>
                  ( task, state )
+handle task@(Edit {a} id val) _ state =
+       ( task, state )
 handle task@(Pure _) _ state =
        -- In this case evaluation terminated
        ( task, state )
@@ -190,3 +201,48 @@ handle task@(Put _) _ state =
        -- This case can't happen
        --FIXME: express this in the type system
        ( task, state )
+
+
+-- Tests -----------------------------------------------------------------------
+
+pure : Task INT
+pure = Pure 42
+
+edit : Task INT
+edit = Edit 0 (JustValue 0)
+
+next : Int -> Task INT
+next x = Edit 2 (JustValue $ x + 1)
+
+pureStep : Task INT
+pureStep = Seq 1 pure next
+
+oneStep : Task INT
+oneStep = Seq 1 edit next
+
+
+-- Running ---------------------------------------------------------------------
+
+%default covering
+
+getEvent : IO Event
+getEvent = do
+         putStr "event? "
+         input <- getLine
+         case words input of
+              ["ed", id, val] => pure (Change (cast id) (INT ** JustValue (cast val)))
+              ["ed", id]      => pure (Change (cast id) (INT ** NoValue))
+              ["st", id]      => pure (Continue (cast id))
+              _               => do putStrLn "parse error!"
+                                    getEvent
+
+runTask : Show (valueOf a) => Task a -> State -> IO ()
+runTask task_ state = do
+        let ( normalisedTask, newState ) = normalise task_ state
+        putStrLn $ show normalisedTask
+        event <- getEvent
+        let ( nextTask, nextState ) = handle normalisedTask event newState
+        runTask nextTask nextState
+
+main : IO ()
+main = runTask oneStep 0
