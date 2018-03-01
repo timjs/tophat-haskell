@@ -79,7 +79,7 @@ State = Int
 
 data Value : TaskType -> Type where
     NoValue   : Value a
-    JustValue : {a : TaskType} -> valueOf a -> Value a
+    JustValue : valueOf a -> Value a
 
 coerce : (a = b) -> Value a -> Value b
 coerce Refl x = x
@@ -118,19 +118,15 @@ Show (valueOf a) => Show (Value a) where
     show NoValue       = "<no value>"
     show (JustValue x) = show x
 
-Show (valueOf a) => Show (Task a) where
-    show (Seq left cont)  = "=>_" ++ " <cont>"
-    show (Par left right) = "<par>"
-    show (Edit val)       = "<edit_" ++ " " ++ show val ++ ">"
-    show (Get)            = "<get>"
-    show (Put x)          = "<put " ++ show x ++ ">"
-    show (Pure x)         = show x
-
-show_seq : Show (valueOf b) => Task b -> String
-show_seq task = "" --FIXME
-
-show_par : (Show (valueOf a), Show (valueOf b)) => Task a -> Task b -> String
-show_par left right = "" --FIXME
+(Show (valueOf a)) => Show (Task a) where
+    -- show (Seq {s} left cont)      = show @{s} left ++ " => <cont>"
+    -- show (Par {s} {t} left right) = "(" ++ show @{s} left ++ " | " ++ show @{t} right ++ ")"
+    show (Seq left cont)          = "... => <cont>"
+    show (Par left right)         = "(... | ...)"
+    show (Edit val)               = "edit " ++ show val
+    show Get                      = "get"
+    show (Put x)                  = "put " ++ show x ++ ""
+    show (Pure x)                 = show x
 
 
 -- Semantics -------------------------------------------------------------------
