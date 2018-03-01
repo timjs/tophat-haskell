@@ -8,11 +8,13 @@ module Task
 data TaskType
     = UNIT
     | INT
+    | STRING
     | PAIR TaskType TaskType
 
 valueOf : TaskType -> Type
 valueOf UNIT       = ()
 valueOf INT        = Int
+valueOf STRING     = String
 valueOf (PAIR a b) = ( valueOf a, valueOf b )
 
 snd_neq : (contra : (y = y') -> Void) -> (PAIR x y = PAIR x y') -> Void
@@ -27,15 +29,25 @@ both_neq contra_x contra_y Refl = contra_x Refl
 Uninhabited (UNIT = INT) where
     uninhabited Refl impossible
 
+Uninhabited (UNIT = STRING) where
+    uninhabited Refl impossible
+
 Uninhabited (UNIT = PAIR x y) where
+    uninhabited Refl impossible
+
+Uninhabited (INT = STRING) where
     uninhabited Refl impossible
 
 Uninhabited (INT = PAIR x y) where
     uninhabited Refl impossible
 
+Uninhabited (STRING = PAIR x y) where
+    uninhabited Refl impossible
+
 DecEq TaskType where
     decEq UNIT       UNIT                                             = Yes Refl
     decEq INT        INT                                              = Yes Refl
+    decEq STRING     STRING                                           = Yes Refl
     decEq (PAIR x y) (PAIR x' y')     with (decEq x x')
       decEq (PAIR x y) (PAIR x y')    | (Yes Refl)  with (decEq y y')
         decEq (PAIR x y) (PAIR x y)   | (Yes Refl)  | (Yes Refl)      = Yes Refl
@@ -45,10 +57,16 @@ DecEq TaskType where
         decEq (PAIR x y) (PAIR x' y') | (No contra) | (No contra')    = No (both_neq contra contra')
     decEq UNIT       INT                                              = No absurd
     decEq INT        UNIT                                             = No (negEqSym absurd)
+    decEq UNIT       STRING                                           = No absurd
+    decEq STRING     UNIT                                             = No (negEqSym absurd)
     decEq UNIT       (PAIR x y)                                       = No absurd
     decEq (PAIR x y) UNIT                                             = No (negEqSym absurd)
+    decEq INT        STRING                                           = No absurd
+    decEq STRING     INT                                              = No (negEqSym absurd)
     decEq INT        (PAIR x y)                                       = No absurd
     decEq (PAIR x y) INT                                              = No (negEqSym absurd)
+    decEq STRING     (PAIR x y)                                       = No absurd
+    decEq (PAIR x y) STRING                                           = No (negEqSym absurd)
 
 
 -- Types -----------------------------------------------------------------------
