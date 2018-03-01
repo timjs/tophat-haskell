@@ -17,15 +17,6 @@ valueOf INT        = Int
 valueOf STRING     = String
 valueOf (PAIR a b) = ( valueOf a, valueOf b )
 
-snd_neq : (contra : (y = y') -> Void) -> (PAIR x y = PAIR x y') -> Void
-snd_neq contra Refl = contra Refl
-
-fst_neq : (contra : (x = x') -> Void) -> (PAIR x y = PAIR x' y) -> Void
-fst_neq contra Refl = contra Refl
-
-both_neq : (contra_x : (x = x') -> Void) -> (contra_y : (y = y') -> Void) -> (PAIR x y = PAIR x' y') -> Void
-both_neq contra_x contra_y Refl = contra_x Refl
-
 Uninhabited (UNIT = INT) where
     uninhabited Refl impossible
 
@@ -43,6 +34,15 @@ Uninhabited (INT = PAIR x y) where
 
 Uninhabited (STRING = PAIR x y) where
     uninhabited Refl impossible
+
+snd_neq : (y = y' -> Void) -> (PAIR x y = PAIR x y') -> Void
+snd_neq contra Refl = contra Refl
+
+fst_neq : (x = x' -> Void) -> (PAIR x y = PAIR x' y) -> Void
+fst_neq contra Refl = contra Refl
+
+both_neq : (x = x' -> Void) -> (y = y' -> Void) -> (PAIR x y = PAIR x' y') -> Void
+both_neq contra_x contra_y Refl = contra_x Refl
 
 DecEq TaskType where
     decEq UNIT       UNIT                                             = Yes Refl
