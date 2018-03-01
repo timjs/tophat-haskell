@@ -223,20 +223,26 @@ handle task@(Put _) _ state =
 
 -- Tests -----------------------------------------------------------------------
 
-pure : Task INT
-pure = Pure 42
+int : Task INT
+int = Pure 42
+
+str : Task STRING
+str = Pure "Hello"
 
 edit : Task INT
 edit = Edit 0 (JustValue 0)
 
-next : Int -> Task INT
-next x = Edit 2 (JustValue $ x + 1)
+add : Int -> Task INT
+add x = Edit 2 (JustValue $ x + 1)
+
+append : String -> String -> Task STRING
+append x y = Edit 2 (JustValue $ x ++ y)
 
 pureStep : Task INT
-pureStep = Seq 1 pure next
+pureStep = Seq 1 int add
 
 oneStep : Task INT
-oneStep = Seq 1 edit next
+oneStep = Seq 1 edit add
 
 
 -- Running ---------------------------------------------------------------------
