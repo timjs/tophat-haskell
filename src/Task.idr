@@ -120,7 +120,7 @@ Show (valueOf a) => Show (Value a) where
 
 (Show (valueOf a)) => Show (Task a) where
     show (Seq left cont)          = show left ++ " => <cont>"
-    show (Par left right)         = "(" ++ show left ++ "|" ++ show right ++ ")"
+    show (Par left right)         = "(" ++ show left ++ " | " ++ show right ++ ")"
     show (Edit val)               = "edit " ++ show val
     show Get                      = "get"
     show (Put x)                  = "put " ++ show x ++ ""
@@ -218,6 +218,15 @@ pureStep = Seq int add
 oneStep : Task INT
 oneStep = Seq edit add
 
+parallel : Task (PAIR INT STRING)
+parallel = Par (Edit (JustValue 1)) (Edit (JustValue "Hello"))
+
+parallelStep : Task STRING
+parallelStep = Seq parallel repeat
+where
+    repeat : ( Int, String ) -> Task STRING
+    repeat ( n, m ) = Edit (JustValue (unwords $ replicate (cast n) m))
+
 
 -- Running ---------------------------------------------------------------------
 
@@ -233,6 +242,7 @@ usage = unlines
     ]
 
 parse : List String -> Either String Event
+--FIXME: input of other types
 parse ["change", val] = Right $ Change (INT ** JustValue (cast val))
 parse ["clear"]       = Right $ Change (INT ** NoValue)
 parse ["cont"]        = Right $ Continue
@@ -265,4 +275,4 @@ run task state = do
     run nextTask nextState
 
 main : IO ()
-main = uncurry run $ init oneStep 0
+main = uncurry run $ init parallel 0
