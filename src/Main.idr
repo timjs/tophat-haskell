@@ -35,7 +35,7 @@ oneStep = do
     add x
 
 parallel : Task (PAIR INT STRING)
-parallel = edit (Just 1) <|> edit (Just "Hello")
+parallel = edit (Just 1) <&> edit (Just "Hello")
 
 parallelStep : Task STRING
 parallelStep = do

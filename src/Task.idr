@@ -37,8 +37,9 @@ pure = Pure
 (>>=) : Show (valueOf a) => Task a -> (valueOf a -> Task b) -> Task b
 (>>=) = Seq
 
-(<|>) : Show (valueOf a) => Show (valueOf b) => Task a -> Task b -> Task (PAIR a b)
-(<|>) = Par
+infixl 3 <&>
+(<&>) : Show (valueOf a) => Show (valueOf b) => Task a -> Task b -> Task (PAIR a b)
+(<&>) = Par
 
 edit : Maybe (valueOf a) -> Task a
 edit = Edit
