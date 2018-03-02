@@ -4,13 +4,17 @@ import Task.Type
 import Task.Event
 
 %default total
-%access public export
+%access export
 
 
 -- Types -----------------------------------------------------------------------
 
+-- State --
+
 State : Type
 State = Int
+
+-- Tasks --
 
 data Task : Ty -> Type where
     -- Primitive combinators
@@ -22,10 +26,34 @@ data Task : Ty -> Type where
     Get  : Task INT
     Put  : valueOf INT -> Task UNIT
     -- Lifting
-    Pure : {a : Ty} -> valueOf a -> Task a
+    Pure : valueOf a -> Task a
+
+
+-- Public interface ------------------------------------------------------------
+
+pure : (valueOf a) -> Task a
+pure = Pure
+
+(>>=) : Show (valueOf a) => Task a -> (valueOf a -> Task b) -> Task b
+(>>=) = Seq
+
+(<|>) : Show (valueOf a) => Show (valueOf b) => Task a -> Task b -> Task (PAIR a b)
+(<|>) = Par
+
+edit : Maybe (valueOf a) -> Task a
+edit = Edit
+
+get : Task INT
+get = Get
+
+put : valueOf INT -> Task UNIT
+put = Put
 
 unit : Task UNIT
 unit = Pure ()
+
+state : Int -> State
+state = id
 
 
 -- Showing ---------------------------------------------------------------------

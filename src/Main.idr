@@ -10,34 +10,37 @@ import Task.Event
 -- Tests -----------------------------------------------------------------------
 
 int : Task INT
-int = Pure 42
+int = pure 42
 
 str : Task STRING
-str = Pure "Hello"
+str = pure "Hello"
 
 edit : Task INT
-edit = Edit (Just 0)
+edit = edit (Just 0)
 
 add : Int -> Task INT
-add x = Edit (Just $ x + 1)
+add x = edit (Just $ x + 1)
 
 append : String -> String -> Task STRING
-append x y = Edit (Just $ x ++ y)
+append x y = edit (Just $ x ++ y)
 
 pureStep : Task INT
-pureStep = Seq int add
+pureStep = do
+    x <- int
+    add x
 
 oneStep : Task INT
-oneStep = Seq edit add
+oneStep = do
+    x <- edit
+    add x
 
 parallel : Task (PAIR INT STRING)
-parallel = Par (Edit (Just 1)) (Edit (Just "Hello"))
+parallel = edit (Just 1) <|> edit (Just "Hello")
 
 parallelStep : Task STRING
-parallelStep = Seq parallel repeat
-where
-    repeat : ( Int, String ) -> Task STRING
-    repeat ( n, m ) = Edit (Just (unwords $ replicate (cast n) m))
+parallelStep = do
+    ( n, m ) <- parallel
+    edit (Just (unwords $ replicate (cast n) m))
 
 
 -- Running ---------------------------------------------------------------------
@@ -63,4 +66,4 @@ run task state = do
     run nextTask nextState
 
 main : IO ()
-main = uncurry run $ init parallelStep 0
+main = uncurry run $ init parallelStep (state 0)
