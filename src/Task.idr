@@ -68,6 +68,9 @@ DecEq TaskType where
     decEq STRING     (PAIR x y)                                       = No absurd
     decEq (PAIR x y) STRING                                           = No (negEqSym absurd)
 
+coerce : (a = b) -> Maybe (valueOf a) -> Maybe (valueOf b)
+coerce Refl x = x
+
 
 -- Types -----------------------------------------------------------------------
 
@@ -75,20 +78,10 @@ State : Type
 State = Int
 
 
--- Values --
-
-data Value : TaskType -> Type where
-    NoValue   : Value a
-    JustValue : valueOf a -> Value a
-
-coerce : (a = b) -> Value a -> Value b
-coerce Refl x = x
-
-
 -- Events --
 
 data Event : Type where
-    Change   : (a ** Value a) -> Event
+    Change   : {b : TaskType} -> (Maybe (valueOf b)) -> Event
     Continue : Event
     First    : Event -> Event
     Second   : Event -> Event
@@ -101,7 +94,7 @@ data Task : TaskType -> Type where
     Seq  : Show (valueOf a) => Task a -> (valueOf a -> Task b) -> Task b
     Par  : Show (valueOf a) => Show (valueOf b) => Task a -> Task b -> Task (PAIR a b)
     -- User interaction
-    Edit : Value a -> Task a
+    Edit : Maybe (valueOf a) -> Task a
     -- Share interaction
     Get  : Task INT
     Put  : valueOf INT -> Task UNIT
@@ -114,14 +107,14 @@ unit = Pure ()
 
 -- Showing ---------------------------------------------------------------------
 
-Show (valueOf a) => Show (Value a) where
-    show NoValue       = "<no value>"
-    show (JustValue x) = show x
+[editor_value] Show a => Show (Maybe a) where
+    show Nothing  = "<no value>"
+    show (Just x) = show x
 
 (Show (valueOf a)) => Show (Task a) where
     show (Seq left cont)          = show left ++ " => <cont>"
     show (Par left right)         = "(" ++ show left ++ " | " ++ show right ++ ")"
-    show (Edit val)               = "edit " ++ show val
+    show (Edit val)               = "edit " ++ show @{editor_value} val
     show Get                      = "get"
     show (Put x)                  = "put " ++ show x ++ ""
     show (Pure x)                 = show x
@@ -161,9 +154,9 @@ handle task@(Seq (Edit val) cont) Continue state =
     -- If we pressed Continue...
     case val of
         -- ...and we have a value: we get on with the continuation
-        JustValue v => ( cont v, state )
+        Just v  => ( cont v, state )
         -- ...without a value: we stay put and have to wait for a value to appear.
-        NoValue     => ( task, state )
+        Nothing => ( task, state )
 handle task@(Seq left cont) event state =
     let
     ( newLeft, newState ) = handle left event state
@@ -181,7 +174,7 @@ handle task@(Par left right) (Second event) state =
     ( newRight, newState )    = handle right event state
     in
     ( Par left newRight, newState )
-handle task@(Edit {a} val) (Change (b ** newVal)) state =
+handle task@(Edit {a} _) (Change {b} newVal) state =
     case decEq b a of
         Yes prf =>
             ( Edit (coerce prf newVal), state )
@@ -204,13 +197,13 @@ str : Task STRING
 str = Pure "Hello"
 
 edit : Task INT
-edit = Edit (JustValue 0)
+edit = Edit (Just 0)
 
 add : Int -> Task INT
-add x = Edit (JustValue $ x + 1)
+add x = Edit (Just $ x + 1)
 
 append : String -> String -> Task STRING
-append x y = Edit (JustValue $ x ++ y)
+append x y = Edit (Just $ x ++ y)
 
 pureStep : Task INT
 pureStep = Seq int add
@@ -219,13 +212,13 @@ oneStep : Task INT
 oneStep = Seq edit add
 
 parallel : Task (PAIR INT STRING)
-parallel = Par (Edit (JustValue 1)) (Edit (JustValue "Hello"))
+parallel = Par (Edit (Just 1)) (Edit (Just "Hello"))
 
 parallelStep : Task STRING
 parallelStep = Seq parallel repeat
 where
     repeat : ( Int, String ) -> Task STRING
-    repeat ( n, m ) = Edit (JustValue (unwords $ replicate (cast n) m))
+    repeat ( n, m ) = Edit (Just (unwords $ replicate (cast n) m))
 
 
 -- Running ---------------------------------------------------------------------
@@ -243,8 +236,8 @@ usage = unlines
 
 parse : List String -> Either String Event
 --FIXME: input of other types
-parse ["change", val] = Right $ Change (INT ** JustValue (cast val))
-parse ["clear"]       = Right $ Change (INT ** NoValue)
+parse ["change", val] = Right $ Change {b = INT} (Just (cast val))
+parse ["clear"]       = Right $ Change {b = INT} Nothing
 parse ["cont"]        = Right $ Continue
 parse ("fst" :: rest) = map First $ parse rest
 parse ("snd" :: rest) = map Second $ parse rest
