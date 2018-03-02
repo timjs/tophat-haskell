@@ -129,11 +129,6 @@ Show (valueOf a) => Show (Value a) where
 
 -- Semantics -------------------------------------------------------------------
 
-value : Task a -> Value a
-value (Pure x)   = JustValue x
-value (Edit val) = val
-value _          = NoValue
-
 eval : Task a -> State -> ( Task a, State )
 -- Combinators
 eval (Seq left cont) state =
