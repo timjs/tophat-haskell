@@ -122,6 +122,12 @@ unit = Pure ()
 
 -- Semantics -------------------------------------------------------------------
 
+value : Task a -> Maybe (valueOf a)
+value (Pure x)         = Just x
+value (Edit val)       = val
+value (Par left right) = Just (!(value left), !(value right))
+value _                = Nothing
+
 eval : Task a -> State -> ( Task a, State )
 -- Combinators
 eval (Seq left cont) state =
@@ -150,9 +156,9 @@ eval task state =
     ( task, state )
 
 handle : Task a -> Event -> State -> ( Task a, State )
-handle task@(Seq (Edit val) cont) Continue state =
+handle task@(Seq left cont) Continue state =
     -- If we pressed Continue...
-    case val of
+    case value left of
         -- ...and we have a value: we get on with the continuation
         Just v  => ( cont v, state )
         -- ...without a value: we stay put and have to wait for a value to appear.
@@ -268,4 +274,4 @@ run task state = do
     run nextTask nextState
 
 main : IO ()
-main = uncurry run $ init parallel 0
+main = uncurry run $ init parallelStep 0
