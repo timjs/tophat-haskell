@@ -111,7 +111,7 @@ handle task@(Seq left cont) Continue state =
     -- If we pressed Continue...
     case value left of
         -- ...and we have a value: we get on with the continuation
-        Just v  => ( cont v, state )
+        Just v  => eval (cont v) state
         -- ...without a value: we stay put and have to wait for a value to appear.
         Nothing => ( task, state )
 handle task@(Seq left cont) event state =
