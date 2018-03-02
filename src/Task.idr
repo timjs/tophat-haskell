@@ -1,75 +1,10 @@
 module Task
 
+import Task.Type
+import Task.Event
+
 %default total
-
-
--- Universe --------------------------------------------------------------------
-
-data TaskType
-    = UNIT
-    | INT
-    | STRING
-    | PAIR TaskType TaskType
-
-valueOf : TaskType -> Type
-valueOf UNIT       = ()
-valueOf INT        = Int
-valueOf STRING     = String
-valueOf (PAIR a b) = ( valueOf a, valueOf b )
-
-Uninhabited (UNIT = INT) where
-    uninhabited Refl impossible
-
-Uninhabited (UNIT = STRING) where
-    uninhabited Refl impossible
-
-Uninhabited (UNIT = PAIR x y) where
-    uninhabited Refl impossible
-
-Uninhabited (INT = STRING) where
-    uninhabited Refl impossible
-
-Uninhabited (INT = PAIR x y) where
-    uninhabited Refl impossible
-
-Uninhabited (STRING = PAIR x y) where
-    uninhabited Refl impossible
-
-snd_neq : (y = y' -> Void) -> (PAIR x y = PAIR x y') -> Void
-snd_neq contra Refl = contra Refl
-
-fst_neq : (x = x' -> Void) -> (PAIR x y = PAIR x' y) -> Void
-fst_neq contra Refl = contra Refl
-
-both_neq : (x = x' -> Void) -> (y = y' -> Void) -> (PAIR x y = PAIR x' y') -> Void
-both_neq contra_x contra_y Refl = contra_x Refl
-
-DecEq TaskType where
-    decEq UNIT       UNIT                                             = Yes Refl
-    decEq INT        INT                                              = Yes Refl
-    decEq STRING     STRING                                           = Yes Refl
-    decEq (PAIR x y) (PAIR x' y')     with (decEq x x')
-      decEq (PAIR x y) (PAIR x y')    | (Yes Refl)  with (decEq y y')
-        decEq (PAIR x y) (PAIR x y)   | (Yes Refl)  | (Yes Refl)      = Yes Refl
-        decEq (PAIR x y) (PAIR x y')  | (Yes Refl)  | (No contra)     = No (snd_neq contra)
-      decEq (PAIR x y) (PAIR x' y')   | (No contra) with (decEq y y')
-        decEq (PAIR x y) (PAIR x' y)  | (No contra) | (Yes Refl)      = No (fst_neq contra)
-        decEq (PAIR x y) (PAIR x' y') | (No contra) | (No contra')    = No (both_neq contra contra')
-    decEq UNIT       INT                                              = No absurd
-    decEq INT        UNIT                                             = No (negEqSym absurd)
-    decEq UNIT       STRING                                           = No absurd
-    decEq STRING     UNIT                                             = No (negEqSym absurd)
-    decEq UNIT       (PAIR x y)                                       = No absurd
-    decEq (PAIR x y) UNIT                                             = No (negEqSym absurd)
-    decEq INT        STRING                                           = No absurd
-    decEq STRING     INT                                              = No (negEqSym absurd)
-    decEq INT        (PAIR x y)                                       = No absurd
-    decEq (PAIR x y) INT                                              = No (negEqSym absurd)
-    decEq STRING     (PAIR x y)                                       = No absurd
-    decEq (PAIR x y) STRING                                           = No (negEqSym absurd)
-
-coerce : (a = b) -> Maybe (valueOf a) -> Maybe (valueOf b)
-coerce Refl x = x
+%access public export
 
 
 -- Types -----------------------------------------------------------------------
@@ -77,19 +12,7 @@ coerce Refl x = x
 State : Type
 State = Int
 
-
--- Events --
-
-data Event : Type where
-    Change   : {b : TaskType} -> (Maybe (valueOf b)) -> Event
-    Continue : Event
-    First    : Event -> Event
-    Second   : Event -> Event
-
-
--- Tasks --
-
-data Task : TaskType -> Type where
+data Task : Ty -> Type where
     -- Primitive combinators
     Seq  : Show (valueOf a) => Task a -> (valueOf a -> Task b) -> Task b
     Par  : Show (valueOf a) => Show (valueOf b) => Task a -> Task b -> Task (PAIR a b)
@@ -99,7 +22,7 @@ data Task : TaskType -> Type where
     Get  : Task INT
     Put  : valueOf INT -> Task UNIT
     -- Lifting
-    Pure : {a : TaskType} -> valueOf a -> Task a
+    Pure : {a : Ty} -> valueOf a -> Task a
 
 unit : Task UNIT
 unit = Pure ()
@@ -193,85 +116,5 @@ handle task _ state =
     -- Cases Get and Put: this case can't happen, it is already evaluated by `eval`
     -- FIXME: express this in the type system...
 
-
--- Tests -----------------------------------------------------------------------
-
-int : Task INT
-int = Pure 42
-
-str : Task STRING
-str = Pure "Hello"
-
-edit : Task INT
-edit = Edit (Just 0)
-
-add : Int -> Task INT
-add x = Edit (Just $ x + 1)
-
-append : String -> String -> Task STRING
-append x y = Edit (Just $ x ++ y)
-
-pureStep : Task INT
-pureStep = Seq int add
-
-oneStep : Task INT
-oneStep = Seq edit add
-
-parallel : Task (PAIR INT STRING)
-parallel = Par (Edit (Just 1)) (Edit (Just "Hello"))
-
-parallelStep : Task STRING
-parallelStep = Seq parallel repeat
-where
-    repeat : ( Int, String ) -> Task STRING
-    repeat ( n, m ) = Edit (Just (unwords $ replicate (cast n) m))
-
-
--- Running ---------------------------------------------------------------------
-
-usage : String
-usage = unlines
-    [ ":: Possible events are:"
-    , "    change <val> : change current value to <val> "
-    , "    clear        : clear current value"
-    , "    cont         : continue with the next task"
-    , "    fst <event>  : send <event> to the first task"
-    , "    snd <event>  : send <event> to the second task"
-    , "    help         : show this message"
-    ]
-
-parse : List String -> Either String Event
---FIXME: input of other types
-parse ["change", val] = Right $ Change {b = INT} (Just (cast val))
-parse ["clear"]       = Right $ Change {b = INT} Nothing
-parse ["cont"]        = Right $ Continue
-parse ("fst" :: rest) = map First $ parse rest
-parse ("snd" :: rest) = map Second $ parse rest
-parse ["help"]        = Left usage
-parse other           = Left $ "!! '" ++ unwords other ++ "' is not a valid command"
-
-%default covering
-
-get : IO Event
-get = do
-    putStr "tasks> "
-    input <- getLine
-    case parse (words input) of
-        Right event => do
-            pure event
-        Left msg => do
-            putStrLn msg
-            get
-
 init : Task a -> State -> ( Task a, State )
 init = eval
-
-run : Show (valueOf a) => Task a -> State -> IO ()
-run task state = do
-    putStrLn $ show task
-    event <- get
-    let ( nextTask, nextState ) = handle task event state
-    run nextTask nextState
-
-main : IO ()
-main = uncurry run $ init parallelStep 0
