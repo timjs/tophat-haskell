@@ -98,8 +98,8 @@ data Event : Type where
 
 data Task : TaskType -> Type where
     -- Primitive combinators
-    Seq  : Task a -> (valueOf a -> Task b) -> Task b
-    Par  : Task a -> Task b -> Task (PAIR a b)
+    Seq  : Show (valueOf a) => Task a -> (valueOf a -> Task b) -> Task b
+    Par  : Show (valueOf a) => Show (valueOf b) => Task a -> Task b -> Task (PAIR a b)
     -- User interaction
     Edit : Value a -> Task a
     -- Share interaction
@@ -119,10 +119,8 @@ Show (valueOf a) => Show (Value a) where
     show (JustValue x) = show x
 
 (Show (valueOf a)) => Show (Task a) where
-    -- show (Seq {s} left cont)      = show @{s} left ++ " => <cont>"
-    -- show (Par {s} {t} left right) = "(" ++ show @{s} left ++ " | " ++ show @{t} right ++ ")"
-    show (Seq left cont)          = "... => <cont>"
-    show (Par left right)         = "(... | ...)"
+    show (Seq left cont)          = show left ++ " => <cont>"
+    show (Par left right)         = "(" ++ show left ++ "|" ++ show right ++ ")"
     show (Edit val)               = "edit " ++ show val
     show Get                      = "get"
     show (Put x)                  = "put " ++ show x ++ ""
