@@ -254,13 +254,15 @@ get = do
             putStrLn msg
             get
 
+init : Task a -> State -> ( Task a, State )
+init = eval
+
 run : Show (valueOf a) => Task a -> State -> IO ()
-run task_ state = do
-    let ( normalisedTask, newState ) = eval task_ state
-    putStrLn $ show normalisedTask
+run task state = do
+    putStrLn $ show task
     event <- get
-    let ( nextTask, nextState ) = handle normalisedTask event newState
+    let ( nextTask, nextState ) = handle task event state
     run nextTask nextState
 
 main : IO ()
-main = run oneStep 0
+main = uncurry run $ init oneStep 0
