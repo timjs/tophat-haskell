@@ -134,37 +134,37 @@ value (Pure x)   = JustValue x
 value (Edit val) = val
 value _          = NoValue
 
-normalise : Task a -> State -> ( Task a, State )
+eval : Task a -> State -> ( Task a, State )
 -- Combinators
-normalise (Seq left cont) state =
+eval (Seq left cont) state =
     let
-    ( newLeft, newState ) = normalise left state
+    ( newLeft, newState ) = eval left state
     in
     case newLeft of
-        --FIXME: maybe add a normalise here
+        --FIXME: maybe add a eval here
         Pure a => ( cont a, newState )
         _      => ( Seq newLeft cont, newState )
-normalise (Par left right) state =
+eval (Par left right) state =
     let
-    ( newLeft, newState )    = normalise left state
-    ( newRight, newerState ) = normalise right newState
+    ( newLeft, newState )    = eval left state
+    ( newRight, newerState ) = eval right newState
     in
     case ( newLeft, newRight ) of
         ( Pure a, Pure b )    => ( Pure ( a, b ), newerState )
         ( newLeft, newRight ) => ( Par newLeft newRight, newerState )
 -- State
-normalise (Get) state =
+eval (Get) state =
     ( Pure state, state )
-normalise (Put x) state =
+eval (Put x) state =
     ( unit, x )
 -- Values
-normalise task state =
+eval task state =
     ( task, state )
 
 handle : Task a -> Event -> State -> ( Task a, State )
-handle task@(Seq left cont) Continue state =
+handle task@(Seq (Edit val) cont) Continue state =
     -- If we pressed Continue...
-    case value left of
+    case val of
         -- ...and we have a value: we get on with the continuation
         JustValue v => ( cont v, state )
         -- ...without a value: we stay put and have to wait for a value to appear.
@@ -196,7 +196,7 @@ handle task@(Edit {a} val) (Change (b ** newVal)) state =
 handle task _ state =
     ( task, state )
     -- Case Pure: evaluation terminated
-    -- Cases Get and Put: this case can't happen, it is already evaluated by `normalise`
+    -- Cases Get and Put: this case can't happen, it is already evaluated by `eval`
     -- FIXME: express this in the type system...
 
 
@@ -261,7 +261,7 @@ get = do
 
 run : Show (valueOf a) => Task a -> State -> IO ()
 run task_ state = do
-    let ( normalisedTask, newState ) = normalise task_ state
+    let ( normalisedTask, newState ) = eval task_ state
     putStrLn $ show normalisedTask
     event <- get
     let ( nextTask, nextState ) = handle normalisedTask event newState
