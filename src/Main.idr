@@ -15,8 +15,8 @@ int = pure 42
 str : Task STRING
 str = pure "Hello"
 
-edit : Task INT
-edit = edit (Just 0)
+ask : Int -> Task INT
+ask x = edit (Just x)
 
 add : Int -> Task INT
 add x = edit (Just $ x + 1)
@@ -31,7 +31,7 @@ pureStep = do
 
 oneStep : Task INT
 oneStep = do
-    x <- edit
+    x <- ask 0
     add x
 
 parallel : Task (PAIR INT STRING)
@@ -41,6 +41,20 @@ parallelStep : Task STRING
 parallelStep = do
     ( n, m ) <- parallel
     edit (Just (unwords $ replicate (cast n) m))
+
+update : Task UNIT
+update = do
+    x <- get
+    y <- ask x
+    put y
+
+watch : Task INT
+watch = do
+    x <- get
+    edit (Just x)
+
+control : Task (PAIR UNIT INT)
+control = update <&> watch
 
 
 -- Running ---------------------------------------------------------------------
@@ -58,7 +72,7 @@ get = do
             putStrLn msg
             get
 
-run : Show (valueOf a) => Task a -> State -> IO ()
+run : Show (typeOf a) => Task a -> State -> IO ()
 run task state = do
     putStrLn $ show task
     event <- get
@@ -66,4 +80,4 @@ run task state = do
     run nextTask nextState
 
 main : IO ()
-main = uncurry run $ init parallelStep (state 0)
+main = uncurry run $ init control (state 0)
