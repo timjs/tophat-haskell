@@ -9,7 +9,7 @@ import Task.Type
 -- Events ----------------------------------------------------------------------
 
 data Event : Type where
-    Change   : {b : Ty} -> (Maybe (valueOf b)) -> Event
+    Change   : {b : Ty} -> (Maybe (typeOf b)) -> Event
     Continue : Event
     First    : Event -> Event
     Second   : Event -> Event

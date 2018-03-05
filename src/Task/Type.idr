@@ -13,11 +13,11 @@ data Ty
     | PAIR Ty Ty
 
 ||| Conversion of Task types to Idris types.
-valueOf : Ty -> Type
-valueOf UNIT       = ()
-valueOf INT        = Int
-valueOf STRING     = String
-valueOf (PAIR a b) = ( valueOf a, valueOf b )
+typeOf : Ty -> Type
+typeOf UNIT       = ()
+typeOf INT        = Int
+typeOf STRING     = String
+typeOf (PAIR a b) = ( typeOf a, typeOf b )
 
 
 -- Lemmas ----------------------------------------------------------------------
@@ -80,5 +80,5 @@ DecEq Ty where
 -- Coercion --------------------------------------------------------------------
 
 --FIXME: there should be some standard way of doing this...
-coerce : (a = b) -> Maybe (valueOf a) -> Maybe (valueOf b)
+coerce : (a = b) -> Maybe (typeOf a) -> Maybe (typeOf b)
 coerce Refl x = x

@@ -18,36 +18,36 @@ State = Int
 
 data Task : Ty -> Type where
     -- Primitive combinators
-    Seq  : Show (valueOf a) => Task a -> (valueOf a -> Task b) -> Task b
-    Par  : Show (valueOf a) => Show (valueOf b) => Task a -> Task b -> Task (PAIR a b)
+    Seq  : Show (typeOf a) => Task a -> (typeOf a -> Task b) -> Task b
+    Par  : Show (typeOf a) => Show (typeOf b) => Task a -> Task b -> Task (PAIR a b)
     -- User interaction
-    Edit : Maybe (valueOf a) -> Task a
+    Edit : Maybe (typeOf a) -> Task a
     -- Share interaction
     Get  : Task INT
-    Put  : valueOf INT -> Task UNIT
+    Put  : typeOf INT -> Task UNIT
     -- Lifting
-    Pure : valueOf a -> Task a
+    Pure : typeOf a -> Task a
 
 
 -- Public interface ------------------------------------------------------------
 
-pure : (valueOf a) -> Task a
+pure : (typeOf a) -> Task a
 pure = Pure
 
-(>>=) : Show (valueOf a) => Task a -> (valueOf a -> Task b) -> Task b
+(>>=) : Show (typeOf a) => Task a -> (typeOf a -> Task b) -> Task b
 (>>=) = Seq
 
 infixl 3 <&>
-(<&>) : Show (valueOf a) => Show (valueOf b) => Task a -> Task b -> Task (PAIR a b)
+(<&>) : Show (typeOf a) => Show (typeOf b) => Task a -> Task b -> Task (PAIR a b)
 (<&>) = Par
 
-edit : Maybe (valueOf a) -> Task a
+edit : Maybe (typeOf a) -> Task a
 edit = Edit
 
 get : Task INT
 get = Get
 
-put : valueOf INT -> Task UNIT
+put : typeOf INT -> Task UNIT
 put = Put
 
 unit : Task UNIT
@@ -63,7 +63,7 @@ state = id
     show Nothing  = "<no value>"
     show (Just x) = show x
 
-(Show (valueOf a)) => Show (Task a) where
+(Show (typeOf a)) => Show (Task a) where
     show (Seq left cont)          = show left ++ " => <cont>"
     show (Par left right)         = "(" ++ show left ++ " | " ++ show right ++ ")"
     show (Edit val)               = "edit " ++ show @{editor_value} val
@@ -74,7 +74,7 @@ state = id
 
 -- Semantics -------------------------------------------------------------------
 
-value : Task a -> Maybe (valueOf a)
+value : Task a -> Maybe (typeOf a)
 value (Pure x)         = Just x
 value (Edit val)       = val
 value (Par left right) = Just (!(value left), !(value right))
