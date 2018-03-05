@@ -57,6 +57,20 @@ state : Int -> State
 state = id
 
 
+-- Applicative and Functor --
+
+-- (<*>) : Show (typeOf a) => Show (typeOf b) => Task (FUN a b) -> Task a -> Task b
+-- (<*>) t1 t2 = do
+--     f <- t1
+--     x <- t2
+--     pure $ f x
+
+(<$>) : Show (typeOf a) => (typeOf a -> typeOf b) -> Task a -> Task b
+(<$>) f t = do
+    x <- t
+    pure $ f x
+
+
 -- Showing ---------------------------------------------------------------------
 
 [editor_value] Show a => Show (Maybe a) where
