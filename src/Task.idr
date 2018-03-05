@@ -11,8 +11,12 @@ import Task.Event
 
 -- State --
 
+STATE : Ty
+STATE = INT
+
 State : Type
-State = Int
+State = typeOf STATE
+
 
 -- Tasks --
 
@@ -23,8 +27,8 @@ data Task : Ty -> Type where
     -- User interaction
     Edit : Maybe (typeOf a) -> Task a
     -- Share interaction
-    Get  : Task INT
-    Put  : typeOf INT -> Task UNIT
+    Get  : Task STATE
+    Put  : typeOf STATE -> Task UNIT
     -- Lifting
     Pure : typeOf a -> Task a
 
