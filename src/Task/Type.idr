@@ -75,10 +75,3 @@ DecEq Ty where
     decEq (PAIR x y) INT                                              = No (negEqSym absurd)
     decEq STRING     (PAIR x y)                                       = No absurd
     decEq (PAIR x y) STRING                                           = No (negEqSym absurd)
-
-
--- Coercion --------------------------------------------------------------------
-
---FIXME: there should be some standard way of doing this...
-coerce : (a = b) -> Maybe (typeOf a) -> Maybe (typeOf b)
-coerce Refl x = x

@@ -22,15 +22,16 @@ State = typeOf STATE
 
 data Task : Ty -> Type where
     -- Primitive combinators
-    Seq  : Show (typeOf a) => Task a -> (typeOf a -> Task b) -> Task b
-    Par  : Show (typeOf a) => Show (typeOf b) => Task a -> Task b -> Task (PAIR a b)
+    Seq   : Show (typeOf a) => Task a -> (typeOf a -> Task b) -> Task b
+    Par   : Show (typeOf a) => Show (typeOf b) => Task a -> Task b -> Task (PAIR a b)
     -- User interaction
-    Edit : Maybe (typeOf a) -> Task a
+    Edit  : Maybe (typeOf a) -> Task a
+    Watch : Task STATE
     -- Share interaction
-    Get  : Task STATE
-    Put  : typeOf STATE -> Task UNIT
+    Get   : Task STATE
+    Put   : typeOf STATE -> Task UNIT
     -- Lifting
-    Pure : typeOf a -> Task a
+    Pure  : typeOf a -> Task a
 
 
 -- Public interface ------------------------------------------------------------
@@ -47,6 +48,9 @@ infixl 3 <&>
 
 edit : Maybe (typeOf a) -> Task a
 edit = Edit
+
+watch : Task INT
+watch = Watch
 
 get : Task INT
 get = Get
@@ -81,22 +85,24 @@ state = id
     show Nothing  = "<no value>"
     show (Just x) = show x
 
-(Show (typeOf a)) => Show (Task a) where
-    show (Seq left cont)          = show left ++ " => <cont>"
-    show (Par left right)         = "(" ++ show left ++ " | " ++ show right ++ ")"
-    show (Edit val)               = "edit " ++ show @{editor_value} val
-    show Get                      = "get"
-    show (Put x)                  = "put " ++ show x ++ ""
-    show (Pure x)                 = show x
+ui : Show (typeOf a) => Task a -> State -> String
+ui (Seq left cont)  s = ui left s ++ " => <cont>"
+ui (Par left right) s = "(" ++ ui left s ++ " | " ++ ui right s ++ ")"
+ui (Edit val)       _ = "edit " ++ show @{editor_value} val
+ui Watch            s = "watch " ++ show s
+ui Get              _ = "get"
+ui (Put x)          _ = "put " ++ show x ++ ""
+ui (Pure x)         _ = show x
 
 
 -- Semantics -------------------------------------------------------------------
 
-value : Task a -> Maybe (typeOf a)
-value (Pure x)         = Just x
-value (Edit val)       = val
-value (Par left right) = Just (!(value left), !(value right))
-value _                = Nothing
+value : Task a -> State -> Maybe (typeOf a)
+value (Pure x)         _ = Just x
+value (Edit val)       _ = val
+value Watch            s = Just s
+value (Par left right) s = Just (!(value left s), !(value right s))
+value _                _ = Nothing
 
 eval : Task a -> State -> ( Task a, State )
 -- Combinators
@@ -128,34 +134,36 @@ eval task state =
 handle : Task a -> Event -> State -> ( Task a, State )
 handle task@(Seq left cont) Continue state =
     -- If we pressed Continue...
-    case value left of
+    case value left state of
         -- ...and we have a value: we get on with the continuation
         Just v  => eval (cont v) state
         -- ...without a value: we stay put and have to wait for a value to appear.
         Nothing => ( task, state )
-handle task@(Seq left cont) event state =
+handle (Seq left cont) event state =
     let
     ( newLeft, newState ) = handle left event state
     in
     ( Seq newLeft cont, newState )
-handle task@(Par left right) (First event) state =
+handle (Par left right) (First event) state =
     -- We pass on the event to left
     let
     ( newLeft, newState )    = handle left event state
     in
     ( Par newLeft right, newState )
-handle task@(Par left right) (Second event) state =
+handle (Par left right) (Second event) state =
     -- We pass on the event to right
     let
     ( newRight, newState )    = handle right event state
     in
     ( Par left newRight, newState )
-handle task@(Edit {a} _) (Change {b} newVal) state =
-    case decEq b a of
-        Yes prf =>
-            ( Edit (coerce prf newVal), state )
-        No _ =>
-            ( task, state )
+handle (Edit _) Clear state =
+    ( Edit Nothing, state )
+handle (Edit {a} val) (Change {b} newVal) state with (decEq b a)
+  handle (Edit _) (Change newVal) state | Yes Refl = ( Edit (Just newVal), state )
+  handle (Edit val) _ state             | No _     = ( Edit val, state )
+handle Watch (Change {b} newVal) state with (decEq b INT)
+  handle Watch (Change newVal) _ | Yes Refl = ( Watch, newVal )
+  handle Watch (Change _) state  | No _     = ( Watch, state )
 -- FIXME: Should pass more unhandled events down or not...
 handle task _ state =
     ( task, state )

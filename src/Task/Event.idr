@@ -9,7 +9,8 @@ import Task.Type
 -- Events ----------------------------------------------------------------------
 
 data Event : Type where
-    Change   : {b : Ty} -> (Maybe (typeOf b)) -> Event
+    Change   : {b : Ty} -> typeOf b -> Event
+    Clear    : Event
     Continue : Event
     First    : Event -> Event
     Second   : Event -> Event
@@ -30,8 +31,8 @@ usage = unlines
 
 parse : List String -> Either String Event
 --FIXME: input of other types
-parse ["change", val] = Right $ Change {b = INT} (Just (cast val))
-parse ["clear"]       = Right $ Change {b = INT} Nothing
+parse ["change", val] = Right $ Change {b = INT} (cast val)
+parse ["clear"]       = Right $ Clear
 parse ["cont"]        = Right $ Continue
 parse ("fst" :: rest) = map First $ parse rest
 parse ("snd" :: rest) = map Second $ parse rest

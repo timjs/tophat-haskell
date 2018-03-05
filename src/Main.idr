@@ -18,8 +18,11 @@ str = pure "Hello"
 ask : Int -> Task INT
 ask x = edit (Just x)
 
-add : Int -> Task INT
-add x = edit (Just $ x + 1)
+inc : Int -> Task INT
+inc x = edit (Just $ x + 1)
+
+add : Int -> Int -> Task INT
+add x y = edit (Just $ x + y)
 
 append : String -> String -> Task STRING
 append x y = edit (Just $ x ++ y)
@@ -27,12 +30,18 @@ append x y = edit (Just $ x ++ y)
 pureStep : Task INT
 pureStep = do
     x <- int
-    add x
+    inc x
 
 oneStep : Task INT
 oneStep = do
     x <- ask 0
-    add x
+    inc x
+
+twoSteps : Task INT
+twoSteps = do
+    x <- ask 0
+    y <- ask 0
+    add x y
 
 parallel : Task (PAIR INT STRING)
 parallel = edit (Just 1) <&> edit (Just "Hello")
@@ -42,16 +51,17 @@ parallelStep = do
     ( n, m ) <- parallel
     edit (Just (unwords $ replicate (cast n) m))
 
+parallelWatch : Task (PAIR INT INT)
+parallelWatch = watch <&> watch
+
 update : Task UNIT
 update = do
     x <- get
     y <- ask x
     put y
-
-watch : Task INT
-watch = do
     x <- get
-    edit (Just x)
+    y <- ask x
+    put y
 
 control : Task (PAIR UNIT INT)
 control = update <&> watch
@@ -74,10 +84,10 @@ get = do
 
 run : Show (typeOf a) => Task a -> State -> IO ()
 run task state = do
-    putStrLn $ show task
+    putStrLn $ ui task state
     event <- get
     let ( nextTask, nextState ) = handle task event state
     run nextTask nextState
 
 main : IO ()
-main = uncurry run $ init control (state 0)
+main = uncurry run $ init parallelWatch (state 0)

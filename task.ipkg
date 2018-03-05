@@ -1,0 +1,9 @@
+package task
+
+sourcedir = src
+
+main = Main
+modules
+    = Task
+    , Task.Event
+    , Task.Type
