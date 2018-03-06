@@ -27,6 +27,7 @@ typeOf UnitTy       = ()
 typeOf (PairTy x y) = ( typeOf x, typeOf y )
 typeOf (Basic b)    = typeOfBasic b
 
+
 -- Lemmas ----------------------------------------------------------------------
 
 Uninhabited (UnitTy = PairTy x y) where
@@ -91,3 +92,25 @@ DecEq Ty where
     decEq (Basic b)    UnitTy                                             = No (negEqSym absurd)
     decEq (PairTy x y) (Basic b)                                          = No absurd
     decEq (Basic b)    (PairTy x y)                                       = No (negEqSym absurd)
+
+
+-- Parsing ---------------------------------------------------------------------
+
+parseInt : String -> Maybe Int
+parseInt "0" = Just 0
+parseInt s   =
+    let
+        -- NOTE: `cast` returns `0` if the cast fails
+        int = the Int (cast s)
+    in
+    if int == 0 then Nothing else Just int
+
+parse : String -> Maybe (b : BasicTy ** typeOfBasic b)
+--FIXME: rewrite this using parser combinators from Text.Parser of Text.Lexer
+parse "True"                  = Just $ (BoolTy ** True)
+parse "False"                 = Just $ (BoolTy ** False)
+parse s   with (parseInt s)
+  parse s | (Just int)        = Just $ (IntTy ** int)
+  parse s | Nothing   with (isPrefixOf "\"" s && isSuffixOf "\"" s)
+    parse s | Nothing | True  = Just $ (StringTy ** substr 1 (pred $ pred $ length s) s)
+    parse s | Nothing | False = Nothing

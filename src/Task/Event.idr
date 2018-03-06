@@ -30,11 +30,13 @@ usage = unlines
     ]
 
 parse : List String -> Either String Event
---FIXME: input of other types
-parse ["change", val] = Right $ Change {b = Basic IntTy} (cast val)
-parse ["clear"]       = Right $ Clear
-parse ["cont"]        = Right $ Continue
-parse ("fst" :: rest) = map First $ parse rest
-parse ("snd" :: rest) = map Second $ parse rest
-parse ["help"]        = Left usage
-parse other           = Left $ "!! '" ++ unwords other ++ "' is not a valid command"
+parse ["change", val] with (Type.parse val)
+  parse ["change", val] | Nothing          = Left $ "!! Error parsing value '" ++ val ++ "'"
+  parse ["change", val] | (Just (ty ** v)) = Right $ Change {b = Basic ty} v
+parse ["clear"]                            = Right $ Clear
+parse ["cont"]                             = Right $ Continue
+parse ("fst" :: rest)                      = map First $ parse rest
+parse ("snd" :: rest)                      = map Second $ parse rest
+parse ["help"]                             = Left usage
+parse []                                   = Left ""
+parse other                                = Left $ "!! '" ++ unwords other ++ "' is not a valid command, type 'help' for more info"
