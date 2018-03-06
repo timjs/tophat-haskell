@@ -161,7 +161,7 @@ handle (Edit _) Clear state =
 handle (Edit {a} val) (Change {b} newVal) state with (decEq b a)
   handle (Edit _) (Change newVal) state | Yes Refl = ( Edit (Just newVal), state )
   handle (Edit val) _ state             | No _     = ( Edit val, state )
-handle Watch (Change {b} newVal) state with (decEq b INT)
+handle Watch (Change {b} newVal) state with (decEq b STATE)
   handle Watch (Change newVal) _ | Yes Refl = ( Watch, newVal )
   handle Watch (Change _) state  | No _     = ( Watch, state )
 -- FIXME: Should pass more unhandled events down or not...

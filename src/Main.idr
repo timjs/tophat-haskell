@@ -73,7 +73,7 @@ control = update <&> watch
 
 get : IO Event
 get = do
-    putStr "tasks> "
+    putStr "> "
     input <- getLine
     case parse (words input) of
         Right event => do
@@ -90,4 +90,4 @@ run task state = do
     run nextTask nextState
 
 main : IO ()
-main = uncurry run $ init parallelWatch (state 0)
+main = uncurry run $ init parallelStep (state 0)
