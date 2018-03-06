@@ -7,7 +7,8 @@ module Task.Type
 -- Type universe ---------------------------------------------------------------
 
 data BasicTy
-    = IntTy
+    = BoolTy
+    | IntTy
     | StringTy
 
 data Ty
@@ -16,6 +17,7 @@ data Ty
     | Basic BasicTy
 
 typeOfBasic : BasicTy -> Type
+typeOfBasic BoolTy   = Bool
 typeOfBasic IntTy    = Int
 typeOfBasic StringTy = String
 
@@ -36,10 +38,14 @@ Uninhabited (UnitTy = Basic b) where
 Uninhabited (PairTy x y = Basic b) where
     uninhabited Refl impossible
 
-Uninhabited (IntTy = StringTy) where
+Uninhabited (BoolTy = IntTy) where
     uninhabited Refl impossible
 
--- basic_neq : (contra : (a = b) -> Void) -> Dec (Basic a = Basic b)
+Uninhabited (BoolTy = StringTy) where
+    uninhabited Refl impossible
+
+Uninhabited (IntTy = StringTy) where
+    uninhabited Refl impossible
 
 basic_neq : (a = b -> Void) -> (Basic a = Basic b) -> Void
 basic_neq contra Refl = contra Refl
@@ -57,8 +63,13 @@ both_neq contra_x contra_y Refl = contra_x Refl
 -- Decidablility ---------------------------------------------------------------
 
 DecEq BasicTy where
+    decEq BoolTy   BoolTy   = Yes Refl
     decEq IntTy    IntTy    = Yes Refl
     decEq StringTy StringTy = Yes Refl
+    decEq BoolTy   IntTy    = No absurd
+    decEq IntTy    BoolTy   = No (negEqSym absurd)
+    decEq BoolTy   StringTy = No absurd
+    decEq StringTy BoolTy   = No (negEqSym absurd)
     decEq IntTy    StringTy = No absurd
     decEq StringTy IntTy    = No (negEqSym absurd)
 
