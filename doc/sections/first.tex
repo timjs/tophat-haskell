@@ -1,3 +1,35 @@
 % !TEX root=../main.tex
 
-Hello!
+In this section we present a first, simple system to model tasks.
+We just have:
+\begin{itemize}
+  \item sequential tasks ($t \Then e$)
+  \item parallel tasks ($t_1 \And t_2$)
+  \item editors with a value ($\square$) and without a value ($\boxtimes$)
+\end{itemize}
+That's all!
+
+Compared to previous attempts we:
+\begin{itemize}
+  \item don't have any stable/unstable values,
+    only editors that \emph{have} a value or \emph{don't have} a value;
+  \item \emph{no task ids} but events based on the \emph{structure} of the current task at hand;
+  \item a \emph{clear distinction} between the pure language and the (embedded) task language;
+  \item no explicit event handling for the end user, everything is build into the semantics;
+  \item a \enquote{big step} semantics for the core language (the pure $\lambda$-calculus),
+    \enquote{medium step} semantics to evaluate tasks till we need an event,
+    and a \enquote{small step} semantics handling user events.
+\end{itemize}
+
+In further chapters we will extend this with the ability to get and put data into shared stores
+and also watch their values change.
+
+The syntax of our language is as follows.
+
+\begin{tabular}{lRCLl}
+  Expressions
+    & e &::= & e_1\ e_2       & – application \\
+    &   &\mid& \{ e_1, e_2 \} & – pairs \\
+    &   &\mid& x              & – variables \\
+    &   &\mid& v              & – values \\
+\end{tabular}
