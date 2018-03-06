@@ -16,6 +16,13 @@
   {\ensuremath{\star}\marginnote{\ensuremath{\star}#1}}
 
 
+%% Blocks %%
+
+\newenvironment*{block}
+  {\bigskip}
+  {\bigskip}
+
+
 %% Column types %%
 
 \newcolumntype{L}{>{$}l<{$}}
@@ -33,6 +40,12 @@
 \let\at\cpageref
 
 
+%% Citations %%
+
+\let\cite\citep
+\let\textcite\citet
+
+
 %% Math %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% NOTE: change this to \emptyset when using a font that includes a nice standard emptyset
@@ -48,6 +61,16 @@
   {\{\!|}
 \newcommand*{\rrbrace}
   {|\!\}}
+
+
+%% Operators %%
+
+\let\lt<
+\let\gt>
+\let\eq\equiv
+
+\newcommand*{\pp}
+  {+\!\!+}
 
 
 %% Shortcuts %%
