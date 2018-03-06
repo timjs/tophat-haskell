@@ -9,52 +9,52 @@ import Task.Event
 
 -- Tests -----------------------------------------------------------------------
 
-int : Task INT
+int : Task (Basic IntTy)
 int = pure 42
 
-str : Task STRING
+str : Task (Basic StringTy)
 str = pure "Hello"
 
-ask : Int -> Task INT
+ask : Int -> Task (Basic IntTy)
 ask x = edit (Just x)
 
-inc : Int -> Task INT
+inc : Int -> Task (Basic IntTy)
 inc x = edit (Just $ x + 1)
 
-add : Int -> Int -> Task INT
+add : Int -> Int -> Task (Basic IntTy)
 add x y = edit (Just $ x + y)
 
-append : String -> String -> Task STRING
+append : String -> String -> Task (Basic StringTy)
 append x y = edit (Just $ x ++ y)
 
-pureStep : Task INT
+pureStep : Task (Basic IntTy)
 pureStep = do
     x <- int
     inc x
 
-oneStep : Task INT
+oneStep : Task (Basic IntTy)
 oneStep = do
     x <- ask 0
     inc x
 
-twoSteps : Task INT
+twoSteps : Task (Basic IntTy)
 twoSteps = do
     x <- ask 0
     y <- ask 0
     add x y
 
-parallel : Task (PAIR INT STRING)
+parallel : Task (PairTy (Basic IntTy) (Basic StringTy))
 parallel = edit (Just 1) <&> edit (Just "Hello")
 
-parallelStep : Task STRING
+parallelStep : Task (Basic StringTy)
 parallelStep = do
     ( n, m ) <- parallel
     edit (Just (unwords $ replicate (cast n) m))
 
-parallelWatch : Task (PAIR INT INT)
+parallelWatch : Task (PairTy (Basic IntTy) (Basic IntTy))
 parallelWatch = watch <&> watch
 
-update : Task UNIT
+update : Task UnitTy
 update = do
     x <- get
     y <- ask x
@@ -63,7 +63,7 @@ update = do
     y <- ask x
     put y
 
-control : Task (PAIR UNIT INT)
+control : Task (PairTy UnitTy (Basic IntTy))
 control = update <&> watch
 
 

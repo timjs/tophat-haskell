@@ -11,11 +11,11 @@ import Task.Event
 
 -- State --
 
-STATE : Ty
-STATE = INT
+StateTy : Ty
+StateTy = Basic IntTy
 
 State : Type
-State = typeOf STATE
+State = typeOf StateTy
 
 
 -- Tasks --
@@ -23,13 +23,13 @@ State = typeOf STATE
 data Task : Ty -> Type where
     -- Primitive combinators
     Seq   : Show (typeOf a) => Task a -> (typeOf a -> Task b) -> Task b
-    Par   : Show (typeOf a) => Show (typeOf b) => Task a -> Task b -> Task (PAIR a b)
+    Par   : Show (typeOf a) => Show (typeOf b) => Task a -> Task b -> Task (PairTy a b)
     -- User interaction
     Edit  : Maybe (typeOf a) -> Task a
-    Watch : Task STATE
+    Watch : Task StateTy
     -- Share interaction
-    Get   : Task STATE
-    Put   : typeOf STATE -> Task UNIT
+    Get   : Task StateTy
+    Put   : typeOf StateTy -> Task UnitTy
     -- Lifting
     Pure  : typeOf a -> Task a
 
@@ -43,22 +43,22 @@ pure = Pure
 (>>=) = Seq
 
 infixl 3 <&>
-(<&>) : Show (typeOf a) => Show (typeOf b) => Task a -> Task b -> Task (PAIR a b)
+(<&>) : Show (typeOf a) => Show (typeOf b) => Task a -> Task b -> Task (PairTy a b)
 (<&>) = Par
 
 edit : Maybe (typeOf a) -> Task a
 edit = Edit
 
-watch : Task INT
+watch : Task (Basic IntTy)
 watch = Watch
 
-get : Task INT
+get : Task (Basic IntTy)
 get = Get
 
-put : typeOf INT -> Task UNIT
+put : typeOf (Basic IntTy) -> Task UnitTy
 put = Put
 
-unit : Task UNIT
+unit : Task UnitTy
 unit = Pure ()
 
 state : Int -> State
@@ -161,7 +161,7 @@ handle (Edit _) Clear state =
 handle (Edit {a} val) (Change {b} newVal) state with (decEq b a)
   handle (Edit _) (Change newVal) state | Yes Refl = ( Edit (Just newVal), state )
   handle (Edit val) _ state             | No _     = ( Edit val, state )
-handle Watch (Change {b} newVal) state with (decEq b STATE)
+handle Watch (Change {b} newVal) state with (decEq b StateTy)
   handle Watch (Change newVal) _ | Yes Refl = ( Watch, newVal )
   handle Watch (Change _) state  | No _     = ( Watch, state )
 -- FIXME: Should pass more unhandled events down or not...

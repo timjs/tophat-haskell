@@ -31,7 +31,7 @@ usage = unlines
 
 parse : List String -> Either String Event
 --FIXME: input of other types
-parse ["change", val] = Right $ Change {b = INT} (cast val)
+parse ["change", val] = Right $ Change {b = Basic IntTy} (cast val)
 parse ["clear"]       = Right $ Clear
 parse ["cont"]        = Right $ Continue
 parse ("fst" :: rest) = map First $ parse rest
