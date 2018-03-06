@@ -147,13 +147,13 @@ handle (Seq left cont) event state =
 handle (Par left right) (First event) state =
     -- We pass on the event to left
     let
-    ( newLeft, newState )    = handle left event state
+    ( newLeft, newState ) = handle left event state
     in
     ( Par newLeft right, newState )
 handle (Par left right) (Second event) state =
     -- We pass on the event to right
     let
-    ( newRight, newState )    = handle right event state
+    ( newRight, newState ) = handle right event state
     in
     ( Par left newRight, newState )
 handle (Edit _) Clear state =
