@@ -11,50 +11,72 @@ import Task.Event
 
 -- State --
 
+StateTy : Ty
+StateTy = Basic IntTy
+
 State : Type
-State = Int
+State = typeOf StateTy
+
 
 -- Tasks --
 
 data Task : Ty -> Type where
     -- Primitive combinators
-    Seq  : Show (valueOf a) => Task a -> (valueOf a -> Task b) -> Task b
-    Par  : Show (valueOf a) => Show (valueOf b) => Task a -> Task b -> Task (PAIR a b)
+    Seq   : Show (typeOf a) => Task a -> (typeOf a -> Task b) -> Task b
+    Par   : Show (typeOf a) => Show (typeOf b) => Task a -> Task b -> Task (PairTy a b)
     -- User interaction
-    Edit : Maybe (valueOf a) -> Task a
+    Edit  : Maybe (typeOf a) -> Task a
+    Watch : Task StateTy
     -- Share interaction
-    Get  : Task INT
-    Put  : valueOf INT -> Task UNIT
+    Get   : Task StateTy
+    Put   : typeOf StateTy -> Task UnitTy
     -- Lifting
-    Pure : valueOf a -> Task a
+    Pure  : typeOf a -> Task a
 
 
 -- Public interface ------------------------------------------------------------
 
-pure : (valueOf a) -> Task a
+pure : (typeOf a) -> Task a
 pure = Pure
 
-(>>=) : Show (valueOf a) => Task a -> (valueOf a -> Task b) -> Task b
+(>>=) : Show (typeOf a) => Task a -> (typeOf a -> Task b) -> Task b
 (>>=) = Seq
 
 infixl 3 <&>
-(<&>) : Show (valueOf a) => Show (valueOf b) => Task a -> Task b -> Task (PAIR a b)
+(<&>) : Show (typeOf a) => Show (typeOf b) => Task a -> Task b -> Task (PairTy a b)
 (<&>) = Par
 
-edit : Maybe (valueOf a) -> Task a
+edit : Maybe (typeOf a) -> Task a
 edit = Edit
 
-get : Task INT
+watch : Task (Basic IntTy)
+watch = Watch
+
+get : Task (Basic IntTy)
 get = Get
 
-put : valueOf INT -> Task UNIT
+put : typeOf (Basic IntTy) -> Task UnitTy
 put = Put
 
-unit : Task UNIT
+unit : Task UnitTy
 unit = Pure ()
 
 state : Int -> State
 state = id
+
+
+-- Applicative and Functor --
+
+-- (<*>) : Show (typeOf a) => Show (typeOf b) => Task (FUN a b) -> Task a -> Task b
+-- (<*>) t1 t2 = do
+--     f <- t1
+--     x <- t2
+--     pure $ f x
+
+(<$>) : Show (typeOf a) => (typeOf a -> typeOf b) -> Task a -> Task b
+(<$>) f t = do
+    x <- t
+    pure $ f x
 
 
 -- Showing ---------------------------------------------------------------------
@@ -63,22 +85,24 @@ state = id
     show Nothing  = "<no value>"
     show (Just x) = show x
 
-(Show (valueOf a)) => Show (Task a) where
-    show (Seq left cont)          = show left ++ " => <cont>"
-    show (Par left right)         = "(" ++ show left ++ " | " ++ show right ++ ")"
-    show (Edit val)               = "edit " ++ show @{editor_value} val
-    show Get                      = "get"
-    show (Put x)                  = "put " ++ show x ++ ""
-    show (Pure x)                 = show x
+ui : Show (typeOf a) => Task a -> State -> String
+ui (Seq left cont)  s = ui left s ++ " => <cont>"
+ui (Par left right) s = "(" ++ ui left s ++ " | " ++ ui right s ++ ")"
+ui (Edit val)       _ = "edit " ++ show @{editor_value} val
+ui Watch            s = "watch " ++ show s
+ui Get              _ = "get"
+ui (Put x)          _ = "put " ++ show x ++ ""
+ui (Pure x)         _ = show x
 
 
 -- Semantics -------------------------------------------------------------------
 
-value : Task a -> Maybe (valueOf a)
-value (Pure x)         = Just x
-value (Edit val)       = val
-value (Par left right) = Just (!(value left), !(value right))
-value _                = Nothing
+value : Task a -> State -> Maybe (typeOf a)
+value (Pure x)         _ = Just x
+value (Edit val)       _ = val
+value Watch            s = Just s
+value (Par left right) s = Just (!(value left s), !(value right s))
+value _                _ = Nothing
 
 eval : Task a -> State -> ( Task a, State )
 -- Combinators
@@ -108,36 +132,38 @@ eval task state =
     ( task, state )
 
 handle : Task a -> Event -> State -> ( Task a, State )
-handle task@(Seq left cont) Continue state =
+handle task@(Seq left cont) (Here Continue) state =
     -- If we pressed Continue...
-    case value left of
+    case value left state of
         -- ...and we have a value: we get on with the continuation
         Just v  => eval (cont v) state
         -- ...without a value: we stay put and have to wait for a value to appear.
         Nothing => ( task, state )
-handle task@(Seq left cont) event state =
+handle (Seq left cont) event state =
     let
     ( newLeft, newState ) = handle left event state
     in
     ( Seq newLeft cont, newState )
-handle task@(Par left right) (First event) state =
+handle (Par left right) (ToLeft event) state =
     -- We pass on the event to left
     let
-    ( newLeft, newState )    = handle left event state
+    ( newLeft, newState ) = handle left event state
     in
     ( Par newLeft right, newState )
-handle task@(Par left right) (Second event) state =
+handle (Par left right) (ToRight event) state =
     -- We pass on the event to right
     let
-    ( newRight, newState )    = handle right event state
+    ( newRight, newState ) = handle right event state
     in
     ( Par left newRight, newState )
-handle task@(Edit {a} _) (Change {b} newVal) state =
-    case decEq b a of
-        Yes prf =>
-            ( Edit (coerce prf newVal), state )
-        No _ =>
-            ( task, state )
+handle (Edit _) (Here Clear) state =
+    ( Edit Nothing, state )
+handle (Edit {a} val) (Here (Change {b} newVal)) state with (decEq b a)
+  handle (Edit _) (Here (Change newVal)) state | Yes Refl = ( Edit (Just newVal), state )
+  handle (Edit val) _ state                    | No _     = ( Edit val, state )
+handle Watch (Here (Change {b} newVal)) state with (decEq b StateTy)
+  handle Watch (Here (Change newVal)) _ | Yes Refl = ( Watch, newVal )
+  handle Watch _ state                  | No _     = ( Watch, state )
 -- FIXME: Should pass more unhandled events down or not...
 handle task _ state =
     ( task, state )

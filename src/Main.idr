@@ -9,38 +9,62 @@ import Task.Event
 
 -- Tests -----------------------------------------------------------------------
 
-int : Task INT
+int : Task (Basic IntTy)
 int = pure 42
 
-str : Task STRING
+str : Task (Basic StringTy)
 str = pure "Hello"
 
-edit : Task INT
-edit = edit (Just 0)
+ask : Int -> Task (Basic IntTy)
+ask x = edit (Just x)
 
-add : Int -> Task INT
-add x = edit (Just $ x + 1)
+inc : Int -> Task (Basic IntTy)
+inc x = edit (Just $ x + 1)
 
-append : String -> String -> Task STRING
+add : Int -> Int -> Task (Basic IntTy)
+add x y = edit (Just $ x + y)
+
+append : String -> String -> Task (Basic StringTy)
 append x y = edit (Just $ x ++ y)
 
-pureStep : Task INT
+pureStep : Task (Basic IntTy)
 pureStep = do
     x <- int
-    add x
+    inc x
 
-oneStep : Task INT
+oneStep : Task (Basic IntTy)
 oneStep = do
-    x <- edit
-    add x
+    x <- ask 0
+    inc x
 
-parallel : Task (PAIR INT STRING)
+twoSteps : Task (Basic IntTy)
+twoSteps = do
+    x <- ask 0
+    y <- ask 0
+    add x y
+
+parallel : Task (PairTy (Basic IntTy) (Basic StringTy))
 parallel = edit (Just 1) <&> edit (Just "Hello")
 
-parallelStep : Task STRING
+parallelStep : Task (Basic StringTy)
 parallelStep = do
     ( n, m ) <- parallel
     edit (Just (unwords $ replicate (cast n) m))
+
+parallelWatch : Task (PairTy (Basic IntTy) (Basic IntTy))
+parallelWatch = watch <&> watch
+
+update : Task UnitTy
+update = do
+    x <- get
+    y <- ask x
+    put y
+    x <- get
+    y <- ask x
+    put y
+
+control : Task (PairTy UnitTy (Basic IntTy))
+control = update <&> watch
 
 
 -- Running ---------------------------------------------------------------------
@@ -49,7 +73,7 @@ parallelStep = do
 
 get : IO Event
 get = do
-    putStr "tasks> "
+    putStr "> "
     input <- getLine
     case parse (words input) of
         Right event => do
@@ -58,9 +82,9 @@ get = do
             putStrLn msg
             get
 
-run : Show (valueOf a) => Task a -> State -> IO ()
+run : Show (typeOf a) => Task a -> State -> IO ()
 run task state = do
-    putStrLn $ show task
+    putStrLn $ ui task state
     event <- get
     let ( nextTask, nextState ) = handle task event state
     run nextTask nextState
