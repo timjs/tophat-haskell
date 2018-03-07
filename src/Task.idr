@@ -120,8 +120,7 @@ eval (Seq left cont) state =
     ( newLeft, newState ) = eval left state
     in
     case newLeft of
-        --FIXME: maybe add a eval here
-        Pure a => ( cont a, newState )
+        Pure a => eval (cont a) newState
         _      => ( Seq newLeft cont, newState )
 eval (Par left right) state =
     let
@@ -151,6 +150,8 @@ handle task@(Seq left cont) (Here Continue) state =
 handle (Seq left cont) event state =
     let
     ( newLeft, newState ) = handle left event state
+    --FIXME: maybe add a eval here
+    -- ( newerLeft, newerState ) = eval newLeft newState
     in
     ( Seq newLeft cont, newState )
 handle (Par left right) (ToLeft event) state =
