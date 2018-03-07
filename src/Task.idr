@@ -132,7 +132,7 @@ eval task state =
     ( task, state )
 
 handle : Task a -> Event -> State -> ( Task a, State )
-handle task@(Seq left cont) Continue state =
+handle task@(Seq left cont) (Here Continue) state =
     -- If we pressed Continue...
     case value left state of
         -- ...and we have a value: we get on with the continuation
@@ -144,26 +144,26 @@ handle (Seq left cont) event state =
     ( newLeft, newState ) = handle left event state
     in
     ( Seq newLeft cont, newState )
-handle (Par left right) (First event) state =
+handle (Par left right) (ToLeft event) state =
     -- We pass on the event to left
     let
     ( newLeft, newState ) = handle left event state
     in
     ( Par newLeft right, newState )
-handle (Par left right) (Second event) state =
+handle (Par left right) (ToRight event) state =
     -- We pass on the event to right
     let
     ( newRight, newState ) = handle right event state
     in
     ( Par left newRight, newState )
-handle (Edit _) Clear state =
+handle (Edit _) (Here Clear) state =
     ( Edit Nothing, state )
-handle (Edit {a} val) (Change {b} newVal) state with (decEq b a)
-  handle (Edit _) (Change newVal) state | Yes Refl = ( Edit (Just newVal), state )
-  handle (Edit val) _ state             | No _     = ( Edit val, state )
-handle Watch (Change {b} newVal) state with (decEq b StateTy)
-  handle Watch (Change newVal) _ | Yes Refl = ( Watch, newVal )
-  handle Watch (Change _) state  | No _     = ( Watch, state )
+handle (Edit {a} val) (Here (Change {b} newVal)) state with (decEq b a)
+  handle (Edit _) (Here (Change newVal)) state | Yes Refl = ( Edit (Just newVal), state )
+  handle (Edit val) _ state                    | No _     = ( Edit val, state )
+handle Watch (Here (Change {b} newVal)) state with (decEq b StateTy)
+  handle Watch (Here (Change newVal)) _ | Yes Refl = ( Watch, newVal )
+  handle Watch _ state                  | No _     = ( Watch, state )
 -- FIXME: Should pass more unhandled events down or not...
 handle task _ state =
     ( task, state )
