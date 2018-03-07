@@ -1,0 +1,93 @@
+% !TEX root=main.tex
+
+
+%% Helpers %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\let\newoperator\DeclareMathOperator
+
+
+%% Text %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand*{\alert}[1]
+  {\textbf{#1}}
+\newcommand*{\enquote}[1]
+  {``#1''}
+\newcommand*{\todo}[1]
+  {\ensuremath{\star}\marginnote{\ensuremath{\star}#1}}
+
+
+%% Blocks %%
+
+\newenvironment*{block}
+  {\bigskip}
+  {\bigskip}
+
+
+%% Column types %%
+
+\newcolumntype{L}{>{$}l<{$}}
+\newcolumntype{C}{>{$}c<{$}}
+\newcolumntype{R}{>{$}r<{$}}
+\newcolumntype{T}{>{\ttfamily}l}
+\newcolumntype{S}{>{\sffamily}l}
+
+
+%% References %%
+%% NOTE: requires `cleveref`
+
+\let\see\cref
+\let\See\Cref
+\let\at\cpageref
+
+
+%% Citations %%
+
+\let\cite\citep
+\let\textcite\citet
+
+
+%% Math %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% NOTE: change this to \emptyset when using a font that includes a nice standard emptyset
+\let\nothing\varnothing
+
+
+%% Braces %%
+
+\let\<\langle
+\let\>\rangle
+
+\newcommand*{\llbrace}
+  {\{\!|}
+\newcommand*{\rrbrace}
+  {|\!\}}
+
+
+%% Operators %%
+
+\let\lt<
+\let\gt>
+\let\eq\equiv
+
+\newcommand*{\pp}
+  {+\!\!+}
+
+
+%% Shortcuts %%
+
+\newcommand*{\powerset}
+  {\mathcal{P}}
+
+\newcommand*{\NN}{\mathbb{N}}
+\newcommand*{\ZZ}{\mathbb{Z}}
+\newcommand*{\RR}{\mathbb{R}}
+\newcommand*{\CC}{\mathbb{C}}
+
+\newcommand*{\LL}{\mathbb{L}}
+\newcommand*{\UU}{\mathbb{U}}
+\newcommand*{\BB}{\mathbb{B}}
+\renewcommand*{\SS}{\mathbb{S}}
+
+\let\to\rightarrow
+\let\implies\Rightarrow
+\let\infers\vdash

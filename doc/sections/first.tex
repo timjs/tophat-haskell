@@ -1,0 +1,93 @@
+% !TEX root=../main.tex
+
+In this section we present a first, simple system to model tasks.
+We just have:
+\begin{itemize}
+  \item sequential tasks ($t \Then e$)
+  \item parallel tasks ($t_1 \And t_2$)
+  \item editors with a value ($\Edit v$) and without a value ($\Empty$)
+\end{itemize}
+That's all!
+
+Compared to previous attempts we:
+\begin{itemize}
+  \item don't have any stable/unstable values,
+    only editors that \emph{have} a value or \emph{don't have} a value;
+  \item \emph{no task ids} but events based on the \emph{structure} of the current task at hand;
+  \item a \emph{clear distinction} between the pure language and the (embedded) task language;
+  \item no explicit event handling for the end user, everything is build into the semantics;
+  \item a \enquote{big step} semantics for the core language (the pure $\lambda$-calculus),
+    \enquote{medium step} semantics to evaluate tasks till we need an event,
+    and a \enquote{small step} semantics handling user events.
+\end{itemize}
+
+In this document we will describe our system adding features step-by-step.
+In further chapters we will extend this with the ability to get and put data into shared stores
+and also watch their values change.
+
+
+\section{Our base language}
+
+Let us start with defining our base lanuage.
+We will start with a simple $\lambda$-calculus
+and embed tasks in it.
+This means we can make use of all the power of our base language in a task.
+Because all the constructs in our base language are standard,
+we will not define typing rules and semantic rules for them explicitly.
+For this we refer to standard work like \textcite{Pierce:2002tp}.
+
+\begin{block}
+  \begin{tabular}{lRCLl}
+    Expressions
+      & e &::= & e_1\ e_2       & – application \\
+      &   &\mid& x              & – variables \\
+      &   &\mid& v              & – values \\
+    Values
+      & v &::= & \lambda x.\ e  & – abstraction \\
+      &   &\mid& B              & – booleans \\
+      &   &\mid& I              & – integers \\
+      &   &\mid& S              & – strings \\
+      &   &\mid& t              & – task \\
+    Tasks
+      & t &::= & `e             & – pure expression \\
+  \end{tabular}
+\end{block}
+
+Expressions are just applications, variables or values.
+Lambda abstractions are values, as some basic types like booleans, integers and strings.
+This is the place we embed tasks in our language.
+For now, the only way to create a task is by \emph{quoting} an expression.
+This means we can now, for example, create very dull tasks containing values like $`1$,
+which is a task returning $1$ and $`"\textit{Hello}"$,
+a task always returning the string $"\textit{Hello}"$.
+
+As you may already have noticed, we will use double quotation marks ($""$) to denote strings.
+The boolean values are $\True$ and $\False$
+and integers are denoted by their decimal.
+We will also make freely use of arithmetic operations like $+$, $-$, $\times$,
+comparison operators like $\ge$, $\eq$, $\not\lt$,
+and appending strings with $\pp$.
+
+
+\subsection{Typing}
+
+\todo{Define the typing rules for our base language}
+
+
+\subsection{Semantics}
+
+For the semantics we define two relations.
+The first one are big step semantics for our base language,
+denoted by $e \Downarrow v$, turning an expression $e$ into a value $v$.
+These are just the standard big step semantics as for example described by \textcite{Pierce:2002tp}.
+
+
+\section{Just an editor}
+
+Tasks are all about interaction and till now we don't have any interaction with the end user at all.
+
+Let us start with the most simple model for tasks: an editor.
+Editors let us view and change a value in the system.
+However, an editor can also have no value at all.
+This is the case when the user clears the value.
+Because we strive to a fully typed system, editors are also typed.
