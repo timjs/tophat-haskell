@@ -21,6 +21,8 @@ State = typeOf StateTy
 -- Tasks --
 
 data Task : Ty -> Type where
+    -- Lifting
+    Pure  : typeOf a -> Task a
     -- Primitive combinators
     Seq   : Show (typeOf a) => Task a -> (typeOf a -> Task b) -> Task b
     Par   : Show (typeOf a) => Show (typeOf b) => Task a -> Task b -> Task (PairTy a b)
@@ -30,8 +32,6 @@ data Task : Ty -> Type where
     -- Share interaction
     Get   : Task StateTy
     Put   : typeOf StateTy -> Task UnitTy
-    -- Lifting
-    Pure  : typeOf a -> Task a
 
 
 -- Public interface ------------------------------------------------------------
@@ -86,13 +86,13 @@ state = id
     show (Just x) = show x
 
 ui : Show (typeOf a) => Task a -> State -> String
+ui (Pure x)         _ = show x
 ui (Seq left cont)  s = ui left s ++ " => <cont>"
 ui (Par left right) s = "(" ++ ui left s ++ " | " ++ ui right s ++ ")"
 ui (Edit val)       _ = "edit " ++ show @{editor_value} val
 ui Watch            s = "watch " ++ show s
 ui Get              _ = "get"
 ui (Put x)          _ = "put " ++ show x ++ ""
-ui (Pure x)         _ = show x
 
 
 -- Semantics -------------------------------------------------------------------
@@ -103,6 +103,15 @@ value (Edit val)       _ = val
 value Watch            s = Just s
 value (Par left right) s = Just (!(value left s), !(value right s))
 value _                _ = Nothing
+
+stable : Task a -> Bool
+stable (Pure x)         = True
+stable (Seq left cont)  = stable left
+stable (Par left right) = stable left && stable right
+stable (Edit x)         = False
+stable Watch            = False
+stable Get              = True
+stable (Put x)          = True
 
 eval : Task a -> State -> ( Task a, State )
 -- Combinators
