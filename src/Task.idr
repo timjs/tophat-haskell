@@ -116,30 +116,30 @@ value Watch            s = Just s
 value (Par left right) s = Just (!(value left s), !(value right s))
 value _                _ = Nothing
 
-eval : Task a -> State -> ( Task a, State )
+normalise : Task a -> State -> ( Task a, State )
 -- Combinators
-eval (Seq left cont) state =
+normalise (Seq left cont) state =
     let
-    ( newLeft, newState ) = eval left state
+    ( newLeft, newState ) = normalise left state
     in
     case newLeft of
-        Pure a => eval (cont a) newState
+        Pure a => normalise (cont a) newState
         _      => ( Seq newLeft cont, newState )
-eval (Par left right) state =
+normalise (Par left right) state =
     let
-    ( newLeft, newState )    = eval left state
-    ( newRight, newerState ) = eval right newState
+    ( newLeft, newState )    = normalise left state
+    ( newRight, newerState ) = normalise right newState
     in
     case ( newLeft, newRight ) of
         ( Pure a, Pure b )    => ( Pure ( a, b ), newerState )
         ( newLeft, newRight ) => ( Par newLeft newRight, newerState )
 -- State
-eval (Get) state =
+normalise (Get) state =
     ( Pure state, state )
-eval (Put x) state =
+normalise (Put x) state =
     ( unit, x )
 -- Values
-eval task state =
+normalise task state =
     ( task, state )
 
 handle : Task a -> Event -> State -> ( Task a, State )
@@ -147,14 +147,14 @@ handle task@(Seq left cont) (Here Continue) state =
     -- If we pressed Continue...
     case value left state of
         -- ...and we have a value: we get on with the continuation
-        Just v  => eval (cont v) state
+        Just v  => normalise (cont v) state
         -- ...without a value: we stay put and have to wait for a value to appear.
         Nothing => ( task, state )
 handle (Seq left cont) event state =
     let
     ( newLeft, newState ) = handle left event state
-    --FIXME: maybe add a eval here
-    -- ( newerLeft, newerState ) = eval newLeft newState
+    --FIXME: maybe add a normalise here
+    -- ( newerLeft, newerState ) = normalise newLeft newState
     in
     ( Seq newLeft cont, newState )
 handle (Par left right) (ToLeft event) state =
@@ -181,8 +181,8 @@ handle Watch (Here (Change {b} newVal)) state with (decEq b StateTy)
 handle task _ state =
     ( task, state )
     -- Case Pure: evaluation terminated
-    -- Cases Get and Put: this case can't happen, it is already evaluated by `eval`
+    -- Cases Get and Put: this case can't happen, it is already evaluated by `normalise`
     -- FIXME: express this in the type system...
 
 init : Task a -> State -> ( Task a, State )
-init = eval
+init = normalise
