@@ -24,7 +24,7 @@ data Task : Ty -> Type where
     -- Lifting
     Pure  : (x : typeOf a) -> Task a
     -- Primitive combinators
-    Seq   : Show (typeOf a) => (left : Task a) -> (next : typeOf a -> Task b) -> Task b
+    Seq   : Show (typeOf a) => (this : Task a) -> (next : typeOf a -> Task b) -> Task b
     Par   : Show (typeOf a) => Show (typeOf b) => (left : Task a) -> (right : Task b) -> Task (PairTy a b)
     -- User interaction
     Edit  : (val : Maybe (typeOf a)) -> Task a
@@ -87,7 +87,7 @@ state = id
 
 ui : Show (typeOf a) => Task a -> State -> String
 ui (Pure x)         _ = "pure " ++ show x
-ui (Seq left cont)  s = ui left s ++ " => <cont>"
+ui (Seq this cont)  s = ui this s ++ " => <cont>"
 ui (Par left right) s = "(" ++ ui left s ++ " | " ++ ui right s ++ ")"
 ui (Edit val)       _ = "edit " ++ show @{editor_value} val
 ui Watch            s = "watch " ++ show s
@@ -99,7 +99,7 @@ ui (Put x)          _ = "put " ++ show x ++ ""
 
 isStable : Task a -> Bool
 isStable (Pure x)         = True
-isStable (Seq left cont)  = isStable left
+isStable (Seq this cont)  = isStable this
 isStable (Par left right) = isStable left && isStable right
 isStable (Edit x)         = False
 isStable Watch            = False
@@ -118,13 +118,13 @@ value _                _ = Nothing
 
 normalise : Task a -> State -> ( Task a, State )
 -- Combinators
-normalise (Seq left cont) state =
+normalise (Seq this cont) state =
     let
-    ( newLeft, newState ) = normalise left state
+    ( newThis, newState ) = normalise this state
     in
-    case newLeft of
+    case newThis of
         Pure a => normalise (cont a) newState
-        _      => ( Seq newLeft cont, newState )
+        _      => ( Seq newThis cont, newState )
 normalise (Par left right) state =
     let
     ( newLeft, newState )    = normalise left state
@@ -143,20 +143,20 @@ normalise task state =
     ( task, state )
 
 handle : Task a -> Event -> State -> ( Task a, State )
-handle task@(Seq left cont) (Here Continue) state =
+handle task@(Seq this cont) (Here Continue) state =
     -- If we pressed Continue...
-    case value left state of
+    case value this state of
         -- ...and we have a value: we get on with the continuation
         Just v  => normalise (cont v) state
         -- ...without a value: we stay put and have to wait for a value to appear.
         Nothing => ( task, state )
-handle (Seq left cont) event state =
+handle (Seq this cont) event state =
     let
-    ( newLeft, newState ) = handle left event state
+    ( newThis, newState ) = handle this event state
     --FIXME: maybe add a normalise here
-    -- ( newerLeft, newerState ) = normalise newLeft newState
+    -- ( newerThis, newerState ) = normalise newThis newState
     in
-    ( Seq newLeft cont, newState )
+    ( Seq newThis cont, newState )
 handle (Par left right) (ToLeft event) state =
     -- We pass on the event to left
     let
