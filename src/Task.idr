@@ -22,16 +22,16 @@ State = typeOf StateTy
 
 data Task : Ty -> Type where
     -- Lifting
-    Pure  : typeOf a -> Task a
+    Pure  : (x : typeOf a) -> Task a
     -- Primitive combinators
-    Seq   : Show (typeOf a) => Task a -> (typeOf a -> Task b) -> Task b
-    Par   : Show (typeOf a) => Show (typeOf b) => Task a -> Task b -> Task (PairTy a b)
+    Seq   : Show (typeOf a) => (left : Task a) -> (next : typeOf a -> Task b) -> Task b
+    Par   : Show (typeOf a) => Show (typeOf b) => (left : Task a) -> (right : Task b) -> Task (PairTy a b)
     -- User interaction
-    Edit  : Maybe (typeOf a) -> Task a
+    Edit  : (val : Maybe (typeOf a)) -> Task a
     Watch : Task StateTy
     -- Share interaction
     Get   : Task StateTy
-    Put   : typeOf StateTy -> Task UnitTy
+    Put   : (x : typeOf StateTy) -> Task UnitTy
 
 
 -- Public interface ------------------------------------------------------------
