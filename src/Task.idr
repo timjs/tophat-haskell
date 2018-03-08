@@ -86,7 +86,7 @@ state = id
     show (Just x) = show x
 
 ui : Show (typeOf a) => Task a -> State -> String
-ui (Pure x)         _ = show x
+ui (Pure x)         _ = "pure " ++ show x
 ui (Seq left cont)  s = ui left s ++ " => <cont>"
 ui (Par left right) s = "(" ++ ui left s ++ " | " ++ ui right s ++ ")"
 ui (Edit val)       _ = "edit " ++ show @{editor_value} val
