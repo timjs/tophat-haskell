@@ -95,6 +95,18 @@ ui Get              _ = "get"
 ui (Put x)          _ = "put " ++ show x ++ ""
 
 
+-- Predicates ------------------------------------------------------------------
+
+isStable : Task a -> Bool
+isStable (Pure x)         = True
+isStable (Seq left cont)  = isStable left
+isStable (Par left right) = isStable left && isStable right
+isStable (Edit x)         = False
+isStable Watch            = False
+isStable Get              = True
+isStable (Put x)          = True
+
+
 -- Semantics -------------------------------------------------------------------
 
 value : Task a -> State -> Maybe (typeOf a)
@@ -103,15 +115,6 @@ value (Edit val)       _ = val
 value Watch            s = Just s
 value (Par left right) s = Just (!(value left s), !(value right s))
 value _                _ = Nothing
-
-stable : Task a -> Bool
-stable (Pure x)         = True
-stable (Seq left cont)  = stable left
-stable (Par left right) = stable left && stable right
-stable (Edit x)         = False
-stable Watch            = False
-stable Get              = True
-stable (Put x)          = True
 
 eval : Task a -> State -> ( Task a, State )
 -- Combinators
