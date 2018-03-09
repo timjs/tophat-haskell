@@ -8,19 +8,34 @@
 \usepackage{underscore}
 
 
-%% Encoding %%
-
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-
-
 %% Fonts %%
 
-% \usepackage{tgpagella}
-% \usepackage{lucidabr}
-\usepackage{libertine}
-\usepackage[varqu]{zi4}
-\usepackage[libertine]{newtxmath}
+\ifxetex
+
+  \usepackage{fontenc}
+  \setmainfont{Bembo Std}
+
+  \newcommand{\textls}[2][5]{%
+    \begingroup\addfontfeatures{LetterSpace=#1}#2\endgroup
+  }
+  \renewcommand{\allcapsspacing}[1]{\textls[15]{#1}}
+  \renewcommand{\smallcapsspacing}[1]{\textls[10]{#1}}
+  \renewcommand{\allcaps}[1]{\textls[15]{\MakeTextUppercase{#1}}}
+  \renewcommand{\smallcaps}[1]{\smallcapsspacing{\scshape\MakeTextLowercase{#1}}}
+  \renewcommand{\textsc}[1]{\smallcapsspacing{\textsmallcaps{#1}}}
+
+\else
+
+  \usepackage[utf8]{inputenc}
+  \usepackage[T1]{fontenc}
+
+  % \usepackage{tgpagella}
+  % \usepackage{lucidabr}
+  \usepackage{libertine}
+  \usepackage[varqu]{zi4}
+  \usepackage[libertine]{newtxmath}
+
+\fi
 
 
 %% Layout %%
