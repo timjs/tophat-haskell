@@ -16,14 +16,40 @@
   {\ensuremath{\star}\marginnote{\ensuremath{\star}#1}}
 
 
+%% Lists %%
+%% NOTE: requires `paralist`
+
+%% Use compact lists by default
+\renewenvironment{itemize}
+  {\begin{compactitem}}
+  {\end{compactitem}}
+\renewenvironment{enumerate}
+  {\begin{compactenum}}
+  {\end{compactenum}}
+\renewenvironment{description}
+  {\begin{compactdesc}}
+  {\end{compactdesc}}
+%% Define starred versions as in-paragraph-lists
+\newenvironment{itemize*}
+  {\begin{inparitem}}
+  {\end{inparitem}}
+\newenvironment{enumerate*}
+  {\begin{inparenum}}
+  {\end{inparenum}}
+\newenvironment{description*}
+  {\begin{inpardesc}}
+  {\end{inpardesc}}
+
+
 %% Blocks %%
 
-\newenvironment*{block}
-  {\bigskip}
-  {\bigskip}
+\newenvironment{block}
+  {\smallskip}
+  {\smallskip}
 
 
 %% Column types %%
+%% NOTE: requires `array`
 
 \newcolumntype{L}{>{$}l<{$}}
 \newcolumntype{C}{>{$}c<{$}}
@@ -41,6 +67,7 @@
 
 
 %% Citations %%
+%% NOTE: requires `natbib`
 
 \let\cite\citep
 \let\textcite\citet
