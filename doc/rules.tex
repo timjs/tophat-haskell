@@ -1,0 +1,59 @@
+% !TEX root=main.tex
+
+
+%% Normalisation %%
+
+\newcommand*{\NPure}
+  {\inferrule*[lab=N-Pure]
+    { }
+    {`v, s \downto `v, s}}
+
+\newcommand*{\NSeqEval}
+  {\inferrule*[lab=N-SeqEval,right={$t_1' \neq `v$}]
+    {t_1, s \downto t_1', s'}
+    {t_1 \Then e, s \downto t_1' \Then e, s'}}
+
+\newcommand*{\NSeq}
+  {\inferrule*[lab=N-Seq,right={$t_1' = `v$}]
+    {t_1, s \downto t_1', s'   \\
+     e\ v \Downarrow t_2       \\
+     t_2, s' \downto t_2', s'' }
+    {t_1 \Then e, s \downto t_2', s''}}
+
+\newcommand*{\NAndEval}
+  {\inferrule*[lab=N-AndEval,right={$t_1' \neq `v_1 \land t_2' \neq `v_2$}]
+    {t_1, s  \downto t_1', s'  \\
+     t_2, s' \downto t_2', s'' }
+    {t_1 \And t_2, s \downto t_1' \And t_2', s}}
+
+\newcommand*{\NAnd}
+  {\inferrule*[lab=N-And,right={$t_1' = `v_1 \land t_2' = `v_2$}]
+    {t_1, s  \downto t_1', s'  \\
+     t_2, s' \downto t_2', s'' }
+    {t_1 \And t_2, s \downto \{`v_1, `v_2\}, s}}
+
+\newcommand*{\NOrEval}
+  {\inferrule*[lab=N-OrEval]%,right={$t_1' \neq `v_1 \land t_2' \neq `v_2$}]
+    {t_1, s  \downto t_1', s'  \\
+     t_2, s' \downto t_2', s'' }
+    {t_1 \Or t_2, s \downto t_1' \Or t_2', s}}
+
+\newcommand*{\NEdit}
+  {\inferrule*[lab=N-Edit]
+    { }
+    {\Edit v, s \downto \Edit v, s}}
+
+\newcommand*{\NEmpty}
+  {\inferrule*[lab=N-Empty]
+    { }
+    {\Empty, s \downto \Empty, s}}
+
+\newcommand*{\NWatch}
+  {\inferrule*[lab=N-Watch]
+    { }
+    {\Watch l, s \downto \Watch l, s}}
+
+\newcommand*{\NFail}
+  {\inferrule*[lab=N-Fail]
+    { }
+    {\Fail, s \downto \Fail, s}}
