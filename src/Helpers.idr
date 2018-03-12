@@ -1,9 +1,10 @@
 module Helpers
 
-import Data.String.Extra
-
 %default total
 %access export
+
+strSnoc : String -> Char -> String
+strSnoc s c = s ++ (singleton c)
 
 between : Char -> Char -> String -> String
 between a b str = strCons a (strSnoc str b)
