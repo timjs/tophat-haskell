@@ -24,7 +24,7 @@ data Task : Ty -> Type where
     -- Pure values
     Pure  : (x : typeOf a) -> Task a
     -- Primitive combinators
-    Seq   : Show (typeOf a) => (this : Task a) -> (next : typeOf a -> Task b) -> Task b
+    Then  : Show (typeOf a) => (this : Task a) -> (next : typeOf a -> Task b) -> Task b
     And   : Show (typeOf a) => Show (typeOf b) => (left : Task a) -> (right : Task b) -> Task (PairTy a b)
     Or    : Show (typeOf a) => (left : Task a) -> (right : Task a) -> Task a
     -- User interaction
@@ -46,7 +46,7 @@ fail : Task a
 fail = Fail
 
 (>>=) : Show (typeOf a) => Task a -> (typeOf a -> Task b) -> Task b
-(>>=) = Seq
+(>>=) = Then
 
 infixr 3 |*|
 (|*|) : Show (typeOf a) => Show (typeOf b) => Task a -> Task b -> Task (PairTy a b)
@@ -102,7 +102,7 @@ state = id
 ui : Show (typeOf a) => Task a -> State -> String
 ui (Pure x)         _ = "pure " ++ show x
 ui Fail             _ = "fail"
-ui (Seq this cont)  s = ui this s ++ " => <cont>"
+ui (Then this cont) s = ui this s ++ " => <cont>"
 ui (And left right) s = "(" ++ ui left s ++ " * " ++ ui right s ++ ")"
 ui (Or left right)  s = "(" ++ ui left s ++ " + " ++ ui right s ++ ")"
 ui (Edit val)       _ = "edit " ++ show @{editor_value} val
@@ -117,7 +117,7 @@ ui (Put x)          _ = "put " ++ show x ++ ""
 isStable : Task a -> Bool
 isStable (Pure x)         = True
 isStable Fail             = False
-isStable (Seq this cont)  = isStable this
+isStable (Then this cont) = isStable this
 isStable (And left right) = isStable left && isStable right
 isStable (Or left right)  = isStable left && isStable right
 isStable (Edit x)         = False
@@ -136,18 +136,18 @@ value (And left right) s = Just (!(value left s), !(value right s))
 -- The rest never has a value because:
 --   * `Or` needs to wait for an user choice
 --   * `Fail` runs forever and doesn't produce a value
---   * `Seq` transforms values to another type
+--   * `Then` transforms values to another type
 value _                _ = Nothing
 
 normalise : Task a -> State -> ( Task a, State )
 -- Combinators
-normalise (Seq this cont) state =
+normalise (Then this cont) state =
     let
     ( newThis, newState ) = normalise this state
     in
     case newThis of
         Pure a => normalise (cont a) newState
-        _      => ( Seq newThis cont, newState )
+        _      => ( Then newThis cont, newState )
 normalise (And left right) state =
     let
     ( newLeft, newState )    = normalise left state
@@ -172,21 +172,21 @@ normalise task state =
     ( task, state )
 
 handle : Task a -> Event -> State -> ( Task a, State )
-handle task@(Seq this cont) (Here Continue) state =
+handle task@(Then this cont) (Here Continue) state =
     -- If we pressed Continue...
     case value this state of
         -- ...and we have a value: we get on with the continuation
         Just v  => normalise (cont v) state
         -- ...without a value: we stay put and have to wait for a value to appear.
         Nothing => ( task, state )
-handle (Seq this cont) event state =
+handle (Then this cont) event state =
     -- Pass the event to this
     let
     ( newThis, newState ) = handle this event state
     --FIXME: maybe add a normalise here
     -- ( newerThis, newerState ) = normalise newThis newState
     in
-    ( Seq newThis cont, newState )
+    ( Then newThis cont, newState )
 handle (And left right) (ToLeft event) state =
     -- Pass the event to left
     let
