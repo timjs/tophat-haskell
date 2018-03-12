@@ -17,6 +17,11 @@ namespace Path
         | Second
         | Next Path
 
+    Show Path where
+        show First    = "fst"
+        show Second   = "snd"
+        show (Next p) = "snd " ++ show p
+
     parse : List String -> Either String Path
     parse ["fst"]         = pure First
     parse ["snd"]         = pure Second
@@ -37,6 +42,21 @@ data Event
     = ToLeft Event
     | Here Action
     | ToRight Event
+
+
+-- Showing ---------------------------------------------------------------------
+
+Show Action where
+    show (Change _)  = "change <val>"
+    show Clear       = "clear"
+    show (Choose p)  = "choose " ++ show p
+    show (Execute p) = "exec " ++ show p
+    show Continue    = "cont"
+
+Show Event where
+    show (ToLeft e)  = "left " ++ show e
+    show (Here e)    = show e
+    show (ToRight e) = "right " ++ show e
 
 
 -- Parsing ---------------------------------------------------------------------

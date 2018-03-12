@@ -146,6 +146,18 @@ value (And left right) s = Just (!(value left s), !(value right s))
 --   * `Then` transforms values to another type
 value _                _ = Nothing
 
+options : Task a -> State -> List Event
+options (Pure x)          _ = []
+options (Then this next)  s = Here Continue :: options this s
+options (When this next)  s = options this s
+options (And left right)  s = map ToLeft (options left s) ++ map ToRight (options right s)
+options (Or left right)   s = Here (Choose First) :: Here (Choose Second) :: map ToLeft (options left s) ++ map ToRight (options right s)
+options (Edit {a} val)    _ = [ Here (Change (Universe.defaultOf a)), Here Clear ]
+options Watch             _ = [ Here (Change (Universe.defaultOf StateTy)) ]
+options Fail              _ = []
+options Get               _ = []
+options (Put x)           _ = []
+
 normalise : Task a -> State -> ( Task a, State )
 -- Combinators
 normalise (Then this cont) state =

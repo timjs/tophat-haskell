@@ -112,9 +112,10 @@ get = do
 run : Show (typeOf a) => Task a -> State -> IO ()
 run task state = do
     putStrLn $ ui task state
+    putStrLn $ "Possible options: " ++ show (options task state)
     event <- get
     let ( nextTask, nextState ) = handle task event state
     run nextTask nextState
 
 main : IO ()
-main = uncurry run $ init checkModulo (state 0)
+main = uncurry run $ init choice3 (state 0)
