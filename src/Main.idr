@@ -90,4 +90,4 @@ run task state = do
     run nextTask nextState
 
 main : IO ()
-main = uncurry run $ init update (state 0)
+main = uncurry run $ init control (state 0)

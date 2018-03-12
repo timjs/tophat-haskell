@@ -25,7 +25,7 @@ data Task : Ty -> Type where
     Pure  : (x : typeOf a) -> Task a
     -- Primitive combinators
     Seq   : Show (typeOf a) => (this : Task a) -> (next : typeOf a -> Task b) -> Task b
-    Par   : Show (typeOf a) => Show (typeOf b) => (left : Task a) -> (right : Task b) -> Task (PairTy a b)
+    And   : Show (typeOf a) => Show (typeOf b) => (left : Task a) -> (right : Task b) -> Task (PairTy a b)
     -- User interaction
     Edit  : (val : Maybe (typeOf a)) -> Task a
     Watch : Task StateTy
@@ -44,7 +44,7 @@ pure = Pure
 
 infixl 3 <&>
 (<&>) : Show (typeOf a) => Show (typeOf b) => Task a -> Task b -> Task (PairTy a b)
-(<&>) = Par
+(<&>) = And
 
 edit : Maybe (typeOf a) -> Task a
 edit = Edit
@@ -88,7 +88,7 @@ state = id
 ui : Show (typeOf a) => Task a -> State -> String
 ui (Pure x)         _ = "pure " ++ show x
 ui (Seq this cont)  s = ui this s ++ " => <cont>"
-ui (Par left right) s = "(" ++ ui left s ++ " | " ++ ui right s ++ ")"
+ui (And left right) s = "(" ++ ui left s ++ " & " ++ ui right s ++ ")"
 ui (Edit val)       _ = "edit " ++ show @{editor_value} val
 ui Watch            s = "watch " ++ show s
 ui Get              _ = "get"
@@ -100,7 +100,7 @@ ui (Put x)          _ = "put " ++ show x ++ ""
 isStable : Task a -> Bool
 isStable (Pure x)         = True
 isStable (Seq this cont)  = isStable this
-isStable (Par left right) = isStable left && isStable right
+isStable (And left right) = isStable left && isStable right
 isStable (Edit x)         = False
 isStable Watch            = False
 isStable Get              = True
@@ -113,7 +113,7 @@ value : Task a -> State -> Maybe (typeOf a)
 value (Pure x)         _ = Just x
 value (Edit val)       _ = val
 value Watch            s = Just s
-value (Par left right) s = Just (!(value left s), !(value right s))
+value (And left right) s = Just (!(value left s), !(value right s))
 value _                _ = Nothing
 
 normalise : Task a -> State -> ( Task a, State )
@@ -125,14 +125,14 @@ normalise (Seq this cont) state =
     case newThis of
         Pure a => normalise (cont a) newState
         _      => ( Seq newThis cont, newState )
-normalise (Par left right) state =
+normalise (And left right) state =
     let
     ( newLeft, newState )    = normalise left state
     ( newRight, newerState ) = normalise right newState
     in
     case ( newLeft, newRight ) of
         ( Pure a, Pure b )    => ( Pure ( a, b ), newerState )
-        ( newLeft, newRight ) => ( Par newLeft newRight, newerState )
+        ( newLeft, newRight ) => ( And newLeft newRight, newerState )
 -- State
 normalise (Get) state =
     ( Pure state, state )
@@ -157,18 +157,18 @@ handle (Seq this cont) event state =
     -- ( newerThis, newerState ) = normalise newThis newState
     in
     ( Seq newThis cont, newState )
-handle (Par left right) (ToLeft event) state =
+handle (And left right) (ToLeft event) state =
     -- We pass on the event to left
     let
     ( newLeft, newState ) = handle left event state
     in
-    ( Par newLeft right, newState )
-handle (Par left right) (ToRight event) state =
+    ( And newLeft right, newState )
+handle (And left right) (ToRight event) state =
     -- We pass on the event to right
     let
     ( newRight, newState ) = handle right event state
     in
-    ( Par left newRight, newState )
+    ( And left newRight, newState )
 handle (Edit _) (Here Clear) state =
     ( Edit Nothing, state )
 handle (Edit {a} val) (Here (Change {b} newVal)) state with (decEq b a)
