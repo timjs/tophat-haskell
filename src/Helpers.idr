@@ -2,16 +2,16 @@ module Helpers
 
 import Data.String.Extra
 
+%default total
 %access export
 
-total
 between : Char -> Char -> String -> String
 between a b str = strCons a (strSnoc str b)
 
+partial
 strLast : String -> Char
 strLast str = strIndex str $ cast (length str) - 1
 
-total
 strMid : String -> String
 strMid str = substr 1 (pred $ pred $ length str) str
 
@@ -26,8 +26,8 @@ mutual
     decons : (str : String) -> Decons str
     decons str with (length str)
       decons ""  | Z   = Empty
-      decons str | S Z = believe_me $ Single (strHead str)
-      decons str | n   = believe_me $ Multi (strHead str) (strLast str) (strMid str)
+      decons str | S Z = believe_me $ Single (assert_total $ strHead str)
+      decons str | n   = believe_me $ Multi (assert_total $ strHead str) (assert_total $ strLast str) (strMid str)
 
 
 test : String -> IO ()
