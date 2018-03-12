@@ -44,7 +44,7 @@ twoSteps = do
     add x y
 
 parallel : Task (PairTy (Basic IntTy) (Basic StringTy))
-parallel = edit (Just 1) <&> edit (Just "Hello")
+parallel = edit (Just 1) |*| edit (Just "Hello")
 
 parallelStep : Task (Basic StringTy)
 parallelStep = do
@@ -52,7 +52,7 @@ parallelStep = do
     edit (Just (unwords $ replicate (cast n) m))
 
 parallelWatch : Task (PairTy (Basic IntTy) (Basic IntTy))
-parallelWatch = watch <&> watch
+parallelWatch = watch |*| watch
 
 update : Task UnitTy
 update = do
@@ -64,7 +64,13 @@ update = do
     put y
 
 control : Task (PairTy UnitTy (Basic IntTy))
-control = update <&> watch
+control = update |*| watch
+
+choice : Task (Basic IntTy)
+choice = ask 1 |+| ask 2
+
+choice3 : Task (Basic IntTy)
+choice3 = choice |+| ask 3
 
 
 -- Running ---------------------------------------------------------------------
@@ -75,7 +81,7 @@ get : IO Event
 get = do
     putStr "> "
     input <- getLine
-    case parse (words input) of
+    case Event.parse (words input) of
         Right event => do
             pure event
         Left msg => do
@@ -90,4 +96,4 @@ run task state = do
     run nextTask nextState
 
 main : IO ()
-main = uncurry run $ init control (state 0)
+main = uncurry run $ init choice3 (state 0)

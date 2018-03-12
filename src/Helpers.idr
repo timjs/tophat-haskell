@@ -3,6 +3,9 @@ module Helpers
 %default total
 %access export
 
+
+-- String decomposition --------------------------------------------------------
+
 strSnoc : String -> Char -> String
 strSnoc s c = s ++ (singleton c)
 

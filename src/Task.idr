@@ -26,6 +26,7 @@ data Task : Ty -> Type where
     -- Primitive combinators
     Seq   : Show (typeOf a) => (this : Task a) -> (next : typeOf a -> Task b) -> Task b
     And   : Show (typeOf a) => Show (typeOf b) => (left : Task a) -> (right : Task b) -> Task (PairTy a b)
+    Or    : Show (typeOf a) => (left : Task a) -> (right : Task a) -> Task a
     -- User interaction
     Edit  : (val : Maybe (typeOf a)) -> Task a
     Watch : Task StateTy
@@ -42,9 +43,17 @@ pure = Pure
 (>>=) : Show (typeOf a) => Task a -> (typeOf a -> Task b) -> Task b
 (>>=) = Seq
 
-infixl 3 <&>
-(<&>) : Show (typeOf a) => Show (typeOf b) => Task a -> Task b -> Task (PairTy a b)
-(<&>) = And
+infixr 3 |*|
+(|*|) : Show (typeOf a) => Show (typeOf b) => Task a -> Task b -> Task (PairTy a b)
+(|*|) = And
+-- FIXME: should do the same trick as below, but need to prove `((a, b), c) = (a, (b, c))` for PairTy
+-- (|*|) (And x y) z = And x (And y z)
+-- (|*|) x y         = And x y
+
+infixr 2 |+|
+(|+|) : Show (typeOf a) => Task a -> Task a -> Task a
+(|+|) (Or x y) z = Or x (Or y z)
+(|+|) x y        = Or x y
 
 edit : Maybe (typeOf a) -> Task a
 edit = Edit
@@ -88,7 +97,8 @@ state = id
 ui : Show (typeOf a) => Task a -> State -> String
 ui (Pure x)         _ = "pure " ++ show x
 ui (Seq this cont)  s = ui this s ++ " => <cont>"
-ui (And left right) s = "(" ++ ui left s ++ " & " ++ ui right s ++ ")"
+ui (And left right) s = "(" ++ ui left s ++ " * " ++ ui right s ++ ")"
+ui (Or left right)  s = "(" ++ ui left s ++ " + " ++ ui right s ++ ")"
 ui (Edit val)       _ = "edit " ++ show @{editor_value} val
 ui Watch            s = "watch " ++ show s
 ui Get              _ = "get"
@@ -97,10 +107,12 @@ ui (Put x)          _ = "put " ++ show x ++ ""
 
 -- Predicates ------------------------------------------------------------------
 
+-- FIXME: is this correct?
 isStable : Task a -> Bool
 isStable (Pure x)         = True
 isStable (Seq this cont)  = isStable this
 isStable (And left right) = isStable left && isStable right
+isStable (Or left right)  = isStable left && isStable right
 isStable (Edit x)         = False
 isStable Watch            = False
 isStable Get              = True
@@ -114,6 +126,8 @@ value (Pure x)         _ = Just x
 value (Edit val)       _ = val
 value Watch            s = Just s
 value (And left right) s = Just (!(value left s), !(value right s))
+-- `Or` never has a value because it needs to wait for an user choice
+value (Or left right)  s = Nothing
 value _                _ = Nothing
 
 normalise : Task a -> State -> ( Task a, State )
@@ -133,6 +147,12 @@ normalise (And left right) state =
     case ( newLeft, newRight ) of
         ( Pure a, Pure b )    => ( Pure ( a, b ), newerState )
         ( newLeft, newRight ) => ( And newLeft newRight, newerState )
+normalise (Or left right) state =
+    let
+    ( newLeft, newState )    = normalise left state
+    ( newRight, newerState ) = normalise right newState
+    in
+    ( Or newLeft newRight, newerState )
 -- State
 normalise (Get) state =
     ( Pure state, state )
@@ -151,6 +171,7 @@ handle task@(Seq this cont) (Here Continue) state =
         -- ...without a value: we stay put and have to wait for a value to appear.
         Nothing => ( task, state )
 handle (Seq this cont) event state =
+    -- Pass the event to this
     let
     ( newThis, newState ) = handle this event state
     --FIXME: maybe add a normalise here
@@ -158,17 +179,38 @@ handle (Seq this cont) event state =
     in
     ( Seq newThis cont, newState )
 handle (And left right) (ToLeft event) state =
-    -- We pass on the event to left
+    -- Pass the event to left
     let
     ( newLeft, newState ) = handle left event state
     in
     ( And newLeft right, newState )
 handle (And left right) (ToRight event) state =
-    -- We pass on the event to right
+    -- Pass the event to right
     let
     ( newRight, newState ) = handle right event state
     in
     ( And left newRight, newState )
+handle (Or left right) (Here (Choose First)) state =
+    -- Choose the first
+    ( left, state )
+handle (Or left right) (Here (Choose Second)) state =
+    -- Choose the second
+    ( right, state )
+handle (Or left right) (Here (Choose (Next p))) state =
+    -- Choose the second and continue
+    handle right (Here (Choose p)) state
+handle (Or left right) (ToLeft event) state =
+    -- Pass the event to left
+    let
+    ( newLeft, newState ) = handle left event state
+    in
+    ( Or newLeft right, newState )
+handle (Or left right) (ToRight event) state =
+    -- Pass the event to right
+    let
+    ( newRight, newState ) = handle right event state
+    in
+    ( Or left newRight, newState )
 handle (Edit _) (Here Clear) state =
     ( Edit Nothing, state )
 handle (Edit {a} val) (Here (Change {b} newVal)) state with (decEq b a)
