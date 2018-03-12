@@ -72,6 +72,9 @@ choice = ask 1 |+| ask 2
 choice3 : Task (Basic IntTy)
 choice3 = choice |+| ask 3
 
+choice1 : Task (Basic IntTy)
+choice1 = ask 2 |+| fail
+
 
 -- Running ---------------------------------------------------------------------
 
@@ -96,4 +99,4 @@ run task state = do
     run nextTask nextState
 
 main : IO ()
-main = uncurry run $ init choice3 (state 0)
+main = uncurry run $ init choice1 (state 0)

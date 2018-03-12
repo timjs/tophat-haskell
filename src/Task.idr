@@ -21,7 +21,7 @@ State = typeOf StateTy
 -- Tasks --
 
 data Task : Ty -> Type where
-    -- Lifting
+    -- Pure values
     Pure  : (x : typeOf a) -> Task a
     -- Primitive combinators
     Seq   : Show (typeOf a) => (this : Task a) -> (next : typeOf a -> Task b) -> Task b
@@ -30,6 +30,8 @@ data Task : Ty -> Type where
     -- User interaction
     Edit  : (val : Maybe (typeOf a)) -> Task a
     Watch : Task StateTy
+    -- Failing
+    Fail  : Task a
     -- Share interaction
     Get   : Task StateTy
     Put   : (x : typeOf StateTy) -> Task UnitTy
@@ -39,6 +41,9 @@ data Task : Ty -> Type where
 
 pure : (typeOf a) -> Task a
 pure = Pure
+
+fail : Task a
+fail = Fail
 
 (>>=) : Show (typeOf a) => Task a -> (typeOf a -> Task b) -> Task b
 (>>=) = Seq
@@ -96,6 +101,7 @@ state = id
 
 ui : Show (typeOf a) => Task a -> State -> String
 ui (Pure x)         _ = "pure " ++ show x
+ui Fail             _ = "fail"
 ui (Seq this cont)  s = ui this s ++ " => <cont>"
 ui (And left right) s = "(" ++ ui left s ++ " * " ++ ui right s ++ ")"
 ui (Or left right)  s = "(" ++ ui left s ++ " + " ++ ui right s ++ ")"
@@ -110,6 +116,7 @@ ui (Put x)          _ = "put " ++ show x ++ ""
 -- FIXME: is this correct?
 isStable : Task a -> Bool
 isStable (Pure x)         = True
+isStable Fail             = False
 isStable (Seq this cont)  = isStable this
 isStable (And left right) = isStable left && isStable right
 isStable (Or left right)  = isStable left && isStable right
@@ -126,8 +133,10 @@ value (Pure x)         _ = Just x
 value (Edit val)       _ = val
 value Watch            s = Just s
 value (And left right) s = Just (!(value left s), !(value right s))
--- `Or` never has a value because it needs to wait for an user choice
-value (Or left right)  s = Nothing
+-- The rest never has a value because:
+--   * `Or` needs to wait for an user choice
+--   * `Fail` runs forever and doesn't produce a value
+--   * `Seq` transforms values to another type
 value _                _ = Nothing
 
 normalise : Task a -> State -> ( Task a, State )
@@ -222,7 +231,8 @@ handle Watch (Here (Change {b} newVal)) state with (decEq b StateTy)
 -- FIXME: Should pass more unhandled events down or not...
 handle task _ state =
     ( task, state )
-    -- Case Pure: evaluation terminated
+    -- Case `Pure`: evaluation terminated
+    -- Case `Fail`: evaluation continues indefinitely
     -- Cases Get and Put: this case can't happen, it is already evaluated by `normalise`
     -- FIXME: express this in the type system...
 
