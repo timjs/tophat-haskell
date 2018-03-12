@@ -1,6 +1,6 @@
 module Task
 
-import Task.Type
+import Task.Universe
 import Task.Event
 
 %default total
@@ -11,7 +11,7 @@ import Task.Event
 
 -- State --
 
-StateTy : Type.Ty
+StateTy : Universe.Ty
 StateTy = BasicTy IntTy
 
 State : Type
@@ -20,7 +20,7 @@ State = typeOf StateTy
 
 -- Tasks --
 
-data Task : Type.Ty -> Type where
+data Task : Universe.Ty -> Type where
     -- Pure values
     Pure  : (x : typeOf a) -> Task a
     -- Primitive combinators

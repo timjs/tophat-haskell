@@ -1,7 +1,7 @@
 module Main
 
 import Task
-import Task.Type
+import Task.Universe
 import Task.Event
 
 %default total

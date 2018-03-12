@@ -1,7 +1,8 @@
 module Task.Event
 
 import Control.Catchable
-import Task.Type
+
+import Task.Universe
 
 %default total
 %access public export
@@ -26,7 +27,7 @@ namespace Path
 -- Events ----------------------------------------------------------------------
 
 data Action : Type where
-    Change   : Type.typeOf b -> Action
+    Change   : Universe.typeOf b -> Action
     Clear    : Action
     Choose   : Path -> Action
     Execute  : Path -> Action
@@ -54,7 +55,7 @@ usage = unlines
     ]
 
 parse : List String -> Either String Event
-parse ["change", val] with (Type.Basic.parse val)
+parse ["change", val] with (Universe.Basic.parse val)
   parse ["change", val] | Nothing          = throw $ "!! Error parsing value '" ++ val ++ "'"
   parse ["change", val] | (Just (ty ** v)) = pure $ Here $ Change {b = BasicTy ty} v
 parse ["clear"]                            = pure $ Here $ Clear

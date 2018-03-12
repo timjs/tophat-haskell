@@ -1,4 +1,4 @@
-module Task.Type
+module Task.Universe
 
 import Data.String
 import Helpers
@@ -69,16 +69,16 @@ namespace Basic
 
 data Ty
     = UnitTy
-    | PairTy Type.Ty Type.Ty
+    | PairTy Universe.Ty Universe.Ty
     | BasicTy Basic.Ty
 
 ||| Conversion of Task types to Idris types.
-typeOf : Type.Ty -> Type
+typeOf : Universe.Ty -> Type
 typeOf UnitTy       = ()
 typeOf (PairTy x y) = ( typeOf x, typeOf y )
 typeOf (BasicTy b)  = Basic.typeOf b
 
-defaultOf : (ty : Type.Ty) -> Type.typeOf ty
+defaultOf : (ty : Universe.Ty) -> Universe.typeOf ty
 defaultOf UnitTy       = ()
 defaultOf (PairTy x y) = ( defaultOf x, defaultOf y )
 defaultOf (BasicTy b)  = Basic.defaultOf b
@@ -110,7 +110,7 @@ both_neq contra_x contra_y Refl = contra_x Refl
 
 -- Decidablility --
 
-DecEq Type.Ty where
+DecEq Universe.Ty where
     decEq UnitTy       UnitTy                                             = Yes Refl
     decEq (PairTy x y) (PairTy x' y')     with (decEq x x')
       decEq (PairTy x y) (PairTy x y')    | (Yes Refl)  with (decEq y y')
