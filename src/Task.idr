@@ -11,8 +11,8 @@ import Task.Event
 
 -- State --
 
-StateTy : Ty
-StateTy = Basic IntTy
+StateTy : Type.Ty
+StateTy = BasicTy IntTy
 
 State : Type
 State = typeOf StateTy
@@ -20,7 +20,7 @@ State = typeOf StateTy
 
 -- Tasks --
 
-data Task : Ty -> Type where
+data Task : Type.Ty -> Type where
     -- Pure values
     Pure  : (x : typeOf a) -> Task a
     -- Primitive combinators
@@ -68,13 +68,13 @@ infixr 2 |+|
 edit : Maybe (typeOf a) -> Task a
 edit = Edit
 
-watch : Task (Basic IntTy)
+watch : Task (BasicTy IntTy)
 watch = Watch
 
-get : Task (Basic IntTy)
+get : Task (BasicTy IntTy)
 get = Get
 
-put : typeOf (Basic IntTy) -> Task UnitTy
+put : typeOf (BasicTy IntTy) -> Task UnitTy
 put = Put
 
 unit : Task UnitTy
@@ -206,7 +206,7 @@ handle (When this cont) event state =
     let
     ( newThis, newState )     = handle this event state
     in
-    normalise (When newThis cont) newState 
+    normalise (When newThis cont) newState
 handle (And left right) (ToLeft event) state =
     -- Pass the event to left
     let

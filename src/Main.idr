@@ -9,49 +9,49 @@ import Task.Event
 
 -- Tests -----------------------------------------------------------------------
 
-int : Task (Basic IntTy)
+int : Task (BasicTy IntTy)
 int = pure 42
 
-str : Task (Basic StringTy)
+str : Task (BasicTy StringTy)
 str = pure "Hello"
 
-ask : Int -> Task (Basic IntTy)
+ask : Int -> Task (BasicTy IntTy)
 ask x = edit (Just x)
 
-inc : Int -> Task (Basic IntTy)
+inc : Int -> Task (BasicTy IntTy)
 inc x = edit (Just $ x + 1)
 
-add : Int -> Int -> Task (Basic IntTy)
+add : Int -> Int -> Task (BasicTy IntTy)
 add x y = edit (Just $ x + y)
 
-append : String -> String -> Task (Basic StringTy)
+append : String -> String -> Task (BasicTy StringTy)
 append x y = edit (Just $ x ++ y)
 
-pureStep : Task (Basic IntTy)
+pureStep : Task (BasicTy IntTy)
 pureStep = do
     x <- int
     inc x
 
-oneStep : Task (Basic IntTy)
+oneStep : Task (BasicTy IntTy)
 oneStep = do
     x <- ask 0
     inc x
 
-twoSteps : Task (Basic IntTy)
+twoSteps : Task (BasicTy IntTy)
 twoSteps = do
     x <- ask 0
     y <- ask 0
     add x y
 
-parallel : Task (PairTy (Basic IntTy) (Basic StringTy))
+parallel : Task (PairTy (BasicTy IntTy) (BasicTy StringTy))
 parallel = edit (Just 1) |*| edit (Just "Hello")
 
-parallelStep : Task (Basic StringTy)
+parallelStep : Task (BasicTy StringTy)
 parallelStep = do
     ( n, m ) <- parallel
     edit (Just (unwords $ replicate (cast n) m))
 
-parallelWatch : Task (PairTy (Basic IntTy) (Basic IntTy))
+parallelWatch : Task (PairTy (BasicTy IntTy) (BasicTy IntTy))
 parallelWatch = watch |*| watch
 
 update : Task UnitTy
@@ -63,19 +63,19 @@ update = do
     y <- ask x
     put y
 
-control : Task (PairTy UnitTy (Basic IntTy))
+control : Task (PairTy UnitTy (BasicTy IntTy))
 control = update |*| watch
 
-choice : Task (Basic IntTy)
+choice : Task (BasicTy IntTy)
 choice = ask 1 |+| ask 2
 
-choice3 : Task (Basic IntTy)
+choice3 : Task (BasicTy IntTy)
 choice3 = choice |+| ask 3
 
-choice1 : Task (Basic IntTy)
+choice1 : Task (BasicTy IntTy)
 choice1 = ask 2 |+| fail
 
-autoStep : Task (Basic IntTy)
+autoStep : Task (BasicTy IntTy)
 autoStep =
     ask 2 >>* \x =>
     if x >= 10
@@ -83,7 +83,7 @@ autoStep =
     else fail
 
 partial -- due to `mod` on `0`
-checkModulo : Task (Basic StringTy)
+checkModulo : Task (BasicTy StringTy)
 checkModulo =
     ask 1 >>* \x =>
     if x `mod` 3 == 0 then

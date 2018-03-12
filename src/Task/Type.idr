@@ -7,51 +7,95 @@ import Helpers
 %access public export
 
 
--- Type universe ---------------------------------------------------------------
+-- Basic universe --------------------------------------------------------------
 
-data BasicTy
-    = BoolTy
-    | IntTy
-    | StringTy
+namespace Basic
+
+    data Ty
+        = BoolTy
+        | IntTy
+        | StringTy
+
+    typeOf : Ty -> Type
+    typeOf BoolTy   = Bool
+    typeOf IntTy    = Int
+    typeOf StringTy = String
+
+    defaultOf : (ty : Ty) -> typeOf ty
+    defaultOf BoolTy   = False
+    defaultOf IntTy    = 0
+    defaultOf StringTy = ""
+
+
+    -- Lemmas --
+
+    Uninhabited (BoolTy = IntTy) where
+        uninhabited Refl impossible
+
+    Uninhabited (BoolTy = StringTy) where
+        uninhabited Refl impossible
+
+    Uninhabited (IntTy = StringTy) where
+        uninhabited Refl impossible
+
+
+    -- Decidablility --
+
+    DecEq Ty where
+        decEq BoolTy   BoolTy   = Yes Refl
+        decEq IntTy    IntTy    = Yes Refl
+        decEq StringTy StringTy = Yes Refl
+        decEq BoolTy   IntTy    = No absurd
+        decEq IntTy    BoolTy   = No (negEqSym absurd)
+        decEq BoolTy   StringTy = No absurd
+        decEq StringTy BoolTy   = No (negEqSym absurd)
+        decEq IntTy    StringTy = No absurd
+        decEq StringTy IntTy    = No (negEqSym absurd)
+
+
+    -- Parsing --
+
+    parse : String -> Maybe (b : Ty ** typeOf b)
+    parse "True"                                                      = Just $ (BoolTy ** True)
+    parse "False"                                                     = Just $ (BoolTy ** False)
+    parse s   with (the (Maybe Int) (parseInteger s))
+      parse s | (Just int)                                            = Just $ (IntTy ** int)
+      parse s | Nothing                        with (decons s)
+        parse (between '"' '"' rest) | Nothing | (Multi '"' '"' rest) = Just $ (StringTy ** rest)
+        parse _                      | Nothing | _                    = Nothing
+
+
+-- Full universe ---------------------------------------------------------------
 
 data Ty
     = UnitTy
-    | PairTy Ty Ty
-    | Basic BasicTy
-
-typeOfBasic : BasicTy -> Type
-typeOfBasic BoolTy   = Bool
-typeOfBasic IntTy    = Int
-typeOfBasic StringTy = String
+    | PairTy Type.Ty Type.Ty
+    | BasicTy Basic.Ty
 
 ||| Conversion of Task types to Idris types.
-typeOf : Ty -> Type
+typeOf : Type.Ty -> Type
 typeOf UnitTy       = ()
 typeOf (PairTy x y) = ( typeOf x, typeOf y )
-typeOf (Basic b)    = typeOfBasic b
+typeOf (BasicTy b)  = Basic.typeOf b
+
+defaultOf : (ty : Type.Ty) -> Type.typeOf ty
+defaultOf UnitTy       = ()
+defaultOf (PairTy x y) = ( defaultOf x, defaultOf y )
+defaultOf (BasicTy b)  = Basic.defaultOf b
 
 
--- Lemmas ----------------------------------------------------------------------
+-- Lemmas --
 
 Uninhabited (UnitTy = PairTy x y) where
     uninhabited Refl impossible
 
-Uninhabited (UnitTy = Basic b) where
+Uninhabited (UnitTy = BasicTy b) where
     uninhabited Refl impossible
 
-Uninhabited (PairTy x y = Basic b) where
+Uninhabited (PairTy x y = BasicTy b) where
     uninhabited Refl impossible
 
-Uninhabited (BoolTy = IntTy) where
-    uninhabited Refl impossible
-
-Uninhabited (BoolTy = StringTy) where
-    uninhabited Refl impossible
-
-Uninhabited (IntTy = StringTy) where
-    uninhabited Refl impossible
-
-basic_neq : (a = b -> Void) -> (Basic a = Basic b) -> Void
+basic_neq : (a = b -> Void) -> (BasicTy a = BasicTy b) -> Void
 basic_neq contra Refl = contra Refl
 
 snd_neq : (y = y' -> Void) -> (PairTy x y = PairTy x y') -> Void
@@ -64,20 +108,9 @@ both_neq : (x = x' -> Void) -> (y = y' -> Void) -> (PairTy x y = PairTy x' y') -
 both_neq contra_x contra_y Refl = contra_x Refl
 
 
--- Decidablility ---------------------------------------------------------------
+-- Decidablility --
 
-DecEq BasicTy where
-    decEq BoolTy   BoolTy   = Yes Refl
-    decEq IntTy    IntTy    = Yes Refl
-    decEq StringTy StringTy = Yes Refl
-    decEq BoolTy   IntTy    = No absurd
-    decEq IntTy    BoolTy   = No (negEqSym absurd)
-    decEq BoolTy   StringTy = No absurd
-    decEq StringTy BoolTy   = No (negEqSym absurd)
-    decEq IntTy    StringTy = No absurd
-    decEq StringTy IntTy    = No (negEqSym absurd)
-
-DecEq Ty where
+DecEq Type.Ty where
     decEq UnitTy       UnitTy                                             = Yes Refl
     decEq (PairTy x y) (PairTy x' y')     with (decEq x x')
       decEq (PairTy x y) (PairTy x y')    | (Yes Refl)  with (decEq y y')
@@ -86,24 +119,12 @@ DecEq Ty where
       decEq (PairTy x y) (PairTy x' y')   | (No contra) with (decEq y y')
         decEq (PairTy x y) (PairTy x' y)  | (No contra) | (Yes Refl)      = No (fst_neq contra)
         decEq (PairTy x y) (PairTy x' y') | (No contra) | (No contra')    = No (both_neq contra contra')
-    decEq (Basic a)  (Basic b)   with (decEq a b)
-      decEq (Basic b)  (Basic b) | (Yes Refl)                             = Yes Refl
-      decEq (Basic a)  (Basic b) | (No contra)                            = No (basic_neq contra)
+    decEq (BasicTy a)  (BasicTy b)   with (decEq a b)
+      decEq (BasicTy b)  (BasicTy b) | (Yes Refl)                         = Yes Refl
+      decEq (BasicTy a)  (BasicTy b) | (No contra)                        = No (basic_neq contra)
     decEq UnitTy       (PairTy x y)                                       = No absurd
     decEq (PairTy x y) UnitTy                                             = No (negEqSym absurd)
-    decEq UnitTy       (Basic b)                                          = No absurd
-    decEq (Basic b)    UnitTy                                             = No (negEqSym absurd)
-    decEq (PairTy x y) (Basic b)                                          = No absurd
-    decEq (Basic b)    (PairTy x y)                                       = No (negEqSym absurd)
-
-
--- Parsing ---------------------------------------------------------------------
-
-parse : String -> Maybe (b : BasicTy ** typeOfBasic b)
-parse "True"                                                      = Just $ (BoolTy ** True)
-parse "False"                                                     = Just $ (BoolTy ** False)
-parse s   with (the (Maybe Int) (parseInteger s))
-  parse s | (Just int)                                            = Just $ (IntTy ** int)
-  parse s | Nothing                        with (decons s)
-    parse (between '"' '"' rest) | Nothing | (Multi '"' '"' rest) = Just $ (StringTy ** rest)
-    parse _                      | Nothing | _                    = Nothing
+    decEq UnitTy       (BasicTy b)                                        = No absurd
+    decEq (BasicTy b)  UnitTy                                             = No (negEqSym absurd)
+    decEq (PairTy x y) (BasicTy b)                                        = No absurd
+    decEq (BasicTy b)  (PairTy x y)                                       = No (negEqSym absurd)

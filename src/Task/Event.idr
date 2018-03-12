@@ -26,7 +26,7 @@ namespace Path
 -- Events ----------------------------------------------------------------------
 
 data Action : Type where
-    Change   : typeOf b -> Action
+    Change   : Type.typeOf b -> Action
     Clear    : Action
     Choose   : Path -> Action
     Execute  : Path -> Action
@@ -54,9 +54,9 @@ usage = unlines
     ]
 
 parse : List String -> Either String Event
-parse ["change", val] with (Type.parse val)
+parse ["change", val] with (Type.Basic.parse val)
   parse ["change", val] | Nothing          = throw $ "!! Error parsing value '" ++ val ++ "'"
-  parse ["change", val] | (Just (ty ** v)) = pure $ Here $ Change {b = Basic ty} v
+  parse ["change", val] | (Just (ty ** v)) = pure $ Here $ Change {b = BasicTy ty} v
 parse ["clear"]                            = pure $ Here $ Clear
 parse ("choose" :: rest)                   = map (Here . Choose) $ Path.parse rest
 parse ("exec" :: rest)                     = map (Here . Execute) $ Path.parse rest
