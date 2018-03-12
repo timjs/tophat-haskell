@@ -2,6 +2,8 @@
 
 \newoperator{\Then}
   {\vartriangleright}
+\newoperator{\When}
+  {\blacktriangleright}
 \let\And\relax
 \newoperator{\And}
   {\otimes}
@@ -20,3 +22,11 @@
   {\textsf{True}}
 \newoperator{\False}
   {\textsf{False}}
+
+\newcommand*{\Continue}
+  {\textsf{C}}
+
+\newcommand*{\downto}
+  {\ensuremath{\;\rightarrow\!\shortmid\;}}
+\newcommand*{\handle}[1]
+  {\ensuremath{\;\xrightarrow{\;#1\;}}\;}

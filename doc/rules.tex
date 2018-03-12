@@ -57,3 +57,33 @@
   {\inferrule*[lab=N-Fail]
     { }
     {\Fail, s \downto \Fail, s}}
+
+
+%% Handling %%
+
+\newcommand*{\HSeqPass}
+  {\inferrule*[lab=H-SeqPass]
+    {t_1, s \handle{\eta} t_1', s'}
+    {t_1 \Then e, s \handle{\eta} t_1' \Then e, s'}}
+
+\newcommand*{\HSeqNothing}
+  {\inferrule*[lab=H-SeqNothing,right={$\mathcal{V}(t_1) = \nothing$}]
+    { }
+    {t_1 \Then e, s \handle{\Continue} t_1 \Then e, s}}
+
+\newcommand*{\HSeqContinue}
+  {\inferrule*[lab=H-SeqContinue,right={$\mathcal{V}(t_1) = v$}]
+    {e\ v \Downarrow t_2     \\
+     t_2, s \downto t_2', s' }
+    {t_1 \Then e, s \handle{\Continue} t_2' \Then e, s'}}
+
+
+
+
+
+\endinput
+
+\newcommand*{\}
+  {\inferrule*[lab=]
+    {}
+    {}}
