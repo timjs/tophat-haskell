@@ -1,6 +1,7 @@
 module Task.Type
 
 import Data.String
+import Helpers
 
 %default total
 %access public export
@@ -99,11 +100,10 @@ DecEq Ty where
 -- Parsing ---------------------------------------------------------------------
 
 parse : String -> Maybe (b : BasicTy ** typeOfBasic b)
---FIXME: rewrite this using parser combinators from Text.Parser of Text.Lexer
-parse "True"                  = Just $ (BoolTy ** True)
-parse "False"                 = Just $ (BoolTy ** False)
+parse "True"                                                      = Just $ (BoolTy ** True)
+parse "False"                                                     = Just $ (BoolTy ** False)
 parse s   with (the (Maybe Int) (parseInteger s))
-  parse s | (Just int)        = Just $ (IntTy ** int)
-  parse s | Nothing   with (isPrefixOf "\"" s && isSuffixOf "\"" s)
-    parse s | Nothing | True  = Just $ (StringTy ** substr 1 (pred $ pred $ length s) s)
-    parse s | Nothing | False = Nothing
+  parse s | (Just int)                                            = Just $ (IntTy ** int)
+  parse s | Nothing                        with (decons s)
+    parse (between '"' '"' rest) | Nothing | (Multi '"' '"' rest) = Just $ (StringTy ** rest)
+    parse _                      | Nothing | _                    = Nothing
