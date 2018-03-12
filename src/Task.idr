@@ -147,13 +147,23 @@ value (And left right) s = Just (!(value left s), !(value right s))
 value _                _ = Nothing
 
 choices : Task a -> List Path
+choices (Or Fail Fail)  = []
+choices (Or left Fail)  = [ First ]
+choices (Or Fail right) = [ Second ] ++ map Next (choices right)
 choices (Or left right) = [ First, Second ] ++ map Next (choices right)
 choices _               = []
 
 options : Task a -> State -> List Event
 options (Pure x)             _ = []
 options (Then this next)     s = Here Continue :: options this s
-options (When this next)     s = options this s
+options (When this next)     s = -- map (Here . Execute) (fromMaybe [] $ choices $ next !(value this s)) ++ options this s
+    let
+    actions =
+        case value this s of
+            Just v  => map (Here . Execute) (choices $ next v)
+            Nothing => []
+    in
+    actions ++ options this s
 options (And left right)     s = map ToLeft (options left s) ++ map ToRight (options right s)
 options task@(Or left right) s = map (Here . Choose) (choices task) ++ map ToLeft (options left s) ++ map ToRight (options right s)
 options (Edit {a} val)       _ = [ Here (Change (Universe.defaultOf a)), Here Clear ]
@@ -175,9 +185,12 @@ normalise task@(When this cont) state =
     case value this state of
         Just v =>
             case cont v of
-                Fail => ( task, state )
-                next => normalise next state
-        Nothing => ( task, state )
+                Fail   => ( task, state )
+                -- FIXME: needed for action management
+                Or _ _ => ( task, state )
+                next   => normalise next state
+        Nothing =>
+            ( task, state )
 normalise (And left right) state =
     let
     ( newLeft, newState )    = normalise left state
@@ -217,10 +230,18 @@ handle (Then this cont) event state =
     -- ( newerThis, newerState ) = normalise newThis newState
     in
     ( Then newThis cont, newState )
+handle task@(When this cont) (Here (Execute p)) state =
+    case value this state of
+        Just v =>
+            case handle (cont v) (Here (Choose p)) state of
+                ( Fail, _ )        => ( task, state )
+                ( next, newState ) => (next, newState )
+        Nothing =>
+            ( task, state )
 handle (When this cont) event state =
     -- Pass the event to this and normalise
     let
-    ( newThis, newState )     = handle this event state
+    ( newThis, newState ) = handle this event state
     in
     normalise (When newThis cont) newState
 handle (And left right) (ToLeft event) state =

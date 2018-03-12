@@ -32,16 +32,32 @@ pureStep = do
     x <- int
     inc x
 
+pureStep' : Task (BasicTy IntTy)
+pureStep' =
+    int >>* \x =>
+    (inc x |+| fail)
+
 oneStep : Task (BasicTy IntTy)
 oneStep = do
     x <- ask 0
     inc x
+
+oneStep' : Task (BasicTy IntTy)
+oneStep' =
+    ask 0 >>* \x =>
+    (inc x |+| fail)
 
 twoSteps : Task (BasicTy IntTy)
 twoSteps = do
     x <- ask 0
     y <- ask 0
     add x y
+
+twoSteps' : Task (BasicTy IntTy)
+twoSteps' =
+    ask 0 >>* \x =>
+    ((ask 0 >>* \y =>
+    (add x y |+| fail)) |+| fail)
 
 parallel : Task (PairTy (BasicTy IntTy) (BasicTy StringTy))
 parallel = edit (Just 1) |*| edit (Just "Hello")
@@ -75,12 +91,20 @@ choice3 = choice |+| ask 3
 choice1 : Task (BasicTy IntTy)
 choice1 = ask 2 |+| fail
 
-autoStep : Task (BasicTy IntTy)
-autoStep =
-    ask 2 >>* \x =>
-    if x >= 10
-        then pure x
-    else fail
+auto : Task (BasicTy StringTy)
+auto =
+    ask 0 >>* \x =>
+    if x >= 10 then pure "large" else fail
+
+actions : Task (BasicTy StringTy)
+actions =
+    ask 0 >>* \x =>
+    (pure "first" |+| pure "second first" |+| pure "second second")
+
+guarded : Task (BasicTy StringTy)
+guarded =
+    ask 0 >>* \x =>
+    ((if x >= 10 then pure "large" else fail) |+| (if x >= 100 then pure "very large" else fail))
 
 partial -- due to `mod` on `0`
 checkModulo : Task (BasicTy StringTy)
@@ -118,4 +142,4 @@ run task state = do
     run nextTask nextState
 
 main : IO ()
-main = uncurry run $ init choice3 (state 0)
+main = uncurry run $ init twoSteps' (state 0)
