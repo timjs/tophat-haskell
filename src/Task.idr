@@ -25,6 +25,7 @@ data Task : Ty -> Type where
     Pure  : (x : typeOf a) -> Task a
     -- Primitive combinators
     Then  : Show (typeOf a) => (this : Task a) -> (next : typeOf a -> Task b) -> Task b
+    When  : Show (typeOf a) => (this : Task a) -> (next : typeOf a -> Task b) -> Task b
     And   : Show (typeOf a) => Show (typeOf b) => (left : Task a) -> (right : Task b) -> Task (PairTy a b)
     Or    : Show (typeOf a) => (left : Task a) -> (right : Task a) -> Task a
     -- User interaction
@@ -47,6 +48,10 @@ fail = Fail
 
 (>>=) : Show (typeOf a) => Task a -> (typeOf a -> Task b) -> Task b
 (>>=) = Then
+
+infixl 1 >>*
+(>>*) : Show (typeOf a) => Task a -> (typeOf a -> Task b) -> Task b
+(>>*) = When
 
 infixr 3 |*|
 (|*|) : Show (typeOf a) => Show (typeOf b) => Task a -> Task b -> Task (PairTy a b)
@@ -103,6 +108,7 @@ ui : Show (typeOf a) => Task a -> State -> String
 ui (Pure x)         _ = "pure " ++ show x
 ui Fail             _ = "fail"
 ui (Then this cont) s = ui this s ++ " => <cont>"
+ui (When this cont) s = ui this s ++ " => <cont>"
 ui (And left right) s = "(" ++ ui left s ++ " * " ++ ui right s ++ ")"
 ui (Or left right)  s = "(" ++ ui left s ++ " + " ++ ui right s ++ ")"
 ui (Edit val)       _ = "edit " ++ show @{editor_value} val
@@ -118,6 +124,7 @@ isStable : Task a -> Bool
 isStable (Pure x)         = True
 isStable Fail             = False
 isStable (Then this cont) = isStable this
+isStable (When this cont) = isStable this
 isStable (And left right) = isStable left && isStable right
 isStable (Or left right)  = isStable left && isStable right
 isStable (Edit x)         = False
@@ -148,6 +155,13 @@ normalise (Then this cont) state =
     case newThis of
         Pure a => normalise (cont a) newState
         _      => ( Then newThis cont, newState )
+normalise task@(When this cont) state =
+    case value this state of
+        Just v =>
+            case cont v of
+                Fail => ( task, state )
+                next => normalise next state
+        Nothing => ( task, state )
 normalise (And left right) state =
     let
     ( newLeft, newState )    = normalise left state
@@ -187,6 +201,12 @@ handle (Then this cont) event state =
     -- ( newerThis, newerState ) = normalise newThis newState
     in
     ( Then newThis cont, newState )
+handle (When this cont) event state =
+    -- Pass the event to this and normalise
+    let
+    ( newThis, newState )     = handle this event state
+    in
+    normalise (When newThis cont) newState 
 handle (And left right) (ToLeft event) state =
     -- Pass the event to left
     let

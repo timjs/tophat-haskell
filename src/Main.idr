@@ -75,6 +75,24 @@ choice3 = choice |+| ask 3
 choice1 : Task (Basic IntTy)
 choice1 = ask 2 |+| fail
 
+autoStep : Task (Basic IntTy)
+autoStep =
+    ask 2 >>* \x =>
+    if x >= 10
+        then pure x
+    else fail
+
+partial -- due to `mod` on `0`
+checkModulo : Task (Basic StringTy)
+checkModulo =
+    ask 1 >>* \x =>
+    if x `mod` 3 == 0 then
+        pure "multiple of 3"
+    else if x `mod` 5 == 0 then
+        pure "multiple of 5"
+    else
+        fail
+
 
 -- Running ---------------------------------------------------------------------
 
@@ -99,4 +117,4 @@ run task state = do
     run nextTask nextState
 
 main : IO ()
-main = uncurry run $ init choice1 (state 0)
+main = uncurry run $ init checkModulo (state 0)
