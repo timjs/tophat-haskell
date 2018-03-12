@@ -1,9 +1,11 @@
 package task
 
 sourcedir = src
+pkgs = contrib
 
 main = Main
 modules
     = Task
     , Task.Event
     , Task.Type
+    , Helpers
