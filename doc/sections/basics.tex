@@ -12,22 +12,20 @@ Because all the constructs in our base language are standard,
 we will not define typing rules and semantic rules for them explicitly.
 For this we refer to standard work like \textcite{Pierce:2002tp} and \textcite{Harper:2016uj}.
 
-\begin{block}
-  \begin{tabular}{lRCLl}
-    Expressions
-      & e &::= & e_1\ e_2       & – application \\
-      &   &\mid& e_1 \cdot e_2  & – operator \\
-      &   &\mid& x              & – variable \\
-      &   &\mid& v              & – value \\
-    Values
-      & v &::= & \lambda x.\ e  & – abstractions \\
-      &   &\mid& I              & – integers \\
-      &   &\mid& S              & – strings \\
-      &   &\mid& t              & – tasks \\
-    Tasks
-      & t &::= & `e             & – pure \\
-  \end{tabular}
-\end{block}
+\begin{grammar}
+  Expressions
+    & e &::= & e_1\ e_2       & – application \\
+    &   &\mid& e_1 \cdot e_2  & – operator \\
+    &   &\mid& x              & – variable \\
+    &   &\mid& v              & – value \\
+  Values
+    & v &::= & \lambda x.\ e  & – abstractions \\
+    &   &\mid& I              & – integers \\
+    &   &\mid& S              & – strings \\
+    &   &\mid& t              & – tasks \\
+  Tasks
+    & t &::= & `e             & – pure \\
+\end{grammar}
 
 Expressions are just applications, variables or values.
 We add a general notion of operators, represented by $\cdot$.
@@ -55,15 +53,13 @@ Only when referring to operators in general we will use $\cdot$.
 Typing rules for our expressions $e$ are as to be expected.
 Only difference with respect to standard work is the addition of a type for tasks.
 
-\begin{block}
-  \begin{tabular}{lRCLl}
-    Types
-      & \tau &::= & \tau_1 \to \tau_2 & – abstractions \\
-      &      &\mid& \Int              & – integers \\
-      &      &\mid& \String           & – strings \\
-      &      &\mid& \Task \tau        & – tasks \\
-  \end{tabular}
-\end{block}
+\begin{grammar}
+  Types
+    & \tau &::= & \tau_1 \to \tau_2 & – abstractions \\
+    &      &\mid& \Int              & – integers \\
+    &      &\mid& \String           & – strings \\
+    &      &\mid& \Task \tau        & – tasks \\
+\end{grammar}
 
 The typing rule for pure tasks becomes:
 \begin{equation*}

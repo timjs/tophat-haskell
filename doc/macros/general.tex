@@ -75,6 +75,9 @@
 
 %% Math %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
+%% Symbols %%
+
 %% NOTE: change this to \emptyset when using a font that includes a nice standard emptyset
 \let\nothing\varnothing
 
@@ -118,3 +121,11 @@
 \let\to\rightarrow
 \let\implies\Rightarrow
 \let\infers\vdash
+
+
+%% Environments %%
+
+\newenvironment*{grammar}
+  %%NOTE: the `@{}` suppreses `\tabcolsep` before the first column
+  {\begin{block}\begin{tabular}{@{}lRCLl}}
+  {\end{tabular}\end{block}}
