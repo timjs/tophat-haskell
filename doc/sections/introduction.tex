@@ -33,6 +33,11 @@ this system distinguishes itself by the following.
   \item
     Events are not handled by the user, but are build into the semantics.
   \item
+    Entering some information into the system is not a one-shot action.
+    Editors keep asking for input continually.
+    Thus repeatedly asking for information does not need to be modelled with recursion.
+    The next task is only executed under preprogrammed internal conditions or external action by the user.
+  \item
     We make use of multiple semantic functions that describe different aspects of the system.
     At the core, we assume a big step semantics for the host language.\footnote{
       We use a $\lambda$-calculus with some simple extensions like $\If\Then\Else$, pairs, and references.}
