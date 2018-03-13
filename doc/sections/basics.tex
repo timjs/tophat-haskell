@@ -2,66 +2,79 @@
 
 \section{Our base language}
 
-Let us start with defining our base lanuage.
-We will start with a simple $\lambda$-calculus
-and embed tasks in it.
-This means we can make use of all the power of our base language in a task.
+Let us start with defining our base or language.
+We start with a simple $\lambda$-calculus,
+just containing abstraction, application, variables,
+and some basic values like integers and strings.
+We will embed our object language in it.
+This means we can make use of all the power of our host language in a task.
 Because all the constructs in our base language are standard,
 we will not define typing rules and semantic rules for them explicitly.
-For this we refer to standard work like \textcite{Pierce:2002tp}.
+For this we refer to standard work like \textcite{Pierce:2002tp} and \textcite{Harper:2016uj}.
 
 \begin{block}
   \begin{tabular}{lRCLl}
     Expressions
       & e &::= & e_1\ e_2       & – application \\
-      &   &\mid& x              & – variables \\
-      &   &\mid& v              & – values \\
+      &   &\mid& e_1 \cdot e_2  & – operator \\
+      &   &\mid& x              & – variable \\
+      &   &\mid& v              & – value \\
     Values
-      & v &::= & \lambda x.\ e  & – abstraction \\
-      &   &\mid& B              & – booleans \\
+      & v &::= & \lambda x.\ e  & – abstractions \\
       &   &\mid& I              & – integers \\
       &   &\mid& S              & – strings \\
-      &   &\mid& t              & – task \\
+      &   &\mid& t              & – tasks \\
     Tasks
-      & t &::= & `e             & – pure expression \\
+      & t &::= & `e             & – pure \\
   \end{tabular}
 \end{block}
 
 Expressions are just applications, variables or values.
-Lambda abstractions are values, as some basic types like booleans, integers and strings.
-This is the place we embed tasks in our language.
-For now, the only way to create a task is by \emph{quoting} an expression.
-This means we can now, for example, create very dull tasks containing values like $`1$,
-which is a task returning $1$ and $`"\textit{Hello}"$,
-a task always returning the string $"\textit{Hello}"$.
+We add a general notion of operators, represented by $\cdot$.
+Lambda abstractions are values, as are integers and strings.
+Most important, \emph{tasks are values}.
 
-As you may already have noticed, we will use double quotation marks ($""$) to denote strings.
-The boolean values are $\True$ and $\False$
-and integers are denoted by their decimal.
-We will also make freely use of arithmetic operations like $+$, $-$, $\times$,
-comparison operators like $\ge$, $\eq$, $\not\lt$,
-and appending strings with $\pp$.
+For now, the only way to create a task is by \emph{quoting} a pure expression
+and thereby lifting it into the task world.
+This means we can create very dull tasks containing values like, for example, $`1$,
+which is a task having the integer $1$,
+and $`\astring{Hello}$, a task always containing the string $\astring{Hello}$.\footnote{
+  Mind the quote $`$ in front of the expression!
+}
+
+We will use double quotation marks ($""$) to denote strings.
+Integers are denoted by their decimal representation.
+In the remaining of this text,
+we will make freely use of arithmetic operators like $+$, $-$, $\times$,
+and appending strings with $\append$.
+Only when referring to operators in general we will use $\cdot$.
 
 
 \subsection{Typing}
 
-\todo{Define the typing rules for our base language}
+Typing rules for our expressions $e$ are as to be expected.
+Only difference with respect to standard work is the addition of a type for tasks.
+
+\begin{block}
+  \begin{tabular}{lRCLl}
+    Types
+      & \tau &::= & \tau_1 \to \tau_2 & – abstractions \\
+      &      &\mid& \Int              & – integers \\
+      &      &\mid& \String           & – strings \\
+      &      &\mid& \Task \tau        & – tasks \\
+  \end{tabular}
+\end{block}
+
+The typing rule for pure tasks becomes:
+\begin{equation*}
+  \TPure
+\end{equation*}
 
 
 \subsection{Semantics}
 
-For the semantics we define two relations.
-The first one are big step semantics for our base language,
-denoted by $e \Downarrow v$, turning an expression $e$ into a value $v$.
-These are just the standard big step semantics as for example described by \textcite{Pierce:2002tp}.
-
-
-\section{Just an editor}
-
-Tasks are all about interaction and till now we don't have any interaction with the end user at all.
-
-Let us start with the most simple model for tasks: an editor.
-Editors let us view and change a value in the system.
-However, an editor can also have no value at all.
-This is the case when the user clears the value.
-Because we strive to a fully typed system, editors are also typed.
+To express the semantics,
+The first one are big step semantics for our host language,
+denoted by $e \downto v$, turning an expression $e$ into a value $v$.
+These do not defer from standard work.
+As tasks are values, they will not be evaluated further.

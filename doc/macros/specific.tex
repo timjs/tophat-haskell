@@ -1,5 +1,41 @@
 % !TEX root=../main.tex
 
+
+%% Host language %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newoperator{\If}
+  {\textbf{if}}
+\newoperator{\Then}
+  {\textbf{then}}
+\newoperator{\Else}
+  {\textbf{else}}
+
+
+%% Values %%
+
+\newoperator{\True}
+  {\textsf{True}}
+\newoperator{\False}
+  {\textsf{False}}
+
+\newcommand*{\astring}[1]
+  {\ensuremath{"\textit{#1}"}}
+
+
+%% Types %%
+
+\newoperator{\Bool}
+  {\textsf{Bool}}
+\newoperator{\Int}
+  {\textsf{Int}}
+\newoperator{\String}
+  {\textsf{String}}
+\newoperator{\Task}
+  {\textsf{Task}}
+
+
+%% Object language %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \newoperator{\Seq}
   {\vartriangleright}
 \newoperator{\When}
@@ -18,22 +54,18 @@
 \newoperator{\Fail}
   {\circlearrowleft}
 
-\newoperator{\If}
-  {\textbf{if}}
-\newoperator{\Then}
-  {\textbf{then}}
-\newoperator{\Else}
-  {\textbf{else}}
 
-\newoperator{\True}
-  {\textsf{True}}
-\newoperator{\False}
-  {\textsf{False}}
+%% Events %%
 
 \newcommand*{\Continue}
   {\textsf{C}}
 
+
+%% Semantic arrows %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \newcommand*{\downto}
+  {\Downarrow}
+\newcommand*{\normalise}
   {\ensuremath{\;\rightarrow\!\shortmid\;}}
 \newcommand*{\handle}[1]
-  {\ensuremath{\;\xrightarrow{\;#1\;}}\;}
+  {\ensuremath{\;\xrightarrow{\;?#1\;}}\;}

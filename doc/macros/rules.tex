@@ -1,62 +1,70 @@
 % !TEX root=../main.tex
 
 
+%% Typing %%
+
+\newcommand*{\TPure}
+  {\inferrule*[lab=T-Pure]
+    {\Gamma \infers e : \tau}
+    {\Gamma \infers `e : \Task \tau}}
+
+
 %% Normalisation %%
 
 \newcommand*{\NPure}
   {\inferrule*[lab=N-Pure]
     { }
-    {`v, s \downto `v, s}}
+    {`v, s \normalise `v, s}}
 
 \newcommand*{\NSeqEval}
   {\inferrule*[lab=N-SeqEval,right={$t_1' \neq `v$}]
-    {t_1, s \downto t_1', s'}
-    {t_1 \Seq e, s \downto t_1' \Seq e, s'}}
+    {t_1, s \normalise t_1', s'}
+    {t_1 \Seq e, s \normalise t_1' \Seq e, s'}}
 
 \newcommand*{\NSeq}
   {\inferrule*[lab=N-Seq,right={$t_1' = `v$}]
-    {t_1, s \downto t_1', s'   \\
-     e\ v \Downarrow t_2       \\
-     t_2, s' \downto t_2', s'' }
-    {t_1 \Seq e, s \downto t_2', s''}}
+    {t_1, s \normalise t_1', s'   \\
+     e\ v \downto t_2       \\
+     t_2, s' \normalise t_2', s'' }
+    {t_1 \Seq e, s \normalise t_2', s''}}
 
 \newcommand*{\NAndEval}
   {\inferrule*[lab=N-AndEval,right={$t_1' \neq `v_1 \land t_2' \neq `v_2$}]
-    {t_1, s  \downto t_1', s'  \\
-     t_2, s' \downto t_2', s'' }
-    {t_1 \And t_2, s \downto t_1' \And t_2', s}}
+    {t_1, s  \normalise t_1', s'  \\
+     t_2, s' \normalise t_2', s'' }
+    {t_1 \And t_2, s \normalise t_1' \And t_2', s}}
 
 \newcommand*{\NAnd}
   {\inferrule*[lab=N-And,right={$t_1' = `v_1 \land t_2' = `v_2$}]
-    {t_1, s  \downto t_1', s'  \\
-     t_2, s' \downto t_2', s'' }
-    {t_1 \And t_2, s \downto \{`v_1, `v_2\}, s}}
+    {t_1, s  \normalise t_1', s'  \\
+     t_2, s' \normalise t_2', s'' }
+    {t_1 \And t_2, s \normalise \{`v_1, `v_2\}, s}}
 
 \newcommand*{\NOrEval}
   {\inferrule*[lab=N-OrEval]%,right={$t_1' \neq `v_1 \land t_2' \neq `v_2$}]
-    {t_1, s  \downto t_1', s'  \\
-     t_2, s' \downto t_2', s'' }
-    {t_1 \Or t_2, s \downto t_1' \Or t_2', s}}
+    {t_1, s  \normalise t_1', s'  \\
+     t_2, s' \normalise t_2', s'' }
+    {t_1 \Or t_2, s \normalise t_1' \Or t_2', s}}
 
 \newcommand*{\NEdit}
   {\inferrule*[lab=N-Edit]
     { }
-    {\Edit v, s \downto \Edit v, s}}
+    {\Edit v, s \normalise \Edit v, s}}
 
 \newcommand*{\NEmpty}
   {\inferrule*[lab=N-Empty]
     { }
-    {\Empty, s \downto \Empty, s}}
+    {\Empty, s \normalise \Empty, s}}
 
 \newcommand*{\NWatch}
   {\inferrule*[lab=N-Watch]
     { }
-    {\Watch l, s \downto \Watch l, s}}
+    {\Watch l, s \normalise \Watch l, s}}
 
 \newcommand*{\NFail}
   {\inferrule*[lab=N-Fail]
     { }
-    {\Fail, s \downto \Fail, s}}
+    {\Fail, s \normalise \Fail, s}}
 
 
 %% Handling %%
@@ -73,8 +81,8 @@
 
 \newcommand*{\HSeqContinue}
   {\inferrule*[lab=H-SeqContinue,right={$\mathcal{V}(t_1) = v$}]
-    {e\ v \Downarrow t_2     \\
-     t_2, s \downto t_2', s' }
+    {e\ v \downto t_2     \\
+     t_2, s \normalise t_2', s' }
     {t_1 \Seq e, s \handle{\Continue} t_2' \Seq e, s'}}
 
 
