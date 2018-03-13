@@ -1,2 +1,4 @@
 - Gibbons 2015, "Functional Programming for Domain-Specific Languages": Has a
   good comparison of deep vs shallow embedding.
+- Peyton-Jones 2010 "Tackling the Awkward Squad...": has an operational
+  semantics for IO in lazy languages
