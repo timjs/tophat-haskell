@@ -1,0 +1,71 @@
+% !TEX root=../main.tex
+
+\section{Just an editor}
+
+Till now we don't have any interaction with the end user.
+The only thing we can create are pure task, containing a value.
+It is kind of hard to claim we model \emph{interactive} workflows without any user interaction at all.
+% At the core of interactive workflows are user interaction.
+An end user should be able to enter information into the system,
+clear it, reenter it et cetera.
+This is modelled by an \emph{editor}.
+
+Editors may or may not contain a current value.
+When it has a value, it can be \emph{changed} or \emph{cleared}.
+When the editor is empty, a value can be \emph{reentered}.
+
+
+For this purpose, we extend our task language with two constructs:
+a valued editor $\Edit v$ and an empty editor $\Empty \tau$.
+\begin{grammar}
+  Tasks & t & ::=& \ldots      & \\
+        &   &\mid& \Edit v     & – Valued editor \\
+        &   &\mid& \Empty \tau & – Empty editor \\
+\end{grammar}
+Valued editors contain a value $v$ and therefore inherit the type of $v$.
+This is expressed by the typing rule for edit.
+\begin{equation*}
+  \TEdit
+\end{equation*}
+Empty editors do not have a value,
+but, because we strive to a fully typed system,
+we like to assign a type to them.
+
+We have two options to solve this:
+\begin{enumerate*}
+  \item let the empty editor have a polymorphic type;
+  \item annotate empty editors with a type and use that.
+\end{enumerate*}
+The first option sounds appealing, however, consider the following use case.
+We start with an editor containing the value $42$: $\Edit 42$.
+The user can change this value, as long as it is an integer,
+for example to $37$: $\Edit 37$.
+Clearing the value results in an empty editor: $\Empty$.
+Now, is the user allowed to enter a value of some other type?
+That is, can we now enter a string?
+This would change the type of the editor!
+Therefore we choose to annotate empty editors with a type.
+The typing rule becomes:
+\begin{equation*}
+  \TEmpty
+\end{equation*}
+
+
+\subsection{Interface}
+
+To interact with an editor,
+we can present an input box in a \GUI.
+The user can than change and clear the value continuously.
+In a text oriented world,
+we can present the user with the current value of the editor
+and an input prompt which asks for a new value.
+
+
+\subsection{Events}
+
+
+\endinput
+
+Editors let us view and change a value in the system.
+However, an editor can also have no value at all.
+This is the case when the user clears the value.

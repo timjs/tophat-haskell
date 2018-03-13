@@ -8,6 +8,17 @@
     {\Gamma \infers e : \tau}
     {\Gamma \infers `e : \Task \tau}}
 
+\newcommand*{\TEdit}
+  {\inferrule*[lab=T-Edit]
+    {\Gamma \infers v : \tau}
+    {\Gamma \infers \Edit v : \Task \tau}}
+
+\newcommand*{\TEmpty}
+  {\inferrule*[lab=T-Empty]
+    { }
+    {\Gamma \infers \Empty \tau : \Task \tau}}
+
+
 
 %% Normalisation %%
 

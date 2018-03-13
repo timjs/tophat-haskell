@@ -12,6 +12,9 @@ Because all the constructs in our base language are standard,
 we will not define typing rules and semantic rules for them explicitly.
 For this we refer to standard work like \textcite{Pierce:2002tp} and \textcite{Harper:2016uj}.
 
+
+\subsection{Syntax}
+
 \begin{grammar}
   Expressions
     & e &::= & e_1\ e_2       & – application \\
@@ -26,7 +29,6 @@ For this we refer to standard work like \textcite{Pierce:2002tp} and \textcite{H
   Tasks
     & t &::= & `e             & – pure \\
 \end{grammar}
-
 Expressions are just applications, variables or values.
 We add a general notion of operators, represented by $\cdot$.
 Lambda abstractions are values, as are integers and strings.
@@ -52,7 +54,6 @@ Only when referring to operators in general we will use $\cdot$.
 
 Typing rules for our expressions $e$ are as to be expected.
 Only difference with respect to standard work is the addition of a type for tasks.
-
 \begin{grammar}
   Types
     & \tau &::= & \tau_1 \to \tau_2 & – abstractions \\
@@ -60,16 +61,15 @@ Only difference with respect to standard work is the addition of a type for task
     &      &\mid& \String           & – strings \\
     &      &\mid& \Task \tau        & – tasks \\
 \end{grammar}
-
-The typing rule for pure tasks becomes:
+The typing rule for pure tasks is than:
 \begin{equation*}
   \TPure
 \end{equation*}
 
 
-\subsection{Semantics}
+\subsection{Evaluation}
 
-To express the semantics,
+To express evaluation,
 we use a big step semantics for our host language.
 Turning an expression $e$ into a value $v$ is denoted by $e \downto v$.
 The rules to evaluate expressions $e$ do not defer from standard work.

@@ -31,21 +31,21 @@
   {\end{compactdesc}}
 %% Define starred versions as in-paragraph-lists
 \newenvironment{itemize*}
-  {\begin{inparitem}}
-  {\end{inparitem}}
-\newenvironment{enumerate*}
-  {\begin{inparenum}}
-  {\end{inparenum}}
+  {\begin{inparaitem}}
+  {\end{inparaitem}}
+\newenvironment{enumerate*}[1][(i)]
+  {\begin{inparaenum}[#1]}
+  {\end{inparaenum}}
 \newenvironment{description*}
-  {\begin{inpardesc}}
-  {\end{inpardesc}}
+  {\begin{inparadesc}}
+  {\end{inparadesc}}
 
 
 %% Blocks %%
 
 \newenvironment{block}
-  {\smallskip}
-  {\smallskip}
+  {\begin{center}}
+  {\end{center}}
 
 
 %% Column types %%
@@ -125,7 +125,11 @@
 
 %% Environments %%
 
+\newenvironment*{marginequation}[1][0pt]
+  {\begin{marginfigure}[#1]\equation\nonumber}
+  {\endequation\end{marginfigure}}
+
 \newenvironment*{grammar}
   %%NOTE: the `@{}` suppreses `\tabcolsep` before the first column
-  {\begin{block}\begin{tabular}{@{}lRCLl}}
+  {\begin{block}\begin{tabular}{@{}rRCLl}}
   {\end{tabular}\end{block}}
