@@ -102,3 +102,23 @@ we need three rules to describe the transitions of editors.
 \end{equation*}
 Note that the conditions to the right of the rules take care of typing.
 They make sure the type of the entered value and the type of the editor are the same.
+
+
+\subsection{Example}
+
+Now, we can make a still dull but interactive example of a workflow.
+How could an interactive session with the user look like when we start with a simple workflow with one editor,
+containing the value two?\todo{We should probably add a rule that doesn't change a task when the event doesn't match\ldots}
+\begin{align*}
+    & \Edit 2 \\
+  \handle{5} & \comment{change value to five} \\
+    & \Edit 5 \\
+  \handle{\Clear} & \comment{clear the current value} \\
+    & \Empty \Int \\
+  \handle{50} & \comment{enter the value fifty} \\
+    & \Edit 50 \\
+  \handle{\astring{Bye}} & \comment{changing the value to a string won't work\ldots} \\
+    & \Edit 50 \\
+  \handle{10} & \comment{change value to ten} \\
+    & \Edit 10
+\end{align*}
