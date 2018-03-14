@@ -2,13 +2,14 @@
 
 \section{Our base language}
 
-Let us start with defining our base or language.
-We start with a simple $\lambda$-calculus,
+Let us start with defining our host language.
+It is a simple $\lambda$-calculus,
 just containing abstraction, application, variables,
 and some basic values like integers and strings.
-We will embed our object language in it.
-This means we can make use of all the power of our host language in a task.
-Because all the constructs in our base language are standard,
+We will embed our task language in it.
+This means we use all the power of the host language,
+such as arithmetic operations and (higher order) functions in our task language.
+Because all the constructs in our host language are standard,
 we will not define typing rules and semantic rules for them explicitly.
 For this we refer to standard work like \textcite{Pierce:2002tp} and \textcite{Harper:2016uj}.
 
@@ -18,7 +19,7 @@ For this we refer to standard work like \textcite{Pierce:2002tp} and \textcite{H
 \begin{grammar}
   Expressions
     & e &::= & e_1\ e_2       & – application \\
-    &   &\mid& e_1 \cdot e_2  & – operator \\
+    &   &\mid& e_1 \star e_2  & – operator \\
     &   &\mid& x              & – variable \\
     &   &\mid& v              & – value \\
   Values
@@ -27,10 +28,10 @@ For this we refer to standard work like \textcite{Pierce:2002tp} and \textcite{H
     &   &\mid& S              & – strings \\
     &   &\mid& t              & – tasks \\
   Tasks
-    & t &::= & `e             & – pure \\
+    & t &::= & `e             & – pure expression \\
 \end{grammar}
 Expressions are just applications, variables or values.
-We add a general notion of operators, represented by $\cdot$.
+We add a general notion of operators, represented by $\star$.
 Lambda abstractions are values, as are integers and strings.
 Most important, \emph{tasks are values}.
 
@@ -38,16 +39,16 @@ For now, the only way to create a task is by \emph{quoting} a pure expression
 and thereby lifting it into the task world.
 This means we can create very dull tasks containing values like, for example, $`1$,
 which is a task having the integer $1$,
-and $`\astring{Hello}$, a task always containing the string $\astring{Hello}$.\footnote{
-  Mind the quote $`$ in front of the expression!
+and $`\astring{Hello}$,\footnote{
+  Mind the extra quote $`$ in front of the expression!
 }
-
+a task always containing the string $\astring{Hello}$.
 We will use double quotation marks ($""$) to denote strings.
 Integers are denoted by their decimal representation.
 In the remaining of this text,
 we will make freely use of arithmetic operators like $+$, $-$, $\times$,
 and appending strings with $\append$.
-Only when referring to operators in general we will use $\cdot$.
+Only when referring to operators in general we will use $\star$.
 
 
 \subsection{Typing}
@@ -70,7 +71,7 @@ The typing rule for pure tasks is than:
 \subsection{Evaluation}
 
 To express evaluation,
-we use a big step semantics for our host language.
+we use the big step semantics of our host language.
 Turning an expression $e$ into a value $v$ is denoted by $e \downto v$.
 The rules to evaluate expressions $e$ do not defer from standard work.
 Also, as tasks are values, they will not be evaluated further by the $\downto$ operation.

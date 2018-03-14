@@ -129,6 +129,10 @@
   {\begin{marginfigure}[#1]\equation\nonumber}
   {\endequation\end{marginfigure}}
 
+\newenvironment*{marginequation*}[1][0pt]
+  {\begin{marginfigure}[#1]\equation}
+  {\endequation\end{marginfigure}}
+
 \newenvironment*{grammar}
   %%NOTE: the `@{}` suppreses `\tabcolsep` before the first column
   {\begin{block}\begin{tabular}{@{}rRCLl}}
