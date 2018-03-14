@@ -74,7 +74,7 @@
     {t_1 \And t_2\st{s} \normalise \{`v_1, `v_2\}\st{s}}}
 
 \newcommand*{\NAndEval}
-  {\inferrule*[lab=N-AndEval,right={$t_1' \neq `v_1 \land t_2' \neq `v_2$}]
+  {\inferrule*[lab=N-AndEval,right={$t_1' \neq `v_1 \lor t_2' \neq `v_2$}]
     {t_1\st{s}  \normalise t_1'\st{s'}  \\
      t_2\st{s'} \normalise t_2'\st{s''} }
     {t_1 \And t_2\st{s} \normalise t_1' \And t_2'\st{s}}}
