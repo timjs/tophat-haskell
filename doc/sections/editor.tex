@@ -51,7 +51,7 @@ The typing rule becomes:
 \end{equation*}
 
 
-\subsection{Events}
+\subsection{Actions}
 
 To interact with an editor,
 we should interact with the user with some kind of interface.
@@ -87,4 +87,18 @@ there are two actions that can be handled by editors:
     &        &\mid& \Clear & – clear editor \\
 \end{grammar}
 The value of an editor, empty or not, can be changed to a value $v$ by just sending the value as an action.
-To clear a valued editor, we send the $\Clear$ event.
+To clear a valued editor, we send the $\Clear$ action.
+
+Handling actions is done by a new semantic relation.
+This relation takes a task $t$ and an action $\alpha$ which results in a new task $t'$.
+We write
+\begin{equation*}
+  \boxed{t \handle{\alpha} t'}
+\end{equation*}
+Formalising our intuition from previous paragraphs,
+we need three rules to describe the transitions of editors.
+\begin{equation*}
+  \hChange \qquad \hClear \qquad \hEnter
+\end{equation*}
+Note that the conditions to the right of the rules take care of typing.
+They make sure the type of the entered value and the type of the editor are the same.

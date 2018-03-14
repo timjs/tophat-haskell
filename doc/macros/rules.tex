@@ -80,6 +80,21 @@
 
 %% Handling %%
 
+\newcommand*{\hChange}
+  {\inferrule*[lab=H-Change',right={$v, v' : \tau$}]
+    { }
+    {\Edit v \handle{v'} \Edit v'}}
+
+\newcommand*{\hClear}
+  {\inferrule*[lab=H-Clear']
+    { }
+    {\Edit v \handle{\Clear} \Empty}}
+
+\newcommand*{\hEnter}
+  {\inferrule*[lab=H-Enter',right={$v' : \tau$}]
+    { }
+    {\Empty \tau \handle{v'} \Edit v'}}
+
 \newcommand*{\HSeqPass}
   {\inferrule*[lab=H-SeqPass]
     {t_1, s \handle{\eta} t_1', s'}
