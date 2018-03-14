@@ -67,6 +67,11 @@ parallelStep = do
     ( n, m ) <- parallel
     edit (Just (unwords $ replicate (cast n) m))
 
+parallelStep' : Task (BasicTy StringTy)
+parallelStep' =
+    parallel >>* \( n, m ) =>
+    (edit (Just (unwords $ replicate (cast n) m)) |+| fail)
+
 parallelWatch : Task (PairTy (BasicTy IntTy) (BasicTy IntTy))
 parallelWatch = watch |*| watch
 
@@ -142,4 +147,4 @@ run task state = do
     run nextTask nextState
 
 main : IO ()
-main = uncurry run $ init twoSteps' (state 0)
+main = uncurry run $ init parallelStep (state 0)

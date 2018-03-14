@@ -155,7 +155,14 @@ choices _               = []
 
 options : Task a -> State -> List Event
 options (Pure x)             _ = []
-options (Then this next)     s = Here Continue :: options this s
+options (Then this next)     s =
+    let
+    actions =
+        case value this s of
+            Just _  => [ Here Continue ]
+            Nothing => []
+    in
+    actions ++ options this s
 options (When this next)     s = -- map (Here . Execute) (fromMaybe [] $ choices $ next !(value this s)) ++ options this s
     let
     actions =
