@@ -38,7 +38,7 @@
 
 \newoperator{\Seq}
   {\vartriangleright}
-\newoperator{\When}
+\newoperator{\Cont}
   {\blacktriangleright}
 \let\And\relax
 \newoperator{\And}
@@ -59,11 +59,11 @@
 
 \newcommand*{\Clear}
   {\textsf{C}}
-\newcommand*{\Continue}
-  {\textsf{C}}
+\newcommand*{\Next}
+  {\textsf{N}}
 
 
-%% Semantic arrows %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Semantic functions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \newcommand*{\downto}
   {\Downarrow}
@@ -71,3 +71,6 @@
   {\ensuremath{\;\rightarrow\!\shortmid\;}}
 \newcommand*{\handle}[1]
   {\ensuremath{\;\xrightarrow{\;#1\;}}\;}
+
+\newcommand*{\Value}
+  {\ensuremath{\mathcal{V}}}

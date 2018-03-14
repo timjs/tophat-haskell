@@ -18,98 +18,152 @@
     { }
     {\Gamma \infers \Empty \tau : \Task \tau}}
 
+\newcommand*{\TSeq}
+  {\inferrule*[lab=T-Seq]
+    {\Gamma \infers t : \Task \tau_1 \\
+     \Gamma \infers e : \tau_1 \to \Task \tau_2}
+    {\Gamma \infers t \Seq e : \Task \tau_2}}
 
 
-%% Normalisation %%
+%% Normalisation without state %%
 
 \newcommand*{\NPure}
   {\inferrule*[lab=N-Pure]
     { }
-    {`v, s \normalise `v, s}}
+    {`v \normalise `v}}
+
+\newcommand*{\NEdit}
+  {\inferrule*[lab=N-Edit]
+    { }
+    {\Edit v \normalise \Edit v}}
+
+\newcommand*{\NEmpty}
+  {\inferrule*[lab=N-Empty]
+    { }
+    {\Empty \tau \normalise \Empty \tau}}
 
 \newcommand*{\NSeqEval}
+  {\inferrule*[lab=N-SeqEval,right={$t_1' \neq `v$}]
+    {t_1 \normalise t_1'}
+    {t_1 \Seq e \normalise t_1' \Seq e}}
+
+\newcommand*{\NSeq}
+  {\inferrule*[lab=N-Seq,right={$t_1' = `v$}]
+    {t_1 \normalise t_1' \\
+     e\ v \downto t_2    \\
+     t_2 \normalise t_2' }
+    {t_1 \Seq e \normalise t_2'}}
+
+
+%% Normalisation with state %%
+
+\newcommand*{\NSPure}
+  {\inferrule*[lab=N-Pure]
+    { }
+    {`v, s \normalise `v, s}}
+
+\newcommand*{\NSEdit}
+  {\inferrule*[lab=N-Edit]
+    { }
+    {\Edit v, s \normalise \Edit v, s}}
+
+\newcommand*{\NSEmpty}
+  {\inferrule*[lab=N-Empty]
+    { }
+    {\Empty, s \normalise \Empty, s}}
+
+\newcommand*{\NSSeqEval}
   {\inferrule*[lab=N-SeqEval,right={$t_1' \neq `v$}]
     {t_1, s \normalise t_1', s'}
     {t_1 \Seq e, s \normalise t_1' \Seq e, s'}}
 
-\newcommand*{\NSeq}
+\newcommand*{\NSSeq}
   {\inferrule*[lab=N-Seq,right={$t_1' = `v$}]
     {t_1, s \normalise t_1', s'   \\
      e\ v \downto t_2       \\
      t_2, s' \normalise t_2', s'' }
     {t_1 \Seq e, s \normalise t_2', s''}}
 
-\newcommand*{\NAndEval}
+\newcommand*{\NSAndEval}
   {\inferrule*[lab=N-AndEval,right={$t_1' \neq `v_1 \land t_2' \neq `v_2$}]
     {t_1, s  \normalise t_1', s'  \\
      t_2, s' \normalise t_2', s'' }
     {t_1 \And t_2, s \normalise t_1' \And t_2', s}}
 
-\newcommand*{\NAnd}
+\newcommand*{\NSAnd}
   {\inferrule*[lab=N-And,right={$t_1' = `v_1 \land t_2' = `v_2$}]
     {t_1, s  \normalise t_1', s'  \\
      t_2, s' \normalise t_2', s'' }
     {t_1 \And t_2, s \normalise \{`v_1, `v_2\}, s}}
 
-\newcommand*{\NOrEval}
+\newcommand*{\NSOrEval}
   {\inferrule*[lab=N-OrEval]%,right={$t_1' \neq `v_1 \land t_2' \neq `v_2$}]
     {t_1, s  \normalise t_1', s'  \\
      t_2, s' \normalise t_2', s'' }
     {t_1 \Or t_2, s \normalise t_1' \Or t_2', s}}
 
-\newcommand*{\NEdit}
-  {\inferrule*[lab=N-Edit]
-    { }
-    {\Edit v, s \normalise \Edit v, s}}
-
-\newcommand*{\NEmpty}
-  {\inferrule*[lab=N-Empty]
-    { }
-    {\Empty, s \normalise \Empty, s}}
-
-\newcommand*{\NWatch}
+\newcommand*{\NSWatch}
   {\inferrule*[lab=N-Watch]
     { }
     {\Watch l, s \normalise \Watch l, s}}
 
-\newcommand*{\NFail}
+\newcommand*{\NSFail}
   {\inferrule*[lab=N-Fail]
     { }
     {\Fail, s \normalise \Fail, s}}
 
 
-%% Handling %%
+%% Handling without state %%
 
-\newcommand*{\hChange}
-  {\inferrule*[lab=H-Change',right={$v, v' : \tau$}]
+\newcommand*{\HChange}
+  {\inferrule*[lab=H-Change,right={$v, v' : \tau$}]
     { }
     {\Edit v \handle{v'} \Edit v'}}
 
-\newcommand*{\hClear}
-  {\inferrule*[lab=H-Clear']
+\newcommand*{\HClear}
+  {\inferrule*[lab=H-Clear]
     { }
     {\Edit v \handle{\Clear} \Empty}}
 
-\newcommand*{\hEnter}
-  {\inferrule*[lab=H-Enter',right={$v' : \tau$}]
+\newcommand*{\HEnter}
+  {\inferrule*[lab=H-Enter,right={$v' : \tau$}]
     { }
     {\Empty \tau \handle{v'} \Edit v'}}
 
 \newcommand*{\HSeqPass}
   {\inferrule*[lab=H-SeqPass]
+    {t_1 \handle{\alpha} t_1'}
+    {t_1 \Seq e \handle{\alpha} t_1' \Seq e}}
+
+\newcommand*{\HSeqStay}
+  {\inferrule*[lab=H-SeqStay,right={$\Value(t_1) = \nothing$}]
+    { }
+    {t_1 \Seq e \handle{\Next} t_1 \Seq e}}
+
+\newcommand*{\HSeqNext}
+  {\inferrule*[lab=H-SeqNext,right={$\Value(t_1) = v$}]
+    {e\ v \downto t_2    \\
+     t_2 \normalise t_2' }
+    {t_1 \Seq e \handle{\Next} t_2' \Seq e}}
+
+
+%% Handling with state %%
+
+\newcommand*{\HSSeqPass}
+  {\inferrule*[lab=H-SeqPass]
     {t_1, s \handle{\eta} t_1', s'}
     {t_1 \Seq e, s \handle{\eta} t_1' \Seq e, s'}}
 
-\newcommand*{\HSeqNothing}
-  {\inferrule*[lab=H-SeqNothing,right={$\mathcal{V}(t_1) = \nothing$}]
+\newcommand*{\HSSeqNothing}
+  {\inferrule*[lab=H-SeqNothing,right={$\Value(t_1) = \nothing$}]
     { }
-    {t_1 \Seq e, s \handle{\Continue} t_1 \Seq e, s}}
+    {t_1 \Seq e, s \handle{\Next} t_1 \Seq e, s}}
 
-\newcommand*{\HSeqContinue}
-  {\inferrule*[lab=H-SeqContinue,right={$\mathcal{V}(t_1) = v$}]
+\newcommand*{\HSSeqContinue}
+  {\inferrule*[lab=H-SeqContinue,right={$\Value(t_1) = v$}]
     {e\ v \downto t_2     \\
      t_2, s \normalise t_2', s' }
-    {t_1 \Seq e, s \handle{\Continue} t_2' \Seq e, s'}}
+    {t_1 \Seq e, s \handle{\Next} t_2' \Seq e, s'}}
 
 
 
