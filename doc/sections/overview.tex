@@ -2,23 +2,34 @@
 
 \section{An overview}
 
+\statefultrue
+
+
 \subsection{Task normalisation}
 
+Most important:
 \begin{mathpar}
-  \NSSeq \\ \NSSeqEval \\
-  \NSAnd \\ \NSAndEval \\
-  \NSOrEval
+  \NSeq \\
+  \NAnd \\
 \end{mathpar}
-The rest is dull:
+Evaluation:
 \begin{mathpar}
-  \NSEdit \quad \NSEmpty \quad \NSWatch \\
-  \NSPure \quad \NSFail
+  \NSeqEval \\
+  \NAndEval \\
+  \NOrEval
+\end{mathpar}
+Other constructs are values:
+\begin{mathpar}
+  \NEdit \qquad \NEmpty \qquad \NWatch \\
+  \NPure \qquad \NFail
 \end{mathpar}
 
 
 \subsection{Event handling}
 
 \begin{mathpar}
-  \HSSeqNothing \quad \HSSeqNothing \\
-  \HSSeqPass
+  \HChange \qquad \HClear \qquad \HEnter \\
+  \HSeqNext \qquad \HSeqStay \\
+  \HSeqPass \\
+  \HAndLeft \qquad \HAndRight
 \end{mathpar}
