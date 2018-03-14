@@ -62,7 +62,9 @@ Only difference with respect to standard work is the addition of a type for task
     &      &\mid& \String           & – strings \\
     &      &\mid& \Task \tau        & – tasks \\
 \end{grammar}
-The typing rule for pure tasks is than:
+Typing rules are of the form $\boxed{\Gamma \infers e : \tau}$,
+which we read as \enquote{in environment $\Gamma$, expression $e$ has type $\tau$}.
+The typing rule for pure tasks is given by
 \begin{equation*}
   \TPure
 \end{equation*}
