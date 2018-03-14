@@ -24,6 +24,12 @@
      \Gamma \infers e : \tau_1 \to \Task \tau_2}
     {\Gamma \infers t \Seq e : \Task \tau_2}}
 
+\newcommand*{\TAnd}
+  {\inferrule*[lab=T-And]
+    {\Gamma \infers t_1 : \Task \tau_1 \\
+     \Gamma \infers t_2 : \Task \tau_2}
+    {\Gamma \infers t_1 \And t_2 : \Task (\tau_1 \times \tau_2)}}
+
 
 %% Normalisation without state %%
 
@@ -42,17 +48,29 @@
     { }
     {\Empty \tau \normalise \Empty \tau}}
 
-\newcommand*{\NSeqEval}
-  {\inferrule*[lab=N-SeqEval,right={$t_1' \neq `v$}]
-    {t_1 \normalise t_1'}
-    {t_1 \Seq e \normalise t_1' \Seq e}}
-
 \newcommand*{\NSeq}
   {\inferrule*[lab=N-Seq,right={$t_1' = `v$}]
     {t_1 \normalise t_1' \\
      e\ v \downto t_2    \\
      t_2 \normalise t_2' }
     {t_1 \Seq e \normalise t_2'}}
+
+\newcommand*{\NSeqEval}
+  {\inferrule*[lab=N-SeqEval,right={$t_1' \neq `v$}]
+    {t_1 \normalise t_1'}
+    {t_1 \Seq e \normalise t_1' \Seq e}}
+
+\newcommand*{\NAnd}
+  {\inferrule*[lab=N-And,right={$t_1' = `v_1 \land t_2' = `v_2$}]
+    {t_1 \normalise t_1'  \\
+     t_2 \normalise t_2' }
+    {t_1 \And t_2 \normalise \{`v_1, `v_2\}}}
+
+\newcommand*{\NAndEval}
+  {\inferrule*[lab=N-AndEval,right={$t_1' \neq `v_1 \land t_2' \neq `v_2$}]
+    {t_1 \normalise t_1'  \\
+     t_2 \normalise t_2' }
+    {t_1 \And t_2 \normalise t_1' \And t_2'}}
 
 
 %% Normalisation with state %%
@@ -145,6 +163,16 @@
     {e\ v \downto t_2    \\
      t_2 \normalise t_2' }
     {t_1 \Seq e \handle{\Next} t_2' \Seq e}}
+
+\newcommand*{\HAndLeft}
+  {\inferrule*[lab=H-AndLeft]
+    {t_1 \handle{\eta} t_1' }
+    {t_1 \And t_2 \handle{\Left \eta} t_1' \And t_2}}
+
+\newcommand*{\HAndRight}
+  {\inferrule*[lab=H-AndRight]
+    {t_2 \handle{\eta} t_2' }
+    {t_1 \And t_2 \handle{\Left \eta} t_1 \And t_2'}}
 
 
 %% Handling with state %%
