@@ -16,9 +16,10 @@ When it is empty, a value can be \emph{reentered}.
 For this purpose, we extend our task language with two constructs:
 a valued editor $\Edit v$ and an empty editor $\Empty \tau$.
 \begin{grammar}
-  Tasks & t & ::=& \ldots      & \\
-        &   &\mid& \Edit v     & – Valued editor \\
-        &   &\mid& \Empty \tau & – Empty editor \\
+  Tasks
+    & t & ::=& \ldots      & \\
+    &   &\mid& \Edit v     & – valued editor \\
+    &   &\mid& \Empty \tau & – empty editor \\
 \end{grammar}
 
 Valued editors contain a value $v$ and therefore inherit the type of $v$.
@@ -62,8 +63,28 @@ we can print out the current value of an editor
 and prompt the user for a new value
 or a command to clear the editor.
 
-\endinput
+To abstract away from the user interface,
+we introduce an event system.
+It does not matter how these events are sent to the application.
+This can be by pushing a button,
+entering text in an input box,
+committing some text on a command line,
+or sending it over a web socket.
 
-Editors let us view and change a value in the system.
-However, an editor can also have no value at all.
-This is the case when the user clears the value.
+We define an extra syntactic category of \emph{actions} $\alpha$.\footnote{
+  We will introduce the umbrella term \emph{events}, which contain actions, in a later section.
+  For now, just having actions is enough.
+}
+As we already discussed before,
+there are two actions that can be handled by editors:
+\begin{enumerate*}
+  \item changing the value; or
+  \item clearing the value.
+\end{enumerate*}
+\begin{grammar}
+  Actions
+    & \alpha & ::=& v      & – change editor to value \\
+    &        &\mid& \Clear & – clear editor \\
+\end{grammar}
+The value of an editor, empty or not, can be changed to a value $v$ by just sending the value as an action.
+To clear a valued editor, we send the $\Clear$ event.
