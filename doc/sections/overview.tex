@@ -71,8 +71,18 @@
   \TPure \qquad \TFail \\
   \TEdit \qquad \TEmpty \qquad \TWatch \\
   \TSeq \\
-  \TAnd \qquad \TOr \\
+  \TAnd \qquad \TOr
 \end{mathpar}
+
+
+\subsection{Expression evaluation}
+
+\begin{equation*}
+  \boxed{\RelationV}
+\end{equation*}
+
+(As defined by \textcite{pierce2002types})
+
 
 \newpage
 \subsection{Task normalisation}
@@ -86,16 +96,18 @@ Most important:
   \NSeq \\
   \NAnd
 \end{mathpar}
+
 Evaluation complementing above conditional rules:
 \begin{mathpar}
   \NSeqEval \\
   \NAndEval \\
   \NOrEval
 \end{mathpar}
+
 Other constructs are values:
 \begin{mathpar}
-  \NEdit \qquad \NEmpty \qquad \NWatch \\
-  \NPure \qquad \NFail
+  \NPure \qquad \NFail \\
+  \NEdit \qquad \NEmpty \qquad \NWatch
 \end{mathpar}
 
 
@@ -112,10 +124,16 @@ For editors and watches:
   \HStore
 \end{mathpar}
 
+Stepping:
 \begin{mathpar}
-  \HSeqNext \qquad \HSeqStay \\
-  \HSeqPass \\
-  \HAndLeft \qquad \HAndRight
+  \HSeqNext \qquad \HSeqStay
+\end{mathpar}
+
+\renewcommand*{\AndOr}{\Both}
+Passing on events ($\AndOr \in \{\And, \Or\}$):
+\begin{mathpar}
+  \HPass \\
+  \HLeft \qquad \HRight
 \end{mathpar}
 
 

@@ -57,6 +57,11 @@
     {\Gamma\st{\Sigma} \infers t_1 \Or t_2 : \Task \tau}}
 
 
+%% Evaluation %%
+
+\newcommand*{\RelationV}
+  {e \downto v}
+
 
 %% Normalisation %%
 
@@ -139,10 +144,10 @@
     { }
     {\Empty \tau\st{s} \handle{v'} \Edit v'\st{s}}}
 
-\newcommand*{\HSeqPass}
-  {\inferrule*[lab=H-SeqPass]
-    {t_1\st{s} \handle{\alpha} t_1'\st{s'}}
-    {t_1 \Seq e\st{s} \handle{\alpha} t_1' \Seq e\st{s'}}}
+\newcommand{\HStore}
+  {\inferrule*[lab=H-Store]
+    { }
+    {\Watch l, s \handle{v'} \Watch l, [l \mapsto v']s}}
 
 \newcommand*{\HSeqStay}
   {\inferrule*[lab=H-SeqStay,right={$\Value(t_1) = \nothing$}]
@@ -155,20 +160,23 @@
      t_2\st{s} \normalise t_2'\st{s'} }
     {t_1 \Seq e\st{s} \handle{\Next} t_2' \Seq e\st{s'}}}
 
-\newcommand*{\HAndLeft}
-  {\inferrule*[lab=H-AndLeft]
+\newcommand*{\HPass}
+  {\inferrule*[lab=H-Pass,right={$\eta \neq \Next$}]
+    {t_1\st{s} \handle{\eta} t_1'\st{s'}}
+    {t_1 \Seq e\st{s} \handle{\eta} t_1' \Seq e\st{s'}}}
+
+\newcommand*{\AndOr}{\Both}
+
+\newcommand*{\HLeft}
+  {\inferrule*[lab=H-Left]
     {t_1\st{s} \handle{\eta} t_1'\st{s'} }
-    {t_1 \And t_2\st{s} \handle{\Left \eta} t_1' \And t_2\st{s'}}}
+    {t_1 \AndOr t_2\st{s} \handle{\Left \eta} t_1' \AndOr t_2\st{s'}}}
 
-\newcommand*{\HAndRight}
-  {\inferrule*[lab=H-AndRight]
+\newcommand*{\HRight}
+  {\inferrule*[lab=H-Right]
     {t_2\st{s} \handle{\eta} t_2'\st{s'} }
-    {t_1\st{s} \And t_2 \handle{\Left \eta} t_1 \And t_2'\st{s'}}}
+    {t_1\st{s} \AndOr t_2 \handle{\Left \eta} t_1 \AndOr t_2'\st{s'}}}
 
-\newcommand{\HStore}
-  {\inferrule*[lab=H-Store]
-    { }
-    {\Watch l, s \handle{v'} \Watch l, [l \mapsto v']s}}
 
 \endinput
 
