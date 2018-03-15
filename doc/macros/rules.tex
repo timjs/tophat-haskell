@@ -73,6 +73,11 @@
     { }
     {`v\st{s} \normalise `v\st{s}}}
 
+\newcommand*{\NFail}
+  {\inferrule*[lab=N-Fail]
+    { }
+    {\Fail\st{s} \normalise \Fail\st{s}}}
+
 \newcommand*{\NEdit}
   {\inferrule*[lab=N-Edit]
     { }
@@ -82,6 +87,11 @@
   {\inferrule*[lab=N-Empty]
     { }
     {\Empty \tau\st{s} \normalise \Empty \tau\st{s}}}
+
+\newcommand*{\NWatch}
+  {\inferrule*[lab=N-Watch]
+    { }
+    {\Watch l\st{s} \normalise \Watch l\st{s}}}
 
 \newcommand*{\NSeq}
   {\inferrule*[lab=N-Seq,right={$t_1' = `v$}]
@@ -113,16 +123,6 @@
      t_2\st{s'} \normalise t_2'\st{s''} }
     {t_1 \Or t_2\st{s} \normalise t_1' \Or t_2'\st{s}}}
 
-\newcommand*{\NWatch}
-  {\inferrule*[lab=N-Watch]
-    { }
-    {\Watch l\st{s} \normalise \Watch l\st{s}}}
-
-\newcommand*{\NFail}
-  {\inferrule*[lab=N-Fail]
-    { }
-    {\Fail\st{s} \normalise \Fail\st{s}}}
-
 
 %% Handling %%
 
@@ -145,7 +145,7 @@
     {\Empty \tau\st{s} \handle{v'} \Edit v'\st{s}}}
 
 \newcommand{\HStore}
-  {\inferrule*[lab=H-Store]
+  {\inferrule*[lab=H-Store,right={$\Sigma(l), v' : \tau$}]
     { }
     {\Watch l, s \handle{v'} \Watch l, [l \mapsto v']s}}
 
