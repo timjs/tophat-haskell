@@ -131,15 +131,20 @@ Stepping:
 %
 Choosing:
 \begin{mathpar}
-  \HFirst \qquad \HSecond \qquad \HOther
+  \HFirst \qquad \HSecond \\
+  \HOther
 \end{mathpar}
 %
 \renewcommand*{\AndOr}{\Both}
 %
-Passing on events ($\AndOr \in \{\And, \Or\}$):
+Passing to left and right ($\AndOr \in \{\And, \Or\}$):
 \begin{mathpar}
-  \HPass \\
   \HLeft \qquad \HRight
+\end{mathpar}
+%
+Fallback case, only applicable when no other matches:
+\begin{mathpar}
+  \HFallback
 \end{mathpar}
 
 
