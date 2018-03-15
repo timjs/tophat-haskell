@@ -82,7 +82,6 @@
 \begin{equation*}
   \boxed{\RelationV}
 \end{equation*}
-%
 (As defined by \textcite{pierce2002types})
 
 
@@ -92,21 +91,29 @@
 \begin{equation*}
   \boxed{\RelationN}
 \end{equation*}
-%
-Simplifying:
+
+
+\paragraph{Simplifying}
+
 \begin{mathpar}
   \NSeq \\
   \NAnd
 \end{mathpar}
-%
-Evaluation complementing above conditional rules:
+
+
+\paragraph{Evaluation}
+
+(Complementing above conditional rules)
+
 \begin{mathpar}
   \NSeqEval \\
   \NAndEval \\
   \NOrEval
 \end{mathpar}
-%
-Other constructs are values:
+
+
+\paragraph{Values}
+
 \begin{mathpar}
   \NPure \qquad \NFail \\
   \NEdit \qquad \NEmpty \qquad \NWatch
@@ -119,32 +126,45 @@ Other constructs are values:
 \begin{equation*}
   \boxed{\RelationH}
 \end{equation*}
-%
-For editors and watches:
+
+
+\paragraph{Editors and Watches}
+
 \begin{mathpar}
   \HChange \qquad \HEnter \qquad \HClear \\
   \HStore
 \end{mathpar}
-%
-Stepping:
+
+
+\paragraph{Stepping}
+
 \begin{mathpar}
   \HNext \qquad \HStay
 \end{mathpar}
-%
-Choosing:
+
+
+\paragraph{Choosing}
+
 \begin{mathpar}
   \HFirst \qquad \HSecond \\
   \HOther
 \end{mathpar}
-%
+
+
+\paragraph{Passing}
+
 \renewcommand*{\AndOr}{\Both}
-%
-Passing to left and right ($\AndOr \in \{\And, \Or\}$):
+($\AndOr \in \{\And, \Or\}$)
+
 \begin{mathpar}
   \HLeft \qquad \HRight
 \end{mathpar}
-%
-Fallback case, only applicable when no other matches:
+
+
+\paragraph{Fallback}
+
+(Only applicable when no other matches apply!)
+
 \begin{mathpar}
   \HFallback
 \end{mathpar}
