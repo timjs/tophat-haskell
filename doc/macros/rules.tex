@@ -10,35 +10,58 @@
 
 %% Typing %%
 
+\newcommand*{\RelationT}
+  {\Gamma\st{\Sigma} \infers e : \tau}
+
 \newcommand*{\TPure}
   {\inferrule*[lab=T-Pure]
-    {\Gamma \infers e : \tau}
-    {\Gamma \infers `e : \Task \tau}}
+    {\Gamma\st{\Sigma} \infers e : \tau}
+    {\Gamma\st{\Sigma} \infers `e : \Task \tau}}
+
+\newcommand*{\TFail}
+  {\inferrule*[lab=T-Fail]
+    {\ }
+    {\Gamma\st{\Sigma} \infers \Fail : \Task \tau}}
 
 \newcommand*{\TEdit}
   {\inferrule*[lab=T-Edit]
-    {\Gamma \infers v : \tau}
-    {\Gamma \infers \Edit v : \Task \tau}}
+    {\Gamma\st{\Sigma} \infers v : \tau}
+    {\Gamma\st{\Sigma} \infers \Edit v : \Task \tau}}
 
 \newcommand*{\TEmpty}
   {\inferrule*[lab=T-Empty]
-    { }
-    {\Gamma \infers \Empty \tau : \Task \tau}}
+    {\ }
+    {\Gamma\st{\Sigma} \infers \Empty \tau : \Task \tau}}
+
+\newcommand*{\TWatch}
+  {\inferrule*[lab=T-Watch]
+    {\Gamma, \Sigma \infers \Sigma(l) : \tau}
+    {\Gamma, \Sigma \infers \Watch l : \Task \tau}}
 
 \newcommand*{\TSeq}
   {\inferrule*[lab=T-Seq]
-    {\Gamma \infers t : \Task \tau_1 \\
-     \Gamma \infers e : \tau_1 \to \Task \tau_2}
-    {\Gamma \infers t \Seq e : \Task \tau_2}}
+    {\Gamma\st{\Sigma} \infers t_1 : \Task \tau_1 \\
+     \Gamma\st{\Sigma} \infers e : \tau_1 \to \Task \tau_2}
+    {\Gamma\st{\Sigma} \infers t_1 \Seq e : \Task \tau_2}}
 
 \newcommand*{\TAnd}
   {\inferrule*[lab=T-And]
-    {\Gamma \infers t_1 : \Task \tau_1 \\
-     \Gamma \infers t_2 : \Task \tau_2}
-    {\Gamma \infers t_1 \And t_2 : \Task (\tau_1 \times \tau_2)}}
+    {\Gamma\st{\Sigma} \infers t_1 : \Task \tau_1 \\
+     \Gamma\st{\Sigma} \infers t_2 : \Task \tau_2}
+    {\Gamma\st{\Sigma} \infers t_1 \And t_2 : \Task (\tau_1 \times \tau_2)}}
+
+\newcommand*{\TOr}
+  {\inferrule*[lab=T-Or]
+    {\Gamma\st{\Sigma} \infers t_1 : \Task \tau \\
+     \Gamma\st{\Sigma} \infers t_2 : \Task \tau }
+    {\Gamma\st{\Sigma} \infers t_1 \Or t_2 : \Task \tau}}
+
 
 
 %% Normalisation %%
+
+\newcommand*{\RelationN}
+  {t\st{s} \normalise t'\st{s'}}
 
 \newcommand*{\NPure}
   {\inferrule*[lab=N-Pure]
@@ -98,6 +121,9 @@
 
 %% Handling %%
 
+\newcommand*{\RelationH}
+  {t\st{s} \handle{\eta} t'\st{s'}}
+
 \newcommand*{\HChange}
   {\inferrule*[lab=H-Change,right={$v, v' : \tau$}]
     { }
@@ -139,6 +165,10 @@
     {t_2\st{s} \handle{\eta} t_2'\st{s'} }
     {t_1\st{s} \And t_2 \handle{\Left \eta} t_1 \And t_2'\st{s'}}}
 
+\newcommand{\HStore}
+  {\inferrule*[lab=H-Store]
+    { }
+    {\Watch l, s \handle{v'} \Watch l, [l \mapsto v']s}}
 
 \endinput
 

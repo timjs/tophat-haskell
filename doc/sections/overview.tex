@@ -1,5 +1,6 @@
 % !TEX root=../main.tex
 
+\newpage
 \section{An overview}
 
 \statefultrue
@@ -59,14 +60,33 @@
 \end{grammar}
 
 
+\newpage
+\subsection{Typing rules}
+
+\begin{equation*}
+  \boxed{\RelationT}
+\end{equation*}
+
+\begin{mathpar}
+  \TPure \qquad \TFail \\
+  \TEdit \qquad \TEmpty \qquad \TWatch \\
+  \TSeq \\
+  \TAnd \qquad \TOr \\
+\end{mathpar}
+
+\newpage
 \subsection{Task normalisation}
+
+\begin{equation*}
+  \boxed{\RelationN}
+\end{equation*}
 
 Most important:
 \begin{mathpar}
   \NSeq \\
-  \NAnd \\
+  \NAnd
 \end{mathpar}
-Evaluation:
+Evaluation complementing above conditional rules:
 \begin{mathpar}
   \NSeqEval \\
   \NAndEval \\
@@ -79,11 +99,24 @@ Other constructs are values:
 \end{mathpar}
 
 
+\newpage
 \subsection{Event handling}
 
+\begin{equation*}
+  \boxed{\RelationH}
+\end{equation*}
+
+For editors and watches:
 \begin{mathpar}
   \HChange \qquad \HClear \qquad \HEnter \\
+  \HStore
+\end{mathpar}
+
+\begin{mathpar}
   \HSeqNext \qquad \HSeqStay \\
   \HSeqPass \\
   \HAndLeft \qquad \HAndRight
 \end{mathpar}
+
+
+\newpage
