@@ -66,7 +66,7 @@
 \begin{equation*}
   \boxed{\RelationT}
 \end{equation*}
-
+%
 \begin{mathpar}
   \TPure \qquad \TFail \\
   \TEdit \qquad \TEmpty \qquad \TWatch \\
@@ -80,7 +80,7 @@
 \begin{equation*}
   \boxed{\RelationV}
 \end{equation*}
-
+%
 (As defined by \textcite{pierce2002types})
 
 
@@ -90,20 +90,20 @@
 \begin{equation*}
   \boxed{\RelationN}
 \end{equation*}
-
-Most important:
+%
+Simplifying:
 \begin{mathpar}
   \NSeq \\
   \NAnd
 \end{mathpar}
-
+%
 Evaluation complementing above conditional rules:
 \begin{mathpar}
   \NSeqEval \\
   \NAndEval \\
   \NOrEval
 \end{mathpar}
-
+%
 Other constructs are values:
 \begin{mathpar}
   \NPure \qquad \NFail \\
@@ -117,19 +117,25 @@ Other constructs are values:
 \begin{equation*}
   \boxed{\RelationH}
 \end{equation*}
-
+%
 For editors and watches:
 \begin{mathpar}
-  \HChange \qquad \HClear \qquad \HEnter \\
+  \HChange \qquad \HEnter \qquad \HClear \\
   \HStore
 \end{mathpar}
-
+%
 Stepping:
 \begin{mathpar}
-  \HSeqNext \qquad \HSeqStay
+  \HNext \qquad \HStay
 \end{mathpar}
-
+%
+Choosing:
+\begin{mathpar}
+  \HFirst \qquad \HSecond \qquad \HOther
+\end{mathpar}
+%
 \renewcommand*{\AndOr}{\Both}
+%
 Passing on events ($\AndOr \in \{\And, \Or\}$):
 \begin{mathpar}
   \HPass \\
