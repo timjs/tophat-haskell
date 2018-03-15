@@ -5,6 +5,60 @@
 \statefultrue
 
 
+\subsection{Language}
+
+\begin{grammar}
+  Expressions
+    & e      &::= & e_1\ e_2                    & – application \\
+    &        &\mid& \If e_1 \Then e_2 \Else e_3 & – test \\
+    &        &\mid& \{e_1, e_2\}                & – pair \\
+    &        &\mid& \Ref e                      & – reference \\
+    &        &\mid& !e                          & – dereference \\
+    &        &\mid& e_1 := e_2                  & – assign \\
+    &        &\mid& e_1 \star e_2               & – operator \\
+    &        &\mid& x                           & – variable \\
+    &        &\mid& v                           & – value \\
+  Values
+    & v      &::= & \lambda x.\ e               & – abstractions \\
+    &        &\mid& \{v_1, v_2\}                & – pairs \\
+    &        &\mid& B \in \BB                   & – booleans \\
+    &        &\mid& I \in \ZZ                   & – integers \\
+    &        &\mid& S \in \SS                   & – strings \\
+    &        &\mid& l                           & – locations \\
+    &        &\mid& t                           & – tasks \\
+  Tasks
+    & t      &::= & `e                          & – pure \\
+    &        &\mid& \Edit v                     & – edit value \\
+    &        &\mid& \Empty \tau                 & – edit empty \\
+    &        &\mid& \Watch l                    & – watch location \\
+    &        &\mid& t \Seq e                    & – sequence \\
+    &        &\mid& t_1 \And t_2                & – pair \\
+    &        &\mid& t_1 \Or t_2                 & – choose \\
+    &        &\mid& \Fail                       & – fail \\
+  Events
+    & \eta   & ::=& \alpha                      & – action \\
+    &        &\mid& \Left \eta                  & – pass to left \\
+    &        &\mid& \Right \eta                 & – pass to right \\
+  Actions
+    & \alpha & ::=& v                           & – change editor to value \\
+    &        &\mid& \Clear                      & – clear editor \\
+    &        &\mid& \Pick \pi                   & – continue with next task \\
+    &        &\mid& \Execute \pi                & – continue with next task \\
+  Paths
+    & \pi    & ::=& \First                      & – choose first \\
+    &        &\mid& \Second                     & – choose second \\
+    &        &\mid& \Other \pi                  & – choose other \\
+  Types
+    & \tau   &::= & \tau_1 \to \tau_2           & – abstractions \\
+    &        &\mid& \tau_1 \times \tau_2        & – pairs \\
+    &        &\mid& \Bool                       & – booleans \\
+    &        &\mid& \Int                        & – integers \\
+    &        &\mid& \String                     & – strings \\
+    &        &\mid& \Reference \tau             & – references \\
+    &        &\mid& \Task \tau                  & – tasks \\
+\end{grammar}
+
+
 \subsection{Task normalisation}
 
 Most important:

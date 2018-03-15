@@ -9,6 +9,8 @@
   {\textbf{then}}
 \newoperator{\Else}
   {\textbf{else}}
+\newoperator{\Ref}
+  {\textbf{ref}}
 
 
 %% Values %%
@@ -30,6 +32,8 @@
   {\textsf{Int}}
 \newoperator{\String}
   {\textsf{String}}
+\newoperator{\Reference}
+  {\textsf{Ref}}
 \newoperator{\Task}
   {\textsf{Task}}
 
@@ -57,15 +61,27 @@
 
 %% Events %%
 
-\newcommand*{\Left}
+\newoperator{\Left}
   {\textsf{L}}
-\newcommand*{\Right}
+\newoperator{\Right}
   {\textsf{R}}
 
 \newcommand*{\Clear}
   {\textsf{C}}
 \newcommand*{\Next}
   {\textsf{N}}
+\newoperator{\Pick}
+  {\textsf{P}}
+\newoperator{\Execute}
+  {\textsf{E}}
+
+
+\newcommand*{\First}
+  {\textsf{F}}
+\newcommand*{\Second}
+  {\textsf{S}}
+\newoperator{\Other}
+  {\textsf{S}}
 
 
 %% Semantic functions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
