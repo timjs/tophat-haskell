@@ -21,6 +21,7 @@
     &        &\mid& v                           & – value \\
   Values
     & v      &::= & \lambda x.\ e               & – abstractions \\
+    &        &\mid& \{\}                        & – unit \\
     &        &\mid& \{v_1, v_2\}                & – pairs \\
     &        &\mid& B \in \BB                   & – booleans \\
     &        &\mid& I \in \ZZ                   & – integers \\
@@ -51,6 +52,7 @@
     &        &\mid& \Other \pi                  & – choose other \\
   Types
     & \tau   &::= & \tau_1 \to \tau_2           & – abstractions \\
+    &        &\mid& \Unit                       & – unit \\
     &        &\mid& \tau_1 \times \tau_2        & – pairs \\
     &        &\mid& \Bool                       & – booleans \\
     &        &\mid& \Int                        & – integers \\
