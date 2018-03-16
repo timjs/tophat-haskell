@@ -3,8 +3,6 @@
 \newpage
 \section{An overview}
 
-\statefultrue
-
 
 \subsection{Language}
 
@@ -62,13 +60,17 @@
 \end{grammar}
 
 
+\renewcommand*{\arraystretch}{4}
+\statefultrue
+
+
 \newpage
 \subsection{Typing rules}
 
 \begin{equation*}
   \boxed{\RelationT}
 \end{equation*}
-%
+
 \begin{mathpar}
   \TPure \qquad \TFail \\
   \TEdit \qquad \TEmpty \qquad \TWatch \\
@@ -101,6 +103,15 @@
 \end{mathpar}
 
 
+\paragraph{Stepping}
+
+\begin{mathpar}
+  \NContStay \\
+  \NContFail \\
+  \NContNext
+\end{mathpar}
+
+
 \paragraph{Evaluation}
 
 (Complementing above conditional rules)
@@ -128,7 +139,7 @@
 \end{equation*}
 
 
-\paragraph{Editors and Watches}
+\paragraph{Editors and watches}
 
 \begin{mathpar}
   \HChange \qquad \HEnter \qquad \HClear \\
@@ -139,7 +150,11 @@
 \paragraph{Stepping}
 
 \begin{mathpar}
-  \HNext \qquad \HStay
+  \begin{array}{@{}ll}
+    \HStayS & \HNextS \\
+    \HStay  & \HNext  \\
+            & \HFail
+  \end{array}
 \end{mathpar}
 
 
@@ -158,6 +173,7 @@
 ($\AndOr \in \{\And, \Or\}$)
 
 \begin{mathpar}
+  \HPassS \qquad \HPass \\
   \HLeft \qquad \HRight
 \end{mathpar}
 

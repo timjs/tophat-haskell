@@ -105,6 +105,22 @@
     {t_1\st{s} \normalise t_1'\st{s'}}
     {t_1 \Seq e\st{s} \normalise t_1' \Seq e\st{s'}}}
 
+\newcommand*{\NContStay}
+  {\inferrule*[lab=N-ContStay,right={$\Value(t_1) = \nothing$}]
+    { }
+    {t_1 \Cont e\st{s} \normalise t_1 \Cont e\st{s}}}
+
+\newcommand*{\NContFail}
+  {\inferrule*[lab=N-ContFail,right={$\Value(t_1) = v \land (t_2 = \Fail \lor t_2 = t_3 \Or t_4)$}]
+    {e\ v \downto t_2}
+    {t_1 \Cont e\st{s} \normalise t_1 \Cont e\st{s}}}
+
+\newcommand*{\NContNext}
+  {\inferrule*[lab=N-ContNext,right={$\Value(t_1) = v \land (t_2 \neq \Fail \lor t_2 \neq t_3 \Or t_4)$}]
+    {e\ v \downto t_2    \\
+     t_2\st{s} \normalise t_2'\st{s'} }
+    {t_1 \Cont e\st{s} \normalise t_2' \Cont e\st{s'}}}
+
 \newcommand*{\NAnd}
   {\inferrule*[lab=N-And,right={$t_1' = `v_1 \land t_2' = `v_2$}]
     {t_1\st{s}  \normalise t_1'\st{s'}  \\
@@ -149,21 +165,43 @@
     { }
     {\Watch l, s \handle{v'} \Watch l, [l \mapsto v']s}}
 
-\newcommand*{\HStay}
-  {\inferrule*[lab=H-Stay,right={$\Value(t_1) = \nothing$}]
+\newcommand*{\HStayS}
+  {\inferrule*[lab=H-Stay',right={$\Value(t_1) = \nothing$}]
     {\ }
     {t_1 \Seq e\st{s} \handle{\Next} t_1 \Seq e\st{s}}}
 
-\newcommand*{\HNext}
-  {\inferrule*[lab=H-Next,right={$\Value(t_1) = v$}]
+\newcommand*{\HNextS}
+  {\inferrule*[lab=H-Next',right={$\Value(t_1) = v$}]
     {e\ v \downto t_2    \\
      t_2\st{s} \normalise t_2'\st{s'} }
     {t_1 \Seq e\st{s} \handle{\Next} t_2' \Seq e\st{s'}}}
 
-\newcommand*{\HPass}
-  {\inferrule*[lab=H-Pass,right={$\eta \neq \Next$}]
+\newcommand*{\HStay}
+  {\inferrule*[lab=H-Stay,right={$\Value(t_1) = \nothing$}]
+    {\ }
+    {t_1 \Cont e\st{s} \handle{\Execute \pi} t_1 \Cont e\st{s}}}
+
+\newcommand*{\HFail}
+  {\inferrule*[lab=H-Fail,right={$\Value(t_1) = v \land t_2 = \Fail$}]
+    {e\ v \downto t_2    \\
+     t_2\st{s} \handle{\Pick \pi} t_2'\st{s'} }
+    {t_1 \Cont e\st{s} \handle{\Execute \pi} t_1 \Cont e\st{s}}}
+
+\newcommand*{\HNext}
+  {\inferrule*[lab=H-Next,right={$\Value(t_1) = v \land t_2 \neq \Fail$}]
+    {e\ v \downto t_2    \\
+     t_2\st{s} \handle{\Pick \pi} t_2'\st{s'} }
+    {t_1 \Cont e\st{s} \handle{\Execute \pi} t_2' \Cont e\st{s'}}}
+
+\newcommand*{\HPassS}
+  {\inferrule*[lab=H-Pass',right={$\eta \neq \Next$}]
     {t_1\st{s} \handle{\eta} t_1'\st{s'}}
     {t_1 \Seq e\st{s} \handle{\eta} t_1' \Seq e\st{s'}}}
+
+\newcommand*{\HPass}
+  {\inferrule*[lab=H-Pass,right={$\eta \neq \Execute \pi$}]
+    {t_1\st{s} \handle{\eta} t_1'\st{s'}}
+    {t_1 \Cont e\st{s} \handle{\eta} t_1' \Cont e\st{s'}}}
 
 \newcommand*{\HFirst}
   {\inferrule*[lab=H-First,right={$t_1 \neq \Fail$}]
