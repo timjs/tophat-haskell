@@ -31,7 +31,8 @@
     &        &\mid& \Edit v                     & – edit value \\
     &        &\mid& \Empty \tau                 & – edit empty \\
     &        &\mid& \Watch l                    & – watch location \\
-    &        &\mid& t \Seq e                    & – sequence \\
+    &&\grayed{\mid}& \grayed{t \Seq e}          & \grayed{– sequence} \\
+    &        &\mid& t \Cont e                   & – sequence \\
     &        &\mid& t_1 \And t_2                & – pair \\
     &        &\mid& t_1 \Or t_2                 & – choose \\
     &        &\mid& \Fail                       & – fail \\
@@ -44,6 +45,7 @@
     &        &\mid& \Clear                      & – clear editor \\
     &        &\mid& \Pick \pi                   & – pick one of two tasks \\
     &        &\mid& \Execute \pi                & – execute one of next tasks \\
+    &&\grayed{\mid}& \grayed{\Next}             & \grayed{– execute next task} \\
   Paths
     & \pi    & ::=& \First                      & – choose first \\
     &        &\mid& \Second                     & – choose second \\
@@ -74,7 +76,8 @@
 \begin{mathpar}
   \TPure \qquad \TFail \\
   \TEdit \qquad \TEmpty \qquad \TWatch \\
-  \TSeq \\
+  \grayed{\TSeq} \\
+  \TCont \\
   \TAnd \qquad \TOr
 \end{mathpar}
 
@@ -85,6 +88,9 @@
   \boxed{\RelationV}
 \end{equation*}
 (As defined by \textcite{pierce2002types})
+
+
+\begin{fullwidth}
 
 
 \newpage
@@ -98,7 +104,7 @@
 \paragraph{Simplifying}
 
 \begin{mathpar}
-  \NSeq \\
+  \grayed{\NSeq} \\
   \NAnd
 \end{mathpar}
 
@@ -106,9 +112,10 @@
 \paragraph{Stepping}
 
 \begin{mathpar}
-  \NContStay \\
-  \NContFail \\
-  \NContNext
+  \begin{array}{@{}ll}
+    \NContStay & \NContFail \\
+               & \NContNext
+  \end{array}
 \end{mathpar}
 
 
@@ -117,9 +124,8 @@
 (Complementing above conditional rules)
 
 \begin{mathpar}
-  \NSeqEval \\
-  \NAndEval \\
-  \NOrEval
+  \grayed{\NSeqEval} \\
+  \NAndEval \qquad \NOrEval
 \end{mathpar}
 
 
@@ -151,19 +157,17 @@
 
 \begin{mathpar}
   \begin{array}{@{}ll}
-    \HStayS & \HNextS \\
-    \HStay  & \HNext  \\
-            & \HFail
+    \grayed{\HStayS} & \grayed{\HNextS} \\
+    \HStay                    & \HNext \\
+                              & \HFail
   \end{array}
 \end{mathpar}
 
 
 \paragraph{Choosing}
 
-\todo{Is the condition to not have a fail in here needed? Or should we erase fails during a normalisation pass?}
 \begin{mathpar}
-  \HFirst \qquad \HSecond \\
-  \HOther
+  \HFirst \qquad \HSecond \qquad \HOther
 \end{mathpar}
 
 
@@ -173,7 +177,7 @@
 ($\AndOr \in \{\And, \Or\}$)
 
 \begin{mathpar}
-  \HPassS \qquad \HPass \\
+  \grayed{\HPassS} \qquad \HPass \\
   \HLeft \qquad \HRight
 \end{mathpar}
 
@@ -185,6 +189,8 @@
 \begin{mathpar}
   \HFallback
 \end{mathpar}
+
+\end{fullwidth}
 
 
 \newpage

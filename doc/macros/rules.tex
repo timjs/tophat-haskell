@@ -44,6 +44,12 @@
      \Gamma\st{\Sigma} \infers e : \tau_1 \to \Task \tau_2}
     {\Gamma\st{\Sigma} \infers t_1 \Seq e : \Task \tau_2}}
 
+\newcommand*{\TCont}
+  {\inferrule*[lab=T-Cont]
+    {\Gamma\st{\Sigma} \infers t_1 : \Task \tau_1 \\
+     \Gamma\st{\Sigma} \infers e : \tau_1 \to \Task \tau_2}
+    {\Gamma\st{\Sigma} \infers t_1 \Cont e : \Task \tau_2}}
+
 \newcommand*{\TAnd}
   {\inferrule*[lab=T-And]
     {\Gamma\st{\Sigma} \infers t_1 : \Task \tau_1 \\
@@ -107,7 +113,7 @@
 
 \newcommand*{\NContStay}
   {\inferrule*[lab=N-ContStay,right={$\Value(t_1) = \nothing$}]
-    { }
+    {\ }
     {t_1 \Cont e\st{s} \normalise t_1 \Cont e\st{s}}}
 
 \newcommand*{\NContFail}
@@ -205,12 +211,12 @@
 
 \newcommand*{\HFirst}
   {\inferrule*[lab=H-First,right={$t_1 \neq \Fail$}]
-    { }
+    {\ }
     {t_1 \Or t_2\st{s} \handle{\Pick \First} t_1\st{s}}}
 
 \newcommand*{\HSecond}
   {\inferrule*[lab=H-Second,right={$t_2 \neq \Fail$}]
-    { }
+    {\ }
     {t_1 \Or t_2\st{s} \handle{\Pick \Second} t_2\st{s}}}
 
 \newcommand*{\HOther}
