@@ -32,11 +32,11 @@ namespace Path
 -- Events ----------------------------------------------------------------------
 
 data Action : Type where
-    Change   : Universe.typeOf b -> Action
-    Clear    : Action
-    Choose   : Path -> Action
-    Execute  : Path -> Action
-    Continue : Action
+    Change  : Universe.typeOf b -> Action
+    Clear   : Action
+    Pick    : Path -> Action
+    Execute : Path -> Action
+    Next    : Action
 
 data Event
     = ToLeft Event
@@ -49,9 +49,9 @@ data Event
 Show Action where
     show (Change _)  = "change <val>"
     show Clear       = "clear"
-    show (Choose p)  = "choose " ++ show p
+    show (Pick p)    = "pick " ++ show p
     show (Execute p) = "exec " ++ show p
-    show Continue    = "cont"
+    show Next        = "next"
 
 Show Event where
     show (ToLeft e)  = "l " ++ show e
@@ -79,9 +79,9 @@ parse ["change", val] with (Universe.Basic.parse val)
   parse ["change", val] | Nothing          = throw $ "!! Error parsing value '" ++ val ++ "'"
   parse ["change", val] | (Just (ty ** v)) = pure $ Here $ Change {b = BasicTy ty} v
 parse ["clear"]                            = pure $ Here $ Clear
-parse ("choose" :: rest)                   = map (Here . Choose) $ Path.parse rest
+parse ("pick" :: rest)                     = map (Here . Pick) $ Path.parse rest
 parse ("exec" :: rest)                     = map (Here . Execute) $ Path.parse rest
-parse ["cont"]                             = pure $ Here $ Continue
+parse ["next"]                             = pure $ Here $ Next
 parse ("l" :: rest)                        = map ToLeft $ parse rest
 parse ("r" :: rest)                        = map ToRight $ parse rest
 parse ["help"]                             = throw usage

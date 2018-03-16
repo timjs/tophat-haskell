@@ -159,7 +159,7 @@ options (Then this next)     s =
     let
     actions =
         case value this s of
-            Just _  => [ Here Continue ]
+            Just _  => [ Here Next ]
             Nothing => []
     in
     actions ++ options this s
@@ -172,7 +172,7 @@ options (When this next)     s = -- map (Here . Execute) (fromMaybe [] $ choices
     in
     actions ++ options this s
 options (And left right)     s = map ToLeft (options left s) ++ map ToRight (options right s)
-options task@(Or left right) s = map (Here . Choose) (choices task) ++ map ToLeft (options left s) ++ map ToRight (options right s)
+options task@(Or left right) s = map (Here . Pick) (choices task) ++ map ToLeft (options left s) ++ map ToRight (options right s)
 options (Edit {a} val)       _ = [ Here (Change (Universe.defaultOf a)), Here Clear ]
 options Watch                _ = [ Here (Change (Universe.defaultOf StateTy)) ]
 options Fail                 _ = []
@@ -222,8 +222,8 @@ normalise task state =
     ( task, state )
 
 handle : Task a -> Event -> State -> ( Task a, State )
-handle task@(Then this cont) (Here Continue) state =
-    -- If we pressed Continue...
+handle task@(Then this cont) (Here Next) state =
+    -- If we pressed Next...
     case value this state of
         -- ...and we have a value: we get on with the continuation
         Just v  => normalise (cont v) state
@@ -240,7 +240,7 @@ handle (Then this cont) event state =
 handle task@(When this cont) (Here (Execute p)) state =
     case value this state of
         Just v =>
-            case handle (cont v) (Here (Choose p)) state of
+            case handle (cont v) (Here (Pick p)) state of
                 ( Fail, _ )        => ( task, state )
                 ( next, newState ) => (next, newState )
         Nothing =>
@@ -263,15 +263,15 @@ handle (And left right) (ToRight event) state =
     ( newRight, newState ) = handle right event state
     in
     ( And left newRight, newState )
-handle (Or left right) (Here (Choose First)) state =
-    -- Choose the first
+handle (Or left right) (Here (Pick First)) state =
+    -- Pick the first
     ( left, state )
-handle (Or left right) (Here (Choose Second)) state =
-    -- Choose the second
+handle (Or left right) (Here (Pick Second)) state =
+    -- Pick the second
     ( right, state )
-handle (Or left right) (Here (Choose (Next p))) state =
-    -- Choose the second and continue
-    handle right (Here (Choose p)) state
+handle (Or left right) (Here (Pick (Next p))) state =
+    -- Pick the second and continue
+    handle right (Here (Pick p)) state
 handle (Or left right) (ToLeft event) state =
     -- Pass the event to left
     let
