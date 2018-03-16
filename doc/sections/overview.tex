@@ -91,14 +91,16 @@
 
 \subsection{Task values}
 
-\begin{tabular}{@{}LCL}
-  \multicolumn{3}{@{}L}{\Value : t \times s \to v^?} \\
-  \Value(`v\st{s})           &=& v \\
-  \Value(\Edit v\st{s})      &=& v \\
-  \Value(\Watch l\st{s})     &=& s(l) \\
-  \Value(t_1 \And t_2\st{s}) &=& \{\Value(t_1\st{s}), \Value(t_2\st{s})\} \\
-  \Value(\_)                 &=& \nothing
-\end{tabular}
+\begin{equation*}
+  \begin{array}{@{}lcl}
+    \multicolumn{3}{c}{\boxed{\Value : t \times s \to v^?}} \\
+    \Value(`v\st{s})           &=& v \\
+    \Value(\Edit v\st{s})      &=& v \\
+    \Value(\Watch l\st{s})     &=& s(l) \\
+    \Value(t_1 \And t_2\st{s}) &=& \{\Value(t_1\st{s}), \Value(t_2\st{s})\} \\
+    \Value(\_)                 &=& \nothing
+  \end{array}
+\end{equation*}
 
 
 \newpage
@@ -196,7 +198,7 @@
 
 \paragraph{Fallback}
 
-(Only applicable when no other matches apply!)
+(Only applicable when no other rules apply!)
 
 \begin{mathpar}
   \HFallback
