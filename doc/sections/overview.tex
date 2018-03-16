@@ -62,7 +62,6 @@
 \end{grammar}
 
 
-\renewcommand*{\arraystretch}{4}
 \statefultrue
 
 
@@ -90,10 +89,23 @@
 (As defined by \textcite{pierce2002types})
 
 
-\begin{fullwidth}
+\subsection{Task values}
+
+\begin{tabular}{@{}LCL}
+  \multicolumn{3}{@{}L}{\Value : t \times s \to v^?} \\
+  \Value(`v\st{s})           &=& v \\
+  \Value(\Edit v\st{s})      &=& v \\
+  \Value(\Watch l\st{s})     &=& s(l) \\
+  \Value(t_1 \And t_2\st{s}) &=& \{\Value(t_1\st{s}), \Value(t_2\st{s})\} \\
+  \Value(\_)                 &=& \nothing
+\end{tabular}
 
 
 \newpage
+\begin{fullwidth}
+\renewcommand*{\arraystretch}{4}
+
+
 \subsection{Task normalisation}
 
 \begin{equation*}
