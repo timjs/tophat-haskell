@@ -13,7 +13,7 @@ Each section will introduce one of the following basic constructs,
 making our language more powerful after every addition:
 \begin{itemize}
   \item editors with a value ($\Edit v$) and without a value ($\Empty$);
-  \item sequential composition of tasks ($t \Cont e$);
+  \item sequential composition of tasks ($t \When e$);
   \item pairing tasks ($t_1 \And t_2$);
   \item giving a choice between tasks ($t_1 \Or t_2$);
   \item watching shared data ($\Watch l$).
@@ -42,7 +42,7 @@ this system distinguishes itself by the following.
   \item
     We make use of multiple semantic functions that describe different aspects of the system.
     At the core, we assume a big step semantics for the host language.\footnote{
-      We use a $\lambda$-calculus with some simple extensions like $\If\Then\Else$, pairs, and references.}
+      We use a $\lambda$-calculus with some simple extensions like $\If{}{}{}$, pairs, and references.}
     On top of this there are \emph{normalisation} semantics of tasks,
     performed after each event handle step,
     and the \emph{handling} of events itself.

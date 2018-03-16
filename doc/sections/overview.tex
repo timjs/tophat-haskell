@@ -8,8 +8,8 @@
 
 \begin{grammar}
   Expressions
-    & e      &::= & e_1\ e_2                    & – application \\
-    &        &\mid& \If e_1 \Then e_2 \Else e_3 & – test \\
+    & e      &::= & e_1\ e_2                    & – apply \\
+    &        &\mid& \If{e_1}{e_2}{e_3}          & – test \\
     &        &\mid& \{e_1, e_2\}                & – pair \\
     &        &\mid& \Ref e                      & – reference \\
     &        &\mid& !e                          & – dereference \\
@@ -18,21 +18,21 @@
     &        &\mid& x                           & – variable \\
     &        &\mid& v                           & – value \\
   Values
-    & v      &::= & \lambda x.\ e               & – abstractions \\
+    & v      &::= & \lambda x.\ e               & – abstraction \\
     &        &\mid& \{\}                        & – unit \\
-    &        &\mid& \{v_1, v_2\}                & – pairs \\
-    &        &\mid& B \in \BB                   & – booleans \\
-    &        &\mid& I \in \ZZ                   & – integers \\
-    &        &\mid& S \in \SS                   & – strings \\
-    &        &\mid& l                           & – locations \\
-    &        &\mid& t                           & – tasks \\
+    &        &\mid& \{v_1, v_2\}                & – pair \\
+    &        &\mid& B \in \BB                   & – boolean \\
+    &        &\mid& I \in \ZZ                   & – integer \\
+    &        &\mid& S \in \SS                   & – string \\
+    &        &\mid& l                           & – location \\
+    &        &\mid& t                           & – task \\
   Tasks
     & t      &::= & `e                          & – pure \\
     &        &\mid& \Edit v                     & – edit value \\
     &        &\mid& \Empty \tau                 & – edit empty \\
     &        &\mid& \Watch l                    & – watch location \\
-    &&\grayed{\mid}& \grayed{t \Seq e}          & \grayed{– sequence} \\
-    &        &\mid& t \Cont e                   & – sequence \\
+    &&\grayed{\mid}& \grayed{t \Then e}          & \grayed{– sequence} \\
+    &        &\mid& t \When e                   & – sequence \\
     &        &\mid& t_1 \And t_2                & – pair \\
     &        &\mid& t_1 \Or t_2                 & – choose \\
     &        &\mid& \Fail                       & – fail \\
@@ -76,8 +76,8 @@
 \begin{mathpar}
   \TPure \qquad \TFail \\
   \TEdit \qquad \TEmpty \qquad \TWatch \\
-  \grayed{\TSeq} \\
-  \TCont \\
+  \grayed{\TThen} \\
+  \TWhen \\
   \TAnd \qquad \TOr
 \end{mathpar}
 
@@ -104,7 +104,7 @@
 \paragraph{Simplifying}
 
 \begin{mathpar}
-  \grayed{\NSeq} \\
+  \grayed{\NThen} \\
   \NAnd
 \end{mathpar}
 
@@ -113,8 +113,8 @@
 
 \begin{mathpar}
   \begin{array}{@{}ll}
-    \NContStay & \NContFail \\
-               & \NContNext
+    \NWhenStay & \NWhenFail \\
+               & \NWhenNext
   \end{array}
 \end{mathpar}
 
@@ -124,7 +124,7 @@
 (Complementing above conditional rules)
 
 \begin{mathpar}
-  \grayed{\NSeqEval} \\
+  \grayed{\NThenEval} \\
   \NAndEval \qquad \NOrEval
 \end{mathpar}
 

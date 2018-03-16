@@ -3,12 +3,12 @@
 
 %% Host language %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\newoperator{\If}
-  {\textbf{if}}
-\newoperator{\Then}
-  {\textbf{then}}
-\newoperator{\Else}
-  {\textbf{else}}
+\newcommand*{\If}[3]
+  {\textbf{if}\,#1\,\textbf{then}\,#2\,\textbf{else}\,#3\,}
+% \newoperator{\THEN}
+  % {\textbf{then}}
+% \newoperator{\ELSE}
+  % {\textbf{else}}
 \newoperator{\Ref}
   {\textbf{ref}}
 
@@ -42,9 +42,9 @@
 
 %% Object language %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\newoperator{\Seq}
+\newoperator{\Then}
   {\vartriangleright}
-\newoperator{\Cont}
+\newoperator{\When}
   {\blacktriangleright}
 \let\And\relax
 \newoperator{\And}

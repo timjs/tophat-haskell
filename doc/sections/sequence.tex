@@ -28,11 +28,11 @@ Syntactically this leads to
 \begin{grammar}
   Tasks
     & t & ::=& \ldots   & \\
-    &   &\mid& t \Seq e & – sequence \\
+    &   &\mid& t \Then e & – sequence \\
 \end{grammar}
 And the accompanied typing rule looks like
 \begin{equation*}
-  \TSeq
+  \TThen
 \end{equation*}
 
 \subsection{Normalisation}
@@ -42,7 +42,7 @@ evaluation tasks $t$ as much as possible,
 till the moment we need an event to continue.
 
 \begin{equation*}
-  \NSeq \qquad \NSeqEval
+  \NThen \qquad \NThenEval
 \end{equation*}
 
 \subsection{Handling}

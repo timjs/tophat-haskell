@@ -38,17 +38,17 @@
     {\Gamma, \Sigma \infers \Sigma(l) : \tau}
     {\Gamma, \Sigma \infers \Watch l : \Task \tau}}
 
-\newcommand*{\TSeq}
-  {\inferrule*[lab=T-Seq]
+\newcommand*{\TThen}
+  {\inferrule*[lab=T-Then]
     {\Gamma\st{\Sigma} \infers t_1 : \Task \tau_1 \\
      \Gamma\st{\Sigma} \infers e : \tau_1 \to \Task \tau_2}
-    {\Gamma\st{\Sigma} \infers t_1 \Seq e : \Task \tau_2}}
+    {\Gamma\st{\Sigma} \infers t_1 \Then e : \Task \tau_2}}
 
-\newcommand*{\TCont}
-  {\inferrule*[lab=T-Cont]
+\newcommand*{\TWhen}
+  {\inferrule*[lab=T-When]
     {\Gamma\st{\Sigma} \infers t_1 : \Task \tau_1 \\
      \Gamma\st{\Sigma} \infers e : \tau_1 \to \Task \tau_2}
-    {\Gamma\st{\Sigma} \infers t_1 \Cont e : \Task \tau_2}}
+    {\Gamma\st{\Sigma} \infers t_1 \When e : \Task \tau_2}}
 
 \newcommand*{\TAnd}
   {\inferrule*[lab=T-And]
@@ -99,33 +99,33 @@
     { }
     {\Watch l\st{s} \normalise \Watch l\st{s}}}
 
-\newcommand*{\NSeq}
-  {\inferrule*[lab=N-Seq,right={$t_1' = `v$}]
+\newcommand*{\NThen}
+  {\inferrule*[lab=N-Then,right={$t_1' = `v$}]
     {t_1\st{s} \normalise t_1'\st{s'}   \\
      e\ v \downto t_2       \\
      t_2\st{s'} \normalise t_2'\st{s''} }
-    {t_1 \Seq e\st{s} \normalise t_2'\st{s''}}}
+    {t_1 \Then e\st{s} \normalise t_2'\st{s''}}}
 
-\newcommand*{\NSeqEval}
-  {\inferrule*[lab=N-SeqEval,right={$t_1' \neq `v$}]
+\newcommand*{\NThenEval}
+  {\inferrule*[lab=N-ThenEval,right={$t_1' \neq `v$}]
     {t_1\st{s} \normalise t_1'\st{s'}}
-    {t_1 \Seq e\st{s} \normalise t_1' \Seq e\st{s'}}}
+    {t_1 \Then e\st{s} \normalise t_1' \Then e\st{s'}}}
 
-\newcommand*{\NContStay}
-  {\inferrule*[lab=N-ContStay,right={$\Value(t_1) = \nothing$}]
+\newcommand*{\NWhenStay}
+  {\inferrule*[lab=N-WhenStay,right={$\Value(t_1) = \nothing$}]
     {\ }
-    {t_1 \Cont e\st{s} \normalise t_1 \Cont e\st{s}}}
+    {t_1 \When e\st{s} \normalise t_1 \When e\st{s}}}
 
-\newcommand*{\NContFail}
-  {\inferrule*[lab=N-ContFail,right={$\Value(t_1) = v \land (t_2 = \Fail \lor t_2 = t_3 \Or t_4)$}]
+\newcommand*{\NWhenFail}
+  {\inferrule*[lab=N-WhenFail,right={$\Value(t_1) = v \land (t_2 = \Fail \lor t_2 = t_3 \Or t_4)$}]
     {e\ v \downto t_2}
-    {t_1 \Cont e\st{s} \normalise t_1 \Cont e\st{s}}}
+    {t_1 \When e\st{s} \normalise t_1 \When e\st{s}}}
 
-\newcommand*{\NContNext}
-  {\inferrule*[lab=N-ContNext,right={$\Value(t_1) = v \land (t_2 \neq \Fail \lor t_2 \neq t_3 \Or t_4)$}]
+\newcommand*{\NWhenNext}
+  {\inferrule*[lab=N-WhenNext,right={$\Value(t_1) = v \land (t_2 \neq \Fail \lor t_2 \neq t_3 \Or t_4)$}]
     {e\ v \downto t_2    \\
      t_2\st{s} \normalise t_2'\st{s'} }
-    {t_1 \Cont e\st{s} \normalise t_2' \Cont e\st{s'}}}
+    {t_1 \When e\st{s} \normalise t_2' \When e\st{s'}}}
 
 \newcommand*{\NAnd}
   {\inferrule*[lab=N-And,right={$t_1' = `v_1 \land t_2' = `v_2$}]
@@ -174,40 +174,40 @@
 \newcommand*{\HStayS}
   {\inferrule*[lab=H-Stay',right={$\Value(t_1) = \nothing$}]
     {\ }
-    {t_1 \Seq e\st{s} \handle{\Next} t_1 \Seq e\st{s}}}
+    {t_1 \Then e\st{s} \handle{\Next} t_1 \Then e\st{s}}}
 
 \newcommand*{\HNextS}
   {\inferrule*[lab=H-Next',right={$\Value(t_1) = v$}]
     {e\ v \downto t_2    \\
      t_2\st{s} \normalise t_2'\st{s'} }
-    {t_1 \Seq e\st{s} \handle{\Next} t_2' \Seq e\st{s'}}}
+    {t_1 \Then e\st{s} \handle{\Next} t_2' \Then e\st{s'}}}
 
 \newcommand*{\HStay}
   {\inferrule*[lab=H-Stay,right={$\Value(t_1) = \nothing$}]
     {\ }
-    {t_1 \Cont e\st{s} \handle{\Execute \pi} t_1 \Cont e\st{s}}}
+    {t_1 \When e\st{s} \handle{\Execute \pi} t_1 \When e\st{s}}}
 
 \newcommand*{\HFail}
   {\inferrule*[lab=H-Fail,right={$\Value(t_1) = v \land t_2 = \Fail$}]
     {e\ v \downto t_2    \\
      t_2\st{s} \handle{\Pick \pi} t_2'\st{s'} }
-    {t_1 \Cont e\st{s} \handle{\Execute \pi} t_1 \Cont e\st{s}}}
+    {t_1 \When e\st{s} \handle{\Execute \pi} t_1 \When e\st{s}}}
 
 \newcommand*{\HNext}
   {\inferrule*[lab=H-Next,right={$\Value(t_1) = v \land t_2 \neq \Fail$}]
     {e\ v \downto t_2    \\
      t_2\st{s} \handle{\Pick \pi} t_2'\st{s'} }
-    {t_1 \Cont e\st{s} \handle{\Execute \pi} t_2' \Cont e\st{s'}}}
+    {t_1 \When e\st{s} \handle{\Execute \pi} t_2' \When e\st{s'}}}
 
 \newcommand*{\HPassS}
   {\inferrule*[lab=H-Pass',right={$\eta \neq \Next$}]
     {t_1\st{s} \handle{\eta} t_1'\st{s'}}
-    {t_1 \Seq e\st{s} \handle{\eta} t_1' \Seq e\st{s'}}}
+    {t_1 \Then e\st{s} \handle{\eta} t_1' \Then e\st{s'}}}
 
 \newcommand*{\HPass}
   {\inferrule*[lab=H-Pass,right={$\eta \neq \Execute \pi$}]
     {t_1\st{s} \handle{\eta} t_1'\st{s'}}
-    {t_1 \Cont e\st{s} \handle{\eta} t_1' \Cont e\st{s'}}}
+    {t_1 \When e\st{s} \handle{\eta} t_1' \When e\st{s'}}}
 
 \newcommand*{\HFirst}
   {\inferrule*[lab=H-First,right={$t_1 \neq \Fail$}]
