@@ -51,7 +51,7 @@ The typing rule becomes:
 \end{equation*}
 
 
-\subsection{Actions}
+\subsection{Events}
 
 To interact with an editor,
 we should interact with the user with some kind of interface.
@@ -71,10 +71,9 @@ entering text in an input box,
 committing some text on a command line,
 or sending it over a web socket.
 
-We define an extra syntactic category of \emph{actions} $\alpha$.\footnote{
-  We will introduce the umbrella term \emph{events}, which contain actions, in a later section.
-  For now, just having actions is enough.
-}
+We define a new syntactic category of \emph{events} $\eta$.
+For now, they only contain \emph{actions} $\alpha$,
+we will introduce new events in a later section.
 As we already discussed before,
 there are two actions that can be handled by editors:
 \begin{enumerate*}
@@ -82,18 +81,20 @@ there are two actions that can be handled by editors:
   \item clearing the value.
 \end{enumerate*}
 \begin{grammar}
+  Events
+    & \eta   & ::=& \alpha & – action \\
   Actions
     & \alpha & ::=& v      & – change editor to value \\
     &        &\mid& \Clear & – clear editor \\
 \end{grammar}
-The value of an editor, empty or not, can be changed to a value $v$ by just sending the value as an action.
+The value of an editor, empty or not, can be changed to a value $v$ by just sending the value as an event.
 To clear a valued editor, we send the $\Clear$ action.
 
-Handling actions is done by a new semantic relation.
-This relation takes a task $t$ and an action $\alpha$ which results in a new task $t'$.
+Handling events is done by a new semantic relation.
+This relation takes a task $t$ and an event $\eta$ which results in a new task $t'$.
 We write
 \begin{equation*}
-  \boxed{t \handle{\alpha} t'}
+  \boxed{t \handle{\eta} t'}
 \end{equation*}
 Formalising our intuition from previous paragraphs,
 we need three rules to describe the transitions of editors.
