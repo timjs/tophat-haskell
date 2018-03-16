@@ -44,8 +44,8 @@
   Actions
     & \alpha & ::=& v                           & – change editor to value \\
     &        &\mid& \Clear                      & – clear editor \\
-    &        &\mid& \Pick \pi                   & – continue with next task \\
-    &        &\mid& \Execute \pi                & – continue with next task \\
+    &        &\mid& \Pick \pi                   & – pick one of two tasks \\
+    &        &\mid& \Execute \pi                & – execute one of next tasks \\
   Paths
     & \pi    & ::=& \First                      & – choose first \\
     &        &\mid& \Second                     & – choose second \\
@@ -145,6 +145,7 @@
 
 \paragraph{Choosing}
 
+\todo{Is the condition to not have a fail in here needed? Or should we erase fails during a normalisation pass?}
 \begin{mathpar}
   \HFirst \qquad \HSecond \\
   \HOther
