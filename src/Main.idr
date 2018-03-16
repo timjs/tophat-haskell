@@ -34,7 +34,7 @@ pureStep = do
 
 pureStep' : Task (BasicTy IntTy)
 pureStep' =
-    int >>* \x =>
+    int >>- \x =>
     (inc x |+| fail)
 
 oneStep : Task (BasicTy IntTy)
@@ -44,7 +44,7 @@ oneStep = do
 
 oneStep' : Task (BasicTy IntTy)
 oneStep' =
-    ask 0 >>* \x =>
+    ask 0 >>- \x =>
     (inc x |+| fail)
 
 twoSteps : Task (BasicTy IntTy)
@@ -55,8 +55,8 @@ twoSteps = do
 
 twoSteps' : Task (BasicTy IntTy)
 twoSteps' =
-    ask 0 >>* \x =>
-    ((ask 0 >>* \y =>
+    ask 0 >>- \x =>
+    ((ask 0 >>- \y =>
     (add x y |+| fail)) |+| fail)
 
 parallel : Task (PairTy (BasicTy IntTy) (BasicTy StringTy))
@@ -69,7 +69,7 @@ parallelStep = do
 
 parallelStep' : Task (BasicTy StringTy)
 parallelStep' =
-    parallel >>* \( n, m ) =>
+    parallel >>- \( n, m ) =>
     (edit (Just (unwords $ replicate (cast n) m)) |+| fail)
 
 parallelWatch : Task (PairTy (BasicTy IntTy) (BasicTy IntTy))
@@ -98,23 +98,23 @@ choice1 = ask 2 |+| fail
 
 auto : Task (BasicTy StringTy)
 auto =
-    ask 0 >>* \x =>
+    ask 0 >>- \x =>
     if x >= 10 then pure "large" else fail
 
 actions : Task (BasicTy StringTy)
 actions =
-    ask 0 >>* \x =>
+    ask 0 >>- \x =>
     (pure "first" |+| pure "second first" |+| pure "second second")
 
 guarded : Task (BasicTy StringTy)
 guarded =
-    ask 0 >>* \x =>
+    ask 0 >>- \x =>
     ((if x >= 10 then pure "large" else fail) |+| (if x >= 100 then pure "very large" else fail))
 
 partial -- due to `mod` on `0`
 checkModulo : Task (BasicTy StringTy)
 checkModulo =
-    ask 1 >>* \x =>
+    ask 1 >>- \x =>
     if x `mod` 3 == 0 then
         pure "multiple of 3"
     else if x `mod` 5 == 0 then

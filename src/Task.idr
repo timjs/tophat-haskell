@@ -49,9 +49,9 @@ fail = Fail
 (>>=) : Show (typeOf a) => Task a -> (typeOf a -> Task b) -> Task b
 (>>=) = Then
 
-infixl 1 >>*
-(>>*) : Show (typeOf a) => Task a -> (typeOf a -> Task b) -> Task b
-(>>*) = When
+infixl 1 >>-
+(>>-) : Show (typeOf a) => Task a -> (typeOf a -> Task b) -> Task b
+(>>-) = When
 
 infixr 3 |*|
 (|*|) : Show (typeOf a) => Show (typeOf b) => Task a -> Task b -> Task (PairTy a b)
