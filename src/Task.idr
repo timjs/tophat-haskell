@@ -4,7 +4,7 @@ import Task.Universe
 import Task.Event
 
 %default total
-%access export
+%access public export
 
 
 -- Types -----------------------------------------------------------------------
@@ -21,8 +21,9 @@ State = typeOf StateTy
 -- Tasks --
 
 data Task : Universe.Ty -> Type where
-    -- Pure values
-    Pure  : (x : typeOf a) -> Task a
+    -- Basic tasks
+    Done  : (x : typeOf a) -> Task a
+    Fail  : Task a
     -- Primitive combinators
     Then  : Show (typeOf a) => (this : Task a) -> (next : typeOf a -> Task b) -> Task b
     When  : Show (typeOf a) => (this : Task a) -> (next : typeOf a -> Task b) -> Task b
@@ -31,20 +32,15 @@ data Task : Universe.Ty -> Type where
     -- User interaction
     Edit  : (val : Maybe (typeOf a)) -> Task a
     Watch : Task StateTy
-    -- Failing
-    Fail  : Task a
     -- Share interaction
     Get   : Task StateTy
     Put   : (x : typeOf StateTy) -> Task UnitTy
 
 
--- Public interface ------------------------------------------------------------
+-- Interface -------------------------------------------------------------------
 
 pure : (typeOf a) -> Task a
-pure = Pure
-
-fail : Task a
-fail = Fail
+pure = Done
 
 (>>=) : Show (typeOf a) => Task a -> (typeOf a -> Task b) -> Task b
 (>>=) = Then
@@ -65,20 +61,8 @@ infixr 2 |+|
 (|+|) (Or x y) z = Or x (Or y z)
 (|+|) x y        = Or x y
 
-edit : Maybe (typeOf a) -> Task a
-edit = Edit
-
-watch : Task (BasicTy IntTy)
-watch = Watch
-
-get : Task (BasicTy IntTy)
-get = Get
-
-put : typeOf (BasicTy IntTy) -> Task UnitTy
-put = Put
-
 unit : Task UnitTy
-unit = Pure ()
+unit = Done ()
 
 state : Int -> State
 state = id
@@ -116,7 +100,7 @@ state = id
     show (Just x) = show x
 
 ui : Show (typeOf a) => Task a -> State -> String
-ui (Pure x)         _ = "pure " ++ show x
+ui (Done x)         _ = "pure " ++ show x
 ui Fail             _ = "fail"
 ui (Then this cont) s = ui this s ++ " => <cont>"
 ui (When this cont) s = ui this s ++ " => <cont>"
@@ -132,7 +116,7 @@ ui (Put x)          _ = "put " ++ show x ++ ""
 
 -- FIXME: is this correct?
 isStable : Task a -> Bool
-isStable (Pure x)         = True
+isStable (Done x)         = True
 isStable Fail             = False
 isStable (Then this cont) = isStable this
 isStable (When this cont) = isStable this
@@ -147,7 +131,7 @@ isStable (Put x)          = True
 -- Semantics -------------------------------------------------------------------
 
 value : Task a -> State -> Maybe (typeOf a)
-value (Pure x)         _ = Just x
+value (Done x)         _ = Just x
 value (Edit val)       _ = val
 value Watch            s = Just s
 value (And left right) s = Just (!(value left s), !(value right s))
@@ -165,7 +149,7 @@ choices (Or left right) = [ First, Second ] ++ map Next (choices right)
 choices _               = []
 
 options : Task a -> State -> List Event
-options (Pure x)             _ = []
+options (Done x)             _ = []
 options (Then this next)     s =
     let
     actions =
@@ -197,7 +181,7 @@ normalise (Then this cont) state =
     ( newThis, newState ) = normalise this state
     in
     case newThis of
-        Pure a => normalise (cont a) newState
+        Done a => normalise (cont a) newState
         _      => ( Then newThis cont, newState )
 normalise task@(When this cont) state =
     case value this state of
@@ -215,7 +199,7 @@ normalise (And left right) state =
     ( newRight, newerState ) = normalise right newState
     in
     case ( newLeft, newRight ) of
-        ( Pure a, Pure b )    => ( Pure ( a, b ), newerState )
+        ( Done a, Done b )    => ( Done ( a, b ), newerState )
         ( newLeft, newRight ) => ( And newLeft newRight, newerState )
 normalise (Or left right) state =
     let
@@ -225,7 +209,7 @@ normalise (Or left right) state =
     ( Or newLeft newRight, newerState )
 -- State
 normalise (Get) state =
-    ( Pure state, state )
+    ( Done state, state )
 normalise (Put x) state =
     ( unit, x )
 -- Values
@@ -306,7 +290,7 @@ handle Watch (Here (Change {b} newVal)) state with (decEq b StateTy)
 -- FIXME: Should pass more unhandled events down or not...
 handle task _ state =
     ( task, state )
-    -- Case `Pure`: evaluation terminated
+    -- Case `Done`: evaluation terminated
     -- Case `Fail`: evaluation continues indefinitely
     -- Cases Get and Put: this case can't happen, it is already evaluated by `normalise`
     -- FIXME: express this in the type system...

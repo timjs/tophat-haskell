@@ -10,22 +10,22 @@ import Task.Event
 -- Tests -----------------------------------------------------------------------
 
 int : Task (BasicTy IntTy)
-int = pure 42
+int = Done 42
 
 str : Task (BasicTy StringTy)
-str = pure "Hello"
+str = Done "Hello"
 
 ask : Int -> Task (BasicTy IntTy)
-ask x = edit (Just x)
+ask x = Edit (Just x)
 
 inc : Int -> Task (BasicTy IntTy)
-inc x = edit (Just $ x + 1)
+inc x = Edit (Just $ x + 1)
 
 add : Int -> Int -> Task (BasicTy IntTy)
-add x y = edit (Just $ x + y)
+add x y = Edit (Just $ x + y)
 
 append : String -> String -> Task (BasicTy StringTy)
-append x y = edit (Just $ x ++ y)
+append x y = Edit (Just $ x ++ y)
 
 pureStep : Task (BasicTy IntTy)
 pureStep = do
@@ -35,7 +35,7 @@ pureStep = do
 pureStep' : Task (BasicTy IntTy)
 pureStep' =
     int >>- \x =>
-    (inc x |+| fail)
+    (inc x |+| Fail)
 
 oneStep : Task (BasicTy IntTy)
 oneStep = do
@@ -45,7 +45,7 @@ oneStep = do
 oneStep' : Task (BasicTy IntTy)
 oneStep' =
     ask 0 >>- \x =>
-    (inc x |+| fail)
+    (inc x |+| Fail)
 
 -- oneStep'' : Task (BasicTy IntTy)
 -- oneStep'' =
@@ -62,36 +62,36 @@ twoSteps' : Task (BasicTy IntTy)
 twoSteps' =
     ask 0 >>- \x =>
     ((ask 0 >>- \y =>
-    (add x y |+| fail)) |+| fail)
+    (add x y |+| Fail)) |+| Fail)
 
 parallel : Task (PairTy (BasicTy IntTy) (BasicTy StringTy))
-parallel = edit Nothing |*| edit (Just "Hello")
+parallel = Edit Nothing |*| Edit (Just "Hello")
 
 parallelStep : Task (BasicTy StringTy)
 parallelStep = do
     ( n, m ) <- parallel
-    edit (Just (unwords $ replicate (cast n) m))
+    Edit (Just (unwords $ replicate (cast n) m))
 
 parallelStep' : Task (BasicTy StringTy)
 parallelStep' =
     parallel >>- \( n, m ) =>
-    (edit (Just (unwords $ replicate (cast n) m)) |+| fail)
+    (Edit (Just (unwords $ replicate (cast n) m)) |+| Fail)
 
 parallelAuto : Task (BasicTy StringTy)
 parallelAuto =
     parallel >>- \( n, m ) =>
-    edit (Just (unwords $ replicate (cast n) m))
+    Edit (Just (unwords $ replicate (cast n) m))
 
 parallelWatch : Task (PairTy (BasicTy IntTy) (BasicTy IntTy))
-parallelWatch = watch |*| watch
+parallelWatch = Watch |*| Watch
 
 stablise : Int -> Task (BasicTy IntTy)
 stablise x = do
     y <- ask x
-    pure y
+    Done y
 
 pair : Task (PairTy (BasicTy IntTy) (BasicTy IntTy))
-pair = pure 3 |*| pure 8
+pair = Done 3 |*| Done 8
 
 inner : Task (BasicTy IntTy)
 inner = do
@@ -105,15 +105,15 @@ inner' =
 
 update : Task UnitTy
 update = do
-    x <- get
+    x <- Get
     y <- ask x
-    put y
-    x <- get
+    Put y
+    x <- Get
     y <- ask x
-    put y
+    Put y
 
 control : Task (PairTy UnitTy (BasicTy IntTy))
-control = update |*| watch
+control = update |*| Watch
 
 choice : Task (BasicTy IntTy)
 choice = ask 1 |+| ask 2
@@ -122,33 +122,33 @@ choice3 : Task (BasicTy IntTy)
 choice3 = choice |+| ask 3
 
 choice1 : Task (BasicTy IntTy)
-choice1 = ask 2 |+| fail
+choice1 = ask 2 |+| Fail
 
 auto : Task (BasicTy StringTy)
 auto =
     ask 0 >>- \x =>
-    if x >= 10 then pure "large" else fail
+    if x >= 10 then Done "large" else Fail
 
 actions : Task (BasicTy StringTy)
 actions =
     ask 0 >>- \x =>
-    (pure "first" |+| pure "second first" |+| pure "second second")
+    (Done "first" |+| Done "second first" |+| Done "second second")
 
 guarded : Task (BasicTy StringTy)
 guarded =
     ask 0 >>- \x =>
-    ((if x >= 10 then pure "large" else fail) |+| (if x >= 100 then pure "very large" else fail))
+    ((if x >= 10 then Done "large" else Fail) |+| (if x >= 100 then Done "very large" else Fail))
 
 partial -- due to `mod` on `0`
 checkModulo : Task (BasicTy StringTy)
 checkModulo =
     ask 1 >>- \x =>
     if x `mod` 3 == 0 then
-        pure "multiple of 3"
+        Done "multiple of 3"
     else if x `mod` 5 == 0 then
-        pure "multiple of 5"
+        Done "multiple of 5"
     else
-        fail
+        Fail
 
 
 -- Running ---------------------------------------------------------------------
