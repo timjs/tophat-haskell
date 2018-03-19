@@ -47,6 +47,11 @@ oneStep' =
     ask 0 >>- \x =>
     (inc x |+| fail)
 
+-- oneStep'' : Task (BasicTy IntTy)
+-- oneStep'' =
+--     ask 0 >>*
+--         [ \x => ( True, inc x ) ]
+
 twoSteps : Task (BasicTy IntTy)
 twoSteps = do
     x <- ask 0
@@ -60,7 +65,7 @@ twoSteps' =
     (add x y |+| fail)) |+| fail)
 
 parallel : Task (PairTy (BasicTy IntTy) (BasicTy StringTy))
-parallel = edit (Just 1) |*| edit (Just "Hello")
+parallel = edit Nothing |*| edit (Just "Hello")
 
 parallelStep : Task (BasicTy StringTy)
 parallelStep = do
@@ -72,8 +77,31 @@ parallelStep' =
     parallel >>- \( n, m ) =>
     (edit (Just (unwords $ replicate (cast n) m)) |+| fail)
 
+parallelAuto : Task (BasicTy StringTy)
+parallelAuto =
+    parallel >>- \( n, m ) =>
+    edit (Just (unwords $ replicate (cast n) m))
+
 parallelWatch : Task (PairTy (BasicTy IntTy) (BasicTy IntTy))
 parallelWatch = watch |*| watch
+
+stablise : Int -> Task (BasicTy IntTy)
+stablise x = do
+    y <- ask x
+    pure y
+
+pair : Task (PairTy (BasicTy IntTy) (BasicTy IntTy))
+pair = pure 3 |*| pure 8
+
+inner : Task (BasicTy IntTy)
+inner = do
+    ( x, y ) <- pair
+    add x y
+
+inner' : Task (BasicTy IntTy)
+inner' =
+    pair >>- \( x, y ) =>
+    add x y
 
 update : Task UnitTy
 update = do

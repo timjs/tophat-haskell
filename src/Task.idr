@@ -83,6 +83,17 @@ unit = Pure ()
 state : Int -> State
 state = id
 
+-- infixl 1 >>*
+-- (>>*) : Show (typeOf a) => Task a -> List (typeOf a -> (Bool, Task b)) -> Task b
+-- (>>*) t fs = t >>- convert fs where
+--     convert : List (Universe.typeOf a -> (Bool, Task b)) -> Universe.typeOf a -> Task b
+--     convert [] x        = fail
+--     convert (f :: fs) x =
+--         let
+--         ( guard, next ) = f x
+--         in
+--         (if guard then next else fail) |+| convert fs x
+
 
 -- Applicative and Functor --
 
