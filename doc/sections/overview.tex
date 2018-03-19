@@ -27,7 +27,7 @@
     &        &\mid& l                           & – location \\
     &        &\mid& t                           & – task \\
   Tasks
-    & t      &::= & `e                          & – pure \\
+    & t      &::= & \Done e                     & – done \\
     &        &\mid& \Edit v                     & – edit value \\
     &        &\mid& \Empty \tau                 & – edit empty \\
     &        &\mid& \Watch l                    & – watch location \\
@@ -94,7 +94,7 @@
 \begin{equation*}
   \begin{array}{@{}lcl}
     \multicolumn{3}{c}{\boxed{\Value : t \times s \to v^?}} \\
-    \Value(`v\st{s})           &=& v \\
+    \Value(\Done v\st{s})      &=& v \\
     \Value(\Edit v\st{s})      &=& v \\
     \Value(\Watch l\st{s})     &=& s(l) \\
     \Value(t_1 \And t_2\st{s}) &=& \{\Value(t_1\st{s}), \Value(t_2\st{s})\} \\

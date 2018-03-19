@@ -16,7 +16,7 @@
 \newcommand*{\TPure}
   {\inferrule*[lab=T-Pure]
     {\Gamma\st{\Sigma} \infers e : \tau}
-    {\Gamma\st{\Sigma} \infers `e : \Task \tau}}
+    {\Gamma\st{\Sigma} \infers \Done e : \Task \tau}}
 
 \newcommand*{\TFail}
   {\inferrule*[lab=T-Fail]
@@ -77,7 +77,7 @@
 \newcommand*{\NPure}
   {\inferrule*[lab=N-Pure]
     { }
-    {`v\st{s} \normalise `v\st{s}}}
+    {\Done v\st{s} \normalise \Done v\st{s}}}
 
 \newcommand*{\NFail}
   {\inferrule*[lab=N-Fail]
@@ -100,14 +100,14 @@
     {\Watch l\st{s} \normalise \Watch l\st{s}}}
 
 \newcommand*{\NThen}
-  {\inferrule*[lab=N-Then,right={$t_1' = `v$}]
+  {\inferrule*[lab=N-Then,right={$t_1' = \Done v$}]
     {t_1\st{s} \normalise t_1'\st{s'}   \\
      e\ v \downto t_2       \\
      t_2\st{s'} \normalise t_2'\st{s''} }
     {t_1 \Then e\st{s} \normalise t_2'\st{s''}}}
 
 \newcommand*{\NThenEval}
-  {\inferrule*[lab=N-ThenEval,right={$t_1' \neq `v$}]
+  {\inferrule*[lab=N-ThenEval,right={$t_1' \neq \Done v$}]
     {t_1\st{s} \normalise t_1'\st{s'}}
     {t_1 \Then e\st{s} \normalise t_1' \Then e\st{s'}}}
 
@@ -128,19 +128,19 @@
     {t_1 \When e\st{s} \normalise t_2' \When e\st{s'}}}
 
 \newcommand*{\NAnd}
-  {\inferrule*[lab=N-And,right={$t_1' = `v_1 \land t_2' = `v_2$}]
+  {\inferrule*[lab=N-And,right={$t_1' = \Done v_1 \land t_2' = \Done v_2$}]
     {t_1\st{s}  \normalise t_1'\st{s'}  \\
      t_2\st{s'} \normalise t_2'\st{s''} }
-    {t_1 \And t_2\st{s} \normalise \{`v_1, `v_2\}\st{s}}}
+    {t_1 \And t_2\st{s} \normalise \{\Done v_1, \Done v_2\}\st{s}}}
 
 \newcommand*{\NAndEval}
-  {\inferrule*[lab=N-AndEval,right={$t_1' \neq `v_1 \lor t_2' \neq `v_2$}]
+  {\inferrule*[lab=N-AndEval,right={$t_1' \neq \Done v_1 \lor t_2' \neq \Done v_2$}]
     {t_1\st{s}  \normalise t_1'\st{s'}  \\
      t_2\st{s'} \normalise t_2'\st{s''} }
     {t_1 \And t_2\st{s} \normalise t_1' \And t_2'\st{s}}}
 
 \newcommand*{\NOrEval}
-  {\inferrule*[lab=N-OrEval]%,right={$t_1' \neq `v_1 \land t_2' \neq `v_2$}]
+  {\inferrule*[lab=N-OrEval]%,right={$t_1' \neq \Done v_1 \land t_2' \neq \Done v_2$}]
     {t_1\st{s}  \normalise t_1'\st{s'}  \\
      t_2\st{s'} \normalise t_2'\st{s''} }
     {t_1 \Or t_2\st{s} \normalise t_1' \Or t_2'\st{s}}}
