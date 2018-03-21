@@ -3,12 +3,14 @@
 
 %% Host language %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\newoperator{\If}
-  {\textbf{if}}
-\newoperator{\Then}
-  {\textbf{then}}
-\newoperator{\Else}
-  {\textbf{else}}
+\newcommand*{\If}[3]
+  {\textbf{if}\,#1\,\textbf{then}\,#2\,\textbf{else}\,#3\,}
+% \newoperator{\THEN}
+  % {\textbf{then}}
+% \newoperator{\ELSE}
+  % {\textbf{else}}
+\newoperator{\Ref}
+  {\textbf{ref}}
 
 
 %% Values %%
@@ -19,24 +21,30 @@
   {\textsf{False}}
 
 \newcommand*{\astring}[1]
-  {\ensuremath{"\textit{#1}"}}
+  {\textit{``#1''}}
 
 
 %% Types %%
 
+\newoperator{\Unit}
+  {\textsf{Unit}}
 \newoperator{\Bool}
   {\textsf{Bool}}
 \newoperator{\Int}
   {\textsf{Int}}
 \newoperator{\String}
   {\textsf{String}}
+\newoperator{\Reference}
+  {\textsf{Ref}}
 \newoperator{\Task}
   {\textsf{Task}}
 
 
 %% Object language %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\newoperator{\Seq}
+\newoperator{\Done}
+  {\checkmark}
+\newoperator{\Then}
   {\vartriangleright}
 \newoperator{\When}
   {\blacktriangleright}
@@ -54,18 +62,43 @@
 \newoperator{\Fail}
   {\circlearrowleft}
 
+\newoperator{\Both}
+  {\odot}
+
 
 %% Events %%
 
-\newcommand*{\Continue}
+\newoperator{\Left}
+  {\textsf{L}}
+\newoperator{\Right}
+  {\textsf{R}}
+
+\newcommand*{\Clear}
   {\textsf{C}}
+\newcommand*{\Next}
+  {\textsf{N}}
+\newoperator{\Pick}
+  {\textsf{P}}
+\newoperator{\Execute}
+  {\textsf{E}}
 
 
-%% Semantic arrows %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand*{\First}
+  {\textsf{F}}
+\newcommand*{\Second}
+  {\textsf{S}}
+\newoperator{\Other}
+  {\textsf{S}}
+
+
+%% Semantic functions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \newcommand*{\downto}
   {\Downarrow}
 \newcommand*{\normalise}
-  {\ensuremath{\;\rightarrow\!\shortmid\;}}
+  {\;\rightarrow\!\shortmid\;}
 \newcommand*{\handle}[1]
-  {\ensuremath{\;\xrightarrow{\;?#1\;}}\;}
+  {\;\xrightarrow{\;#1\;}\;}
+
+\newcommand*{\Value}
+  {\mathcal{V}}

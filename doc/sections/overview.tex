@@ -1,24 +1,210 @@
 % !TEX root=../main.tex
 
+\newpage
 \section{An overview}
+
+
+\subsection{Language}
+
+\begin{grammar}
+  Expressions
+    & e      &::= & e_1\ e_2                    & – apply \\
+    &        &\mid& \If{e_1}{e_2}{e_3}          & – test \\
+    &        &\mid& \{e_1, e_2\}                & – pair \\
+    &        &\mid& \Ref e                      & – reference \\
+    &        &\mid& !e                          & – dereference \\
+    &        &\mid& e_1 := e_2                  & – assign \\
+    &        &\mid& e_1 \star e_2               & – operator \\
+    &        &\mid& x                           & – variable \\
+    &        &\mid& v                           & – value \\
+  Values
+    & v      &::= & \lambda x.\ e               & – abstraction \\
+    &        &\mid& \{\}                        & – unit \\
+    &        &\mid& \{v_1, v_2\}                & – pair \\
+    &        &\mid& B \in \BB                   & – boolean \\
+    &        &\mid& I \in \ZZ                   & – integer \\
+    &        &\mid& S \in \SS                   & – string \\
+    &        &\mid& l                           & – location \\
+    &        &\mid& t                           & – task \\
+  Tasks
+    & t      &::= & \Done e                     & – done \\
+    &        &\mid& \Edit v                     & – edit value \\
+    &        &\mid& \Empty \tau                 & – edit empty \\
+    &        &\mid& \Watch l                    & – watch location \\
+    &&\grayed{\mid}& \grayed{t \Then e}          & \grayed{– sequence} \\
+    &        &\mid& t \When e                   & – sequence \\
+    &        &\mid& t_1 \And t_2                & – pair \\
+    &        &\mid& t_1 \Or t_2                 & – choose \\
+    &        &\mid& \Fail                       & – fail \\
+  Events
+    & \eta   & ::=& \alpha                      & – action \\
+    &        &\mid& \Left \eta                  & – pass to left \\
+    &        &\mid& \Right \eta                 & – pass to right \\
+  Actions
+    & \alpha & ::=& v                           & – change editor to value \\
+    &        &\mid& \Clear                      & – clear editor \\
+    &        &\mid& \Pick \pi                   & – pick one of two tasks \\
+    &        &\mid& \Execute \pi                & – execute one of next tasks \\
+    &&\grayed{\mid}& \grayed{\Next}             & \grayed{– execute next task} \\
+  Paths
+    & \pi    & ::=& \First                      & – choose first \\
+    &        &\mid& \Second                     & – choose second \\
+    &        &\mid& \Other \pi                  & – choose other \\
+  Types
+    & \tau   &::= & \tau_1 \to \tau_2           & – abstractions \\
+    &        &\mid& \Unit                       & – unit \\
+    &        &\mid& \tau_1 \times \tau_2        & – pairs \\
+    &        &\mid& \Bool                       & – booleans \\
+    &        &\mid& \Int                        & – integers \\
+    &        &\mid& \String                     & – strings \\
+    &        &\mid& \Reference \tau             & – references \\
+    &        &\mid& \Task \tau                  & – tasks \\
+\end{grammar}
+
+
+\statefultrue
+
+
+\newpage
+\subsection{Typing rules}
+
+\begin{equation*}
+  \boxed{\RelationT}
+\end{equation*}
+
+\begin{mathpar}
+  \TPure \qquad \TFail \\
+  \TEdit \qquad \TEmpty \qquad \TWatch \\
+  \grayed{\TThen} \\
+  \TWhen \\
+  \TAnd \qquad \TOr
+\end{mathpar}
+
+
+\subsection{Expression evaluation}
+
+\begin{equation*}
+  \boxed{\RelationV}
+\end{equation*}
+(As defined by \textcite{pierce2002types})
+
+
+\subsection{Task values}
+
+\begin{equation*}
+  \begin{array}{@{}lcl}
+    \multicolumn{3}{c}{\boxed{\Value : t \times s \to v^?}} \\
+    \Value(\Done v\st{s})      &=& v \\
+    \Value(\Edit v\st{s})      &=& v \\
+    \Value(\Watch l\st{s})     &=& s(l) \\
+    \Value(t_1 \And t_2\st{s}) &=& \{\Value(t_1\st{s}), \Value(t_2\st{s})\} \\
+    \Value(\_)                 &=& \nothing
+  \end{array}
+\end{equation*}
+
+
+\newpage
+\begin{fullwidth}
+\renewcommand*{\arraystretch}{4}
+
 
 \subsection{Task normalisation}
 
+\begin{equation*}
+  \boxed{\RelationN}
+\end{equation*}
+
+
+\paragraph{Simplifying}
+
 \begin{mathpar}
-  \NSeq \\ \NSeqEval \\
-  \NAnd \\ \NAndEval \\
-  \NOrEval
-\end{mathpar}
-The rest is dull:
-\begin{mathpar}
-  \NEdit \quad \NEmpty \quad \NWatch \\
-  \NPure \quad \NFail
+  \grayed{\NThen} \\
+  \NAnd
 \end{mathpar}
 
 
+\paragraph{Stepping}
+
+\begin{mathpar}
+  \begin{array}{@{}ll}
+    \NWhenStay & \NWhenFail \\
+               & \NWhenNext
+  \end{array}
+\end{mathpar}
+
+
+\paragraph{Evaluation}
+
+(Complementing above conditional rules)
+
+\begin{mathpar}
+  \grayed{\NThenEval} \\
+  \NAndEval \qquad \NOrEval
+\end{mathpar}
+
+
+\paragraph{Values}
+
+\begin{mathpar}
+  \NPure \qquad \NFail \\
+  \NEdit \qquad \NEmpty \qquad \NWatch
+\end{mathpar}
+
+
+\newpage
 \subsection{Event handling}
 
+\begin{equation*}
+  \boxed{\RelationH}
+\end{equation*}
+
+
+\paragraph{Editors and watches}
+
 \begin{mathpar}
-  \HSeqNothing \quad \HSeqNothing \\
-  \HSeqPass
+  \HChange \qquad \HEnter \qquad \HClear \\
+  \HStore
 \end{mathpar}
+
+
+\paragraph{Stepping}
+
+\begin{mathpar}
+  \begin{array}{@{}ll}
+    \grayed{\HStayS} & \grayed{\HNextS} \\
+    \HStay                    & \HNext \\
+                              & \HFail
+  \end{array}
+\end{mathpar}
+
+
+\paragraph{Choosing}
+
+\begin{mathpar}
+  \HFirst \qquad \HSecond \qquad \HOther
+\end{mathpar}
+
+
+\paragraph{Passing}
+
+\renewcommand*{\AndOr}{\Both}
+($\AndOr \in \{\And, \Or\}$)
+
+\begin{mathpar}
+  \grayed{\HPassS} \qquad \HPass \\
+  \HLeft \qquad \HRight
+\end{mathpar}
+
+
+\paragraph{Fallback}
+
+(Only applicable when no other rules apply!)
+
+\begin{mathpar}
+  \HFallback
+\end{mathpar}
+
+\end{fullwidth}
+
+
+\newpage

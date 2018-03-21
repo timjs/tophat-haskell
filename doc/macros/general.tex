@@ -12,8 +12,10 @@
   {\textbf{#1}}
 \newcommand*{\enquote}[1]
   {``#1''}
+\newcommand*{\grayed}[1]
+  {\textcolor{gray}{#1}}
 \newcommand*{\todo}[1]
-  {\ensuremath{\star}\marginnote{\ensuremath{\star}#1}}
+  {\ensuremath{\star}\marginnote{\ensuremath{\star} #1}}
 
 
 %% Lists %%
@@ -97,7 +99,6 @@
 
 \let\lt<
 \let\gt>
-\let\eq\equiv
 
 \newcommand*{\append}
   {+\!\!+}
@@ -123,9 +124,19 @@
 \let\infers\vdash
 
 
+%% Comments %%
+
+\newcommand*{\comment}[1]
+  {\quad\text{\{ #1 \}}}
+
+
 %% Environments %%
 
 \newenvironment*{marginequation}[1][0pt]
+  {\begin{marginfigure}[#1]\equation}
+  {\endequation\end{marginfigure}}
+
+\newenvironment*{marginequation*}[1][0pt]
   {\begin{marginfigure}[#1]\equation\nonumber}
   {\endequation\end{marginfigure}}
 

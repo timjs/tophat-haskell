@@ -8,7 +8,7 @@ each with its own characteristics,
 we will show how to express task based systems.
 Our language is capable of expressing the majority of programs that could be written in the \ITASKS\ system.
 
-In the next sections we will gradually develop our language.
+In the next sections we will gradually develop a language for interactive workflows.
 Each section will introduce one of the following basic constructs,
 making our language more powerful after every addition:
 \begin{itemize}
@@ -26,7 +26,7 @@ this system distinguishes itself by the following.
     There is a clear distinction between the underlaying \emph{host language} and the task layer (\emph{object language}) on top of it.
   \item
     There is no notion of values which can be stable or unstable.
-    Our language has pure values lifted into the task world ($`e$)\footnote{
+    Our language has pure values lifted into the task world ($\Done e$)\footnote{
       This makes the system a pointed functor.}
     and editors which have a value or don't have a value.
   \item
@@ -42,7 +42,7 @@ this system distinguishes itself by the following.
   \item
     We make use of multiple semantic functions that describe different aspects of the system.
     At the core, we assume a big step semantics for the host language.\footnote{
-      We use a $\lambda$-calculus with some simple extensions like $\If\Then\Else$, pairs, and references.}
+      We use a $\lambda$-calculus with some simple extensions like $\If{}{}{}$, pairs, and references.}
     On top of this there are \emph{normalisation} semantics of tasks,
     performed after each event handle step,
     and the \emph{handling} of events itself.
@@ -54,7 +54,7 @@ this system distinguishes itself by the following.
 The remaining of this report is structured as follows.
 In the first section we will start with the definition of our host language,
 the pure $\lambda$-calculus,
-and an empty object language.
+and an object language containing just lifted expressions.
 Thereafter, in the next five sections, we will gradually define our object language,
 extending the properties of our host language when needed.
 We strive to keep the host language as small as possible.

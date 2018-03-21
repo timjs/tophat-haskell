@@ -3,69 +3,123 @@
 \section{Just an editor}
 
 Till now we don't have any interaction with the end user.
-The only thing we can create are pure task, containing a value.
+The only things we can create are pure task, containing a value.
 It is kind of hard to claim we model \emph{interactive} workflows without any user interaction at all.
 % At the core of interactive workflows are user interaction.
 An end user should be able to enter information into the system,
 clear it, reenter it et cetera.
 This is modelled by an \emph{editor}.
-
 Editors may or may not contain a current value.
-When it has a value, it can be \emph{changed} or \emph{cleared}.
-When the editor is empty, a value can be \emph{reentered}.
-
+When an editor has a value, it can be \emph{changed} or \emph{cleared}.
+When it is empty, a value can be \emph{reentered}.
 
 For this purpose, we extend our task language with two constructs:
 a valued editor $\Edit v$ and an empty editor $\Empty \tau$.
 \begin{grammar}
-  Tasks & t & ::=& \ldots      & \\
-        &   &\mid& \Edit v     & – Valued editor \\
-        &   &\mid& \Empty \tau & – Empty editor \\
+  Tasks
+    & t & ::=& \ldots      & \\
+    &   &\mid& \Edit v     & – valued editor \\
+    &   &\mid& \Empty \tau & – empty editor \\
 \end{grammar}
+
 Valued editors contain a value $v$ and therefore inherit the type of $v$.
-This is expressed by the typing rule for edit.
+This is expressed by the following typing rule for edit.
 \begin{equation*}
   \TEdit
 \end{equation*}
 Empty editors do not have a value,
 but, because we strive to a fully typed system,
 we like to assign a type to them.
-
 We have two options to solve this:
 \begin{enumerate*}
   \item let the empty editor have a polymorphic type;
   \item annotate empty editors with a type and use that.
 \end{enumerate*}
 The first option sounds appealing, however, consider the following use case.
-We start with an editor containing the value $42$: $\Edit 42$.
+We start with an editor containing the value two: $\Edit 2$.
 The user can change this value, as long as it is an integer,
-for example to $37$: $\Edit 37$.
+for example to five: $\Edit 5$.
 Clearing the value results in an empty editor: $\Empty$.
 Now, is the user allowed to enter a value of some other type?
 That is, can we now enter a string?
 This would change the type of the editor!
-Therefore we choose to annotate empty editors with a type.
+We need to keep track of the type of values that can be entered into an empty editor
+and therefore we choose to annotate them with a type.
 The typing rule becomes:
 \begin{equation*}
   \TEmpty
 \end{equation*}
 
 
-\subsection{Interface}
-
-To interact with an editor,
-we can present an input box in a \GUI.
-The user can than change and clear the value continuously.
-In a text oriented world,
-we can present the user with the current value of the editor
-and an input prompt which asks for a new value.
-
-
 \subsection{Events}
 
+To interact with an editor,
+we should interact with the user with some kind of interface.
+In a graphical setting,
+we can present the user an input box.
+The user can than change and clear values continuously.
+In a text oriented world,
+we can print out the current value of an editor
+and prompt the user for a new value
+or a command to clear the editor.
 
-\endinput
+To abstract away from the user interface,
+we introduce an event system.
+It does not matter how these events are sent to the application.
+This can be by pushing a button,
+entering text in an input box,
+committing some text on a command line,
+or sending it over a web socket.
 
-Editors let us view and change a value in the system.
-However, an editor can also have no value at all.
-This is the case when the user clears the value.
+We define a new syntactic category of \emph{events} $\eta$.
+For now, they only contain \emph{actions} $\alpha$,
+we will introduce new events in a later section.
+As we already discussed before,
+there are two actions that can be handled by editors:
+\begin{enumerate*}
+  \item changing the value; or
+  \item clearing the value.
+\end{enumerate*}
+\begin{grammar}
+  Events
+    & \eta   & ::=& \alpha & – action \\
+  Actions
+    & \alpha & ::=& v      & – change editor to value \\
+    &        &\mid& \Clear & – clear editor \\
+\end{grammar}
+The value of an editor, empty or not, can be changed to a value $v$ by just sending the value as an event.
+To clear a valued editor, we send the $\Clear$ action.
+
+Handling events is done by a new semantic relation.
+This relation takes a task $t$ and an event $\eta$ which results in a new task $t'$.
+We write
+\begin{equation*}
+  \boxed{\RelationH}
+\end{equation*}
+Formalising our intuition from previous paragraphs,
+we need three rules to describe the transitions of editors.
+\begin{equation*}
+  \HChange \qquad \HClear \qquad \HEnter
+\end{equation*}
+Note that the conditions to the right of the rules take care of typing.
+They make sure the type of the entered value and the type of the editor are the same.
+
+
+\subsection{Example}
+
+Now, we can make a still dull but interactive example of a workflow.
+How could an interactive session with the user look like when we start with a simple workflow with one editor,
+containing the value two?\todo{We should probably add a rule that doesn't change a task when the event doesn't match\ldots}
+\begin{align*}
+    & \Edit 2 \\
+  \handle{5} & \comment{change value to five} \\
+    & \Edit 5 \\
+  \handle{\Clear} & \comment{clear the current value} \\
+    & \Empty \Int \\
+  \handle{50} & \comment{enter the value fifty} \\
+    & \Edit 50 \\
+  \handle{\astring{Bye}} & \comment{changing the value to a string won't work\ldots} \\
+    & \Edit 50 \\
+  \handle{10} & \comment{change value to ten} \\
+    & \Edit 10
+\end{align*}

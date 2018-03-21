@@ -1,104 +1,245 @@
 % !TEX root=../main.tex
 
+%% Helpers %%
+
+\newif\ifstateful
+\statefulfalse
+\newcommand*{\st}[1]
+  {\ifstateful, #1\else\fi}
+
 
 %% Typing %%
 
+\newcommand*{\RelationT}
+  {\Gamma\st{\Sigma} \infers e : \tau}
+
 \newcommand*{\TPure}
   {\inferrule*[lab=T-Pure]
-    {\Gamma \infers e : \tau}
-    {\Gamma \infers `e : \Task \tau}}
+    {\Gamma\st{\Sigma} \infers e : \tau}
+    {\Gamma\st{\Sigma} \infers \Done e : \Task \tau}}
+
+\newcommand*{\TFail}
+  {\inferrule*[lab=T-Fail]
+    {\ }
+    {\Gamma\st{\Sigma} \infers \Fail : \Task \tau}}
 
 \newcommand*{\TEdit}
   {\inferrule*[lab=T-Edit]
-    {\Gamma \infers v : \tau}
-    {\Gamma \infers \Edit v : \Task \tau}}
+    {\Gamma\st{\Sigma} \infers v : \tau}
+    {\Gamma\st{\Sigma} \infers \Edit v : \Task \tau}}
 
 \newcommand*{\TEmpty}
   {\inferrule*[lab=T-Empty]
-    { }
-    {\Gamma \infers \Empty \tau : \Task \tau}}
+    {\ }
+    {\Gamma\st{\Sigma} \infers \Empty \tau : \Task \tau}}
 
+\newcommand*{\TWatch}
+  {\inferrule*[lab=T-Watch]
+    {\Gamma, \Sigma \infers \Sigma(l) : \tau}
+    {\Gamma, \Sigma \infers \Watch l : \Task \tau}}
+
+\newcommand*{\TThen}
+  {\inferrule*[lab=T-Then]
+    {\Gamma\st{\Sigma} \infers t_1 : \Task \tau_1 \\
+     \Gamma\st{\Sigma} \infers e : \tau_1 \to \Task \tau_2}
+    {\Gamma\st{\Sigma} \infers t_1 \Then e : \Task \tau_2}}
+
+\newcommand*{\TWhen}
+  {\inferrule*[lab=T-When]
+    {\Gamma\st{\Sigma} \infers t_1 : \Task \tau_1 \\
+     \Gamma\st{\Sigma} \infers e : \tau_1 \to \Task \tau_2}
+    {\Gamma\st{\Sigma} \infers t_1 \When e : \Task \tau_2}}
+
+\newcommand*{\TAnd}
+  {\inferrule*[lab=T-And]
+    {\Gamma\st{\Sigma} \infers t_1 : \Task \tau_1 \\
+     \Gamma\st{\Sigma} \infers t_2 : \Task \tau_2}
+    {\Gamma\st{\Sigma} \infers t_1 \And t_2 : \Task\,(\tau_1 \times \tau_2)}}
+
+\newcommand*{\TOr}
+  {\inferrule*[lab=T-Or]
+    {\Gamma\st{\Sigma} \infers t_1 : \Task \tau \\
+     \Gamma\st{\Sigma} \infers t_2 : \Task \tau }
+    {\Gamma\st{\Sigma} \infers t_1 \Or t_2 : \Task \tau}}
+
+
+%% Evaluation %%
+
+\newcommand*{\RelationV}
+  {e \downto v}
 
 
 %% Normalisation %%
 
+\newcommand*{\RelationN}
+  {t\st{s} \normalise t'\st{s'}}
+
 \newcommand*{\NPure}
   {\inferrule*[lab=N-Pure]
     { }
-    {`v, s \normalise `v, s}}
-
-\newcommand*{\NSeqEval}
-  {\inferrule*[lab=N-SeqEval,right={$t_1' \neq `v$}]
-    {t_1, s \normalise t_1', s'}
-    {t_1 \Seq e, s \normalise t_1' \Seq e, s'}}
-
-\newcommand*{\NSeq}
-  {\inferrule*[lab=N-Seq,right={$t_1' = `v$}]
-    {t_1, s \normalise t_1', s'   \\
-     e\ v \downto t_2       \\
-     t_2, s' \normalise t_2', s'' }
-    {t_1 \Seq e, s \normalise t_2', s''}}
-
-\newcommand*{\NAndEval}
-  {\inferrule*[lab=N-AndEval,right={$t_1' \neq `v_1 \land t_2' \neq `v_2$}]
-    {t_1, s  \normalise t_1', s'  \\
-     t_2, s' \normalise t_2', s'' }
-    {t_1 \And t_2, s \normalise t_1' \And t_2', s}}
-
-\newcommand*{\NAnd}
-  {\inferrule*[lab=N-And,right={$t_1' = `v_1 \land t_2' = `v_2$}]
-    {t_1, s  \normalise t_1', s'  \\
-     t_2, s' \normalise t_2', s'' }
-    {t_1 \And t_2, s \normalise \{`v_1, `v_2\}, s}}
-
-\newcommand*{\NOrEval}
-  {\inferrule*[lab=N-OrEval]%,right={$t_1' \neq `v_1 \land t_2' \neq `v_2$}]
-    {t_1, s  \normalise t_1', s'  \\
-     t_2, s' \normalise t_2', s'' }
-    {t_1 \Or t_2, s \normalise t_1' \Or t_2', s}}
-
-\newcommand*{\NEdit}
-  {\inferrule*[lab=N-Edit]
-    { }
-    {\Edit v, s \normalise \Edit v, s}}
-
-\newcommand*{\NEmpty}
-  {\inferrule*[lab=N-Empty]
-    { }
-    {\Empty, s \normalise \Empty, s}}
-
-\newcommand*{\NWatch}
-  {\inferrule*[lab=N-Watch]
-    { }
-    {\Watch l, s \normalise \Watch l, s}}
+    {\Done v\st{s} \normalise \Done v\st{s}}}
 
 \newcommand*{\NFail}
   {\inferrule*[lab=N-Fail]
     { }
-    {\Fail, s \normalise \Fail, s}}
+    {\Fail\st{s} \normalise \Fail\st{s}}}
+
+\newcommand*{\NEdit}
+  {\inferrule*[lab=N-Edit]
+    { }
+    {\Edit v\st{s} \normalise \Edit v\st{s}}}
+
+\newcommand*{\NEmpty}
+  {\inferrule*[lab=N-Empty]
+    { }
+    {\Empty \tau\st{s} \normalise \Empty \tau\st{s}}}
+
+\newcommand*{\NWatch}
+  {\inferrule*[lab=N-Watch]
+    { }
+    {\Watch l\st{s} \normalise \Watch l\st{s}}}
+
+\newcommand*{\NThen}
+  {\inferrule*[lab=N-Then,right={$t_1' = \Done v$}]
+    {t_1\st{s} \normalise t_1'\st{s'}   \\
+     e\ v \downto t_2       \\
+     t_2\st{s'} \normalise t_2'\st{s''} }
+    {t_1 \Then e\st{s} \normalise t_2'\st{s''}}}
+
+\newcommand*{\NThenEval}
+  {\inferrule*[lab=N-ThenEval,right={$t_1' \neq \Done v$}]
+    {t_1\st{s} \normalise t_1'\st{s'}}
+    {t_1 \Then e\st{s} \normalise t_1' \Then e\st{s'}}}
+
+\newcommand*{\NWhenStay}
+  {\inferrule*[lab=N-WhenStay,right={$\Value(t_1) = \nothing$}]
+    {\ }
+    {t_1 \When e\st{s} \normalise t_1 \When e\st{s}}}
+
+\newcommand*{\NWhenFail}
+  {\inferrule*[lab=N-WhenFail,right={$\Value(t_1) = v \land (t_2 = \Fail \lor t_2 = t_3 \Or t_4)$}]
+    {e\ v \downto t_2}
+    {t_1 \When e\st{s} \normalise t_1 \When e\st{s}}}
+
+\newcommand*{\NWhenNext}
+  {\inferrule*[lab=N-WhenNext,right={$\Value(t_1) = v \land (t_2 \neq \Fail \lor t_2 \neq t_3 \Or t_4)$}]
+    {e\ v \downto t_2    \\
+     t_2\st{s} \normalise t_2'\st{s'} }
+    {t_1 \When e\st{s} \normalise t_2' \When e\st{s'}}}
+
+\newcommand*{\NAnd}
+  {\inferrule*[lab=N-And,right={$t_1' = \Done v_1 \land t_2' = \Done v_2$}]
+    {t_1\st{s}  \normalise t_1'\st{s'}  \\
+     t_2\st{s'} \normalise t_2'\st{s''} }
+    {t_1 \And t_2\st{s} \normalise \{\Done v_1, \Done v_2\}\st{s}}}
+
+\newcommand*{\NAndEval}
+  {\inferrule*[lab=N-AndEval,right={$t_1' \neq \Done v_1 \lor t_2' \neq \Done v_2$}]
+    {t_1\st{s}  \normalise t_1'\st{s'}  \\
+     t_2\st{s'} \normalise t_2'\st{s''} }
+    {t_1 \And t_2\st{s} \normalise t_1' \And t_2'\st{s}}}
+
+\newcommand*{\NOrEval}
+  {\inferrule*[lab=N-OrEval]%,right={$t_1' \neq \Done v_1 \land t_2' \neq \Done v_2$}]
+    {t_1\st{s}  \normalise t_1'\st{s'}  \\
+     t_2\st{s'} \normalise t_2'\st{s''} }
+    {t_1 \Or t_2\st{s} \normalise t_1' \Or t_2'\st{s}}}
 
 
 %% Handling %%
 
-\newcommand*{\HSeqPass}
-  {\inferrule*[lab=H-SeqPass]
-    {t_1, s \handle{\eta} t_1', s'}
-    {t_1 \Seq e, s \handle{\eta} t_1' \Seq e, s'}}
+\newcommand*{\RelationH}
+  {t\st{s} \handle{\eta} t'\st{s'}}
 
-\newcommand*{\HSeqNothing}
-  {\inferrule*[lab=H-SeqNothing,right={$\mathcal{V}(t_1) = \nothing$}]
+\newcommand*{\HChange}
+  {\inferrule*[lab=H-Change,right={$v, v' : \tau$}]
     { }
-    {t_1 \Seq e, s \handle{\Continue} t_1 \Seq e, s}}
+    {\Edit v\st{s} \handle{v'} \Edit v'\st{s}}}
 
-\newcommand*{\HSeqContinue}
-  {\inferrule*[lab=H-SeqContinue,right={$\mathcal{V}(t_1) = v$}]
-    {e\ v \downto t_2     \\
-     t_2, s \normalise t_2', s' }
-    {t_1 \Seq e, s \handle{\Continue} t_2' \Seq e, s'}}
+\newcommand*{\HClear}
+  {\inferrule*[lab=H-Clear]
+    { }
+    {\Edit v\st{s} \handle{\Clear} \Empty\st{s}}}
 
+\newcommand*{\HEnter}
+  {\inferrule*[lab=H-Enter,right={$v' : \tau$}]
+    { }
+    {\Empty \tau\st{s} \handle{v'} \Edit v'\st{s}}}
 
+\newcommand{\HStore}
+  {\inferrule*[lab=H-Store,right={$\Sigma(l), v' : \tau$}]
+    { }
+    {\Watch l, s \handle{v'} \Watch l, [l \mapsto v']s}}
 
+\newcommand*{\HStayS}
+  {\inferrule*[lab=H-Stay',right={$\Value(t_1) = \nothing$}]
+    {\ }
+    {t_1 \Then e\st{s} \handle{\Next} t_1 \Then e\st{s}}}
 
+\newcommand*{\HNextS}
+  {\inferrule*[lab=H-Next',right={$\Value(t_1) = v$}]
+    {e\ v \downto t_2    \\
+     t_2\st{s} \normalise t_2'\st{s'} }
+    {t_1 \Then e\st{s} \handle{\Next} t_2' \Then e\st{s'}}}
+
+\newcommand*{\HStay}
+  {\inferrule*[lab=H-Stay,right={$\Value(t_1) = \nothing$}]
+    {\ }
+    {t_1 \When e\st{s} \handle{\Execute \pi} t_1 \When e\st{s}}}
+
+\newcommand*{\HFail}
+  {\inferrule*[lab=H-Fail,right={$\Value(t_1) = v \land t_2 = \Fail$}]
+    {e\ v \downto t_2    \\
+     t_2\st{s} \handle{\Pick \pi} t_2'\st{s'} }
+    {t_1 \When e\st{s} \handle{\Execute \pi} t_1 \When e\st{s}}}
+
+\newcommand*{\HNext}
+  {\inferrule*[lab=H-Next,right={$\Value(t_1) = v \land t_2 \neq \Fail$}]
+    {e\ v \downto t_2    \\
+     t_2\st{s} \handle{\Pick \pi} t_2'\st{s'} }
+    {t_1 \When e\st{s} \handle{\Execute \pi} t_2' \When e\st{s'}}}
+
+\newcommand*{\HPassS}
+  {\inferrule*[lab=H-Pass',right={$\eta \neq \Next$}]
+    {t_1\st{s} \handle{\eta} t_1'\st{s'}}
+    {t_1 \Then e\st{s} \handle{\eta} t_1' \Then e\st{s'}}}
+
+\newcommand*{\HPass}
+  {\inferrule*[lab=H-Pass,right={$\eta \neq \Execute \pi$}]
+    {t_1\st{s} \handle{\eta} t_1'\st{s'}}
+    {t_1 \When e\st{s} \handle{\eta} t_1' \When e\st{s'}}}
+
+\newcommand*{\HFirst}
+  {\inferrule*[lab=H-First,right={$t_1 \neq \Fail$}]
+    {\ }
+    {t_1 \Or t_2\st{s} \handle{\Pick \First} t_1\st{s}}}
+
+\newcommand*{\HSecond}
+  {\inferrule*[lab=H-Second,right={$t_2 \neq \Fail$}]
+    {\ }
+    {t_1 \Or t_2\st{s} \handle{\Pick \Second} t_2\st{s}}}
+
+\newcommand*{\HOther}
+  {\inferrule*[lab=H-Other,right={$t_2 \neq \Fail$}]
+    {t_2\st{s} \handle{\Pick \pi} t_2'\st{s'}}
+    {t_1 \Or t_2\st{s} \handle{\Pick \Other \pi} t_2'\st{s'}}}
+
+\newcommand*{\AndOr}{\Both}
+
+\newcommand*{\HLeft}
+  {\inferrule*[lab=H-Left]
+    {t_1\st{s} \handle{\eta} t_1'\st{s'} }
+    {t_1 \AndOr t_2\st{s} \handle{\Left \eta} t_1' \AndOr t_2\st{s'}}}
+
+\newcommand*{\HRight}
+  {\inferrule*[lab=H-Right]
+    {t_2\st{s} \handle{\eta} t_2'\st{s'} }
+    {t_1\st{s} \AndOr t_2 \handle{\Right \eta} t_1 \AndOr t_2'\st{s'}}}
+
+\newcommand*{\HFallback}
+  {\inferrule*[lab=H-Fallback]
+    { }
+    {t\st{s} \handle{\eta} t\st{s}}}
 
 \endinput
 
