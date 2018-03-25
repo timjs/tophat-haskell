@@ -206,8 +206,9 @@
 
 \newcommand*{\HPass}
   {\inferrule*[lab=H-Pass,right={$\eta \neq \Execute \pi$}]
-    {t_1\st{s} \handle{\eta} t_1'\st{s'}}
-    {t_1 \When e\st{s} \handle{\eta} t_1' \When e\st{s'}}}
+    {t_1\st{s} \handle{\eta} t_1'\st{s'}       \\
+     t_1' \When e\st{s'} \normalise t_2\st{s''} }
+    {t_1 \When e\st{s} \handle{\eta} t_2\st{s''}}}
 
 \newcommand*{\HFirst}
   {\inferrule*[lab=H-First,right={$t_1 \neq \Fail$}]
