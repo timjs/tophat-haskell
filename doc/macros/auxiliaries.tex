@@ -21,13 +21,13 @@
 
 %% Math %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% \(re)newmathcommand[.cat.]{.name.}{.def.}
-\newmacro{newmathcommand}[3][1]
-  {\ifthenelse{\isempty{#1}}
-    {\newmacro{#2}{#3}}
-    {\newmacro{#2}{\usemacro{math#1}{#3}}}}
-\newmacro{renewmathcommand}[3][1]
-  {\ifthenelse{\isempty{#1}}
-    {\renewmacro{#2}{#3}}
-    {\renewmacro{#2}{\usemacro{math#1}{#3}}}}
+%% \(re)newmathcommand{.name.}[.cat.]{.def.}
+\newmacro{newmathcommand}[3][2]
+  {\ifthenelse{\isempty{#2}}
+    {\newmacro{#1}{#3}}
+    {\newmacro{#1}{\usemacro{math#2}{#3}}}}
+\newmacro{renewmathcommand}[3][2]
+  {\ifthenelse{\isempty{#2}}
+    {\renewmacro{#1}{#3}}
+    {\renewmacro{#1}{\usemacro{math#2}{#3}}}}
 %%FIXME: change this to \(re)newmathcommand{.command.}[.cat.]{.def.} ???

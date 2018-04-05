@@ -5,8 +5,8 @@
 
 %%NOTE: `\mathrel` gives a single space width between keywords but removes it after another relational operator.
 %%      `\mathop`  gives just a small skip, but doesn't has above bug.
-\newmacro{newoperator}
-  {\newmathcommand[op]}
+\newmacro{newoperator}[1]
+  {\newmathcommand{#1}[op]}
 %%FIXME: fix default argument
 \newmacro{newkeyword}[2][1]
   {\newoperator{#1}{\text{\sffamily\bfseries #2}}}
@@ -80,12 +80,12 @@
 
 %% Semantic functions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\newmathcommand[rel]{downto}
+\newmathcommand{downto}[rel]
   {\Downarrow}
-\newmathcommand[rel]{normalise}
+\newmathcommand{normalise}[rel]
   {\;\rightarrow\!\shortmid\;}
 \newmacro{handle}[1]
   {\mathrel{\;\xrightarrow{\;#1\;}\;}}
 
-\newmathcommand[cal]{Value}
+\newmathcommand{Value}[cal]
   {V}
