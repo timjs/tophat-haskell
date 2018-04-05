@@ -1,9 +1,6 @@
 % !TEX root=../main.tex
 
-
-%% Helpers %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\let\newoperator\DeclareMathOperator
+\input macros/auxiliaries
 
 
 %% Text %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -75,8 +72,23 @@
 \let\textcite\citet
 
 
-%% Math %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Abbreviations %%
 
+%% \newabbreviation[.name.]{.text.}{.full.}
+\newcommand*{\newabbreviation}[3][]
+  {\ifthenelse{\isempty{#1}}
+     %%FIXME: something with \uppercase and \csname...
+     {\newabbreviationaux{\uppercase{#2}}{\lowercase{#2}}{#3}}
+     {\newabbreviationaux{#1}{\lowercase{#2}}{#3}}}
+\newcommand*{\newabbreviationaux}[3]
+  {\newmacro{#1}{\smallcaps{#2}}
+   \newmacro{infull#1}{#3}}
+
+\newcommand*{\infull}[1]
+  {\usemacro{infull#1}}
+
+
+%% Math %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Symbols %%
 
@@ -89,10 +101,8 @@
 \let\<\langle
 \let\>\rangle
 
-\newcommand*{\llbrace}
-  {\{\!|}
-\newcommand*{\rrbrace}
-  {|\!\}}
+\newmathcommand[open] {llbrace}{\{\!|}
+\newmathcommand[close]{rrbrace}{|\!\}}
 
 
 %% Operators %%
@@ -100,24 +110,23 @@
 \let\lt<
 \let\gt>
 
-\newcommand*{\append}
+\newmathcommand[bin]{append}
   {+\!\!+}
 
 
 %% Shortcuts %%
 
-\newcommand*{\powerset}
-  {\mathcal{P}}
+\newmathcommand[cal]{powerset}{P}
 
-\newcommand*{\NN}{\mathbb{N}}
-\newcommand*{\ZZ}{\mathbb{Z}}
-\newcommand*{\RR}{\mathbb{R}}
-\newcommand*{\CC}{\mathbb{C}}
+\newmathcommand  [bb]{NN}{N}
+\newmathcommand  [bb]{ZZ}{Z}
+\newmathcommand  [bb]{RR}{R}
+\newmathcommand  [bb]{CC}{C}
 
-\newcommand*{\LL}{\mathbb{L}}
-\newcommand*{\UU}{\mathbb{U}}
-\newcommand*{\BB}{\mathbb{B}}
-\renewcommand*{\SS}{\mathbb{S}}
+\newmathcommand  [bb]{LL}{L}
+\newmathcommand  [bb]{UU}{U}
+\newmathcommand  [bb]{BB}{B}
+\renewmathcommand[bb]{SS}{S}
 
 \let\to\rightarrow
 \let\implies\Rightarrow
