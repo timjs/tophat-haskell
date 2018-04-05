@@ -1,106 +1,91 @@
 % !TEX root=../main.tex
 
 
+%% Helpers %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%NOTE: `\mathrel` gives a single space width between keywords but removes it after another relational operator.
+%%      `\mathop`  gives just a small skip, but doesn't has above bug.
+\newcommand*{\newoperator}
+  {\newmathcommand[op]}
+%%FIXME: fix default argument
+\newcommand*{\newkeyword}[2][]
+  {\newoperator{#1}{\text{\sffamily\bfseries #2}}}
+\newcommand*{\newvalue}[2][]
+  {\newoperator{#1}{\text{\sffamily #2}}}
+\newcommand*{\newtype}[2][]
+  {\newoperator{#1}{\text{\sffamily\scshape #2}}}
+
+
 %% Host language %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\let\newoperator\DeclareMathOperator
+\newkeyword[IF]  {if}
+\newkeyword[THEN]{then}
+\newkeyword[ELSE]{else}
 
-\newcommand*{\If}[3]
-  {\textbf{if}\,#1\,\textbf{then}\,#2\,\textbf{else}\,#3\,}
-% \newoperator{\THEN}
-  % {\textbf{then}}
-% \newoperator{\ELSE}
-  % {\textbf{else}}
-\newoperator{\Ref}
-  {\textbf{ref}}
+\newkeyword[Ref] {ref}
+
+\newmacro{If}[3]
+  {\IF #1 \THEN #2 \ELSE #3}
 
 
 %% Values %%
 
-\newoperator{\True}
-  {\textsf{True}}
-\newoperator{\False}
-  {\textsf{False}}
+\newvalue[True]{True}
+\newvalue[False]{False}
 
 \newcommand*{\astring}[1]
-  {\textit{``#1''}}
+  {\text{``#1''}}
 
 
 %% Types %%
 
-\newoperator{\Unit}
-  {\textsf{Unit}}
-\newoperator{\Bool}
-  {\textsf{Bool}}
-\newoperator{\Int}
-  {\textsf{Int}}
-\newoperator{\String}
-  {\textsf{String}}
-\newoperator{\Reference}
-  {\textsf{Ref}}
-\newoperator{\Task}
-  {\textsf{Task}}
+\newtype[Unit]     {Unit}
+\newtype[Bool]     {Bool}
+\newtype[Int]      {Int}
+\newtype[String]   {String}
+\newtype[Reference]{Ref}
+\newtype[Task]     {Task}
 
 
 %% Object language %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\newoperator{\Done}
-  {\checkmark}
-\newoperator{\Then}
-  {\vartriangleright}
-\newoperator{\When}
-  {\blacktriangleright}
 \let\And\relax
-\newoperator{\And}
-  {\otimes}
-\newoperator{\Or}
-  {\oplus}
-\newoperator{\Edit}
-  {\square}
-\newoperator{\Empty}
-  {\boxtimes}
-\newoperator{\Watch}
-  {\blacksquare}
-\newoperator{\Fail}
-  {\circlearrowleft}
+\newoperator{Done} {\checkmark}
+\newoperator{Then} {\vartriangleright}
+\newoperator{When} {\blacktriangleright}
+\newoperator{And}  {\otimes}
+\newoperator{Or}   {\oplus}
+\newoperator{Edit} {\square}
+\newoperator{Empty}{\boxtimes}
+\newoperator{Watch}{\blacksquare}
+\newoperator{Fail} {\lightning}
 
-\newoperator{\Both}
-  {\odot}
+\newoperator{Both} {\odot}
 
 
 %% Events %%
 
-\newoperator{\Left}
-  {\textsf{L}}
-\newoperator{\Right}
-  {\textsf{R}}
+\newvalue[Left]   {L}
+\newvalue[Right]  {R}
 
-\newcommand*{\Clear}
-  {\textsf{C}}
-\newcommand*{\Next}
-  {\textsf{N}}
-\newoperator{\Pick}
-  {\textsf{P}}
-\newoperator{\Execute}
-  {\textsf{E}}
+\newvalue[Clear]  {C}
+\newvalue[Next]   {N}
+\newvalue[Pick]   {P}
+\newvalue[Execute]{E}
 
-
-\newcommand*{\First}
-  {\textsf{F}}
-\newcommand*{\Second}
-  {\textsf{S}}
-\newoperator{\Other}
-  {\textsf{S}}
+\newvalue[First]  {F}
+\newvalue[Second] {S}
+\newvalue[Other]  {S}
 
 
 %% Semantic functions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\newcommand*{\downto}
+\newmathcommand[rel]{downto}
   {\Downarrow}
-\newcommand*{\normalise}
+\newmathcommand[rel]{normalise}
   {\;\rightarrow\!\shortmid\;}
-\newcommand*{\handle}[1]
-  {\;\xrightarrow{\;#1\;}\;}
+\newmacro{handle}[1]
+  {\mathrel{\;\xrightarrow{\;#1\;}\;}}
 
-\newcommand*{\Value}
-  {\mathcal{V}}
+\newmathcommand[cal]{Value}
+  {V}
