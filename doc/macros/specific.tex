@@ -9,11 +9,17 @@
   {\newmathcommand{#1}[op]}
 %%FIXME: fix default argument
 \newmacro{newkeyword}[2][1]
-  {\newoperator{#1}{\text{\sffamily\bfseries #2}}}
+  {\ifthenelse{\isempty{#1}}
+    {\newoperator{#2}{\text{\sffamily\bfseries #2}}}
+    {\newoperator{#1}{\text{\sffamily\bfseries #2}}}}
 \newmacro{newvalue}[2][1]
-  {\newoperator{#1}{\text{\sffamily #2}}}
+  {\ifthenelse{\isempty{#1}}
+    {\newoperator{#2}{\text{\sffamily #2}}}
+    {\newoperator{#1}{\text{\sffamily #2}}}}
 \newmacro{newtype}[2][1]
-  {\newoperator{#1}{\text{\sffamily\scshape #2}}}
+  {\ifthenelse{\isempty{#1}}
+    {\newoperator{#2}{\text{\sffamily\scshape #2}}}
+    {\newoperator{#1}{\text{\sffamily\scshape #2}}}}
 
 
 %% Host language %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -30,8 +36,8 @@
 
 %% Values %%
 
-\newvalue[True]{True}
-\newvalue[False]{False}
+\newvalue{True}
+\newvalue{False}
 
 \newmacro{astring}[1]
   {\text{``#1''}}
@@ -39,12 +45,12 @@
 
 %% Types %%
 
-\newtype[Unit]     {Unit}
-\newtype[Bool]     {Bool}
-\newtype[Int]      {Int}
-\newtype[String]   {String}
+\newtype{Unit}
+\newtype{Bool}
+\newtype{Int}
+\newtype{String}
 \newtype[Reference]{Ref}
-\newtype[Task]     {Task}
+\newtype{Task}
 
 
 %% Object language %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

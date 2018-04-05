@@ -77,8 +77,7 @@
 %% \newabbreviation[.name.]{.text.}{.full.}
 \newmacro{newabbreviation}[3][1]
   {\ifthenelse{\isempty{#1}}
-     %%FIXME: something with \uppercase and \csname...
-     {\newabbreviationaux{\uppercase{#2}}{\lowercase{#2}}{#3}}
+     {\newabbreviationaux{#2}{\lowercase{#2}}{#3}}
      {\newabbreviationaux{#1}{\lowercase{#2}}{#3}}}
 \newmacro{newabbreviationaux}[3]
   {\newmacro{#1}{\smallcaps{#2}}
