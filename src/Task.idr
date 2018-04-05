@@ -237,7 +237,7 @@ handle task@(When this cont) (Here (Execute p)) state =
         Just v =>
             case handle (cont v) (Here (Pick p)) state of
                 ( Fail, _ )        => ( task, state )
-                ( next, newState ) => (next, newState )
+                ( next, newState ) => ( next, newState )
         Nothing =>
             ( task, state )
 handle (When this cont) event state =
