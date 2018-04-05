@@ -120,7 +120,7 @@
 \newrule{N-And}[t_1' = \Done v_1 \land t_2' = \Done v_2]
   {t_1\st{s}  \normalise t_1'\st{s'}  \\
    t_2\st{s'} \normalise t_2'\st{s''} }
-  {t_1 \And t_2\st{s} \normalise \{\Done v_1, \Done v_2\}\st{s}}
+  {t_1 \And t_2\st{s} \normalise \Done \{v_1, v_2\}\st{s}}
 
 \newrule{N-AndEval}[t_1' \neq \Done v_1 \lor t_2' \neq \Done v_2]
   {t_1\st{s}  \normalise t_1'\st{s'}  \\
@@ -154,14 +154,14 @@
   { }
   {\Watch l, s \handle{v'} \Watch l, [l \mapsto v']s}
 
-\newrule{H-StayS}[\Value(t_1) = \nothing]
+\newrule{H-Stay'}[\Value(t_1) = \nothing]
   {\ }
   {t_1 \Then e\st{s} \handle{\Next} t_1 \Then e\st{s}}
 
-\newrule{H-NextS}[\Value(t_1) = v]
+\newrule{H-Next'}[\Value(t_1) = v]
   {e\ v \downto t_2    \\
    t_2\st{s} \normalise t_2'\st{s'} }
-  {t_1 \Then e\st{s} \handle{\Next} t_2' \Then e\st{s'}}
+  {t_1 \Then e\st{s} \handle{\Next} t_2'\st{s'}}
 
 \newrule{H-Stay}[\Value(t_1) = \nothing]
   {\ }
@@ -175,7 +175,7 @@
 \newrule{H-Next}[\Value(t_1) = v \land t_2 \neq \Fail]
   {e\ v \downto t_2    \\
    t_2\st{s} \handle{\Pick \pi} t_2'\st{s'} }
-  {t_1 \When e\st{s} \handle{\Execute \pi} t_2' \When e\st{s'}}
+  {t_1 \When e\st{s} \handle{\Execute \pi} t_2'\st{s'}}
 
 \newrule{H-PassS}
   {t_1\st{s} \handle{\eta} t_1'\st{s'}}

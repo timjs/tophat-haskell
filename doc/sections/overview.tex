@@ -21,20 +21,21 @@
     & v      &::= & \lambda x.\ e               & – abstraction \\
     &        &\mid& \{\}                        & – unit \\
     &        &\mid& \{v_1, v_2\}                & – pair \\
-    &        &\mid& B \in \BB                   & – boolean \\
-    &        &\mid& I \in \ZZ                   & – integer \\
-    &        &\mid& S \in \SS                   & – string \\
     &        &\mid& l                           & – location \\
     &        &\mid& t                           & – task \\
+    &        &\mid& \bar{v}                     & – basic values \\
+    &\bar{v} &::= & B \in \BB                   & – boolean \\
+    &        &\mid& I \in \ZZ                   & – integer \\
+    &        &\mid& S \in \SS                   & – string \\
   Tasks
     & t      &::= & \Done e                     & – done \\
     &        &\mid& \Edit v                     & – edit value \\
     &        &\mid& \Empty \tau                 & – edit empty \\
     &        &\mid& \Watch l                    & – watch location \\
-    &&\grayed{\mid}& \grayed{t \Then e}          & \grayed{– sequence} \\
-    &        &\mid& t \When e                   & – sequence \\
-    &        &\mid& t_1 \And t_2                & – pair \\
-    &        &\mid& t_1 \Or t_2                 & – choose \\
+    &&\grayed{\mid}& \grayed{e_1 \Then e_2}     & \grayed{– sequence} \\
+    &        &\mid& e_1 \When e_2               & – sequence \\
+    &        &\mid& e_1 \And e_2                & – interleave \\
+    &        &\mid& e_1 \Or e_2                 & – choose \\
     &        &\mid& \Fail                       & – fail \\
   Events
     & \eta   & ::=& \alpha                      & – action \\
@@ -54,11 +55,12 @@
     & \tau   &::= & \tau_1 \to \tau_2           & – abstractions \\
     &        &\mid& \Unit                       & – unit \\
     &        &\mid& \tau_1 \times \tau_2        & – pairs \\
-    &        &\mid& \Bool                       & – booleans \\
-    &        &\mid& \Int                        & – integers \\
-    &        &\mid& \String                     & – strings \\
     &        &\mid& \Reference \tau             & – references \\
     &        &\mid& \Task \tau                  & – tasks \\
+    &        &\mid& \bar{\tau}                  & – basic types \\
+  &\bar{\tau}&::= & \Bool                       & – booleans \\
+    &        &\mid& \Int                        & – integers \\
+    &        &\mid& \String                     & – strings \\
 \end{grammar}
 
 
@@ -116,6 +118,7 @@
 
 
 \paragraph{Simplifying}
+\todo{Is \refrule{N-And} needed or can we just use $\Value(t)$ to check if we have a pair?}
 
 \begin{mathpar}
   \grayed{\userule{N-Then}} \\
@@ -128,7 +131,7 @@
 \begin{mathpar}
   \begin{array}{@{}ll}
     \userule{N-WhenStay} & \userule{N-WhenFail} \\
-               & \userule{N-WhenNext}
+                         & \userule{N-WhenNext}
   \end{array}
 \end{mathpar}
 
@@ -169,11 +172,13 @@
 
 \paragraph{Stepping}
 
+(This is the ugly part\ldots)
+
 \begin{mathpar}
   \begin{array}{@{}ll}
-    \grayed{\userule{H-StayS}} & \grayed{\userule{H-NextS}} \\
-    \userule{H-Stay}                    & \userule{H-Next} \\
-                              & \userule{H-Fail}
+    \grayed{\userule{H-Stay'}} & \grayed{\userule{H-Next'}} \\
+    \userule{H-Stay}           & \userule{H-Next} \\
+                               & \userule{H-Fail}
   \end{array}
 \end{mathpar}
 
@@ -188,7 +193,8 @@
 \paragraph{Passing}
 
 \renewcommand*{\AndOr}{\Both}
-($\AndOr \in \{\And, \Or\}$)
+(We use $\AndOr \in \{\And, \Or\}$.
+Note that \refrule{H-Pass} is the place where we reuse $\normalise$.)
 
 \begin{mathpar}
   \grayed{\userule{H-PassS}} \qquad \userule{H-Pass} \\
