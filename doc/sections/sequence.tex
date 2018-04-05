@@ -32,7 +32,7 @@ Syntactically this leads to
 \end{grammar}
 And the accompanied typing rule looks like
 \begin{equation*}
-  \TThen
+  \userule{T-Then}
 \end{equation*}
 
 \subsection{Normalisation}
@@ -42,7 +42,7 @@ evaluation tasks $t$ as much as possible,
 till the moment we need an event to continue.
 
 \begin{equation*}
-  \NThen \qquad \NThenEval
+  \userule{N-Then} \qquad \userule{N-ThenEval}
 \end{equation*}
 
 \subsection{Handling}
@@ -63,10 +63,10 @@ till the moment we need an event to continue.
 \end{grammar}
 
 \begin{equation*}
-  \HNext \qquad \HStay
+  \userule{H-Next} \qquad \userule{H-Stay}
 \end{equation*}
 \begin{equation*}
-  \HPassS
+  \userule{H-PassS}
 \end{equation*}
 
 \subsection{Example}

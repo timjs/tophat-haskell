@@ -5,14 +5,14 @@
 
 %%NOTE: `\mathrel` gives a single space width between keywords but removes it after another relational operator.
 %%      `\mathop`  gives just a small skip, but doesn't has above bug.
-\newcommand*{\newoperator}
+\newmacro{newoperator}
   {\newmathcommand[op]}
 %%FIXME: fix default argument
-\newcommand*{\newkeyword}[2][]
+\newmacro{newkeyword}[2][1]
   {\newoperator{#1}{\text{\sffamily\bfseries #2}}}
-\newcommand*{\newvalue}[2][]
+\newmacro{newvalue}[2][1]
   {\newoperator{#1}{\text{\sffamily #2}}}
-\newcommand*{\newtype}[2][]
+\newmacro{newtype}[2][1]
   {\newoperator{#1}{\text{\sffamily\scshape #2}}}
 
 
@@ -33,7 +33,7 @@
 \newvalue[True]{True}
 \newvalue[False]{False}
 
-\newcommand*{\astring}[1]
+\newmacro{astring}[1]
   {\text{``#1''}}
 
 

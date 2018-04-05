@@ -73,11 +73,11 @@
 \end{equation*}
 
 \begin{mathpar}
-  \TPure \qquad \TFail \\
-  \TEdit \qquad \TEmpty \qquad \TWatch \\
-  \grayed{\TThen} \\
-  \TWhen \\
-  \TAnd \qquad \TOr
+  \userule{T-Pure} \qquad \userule{T-Fail} \\
+  \userule{T-Edit} \qquad \userule{T-Empty} \qquad \userule{T-Watch} \\
+  \grayed{\userule{T-Then}} \\
+  \userule{T-When} \\
+  \userule{T-And} \qquad \userule{T-Or}
 \end{mathpar}
 
 
@@ -118,8 +118,8 @@
 \paragraph{Simplifying}
 
 \begin{mathpar}
-  \grayed{\NThen} \\
-  \NAnd
+  \grayed{\userule{N-Then}} \\
+  \userule{N-And}
 \end{mathpar}
 
 
@@ -127,8 +127,8 @@
 
 \begin{mathpar}
   \begin{array}{@{}ll}
-    \NWhenStay & \NWhenFail \\
-               & \NWhenNext
+    \userule{N-WhenStay} & \userule{N-WhenFail} \\
+               & \userule{N-WhenNext}
   \end{array}
 \end{mathpar}
 
@@ -138,16 +138,16 @@
 (Complementing above conditional rules)
 
 \begin{mathpar}
-  \grayed{\NThenEval} \\
-  \NAndEval \qquad \NOrEval
+  \grayed{\userule{N-ThenEval}} \\
+  \userule{N-AndEval} \qquad \userule{N-OrEval}
 \end{mathpar}
 
 
 \paragraph{Values}
 
 \begin{mathpar}
-  \NPure \qquad \NFail \\
-  \NEdit \qquad \NEmpty \qquad \NWatch
+  \userule{N-Pure} \qquad \userule{N-Fail} \\
+  \userule{N-Edit} \qquad \userule{N-Empty} \qquad \userule{N-Watch}
 \end{mathpar}
 
 
@@ -162,8 +162,8 @@
 \paragraph{Editors and watches}
 
 \begin{mathpar}
-  \HChange \qquad \HEnter \qquad \HClear \\
-  \HStore
+  \userule{H-Change} \qquad \userule{H-Enter} \qquad \userule{H-Clear} \\
+  \userule{H-Store}
 \end{mathpar}
 
 
@@ -171,9 +171,9 @@
 
 \begin{mathpar}
   \begin{array}{@{}ll}
-    \grayed{\HStayS} & \grayed{\HNextS} \\
-    \HStay                    & \HNext \\
-                              & \HFail
+    \grayed{\userule{H-StayS}} & \grayed{\userule{H-NextS}} \\
+    \userule{H-Stay}                    & \userule{H-Next} \\
+                              & \userule{H-Fail}
   \end{array}
 \end{mathpar}
 
@@ -181,7 +181,7 @@
 \paragraph{Choosing}
 
 \begin{mathpar}
-  \HFirst \qquad \HSecond \qquad \HOther
+  \userule{H-First} \qquad \userule{H-Second} \qquad \userule{H-Other}
 \end{mathpar}
 
 
@@ -191,8 +191,8 @@
 ($\AndOr \in \{\And, \Or\}$)
 
 \begin{mathpar}
-  \grayed{\HPassS} \qquad \HPass \\
-  \HLeft \qquad \HRight
+  \grayed{\userule{H-PassS}} \qquad \userule{H-Pass} \\
+  \userule{H-Left} \qquad \userule{H-Right}
 \end{mathpar}
 
 
@@ -201,7 +201,7 @@
 (Only applicable when no other rules apply!)
 
 \begin{mathpar}
-  \HFallback
+  \userule{H-Fallback}
 \end{mathpar}
 
 \end{fullwidth}

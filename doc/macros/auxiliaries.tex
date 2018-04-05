@@ -2,11 +2,11 @@
 
 %% Definitions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% \(re)newmacro{.name.}[.arg.][.opt.]{.def.}
+%% \(re)newmacro{.name.}[.num.][.list.]{.def.}
 \newcommand*{\newmacro}[1]
-  {\expandafter\newcommand\expandafter*\csname #1\endcsname}
+  {\expandafter\newcommandx\expandafter*\csname #1\endcsname}
 \newcommand*{\renewmacro}[1]
-  {\expandafter\renewcommand\expandafter*\csname #1\endcsname}
+  {\expandafter\renewcommandx\expandafter*\csname #1\endcsname}
 
 %% \usemacro{.name.}
 \newcommand*{\usemacro}[1]
@@ -15,18 +15,18 @@
 
 %% Tests %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\newcommand*{\isempty}[1]
+\newmacro{isempty}[1]
   {\equal{#1}{}}
 
 
 %% Math %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% \(re)newmathcommand[.cat.]{.name.}{.def.}
-\newcommand*{\newmathcommand}[3][]
+\newmacro{newmathcommand}[3][1]
   {\ifthenelse{\isempty{#1}}
     {\newmacro{#2}{#3}}
     {\newmacro{#2}{\usemacro{math#1}{#3}}}}
-\newcommand*{\renewmathcommand}[3][]
+\newmacro{renewmathcommand}[3][1]
   {\ifthenelse{\isempty{#1}}
     {\renewmacro{#2}{#3}}
     {\renewmacro{#2}{\usemacro{math#1}{#3}}}}

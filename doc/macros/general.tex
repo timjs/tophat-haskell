@@ -5,13 +5,13 @@
 
 %% Text %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\newcommand*{\alert}[1]
+\newmacro{alert}[1]
   {\textbf{#1}}
-\newcommand*{\enquote}[1]
+\newmacro{enquote}[1]
   {``#1''}
-\newcommand*{\grayed}[1]
+\newmacro{grayed}[1]
   {\textcolor{gray}{#1}}
-\newcommand*{\todo}[1]
+\newmacro{todo}[1]
   {\ensuremath{\star}\marginnote{\ensuremath{\star} #1}}
 
 
@@ -75,16 +75,16 @@
 %% Abbreviations %%
 
 %% \newabbreviation[.name.]{.text.}{.full.}
-\newcommand*{\newabbreviation}[3][]
+\newmacro{newabbreviation}[3][1]
   {\ifthenelse{\isempty{#1}}
      %%FIXME: something with \uppercase and \csname...
      {\newabbreviationaux{\uppercase{#2}}{\lowercase{#2}}{#3}}
      {\newabbreviationaux{#1}{\lowercase{#2}}{#3}}}
-\newcommand*{\newabbreviationaux}[3]
+\newmacro{newabbreviationaux}[3]
   {\newmacro{#1}{\smallcaps{#2}}
    \newmacro{infull#1}{#3}}
 
-\newcommand*{\infull}[1]
+\newmacro{infull}[1]
   {\usemacro{infull#1}}
 
 
@@ -135,7 +135,7 @@
 
 %% Comments %%
 
-\newcommand*{\comment}[1]
+\newmacro{comment}[1]
   {\quad\text{\{ #1 \}}}
 
 

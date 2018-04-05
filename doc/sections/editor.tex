@@ -25,7 +25,7 @@ a valued editor $\Edit v$ and an empty editor $\Empty \tau$.
 Valued editors contain a value $v$ and therefore inherit the type of $v$.
 This is expressed by the following typing rule for edit.
 \begin{equation*}
-  \TEdit
+  \userule{T-Edit}
 \end{equation*}
 Empty editors do not have a value,
 but, because we strive to a fully typed system,
@@ -47,7 +47,7 @@ We need to keep track of the type of values that can be entered into an empty ed
 and therefore we choose to annotate them with a type.
 The typing rule becomes:
 \begin{equation*}
-  \TEmpty
+  \userule{T-Empty}
 \end{equation*}
 
 
@@ -99,7 +99,7 @@ We write
 Formalising our intuition from previous paragraphs,
 we need three rules to describe the transitions of editors.
 \begin{equation*}
-  \HChange \qquad \HClear \qquad \HEnter
+  \userule{H-Change} \qquad \userule{H-Clear} \qquad \userule{H-Enter}
 \end{equation*}
 Note that the conditions to the right of the rules take care of typing.
 They make sure the type of the entered value and the type of the editor are the same.

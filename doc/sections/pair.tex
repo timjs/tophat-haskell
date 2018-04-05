@@ -23,18 +23,18 @@
 \end{grammar}
 
 \begin{equation*}
-  \TAnd
+  \userule{T-And}
 \end{equation*}
 
 \begin{equation*}
-  \NAnd \qquad \NAndEval
+  \userule{N-And} \qquad \userule{N-AndEval}
 \end{equation*}
 
-The rule \textsc{N-AndEval} covers the other three cases and makes sure both $t_1$ and $t_2$ will be normalised towards a value as much as possible.
+The rule \refrule{N-AndEval} covers the other three cases and makes sure both $t_1$ and $t_2$ will be normalised towards a value as much as possible.
 
 \renewcommand*{\AndOr}{\And}
 
 \todo{No normalise here?}
 \begin{equation*}
-  \HLeft \qquad \HRight
+  \userule{H-Left} \qquad \userule{H-Right}
 \end{equation*}
