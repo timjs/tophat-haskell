@@ -6,10 +6,10 @@
   {\newmacro{#1}{\inferrule*[lab={#1},right={$#2$}]
     {#3}
     {#4}}}
-\newmacro{userule}[1]
-  {\usemacro{#1}}
-\newmacro{refrule}[1]
-  {\textsc{#1}}
+\newmacro{userule}
+  {\usemacro}
+\newmacro{refrule}
+  {\textsc}
 
 \newif\ifstateful
 \statefulfalse

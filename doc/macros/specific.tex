@@ -7,8 +7,8 @@
 %%      `\mathop`  gives just a small skip, but doesn't has above bug.
 \newmacro{newoperator}[1]
   {\newmathcommand{#1}[op]}
-%%FIXME: fix default argument
 \newmacro{newkeyword}[2][1]
+  %%FIXME: this is to complicated: {\newoperator{\ifthenelse{\isempty{#1}}{#2}{#1}}{\text{\sffamily\bfseries #2}}}
   {\ifthenelse{\isempty{#1}}
     {\newoperator{#2}{\text{\sffamily\bfseries #2}}}
     {\newoperator{#1}{\text{\sffamily\bfseries #2}}}}
