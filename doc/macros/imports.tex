@@ -11,12 +11,14 @@
 %% Fonts %%
 
 \usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
+%%NOTE: T1 doesn't have the `Th` and `Qu` ligatures :-(
+\usepackage[OT1]{fontenc}
 
 \usepackage{stmaryrd}
 
 % \usepackage{tgpagella}
 % \usepackage{lucidabr}
+
 \usepackage{libertine}
 \usepackage[varqu]{zi4}
 \usepackage[libertine]{newtxmath}
@@ -30,7 +32,8 @@
 
 %% Layout %%
 
-% \usepackage[final]{microtype}
+\usepackage{microtype}
+\usepackage{xspace}
 
 
 %% Additions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -50,7 +53,9 @@
 %% Graphics %%
 
 \usepackage{graphicx}
-% \usepackage{xcolor}
+\usepackage{xcolor}
+% \usepackage{dblfloatfix}
+% \usepackage[export]{adjustbox}
 
 
 %% Tabulations %%

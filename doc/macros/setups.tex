@@ -5,10 +5,18 @@
 
 \frenchspacing
 
-%% NOTE: uses the same lengths as in `tufte-common.def` and `article.cls`...
-\setlength{\bigskipamount}   {3.25ex plus .2ex} %% ...before (sub)section
-\setlength{\medskipamount}   {2.3ex  plus .2ex} %% ...after section
-\setlength{\smallskipamount} {1.5ex  plus .2ex} %% ...after subsection
+\setlength{\bigskipamount}   {0.7500\baselineskip plus 0.2500\baselineskip minus 0.2500\baselineskip}
+\setlength{\medskipamount}   {0.3750\baselineskip plus 0.1250\baselineskip minus 0.1250\baselineskip}
+\setlength{\smallskipamount} {0.1875\baselineskip plus 0.0625\baselineskip minus 0.0625\baselineskip}
+
+
+%% Quoting %%
+%%NOTE: requires 'quoting'
+
+\quotingsetup
+  {font=itshape
+  ,leftmargin=\parindent
+  ,listvskip}
 
 
 %% Numbering %%
@@ -16,10 +24,26 @@
 % \setcounter{secnumdepth}{2}
 
 
+%% Floats %%
+
+% \setlength{\abovecaptionskip}{\medskipamount}
+% \setlength{\floatsep}        {\medskipamount}
+% \setlength{\textfloatsep}    {\bigskipamount}
+% \setlength{\intextsep}       {\medskipamount}
+% \setlength{\dblfloatsep}     {\medskipamount}
+% \setlength{\dbltextfloatsep} {\bigskipamount}
+
+
 %% Compact lists %%
 %% NOTE: requires `paralist`
 
-\setlength{\pltopsep}{\smallskipamount}
+\setlength{\pltopsep}   {\medskipamount}
 \setlength{\plpartopsep}{\parskip}
-\setlength{\plitemsep}{\parskip}
-\setlength{\plparsep}{\parskip}
+\setlength{\plitemsep}  {\parskip}
+\setlength{\plparsep}   {\parskip}
+
+
+%% Tabular strech %%
+
+% \renewmacro{arraystretch}
+%   {1.1}

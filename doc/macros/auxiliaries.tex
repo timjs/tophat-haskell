@@ -2,15 +2,22 @@
 
 %% Definitions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% \(re)newmacro{.name.}[.num.][.list.]{.def.}
+%% \(re)newmacro{.name.}[.num.][.list.]{.def.} % short by default
 \newcommand*{\newmacro}[1]
   {\expandafter\newcommandx\expandafter*\csname #1\endcsname}
 \newcommand*{\renewmacro}[1]
   {\expandafter\renewcommandx\expandafter*\csname #1\endcsname}
+\newcommand*{\providemacro}[1]
+  {\expandafter\providecommandx\expandafter*\csname #1\endcsname}
 
 %% \usemacro{.name.}
 \newcommand*{\usemacro}[1]
   {\csname #1\endcsname}
+
+%% \(re)newenvironment{.name.}[.num.][.list.]{.def.} % long by default
+\let\newenvironment\newenvironmentx
+\let\renewenvironment\renewenvironmentx
+\let\provideenvironment\provideenvironmentx
 
 
 %% Tests %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

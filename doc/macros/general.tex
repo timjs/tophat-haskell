@@ -5,14 +5,28 @@
 
 %% Text %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\providemacro{marginnote}
+  {\marginpar}
+\providemacro{smallcaps}
+  {\textsc}
+
 \newmacro{alert}[1]
   {\textbf{#1}}
+\newmacro{divert}[1]
+  {\textcolor{gray}{#1}}
 \newmacro{enquote}[1]
   {``#1''}
-\newmacro{grayed}[1]
-  {\textcolor{gray}{#1}}
+\newmacro{fix}[1]
+  {\colorbox{yellow}{#1}\marginnote{\colorbox{yellow}{$\star$}}}
 \newmacro{todo}[1]
-  {\ensuremath{\star}\marginnote{\ensuremath{\star} #1}}
+  {\textcolor{red}{$\star$}\marginnote{\textcolor{red}{#1}}}
+
+\newenvironment{fadeout}
+  {\color{gray}}
+  {}
+\newenvironment{emphasize}
+  {\begin{quote}}
+  {\end{quote}}
 
 
 %% Lists %%
@@ -32,7 +46,7 @@
 \newenvironment{itemize*}
   {\begin{inparaitem}}
   {\end{inparaitem}}
-\newenvironment{enumerate*}[1][(i)]
+\newenvironment{enumerate*}[1][1=(i)]
   {\begin{inparaenum}[#1]}
   {\end{inparaenum}}
 \newenvironment{description*}
@@ -40,11 +54,13 @@
   {\end{inparadesc}}
 
 
-%% Blocks %%
+%% Quotations %%
+%% NOTE: requires `quoting`
 
-\newenvironment{block}
-  {\begin{center}}
-  {\end{center}}
+\let\quote\quoting
+\let\endquote\endquoting
+\renewenvironment{quotation}
+  {\ClassError{Please use the `quote` environment instead of `quotation`}}
 
 
 %% Column types %%
@@ -72,19 +88,43 @@
 \let\textcite\citet
 
 
-%% Abbreviations %%
+%% Blocks %%
 
-%% \newabbreviation[.name.]{.text.}{.full.}
-\newmacro{newabbreviation}[3][1]
+\newenvironment{block}
+  {\begin{center}}
+  {\end{center}}
+
+
+%% Logos %%
+
+%% \newlogo[.name.]{.text.}
+\newmacro{newlogo}[2][1]
   {\ifthenelse{\isempty{#1}}
-     {\newabbreviationaux{#2}{\lowercase{#2}}{#3}}
-     {\newabbreviationaux{#1}{\lowercase{#2}}{#3}}}
-\newmacro{newabbreviationaux}[3]
-  {\newmacro{#1}{\smallcaps{#2}}
-   \newmacro{infull#1}{#3}}
+     {\newlogoaux{#2}{\smallcaps{\lowercase{#2}}}}
+     {\newlogoaux{#1}{#2}}}
+\newmacro{newlogoaux}[2]
+  {\newmacro{#1}{#2\xspace}}
 
-\newmacro{infull}[1]
-  {\usemacro{infull#1}}
+
+%% Languages %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%NOTE: `\mathrel` gives a single space width between keywords but removes it after another relational operator.
+%%      `\mathop`  gives just a small skip, but doesn't has above bug.
+\newmacro{newoperator}[1]
+  {\newmathcommand{#1}[op]}
+\newmacro{newkeyword}[2][1]
+  %%FIXME: this is to complicated: {\newoperator{\ifthenelse{\isempty{#1}}{#2}{#1}}{\text{\sffamily\bfseries #2}}}
+  {\ifthenelse{\isempty{#1}}
+    {\newoperator{#2}{\text{\sffamily\bfseries #2}}}
+    {\newoperator{#1}{\text{\sffamily\bfseries #2}}}}
+\newmacro{newvalue}[2][1]
+  {\ifthenelse{\isempty{#1}}
+    {\newoperator{#2}{\text{\sffamily #2}}}
+    {\newoperator{#1}{\text{\sffamily #2}}}}
+\newmacro{newtype}[2][1]
+  {\ifthenelse{\isempty{#1}}
+    {\newoperator{#2}{\text{\sffamily\scshape #2}}}
+    {\newoperator{#1}{\text{\sffamily\scshape #2}}}}
 
 
 %% Math %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -117,8 +157,13 @@
 
 \newmathcommand{powerset}[cal]{P}
 
+\newmathcommand{n}{\underline{n}}
+
 \newmathcommand{NN}  [bb]{N}
 \newmathcommand{ZZ}  [bb]{Z}
+\newmathcommand{EE}  [bb]{E}
+\newmathcommand{OO}  [bb]{O}
+\newmathcommand{QQ}  [bb]{A}
 \newmathcommand{RR}  [bb]{R}
 \newmathcommand{CC}  [bb]{C}
 
@@ -132,19 +177,28 @@
 \let\infers\vdash
 
 
-%% Comments %%
+%% Hints and local definitions %%
 
-\newmacro{comment}[1]
+\newmacro{hint}[1]
   {\quad\text{\{ #1 \}}}
+
+\newmathcommand{when}[op]
+  {\mathbf{when}}
+\newmathcommand{where}[op]
+  {\mathbf{where}}
+\newmathcommand{impossible}[op]
+  {\mathrm{impossible}}
 
 
 %% Environments %%
 
-\newenvironment*{marginequation}[1][0pt]
+\let\group\begingroup
+
+\newenvironment*{marginequation}[1][1=0pt]
   {\begin{marginfigure}[#1]\equation}
   {\endequation\end{marginfigure}}
 
-\newenvironment*{marginequation*}[1][0pt]
+\newenvironment*{marginequation*}[1][1=0pt]
   {\begin{marginfigure}[#1]\equation\nonumber}
   {\endequation\end{marginfigure}}
 
