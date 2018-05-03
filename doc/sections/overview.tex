@@ -8,35 +8,36 @@
 
 \begin{grammar}
   Expressions
-    & e      &::= & e_1\ e_2                    & – apply \\
+    & e      &::= & \lambda x.\ e               & – abstraction \\
+    &        &\mid& e_1\ e_2                    & – application \\
     &        &\mid& \If{e_1}{e_2}{e_3}          & – test \\
+    &        &\mid& \{\}                        & – unit \\
     &        &\mid& \{e_1, e_2\}                & – pair \\
-    &        &\mid& \Ref e                      & – reference \\
-    &        &\mid& !e                          & – dereference \\
-    &        &\mid& e_1 := e_2                  & – assign \\
     &        &\mid& e_1 \star e_2               & – operator \\
     &        &\mid& x                           & – variable \\
-    &        &\mid& v                           & – value \\
-  Values
-    & v      &::= & \lambda x.\ e               & – abstraction \\
-    &        &\mid& \{\}                        & – unit \\
-    &        &\mid& \{v_1, v_2\}                & – pair \\
+    &        &\mid& c                           & – constants \\
+    &        &\mid& r                           & \\
+  References
+    &        &::= & \Ref e                      & – reference \\
+    &        &\mid& !e                          & – dereference \\
+    &        &\mid& e_1 := e_2                  & – assign \\
     &        &\mid& l                           & – location \\
-    &        &\mid& t                           & – task \\
-    &        &\mid& \bar{v}                     & – basic values \\
-    &\bar{v} &::= & B \in \BB                   & – boolean \\
-    &        &\mid& I \in \ZZ                   & – integer \\
-    &        &\mid& S \in \SS                   & – string \\
+    &        &\mid& t                           & \\
   Tasks
     & t      &::= & \Done e                     & – done \\
-    &        &\mid& \Edit v                     & – edit value \\
+    &        &\mid& \Edit e                     & – edit value \\
     &        &\mid& \Empty \tau                 & – edit empty \\
     &        &\mid& \Watch l                    & – watch location \\
-    &&\divert{\mid}& \divert{e_1 \Then e_2}     & \divert{– sequence} \\
+    &        &\mid& e_1 \Then e_2               & – ask \\
     &        &\mid& e_1 \When e_2               & – sequence \\
-    &        &\mid& e_1 \And e_2                & – interleave \\
+    &        &\mid& e_1 \And e_2                & – pair \\
     &        &\mid& e_1 \Or e_2                 & – choose \\
     &        &\mid& \Fail                       & – fail \\
+  Constants
+    & c      &::= & B \in \BB                   & – boolean \\
+    &        &\mid& I \in \ZZ                   & – integer \\
+    &        &\mid& S \in \SS                   & – string \\
+  \addlinespace
   Events
     & \eta   & ::=& \alpha                      & – action \\
     &        &\mid& \Left \eta                  & – pass to left \\
@@ -44,24 +45,29 @@
   Actions
     & \alpha & ::=& v                           & – change editor to value \\
     &        &\mid& \Clear                      & – clear editor \\
-    &        &\mid& \Pick \pi                   & – pick one of two tasks \\
-    &        &\mid& \Execute \pi                & – execute one of next tasks \\
-    &&\divert{\mid}& \divert{\Next}             & \divert{– execute next task} \\
+    &        &\mid& \Pick \pi                   & – pick a task \\
+    &        &\mid& \Next                       & – execute next task \\
   Paths
     & \pi    & ::=& \First                      & – choose first \\
     &        &\mid& \Second                     & – choose second \\
     &        &\mid& \Other \pi                  & – choose other \\
+  \addlinespace
   Types
     & \tau   &::= & \tau_1 \to \tau_2           & – abstractions \\
     &        &\mid& \Unit                       & – unit \\
     &        &\mid& \tau_1 \times \tau_2        & – pairs \\
     &        &\mid& \Reference \tau             & – references \\
     &        &\mid& \Task \tau                  & – tasks \\
-    &        &\mid& \bar{\tau}                  & – basic types \\
-  &\bar{\tau}&::= & \Bool                       & – booleans \\
+    &        &\mid& \beta                       & – basic types \\
+  Builtins
+    & \beta  &::= & \Bool                       & – booleans \\
     &        &\mid& \Int                        & – integers \\
     &        &\mid& \String                     & – strings \\
 \end{grammar}
+
+
+\subsection{Values}
+
 
 
 \statefultrue
