@@ -14,12 +14,12 @@ When an editor has a value, it can be \emph{changed} or \emph{cleared}.
 When it is empty, a value can be \emph{reentered}.
 
 For this purpose, we extend our task language with two constructs:
-a valued editor $\Edit v$ and an empty editor $\Empty \tau$.
+a valued editor $\Edit v$ and an empty editor $\Fill \tau$.
 \begin{grammar}
   Tasks
     & t & ::=& \ldots      & \\
     &   &\mid& \Edit v     & – valued editor \\
-    &   &\mid& \Empty \tau & – empty editor \\
+    &   &\mid& \Fill \tau  & – empty editor \\
 \end{grammar}
 
 Valued editors contain a value $v$ and therefore inherit the type of $v$.
@@ -39,7 +39,7 @@ The first option sounds appealing, however, consider the following use case.
 We start with an editor containing the value two: $\Edit 2$.
 The user can change this value, as long as it is an integer,
 for example to five: $\Edit 5$.
-Clearing the value results in an empty editor: $\Empty$.
+Clearing the value results in an empty editor: $\Fill$.
 Now, is the user allowed to enter a value of some other type?
 That is, can we now enter a string?
 This would change the type of the editor!
@@ -47,7 +47,7 @@ We need to keep track of the type of values that can be entered into an empty ed
 and therefore we choose to annotate them with a type.
 The typing rule becomes:
 \begin{equation*}
-  \userule{T-Empty}
+  \userule{T-Fill}
 \end{equation*}
 
 
@@ -85,10 +85,10 @@ there are two actions that can be handled by editors:
     & \eta   & ::=& \alpha & – action \\
   Actions
     & \alpha & ::=& v      & – change editor to value \\
-    &        &\mid& \Clear & – clear editor \\
+    &        &\mid& \Empty & – empty an editor \\
 \end{grammar}
 The value of an editor, empty or not, can be changed to a value $v$ by just sending the value as an event.
-To clear a valued editor, we send the $\Clear$ action.
+To clear a valued editor, we send the $\Empty$ action.
 
 Handling events is done by a new semantic relation.
 This relation takes a task $t$ and an event $\eta$ which results in a new task $t'$.
@@ -114,8 +114,8 @@ containing the value two?\todo{We should probably add a rule that doesn't change
     & \Edit 2 \\
   \handle{5} & \hint{change value to five} \\
     & \Edit 5 \\
-  \handle{\Clear} & \hint{clear the current value} \\
-    & \Empty \Int \\
+  \handle{\Empty} & \hint{clear the current value} \\
+    & \Fill \Int \\
   \handle{50} & \hint{enter the value fifty} \\
     & \Edit 50 \\
   \handle{\astring{Bye}} & \hint{changing the value to a string won't work\ldots} \\

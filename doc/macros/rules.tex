@@ -34,9 +34,9 @@
   {\Gamma\st{\Sigma} \infers v : \tau}
   {\Gamma\st{\Sigma} \infers \Edit v : \Task \tau}
 
-\newrule{T-Empty}
+\newrule{T-Fill}
   {\ }
-  {\Gamma\st{\Sigma} \infers \Empty \tau : \Task \tau}
+  {\Gamma\st{\Sigma} \infers \Fill \tau : \Task \tau}
 
 \newrule{T-Watch}
   {\Gamma, \Sigma \infers \Sigma(l) : \tau}
@@ -45,12 +45,12 @@
 \newrule{T-Then}
   {\Gamma\st{\Sigma} \infers t_1 : \Task \tau_1 \\
    \Gamma\st{\Sigma} \infers e : \tau_1 \to \Task \tau_2}
-  {\Gamma\st{\Sigma} \infers t_1 \Then e : \Task \tau_2}
+  {\Gamma\st{\Sigma} \infers t_1 \Next e : \Task \tau_2}
 
 \newrule{T-When}
   {\Gamma\st{\Sigma} \infers t_1 : \Task \tau_1 \\
    \Gamma\st{\Sigma} \infers e : \tau_1 \to \Task \tau_2}
-  {\Gamma\st{\Sigma} \infers t_1 \When e : \Task \tau_2}
+  {\Gamma\st{\Sigma} \infers t_1 \Then e : \Task \tau_2}
 
 \newrule{T-And}
   {\Gamma\st{\Sigma} \infers t_1 : \Task \tau_1 \\
@@ -86,9 +86,9 @@
   { }
   {\Edit v\st{s} \normalise \Edit v\st{s}}
 
-\newrule{N-Empty}
+\newrule{N-Fill}
   { }
-  {\Empty \tau\st{s} \normalise \Empty \tau\st{s}}
+  {\Fill \tau\st{s} \normalise \Fill \tau\st{s}}
 
 \newrule{N-Watch}
   { }
@@ -98,24 +98,24 @@
   {t_1\st{s} \normalise t_1'\st{s'}   \\
    e\ v \downto t_2       \\
    t_2\st{s'} \normalise t_2'\st{s''} }
-  {t_1 \Then e\st{s} \normalise t_2'\st{s''}}
+  {t_1 \Next e\st{s} \normalise t_2'\st{s''}}
 
 \newrule{N-ThenEval}[t_1' \neq \Done v]
   {t_1\st{s} \normalise t_1'\st{s'}}
-  {t_1 \Then e\st{s} \normalise t_1' \Then e\st{s'}}
+  {t_1 \Next e\st{s} \normalise t_1' \Next e\st{s'}}
 
 \newrule{N-WhenStay}[\Value(t_1) = \nothing]
   {\ }
-  {t_1 \When e\st{s} \normalise t_1 \When e\st{s}}
+  {t_1 \Then e\st{s} \normalise t_1 \Then e\st{s}}
 
 \newrule{N-WhenFail}[\Value(t_1) = v \land (t_2 = \Fail \lor t_2 = t_3 \Or t_4)]
   {e\ v \downto t_2}
-  {t_1 \When e\st{s} \normalise t_1 \When e\st{s}}
+  {t_1 \Then e\st{s} \normalise t_1 \Then e\st{s}}
 
 \newrule{N-WhenNext}[\Value(t_1) = v \land (t_2 \neq \Fail \lor t_2 \neq t_3 \Or t_4)]
   {e\ v \downto t_2    \\
    t_2\st{s} \normalise t_2'\st{s'} }
-  {t_1 \When e\st{s} \normalise t_2' \When e\st{s'}}
+  {t_1 \Then e\st{s} \normalise t_2' \Then e\st{s'}}
 
 \newrule{N-And}[t_1' = \Done v_1 \land t_2' = \Done v_2]
   {t_1\st{s}  \normalise t_1'\st{s'}  \\
@@ -142,13 +142,13 @@
   { }
   {\Edit v\st{s} \handle{v'} \Edit v'\st{s}}
 
-\newrule{H-Clear}
+\newrule{H-Empty}
   { }
-  {\Edit v\st{s} \handle{\Clear} \Empty\st{s}}
+  {\Edit v\st{s} \handle{\Empty} \Fill\st{s}}
 
-\newrule{H-Enter}[v' : \tau]
+\newrule{H-Fill}[v' : \tau]
   { }
-  {\Empty \tau\st{s} \handle{v'} \Edit v'\st{s}}
+  {\Fill \tau\st{s} \handle{v'} \Edit v'\st{s}}
 
 \newrule{H-Store}[\Sigma(l), v' : \tau]
   { }
@@ -156,35 +156,35 @@
 
 \newrule{H-Stay'}[\Value(t_1) = \nothing]
   {\ }
-  {t_1 \Then e\st{s} \handle{\Next} t_1 \Then e\st{s}}
+  {t_1 \Next e\st{s} \handle{\Continue} t_1 \Next e\st{s}}
 
 \newrule{H-Next'}[\Value(t_1) = v]
   {e\ v \downto t_2    \\
    t_2\st{s} \normalise t_2'\st{s'} }
-  {t_1 \Then e\st{s} \handle{\Next} t_2'\st{s'}}
+  {t_1 \Next e\st{s} \handle{\Continue} t_2'\st{s'}}
 
 \newrule{H-Stay}[\Value(t_1) = \nothing]
   {\ }
-  {t_1 \When e\st{s} \handle{\Execute \pi} t_1 \When e\st{s}}
+  {t_1 \Then e\st{s} \handle{\Execute \pi} t_1 \Then e\st{s}}
 
 \newrule{H-Fail}[\Value(t_1) = v \land t_2 = \Fail]
   {e\ v \downto t_2    \\
    t_2\st{s} \handle{\Pick \pi} t_2'\st{s'} }
-  {t_1 \When e\st{s} \handle{\Execute \pi} t_1 \When e\st{s}}
+  {t_1 \Then e\st{s} \handle{\Execute \pi} t_1 \Then e\st{s}}
 
 \newrule{H-Next}[\Value(t_1) = v \land t_2 \neq \Fail]
   {e\ v \downto t_2    \\
    t_2\st{s} \handle{\Pick \pi} t_2'\st{s'} }
-  {t_1 \When e\st{s} \handle{\Execute \pi} t_2'\st{s'}}
+  {t_1 \Then e\st{s} \handle{\Execute \pi} t_2'\st{s'}}
 
 \newrule{H-PassS}
   {t_1\st{s} \handle{\eta} t_1'\st{s'}}
-  {t_1 \Then e\st{s} \handle{\eta} t_1' \Then e\st{s'}}
+  {t_1 \Next e\st{s} \handle{\eta} t_1' \Next e\st{s'}}
 
 \newrule{H-Pass}[\eta \neq \Execute \pi]
   {t_1\st{s} \handle{\eta} t_1'\st{s'}       \\
-   t_1' \When e\st{s'} \normalise t_2\st{s''} }
-  {t_1 \When e\st{s} \handle{\eta} t_2\st{s''}}
+   t_1' \Then e\st{s'} \normalise t_2\st{s''} }
+  {t_1 \Then e\st{s} \handle{\eta} t_2\st{s''}}
 
 \newrule{H-First}[t_1 \neq \Fail]
   {\ }

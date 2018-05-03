@@ -36,12 +36,12 @@
 
 \let\And\relax
 \newoperator{Done} {\checkmark}
-\newoperator{Then} {\vartriangleright}
-\newoperator{When} {\blacktriangleright}
+\newoperator{Then} {\blacktriangleright}
+\newoperator{Next} {\vartriangleright}
 \newoperator{And}  {\otimes}
 \newoperator{Or}   {\oplus}
 \newoperator{Edit} {\square}
-\newoperator{Empty}{\boxtimes}
+\newoperator{Fill} {\boxtimes}
 \newoperator{Watch}{\blacksquare}
 \newoperator{Fail} {\lightning}
 
@@ -53,10 +53,9 @@
 \newvalue[Left]   {L}
 \newvalue[Right]  {R}
 
-\newvalue[Clear]  {C}
-\newvalue[Next]   {N}
-\newvalue[Pick]   {P}
-\newvalue[Execute]{E}
+\newvalue[Empty]   {E}
+\newvalue[Continue]{C}
+\newvalue[Pick]    {P}
 
 \newvalue[First]  {F}
 \newvalue[Second] {S}
@@ -74,3 +73,8 @@
 
 \newmathcommand{Value}[cal]
   {V}
+
+
+%% Depricated %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newvalue[Execute] {<depricated>}

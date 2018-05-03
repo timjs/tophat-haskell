@@ -26,10 +26,10 @@
   Tasks
     & t      &::= & \Done e                     & – done \\
     &        &\mid& \Edit e                     & – edit value \\
-    &        &\mid& \Empty \beta                & – edit empty \\
+    &        &\mid& \Fill \beta                 & – fill value \\
     &        &\mid& \Watch e                    & – watch location \\
-    &        &\mid& e_1 \Then e_2               & – ask \\
-    &        &\mid& e_1 \When e_2               & – sequence \\
+    &        &\mid& e_1 \Next e_2               & – ask \\
+    &        &\mid& e_1 \Then e_2               & – sequence \\
     &        &\mid& e_1 \And e_2                & – pair \\
     &        &\mid& e_1 \Or e_2                 & – choose \\
     &        &\mid& \Fail                       & – fail \\
@@ -44,10 +44,10 @@
     &        &\mid& \Left \eta                  & – pass to left \\
     &        &\mid& \Right \eta                 & – pass to right \\
   Actions
-    & \alpha & ::=& v                           & – change editor \\
-    &        &\mid& \Clear                      & – clear editor \\
-    &        &\mid& \Pick \pi                   & – pick task \\
-    &        &\mid& \Next                       & – next task \\
+    & \alpha & ::=& v                           & – change \\
+    &        &\mid& \Empty                      & – empty \\
+    &        &\mid& \Pick \pi                   & – pick \\
+    &        &\mid& \Continue                   & – continue \\
   Paths
     & \pi    & ::=& \First                      & – pick first \\
     &        &\mid& \Second                     & – pick second \\
@@ -79,9 +79,9 @@
   Task values
     & u      &::= & \Done c                     & – done \\
     &        &\mid& \Edit c                     & – edit value \\
-    &        &\mid& \Empty \beta                & – edit empty \\
+    &        &\mid& \Fill \beta                 & – fill value \\
     &        &\mid& \Watch l                    & – watch location \\
-    &        &\mid& u \Then e                   & – ask \\
+    &        &\mid& u \Next e                   & – ask \\
     &        &\mid& u_1 \And u_2                & – pair \\
     &        &\mid& e_1 \Or e_2                 & – choose \\
     &        &\mid& \Fail                       & – fail \\
@@ -89,7 +89,7 @@
 
 Note:
 \begin{itemize}
-  \item $u \When e$ is \emph{not} a task value.
+  \item $u \Then e$ is \emph{not} a task value.
     Internal steps should be evaluated without user interaction.
   \item The value of $e_1 \Or e_2$ is itself.
     Evaluating one or both options before the user makes a choice will result in untimely reference updates.
@@ -108,7 +108,7 @@ Note:
 
 \begin{mathpar}
   \userule{T-Pure} \qquad \userule{T-Fail} \\
-  \userule{T-Edit} \qquad \userule{T-Empty} \qquad \userule{T-Watch} \\
+  \userule{T-Edit} \qquad \userule{T-Fill} \qquad \userule{T-Watch} \\
   \divert{\userule{T-Then}} \\
   \userule{T-When} \\
   \userule{T-And} \qquad \userule{T-Or}
@@ -182,7 +182,7 @@ Note:
 
 \begin{mathpar}
   \userule{N-Pure} \qquad \userule{N-Fail} \\
-  \userule{N-Edit} \qquad \userule{N-Empty} \qquad \userule{N-Watch}
+  \userule{N-Edit} \qquad \userule{N-Fill} \qquad \userule{N-Watch}
 \end{mathpar}
 
 
