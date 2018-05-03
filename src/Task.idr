@@ -24,9 +24,9 @@ data Task : Universe.Ty -> Type where
     -- Basic tasks
     Done  : (x : typeOf a) -> Task a
     Fail  : Task a
-    -- Primitive combinators
     Then  : Show (typeOf a) => (this : Task a) -> (next : typeOf a -> Task b) -> Task b
-    When  : Show (typeOf a) => (this : Task a) -> (next : typeOf a -> Task b) -> Task b
+    -- Primitive combinators
+    Next  : Show (typeOf a) => (this : Task a) -> (next : typeOf a -> Task b) -> Task b
     And   : Show (typeOf a) => Show (typeOf b) => (left : Task a) -> (right : Task b) -> Task (PairTy a b)
     Or    : Show (typeOf a) => (left : Task a) -> (right : Task a) -> Task a
     -- User interaction
@@ -43,11 +43,11 @@ pure : (typeOf a) -> Task a
 pure = Done
 
 (>>=) : Show (typeOf a) => Task a -> (typeOf a -> Task b) -> Task b
-(>>=) = Then
+(>>=) = Next
 
 infixl 1 >>-
 (>>-) : Show (typeOf a) => Task a -> (typeOf a -> Task b) -> Task b
-(>>-) = When
+(>>-) = Then
 
 infixr 3 |*|
 (|*|) : Show (typeOf a) => Show (typeOf b) => Task a -> Task b -> Task (PairTy a b)
@@ -103,7 +103,7 @@ ui : Show (typeOf a) => Task a -> State -> String
 ui (Done x)         _ = "pure " ++ show x
 ui Fail             _ = "fail"
 ui (Then this cont) s = ui this s ++ " => <cont>"
-ui (When this cont) s = ui this s ++ " => <cont>"
+ui (Next this cont) s = ui this s ++ " => <cont>"
 ui (And left right) s = "(" ++ ui left s ++ " * " ++ ui right s ++ ")"
 ui (Or left right)  s = "(" ++ ui left s ++ " + " ++ ui right s ++ ")"
 ui (Edit val)       _ = "edit " ++ show @{editor_value} val
@@ -119,7 +119,7 @@ isStable : Task a -> Bool
 isStable (Done x)         = True
 isStable Fail             = False
 isStable (Then this cont) = isStable this
-isStable (When this cont) = isStable this
+isStable (Next this cont) = isStable this
 isStable (And left right) = isStable left && isStable right
 isStable (Or left right)  = isStable left && isStable right
 isStable (Edit x)         = False
@@ -138,27 +138,27 @@ value (And left right) s = Just (!(value left s), !(value right s))
 -- The rest never has a value because:
 --   * `Or` needs to wait for an user choice
 --   * `Fail` runs forever and doesn't produce a value
---   * `Then` transforms values to another type
+--   * `Next` transforms values to another type
 value _                _ = Nothing
 
 choices : Task a -> List Path
 choices (Or Fail Fail)  = []
 choices (Or left Fail)  = [ First ]
-choices (Or Fail right) = [ Second ] ++ map Next (choices right)
-choices (Or left right) = [ First, Second ] ++ map Next (choices right)
+choices (Or Fail right) = [ Second ] ++ map Succ (choices right)
+choices (Or left right) = [ First, Second ] ++ map Succ (choices right)
 choices _               = []
 
 options : Task a -> State -> List Event
 options (Done x)             _ = []
-options (Then this next)     s =
+options (Next this next)     s =
     let
     actions =
         case value this s of
-            Just _  => [ Here Next ]
+            Just _  => [ Here Continue ]
             Nothing => []
     in
     actions ++ options this s
-options (When this next)     s = -- map (Here . Execute) (fromMaybe [] $ choices $ next !(value this s)) ++ options this s
+options (Then this next)     s = -- map (Here . Execute) (fromMaybe [] $ choices $ next !(value this s)) ++ options this s
     let
     actions =
         case value this s of
@@ -168,7 +168,7 @@ options (When this next)     s = -- map (Here . Execute) (fromMaybe [] $ choices
     actions ++ options this s
 options (And left right)     s = map ToLeft (options left s) ++ map ToRight (options right s)
 options task@(Or left right) s = map (Here . Pick) (choices task) ++ map ToLeft (options left s) ++ map ToRight (options right s)
-options (Edit {a} val)       _ = [ Here (Change (Universe.defaultOf a)), Here Clear ]
+options (Edit {a} val)       _ = [ Here (Change (Universe.defaultOf a)), Here Empty ]
 options Watch                _ = [ Here (Change (Universe.defaultOf StateTy)) ]
 options Fail                 _ = []
 options Get                  _ = []
@@ -176,14 +176,14 @@ options (Put x)              _ = []
 
 normalise : Task a -> State -> ( Task a, State )
 -- Combinators
-normalise (Then this cont) state =
+normalise (Next this cont) state =
     let
     ( newThis, newState ) = normalise this state
     in
     case newThis of
         Done a => normalise (cont a) newState
-        _      => ( Then newThis cont, newState )
-normalise task@(When this cont) state =
+        _      => ( Next newThis cont, newState )
+normalise task@(Then this cont) state =
     case value this state of
         Just v =>
             case cont v of
@@ -217,22 +217,22 @@ normalise task state =
     ( task, state )
 
 handle : Task a -> Event -> State -> ( Task a, State )
-handle task@(Then this cont) (Here Next) state =
-    -- If we pressed Next...
+handle task@(Next this cont) (Here Continue) state =
+    -- If we pressed Continue...
     case value this state of
         -- ...and we have a value: we get on with the continuation
         Just v  => normalise (cont v) state
         -- ...without a value: we stay put and have to wait for a value to appear.
         Nothing => ( task, state )
-handle (Then this cont) event state =
+handle (Next this cont) event state =
     -- Pass the event to this
     let
     ( newThis, newState ) = handle this event state
     --FIXME: maybe add a normalise here
     -- ( newerThis, newerState ) = normalise newThis newState
     in
-    ( Then newThis cont, newState )
-handle task@(When this cont) (Here (Execute p)) state =
+    ( Next newThis cont, newState )
+handle task@(Then this cont) (Here (Execute p)) state =
     case value this state of
         Just v =>
             case handle (cont v) (Here (Pick p)) state of
@@ -240,12 +240,12 @@ handle task@(When this cont) (Here (Execute p)) state =
                 ( next, newState ) => ( next, newState )
         Nothing =>
             ( task, state )
-handle (When this cont) event state =
+handle (Then this cont) event state =
     -- Pass the event to this and normalise
     let
     ( newThis, newState ) = handle this event state
     in
-    normalise (When newThis cont) newState
+    normalise (Then newThis cont) newState
 handle (And left right) (ToLeft event) state =
     -- Pass the event to left
     let
@@ -264,7 +264,7 @@ handle (Or left right) (Here (Pick First)) state =
 handle (Or left right) (Here (Pick Second)) state =
     -- Pick the second
     ( right, state )
-handle (Or left right) (Here (Pick (Next p))) state =
+handle (Or left right) (Here (Pick (Succ p))) state =
     -- Pick the second and continue
     handle right (Here (Pick p)) state
 handle (Or left right) (ToLeft event) state =
@@ -279,7 +279,7 @@ handle (Or left right) (ToRight event) state =
     ( newRight, newState ) = handle right event state
     in
     ( Or left newRight, newState )
-handle (Edit _) (Here Clear) state =
+handle (Edit _) (Here Empty) state =
     ( Edit Nothing, state )
 handle (Edit {a} val) (Here (Change {b} newVal)) state with (decEq b a)
   handle (Edit _) (Here (Change newVal)) state | Yes Refl = ( Edit (Just newVal), state )

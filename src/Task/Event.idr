@@ -15,28 +15,28 @@ namespace Path
     data Path
         = First
         | Second
-        | Next Path
+        | Succ Path
 
     Show Path where
         show First    = "f"
         show Second   = "s"
-        show (Next p) = "s " ++ show p
+        show (Succ p) = "s " ++ show p
 
     parse : List String -> Either String Path
     parse ["f"]         = pure First
     parse ["s"]         = pure Second
-    parse ("s" :: rest) = map Next $ parse rest
+    parse ("s" :: rest) = map Succ $ parse rest
     parse other           = throw $ "!! '" ++ unwords other ++ "' is not a valid path, type 'help' for more info"
 
 
 -- Events ----------------------------------------------------------------------
 
 data Action : Type where
-    Change  : Universe.typeOf b -> Action
-    Clear   : Action
-    Pick    : Path -> Action
-    Execute : Path -> Action
-    Next    : Action
+    Change   : Universe.typeOf b -> Action
+    Empty    : Action
+    Pick     : Path -> Action
+    Execute  : Path -> Action
+    Continue : Action
 
 data Event
     = ToLeft Event
@@ -48,10 +48,10 @@ data Event
 
 Show Action where
     show (Change _)  = "change <val>"
-    show Clear       = "clear"
+    show Empty       = "empty"
     show (Pick p)    = "pick " ++ show p
     show (Execute p) = "exec " ++ show p
-    show Next        = "next"
+    show Continue    = "cont"
 
 Show Event where
     show (ToLeft e)  = "l " ++ show e
@@ -64,8 +64,8 @@ Show Event where
 usage : String
 usage = unlines
     [ ":: Possible events are:"
-    , "    change <val> : change current value to <val> "
-    , "    clear        : clear current value"
+    , "    change <val> : change current editor to <val> "
+    , "    empty        : empty current editor"
     , "    pick <path>  : choose amongst first or second option"
     , "    exec <path>  : execute one of possible options"
     , "    cont         : continue with the next task"
@@ -78,10 +78,10 @@ parse : List String -> Either String Event
 parse ["change", val] with (Universe.Basic.parse val)
   parse ["change", val] | Nothing          = throw $ "!! Error parsing value '" ++ val ++ "'"
   parse ["change", val] | (Just (ty ** v)) = pure $ Here $ Change {b = BasicTy ty} v
-parse ["clear"]                            = pure $ Here $ Clear
+parse ["empty"]                            = pure $ Here $ Empty
 parse ("pick" :: rest)                     = map (Here . Pick) $ Path.parse rest
 parse ("exec" :: rest)                     = map (Here . Execute) $ Path.parse rest
-parse ["next"]                             = pure $ Here $ Next
+parse ["cont"]                             = pure $ Here $ Continue
 parse ("l" :: rest)                        = map ToLeft $ parse rest
 parse ("r" :: rest)                        = map ToRight $ parse rest
 parse ["help"]                             = throw usage
