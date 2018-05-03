@@ -8,8 +8,10 @@
     {#4}}}
 \newmacro{userule}
   {\usemacro}
-\newmacro{refrule}
-  {\textsc}
+\newmacro{refrule}[1]
+  {\ifthenelse{\isundefined{#1}}
+    {\GenericError{}{Rule `#1` is not defined}{}{}}
+    {\textsc{#1}}}
 
 \newif\ifstateful
 \statefulfalse
@@ -22,7 +24,7 @@
 \newmacro{RelationT}
   {\Gamma\st{\Sigma} \infers e : \tau}
 
-\newrule{T-Pure}
+\newrule{T-Done}
   {\Gamma\st{\Sigma} \infers e : \tau}
   {\Gamma\st{\Sigma} \infers \Done e : \Task \tau}
 
@@ -31,36 +33,36 @@
   {\Gamma\st{\Sigma} \infers \Fail : \Task \tau}
 
 \newrule{T-Edit}
-  {\Gamma\st{\Sigma} \infers v : \tau}
-  {\Gamma\st{\Sigma} \infers \Edit v : \Task \tau}
+  {\Gamma\st{\Sigma} \infers e : \beta}
+  {\Gamma\st{\Sigma} \infers \Edit e : \Task \beta}
 
 \newrule{T-Fill}
   {\ }
-  {\Gamma\st{\Sigma} \infers \Fill \tau : \Task \tau}
+  {\Gamma\st{\Sigma} \infers \Fill \beta : \Task \beta}
 
 \newrule{T-Watch}
-  {\Gamma, \Sigma \infers \Sigma(l) : \tau}
-  {\Gamma, \Sigma \infers \Watch l : \Task \tau}
+  {\Gamma, \Sigma \infers e : \beta}
+  {\Gamma, \Sigma \infers \Watch e : \Task \beta}
+
+\newrule{T-Next}
+  {\Gamma\st{\Sigma} \infers e_1 : \Task \tau_1 \\
+   \Gamma\st{\Sigma} \infers e_2 : \tau_1 \to \Task \tau_2}
+  {\Gamma\st{\Sigma} \infers e_1 \Next e_2 : \Task \tau_2}
 
 \newrule{T-Then}
-  {\Gamma\st{\Sigma} \infers t_1 : \Task \tau_1 \\
-   \Gamma\st{\Sigma} \infers e : \tau_1 \to \Task \tau_2}
-  {\Gamma\st{\Sigma} \infers t_1 \Next e : \Task \tau_2}
-
-\newrule{T-When}
-  {\Gamma\st{\Sigma} \infers t_1 : \Task \tau_1 \\
-   \Gamma\st{\Sigma} \infers e : \tau_1 \to \Task \tau_2}
-  {\Gamma\st{\Sigma} \infers t_1 \Then e : \Task \tau_2}
+  {\Gamma\st{\Sigma} \infers e_1 : \Task \tau_1 \\
+   \Gamma\st{\Sigma} \infers e_2 : \tau_1 \to \Task \tau_2}
+  {\Gamma\st{\Sigma} \infers e_1 \Then e_2 : \Task \tau_2}
 
 \newrule{T-And}
-  {\Gamma\st{\Sigma} \infers t_1 : \Task \tau_1 \\
-   \Gamma\st{\Sigma} \infers t_2 : \Task \tau_2}
-  {\Gamma\st{\Sigma} \infers t_1 \And t_2 : \Task\,(\tau_1 \times \tau_2)}
+  {\Gamma\st{\Sigma} \infers e_1 : \Task \tau_1 \\
+   \Gamma\st{\Sigma} \infers e_2 : \Task \tau_2}
+  {\Gamma\st{\Sigma} \infers e_1 \And e_2 : \Task\,(\tau_1 \times \tau_2)}
 
 \newrule{T-Or}
-  {\Gamma\st{\Sigma} \infers t_1 : \Task \tau \\
-   \Gamma\st{\Sigma} \infers t_2 : \Task \tau }
-  {\Gamma\st{\Sigma} \infers t_1 \Or t_2 : \Task \tau}
+  {\Gamma\st{\Sigma} \infers e_1 : \Task \tau \\
+   \Gamma\st{\Sigma} \infers e_2 : \Task \tau }
+  {\Gamma\st{\Sigma} \infers e_1 \Or e_2 : \Task \tau}
 
 
 %% Evaluation %%

@@ -16,7 +16,7 @@
     &        &\mid& e_1 \star e_2               & – operator \\
     &        &\mid& x                           & – variable \\
     &        &\mid& c                           & – constant \\
-    &        &\mid& r                           & - reference \\
+    &        &\mid& r                           & – reference \\
   References
     & r      &::= & \Ref e                      & – reference \\
     &        &\mid& !e                          & – dereference \\
@@ -107,10 +107,10 @@ Note:
 \end{equation*}
 
 \begin{mathpar}
-  \userule{T-Pure} \qquad \userule{T-Fail} \\
+  \userule{T-Done} \qquad \userule{T-Fail} \\
   \userule{T-Edit} \qquad \userule{T-Fill} \qquad \userule{T-Watch} \\
-  \divert{\userule{T-Then}} \\
-  \userule{T-When} \\
+  \userule{T-Next} \\
+  \userule{T-Then} \\
   \userule{T-And} \qquad \userule{T-Or}
 \end{mathpar}
 
