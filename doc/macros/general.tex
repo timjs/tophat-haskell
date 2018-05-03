@@ -95,15 +95,16 @@
   {\end{center}}
 
 
-%% Logos %%
+%% Abbreviations %%
 
-%% \newlogo[.name.]{.text.}
-\newmacro{newlogo}[2][1]
+%% \newabbreviation[.name.]{.text.}{.full.}
+\newmacro{newabbreviation}[3][1]
   {\ifthenelse{\isempty{#1}}
-     {\newlogoaux{#2}{\smallcaps{\lowercase{#2}}}}
-     {\newlogoaux{#1}{#2}}}
-\newmacro{newlogoaux}[2]
-  {\newmacro{#1}{#2\xspace}}
+     {\newabbreviationaux{#2}{\lowercase{#2}}{#3}}
+     {\newabbreviationaux{#1}{\lowercase{#2}}{#3}}}
+\newmacro{newabbreviationaux}[3]
+  {\newmacro{#1}{\smallcaps{#2}}
+   \newmacro{infull#1}{#3}}
 
 
 %% Languages %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

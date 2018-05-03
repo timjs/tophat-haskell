@@ -112,14 +112,14 @@ How could an interactive session with the user look like when we start with a si
 containing the value two?\todo{We should probably add a rule that doesn't change a task when the event doesn't match\ldots}
 \begin{align*}
     & \Edit 2 \\
-  \handle{5} & \comment{change value to five} \\
+  \handle{5} & \hint{change value to five} \\
     & \Edit 5 \\
-  \handle{\Clear} & \comment{clear the current value} \\
+  \handle{\Clear} & \hint{clear the current value} \\
     & \Empty \Int \\
-  \handle{50} & \comment{enter the value fifty} \\
+  \handle{50} & \hint{enter the value fifty} \\
     & \Edit 50 \\
-  \handle{\astring{Bye}} & \comment{changing the value to a string won't work\ldots} \\
+  \handle{\astring{Bye}} & \hint{changing the value to a string won't work\ldots} \\
     & \Edit 50 \\
-  \handle{10} & \comment{change value to ten} \\
+  \handle{10} & \hint{change value to ten} \\
     & \Edit 10
 \end{align*}

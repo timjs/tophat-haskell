@@ -32,7 +32,7 @@
     &        &\mid& \Edit v                     & – edit value \\
     &        &\mid& \Empty \tau                 & – edit empty \\
     &        &\mid& \Watch l                    & – watch location \\
-    &&\grayed{\mid}& \grayed{e_1 \Then e_2}     & \grayed{– sequence} \\
+    &&\divert{\mid}& \divert{e_1 \Then e_2}     & \divert{– sequence} \\
     &        &\mid& e_1 \When e_2               & – sequence \\
     &        &\mid& e_1 \And e_2                & – interleave \\
     &        &\mid& e_1 \Or e_2                 & – choose \\
@@ -46,7 +46,7 @@
     &        &\mid& \Clear                      & – clear editor \\
     &        &\mid& \Pick \pi                   & – pick one of two tasks \\
     &        &\mid& \Execute \pi                & – execute one of next tasks \\
-    &&\grayed{\mid}& \grayed{\Next}             & \grayed{– execute next task} \\
+    &&\divert{\mid}& \divert{\Next}             & \divert{– execute next task} \\
   Paths
     & \pi    & ::=& \First                      & – choose first \\
     &        &\mid& \Second                     & – choose second \\
@@ -77,7 +77,7 @@
 \begin{mathpar}
   \userule{T-Pure} \qquad \userule{T-Fail} \\
   \userule{T-Edit} \qquad \userule{T-Empty} \qquad \userule{T-Watch} \\
-  \grayed{\userule{T-Then}} \\
+  \divert{\userule{T-Then}} \\
   \userule{T-When} \\
   \userule{T-And} \qquad \userule{T-Or}
 \end{mathpar}
@@ -121,7 +121,7 @@
 \todo{Is \refrule{N-And} needed or can we just use $\Value(t)$ to check if we have a pair?}
 
 \begin{mathpar}
-  \grayed{\userule{N-Then}} \\
+  \divert{\userule{N-Then}} \\
   \userule{N-And}
 \end{mathpar}
 
@@ -141,7 +141,7 @@
 (Complementing above conditional rules)
 
 \begin{mathpar}
-  \grayed{\userule{N-ThenEval}} \\
+  \divert{\userule{N-ThenEval}} \\
   \userule{N-AndEval} \qquad \userule{N-OrEval}
 \end{mathpar}
 
@@ -176,7 +176,7 @@
 
 \begin{mathpar}
   \begin{array}{@{}ll}
-    \grayed{\userule{H-Stay'}} & \grayed{\userule{H-Next'}} \\
+    \divert{\userule{H-Stay'}} & \divert{\userule{H-Next'}} \\
     \userule{H-Stay}           & \userule{H-Next} \\
                                & \userule{H-Fail}
   \end{array}
@@ -197,7 +197,7 @@
 Note that \refrule{H-Pass} is the place where we reuse $\normalise$.)
 
 \begin{mathpar}
-  \grayed{\userule{H-PassS}} \qquad \userule{H-Pass} \\
+  \divert{\userule{H-PassS}} \qquad \userule{H-Pass} \\
   \userule{H-Left} \qquad \userule{H-Right}
 \end{mathpar}
 
