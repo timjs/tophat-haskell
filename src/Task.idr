@@ -105,6 +105,7 @@ ui Fail             _ = "fail"
 ui (Then this cont) s = ui this s ++ " => <cont>"
 ui (Next this cont) s = ui this s ++ " -> <cont>"
 ui (And left right) s = "(" ++ ui left s ++ " * " ++ ui right s ++ ")"
+--FIXME: should we present UI's to the user for every or branch?
 ui (Or left right)  s = "(" ++ ui left s ++ " + " ++ ui right s ++ ")"
 ui (Edit val)       _ = "edit " ++ show @{editor_value} val
 ui Watch            s = "watch " ++ show s
@@ -119,6 +120,8 @@ value (Done x)         _ = Just x
 value (Edit val)       _ = val
 value Watch            s = Just s
 value (And left right) s = Just (!(value left s), !(value right s))
+value Get              s = Just s
+value (Put _)          _ = Just ()
 -- The rest never has a value because:
 --   * `Or` needs to wait for an user choice
 --   * `Fail` runs forever and doesn't produce a value
@@ -143,15 +146,8 @@ options (Next this next)     s =
     in
     here ++ options this s
 options (Then this next)     s = options this s
-    -- let
-    -- here =
-    --     case value this s of
-    --         Just v  => map (Here . Execute) (choices $ next v)
-    --         Nothing => []
-    -- in
-    -- here ++ options this s
 options (And left right)     s = map ToLeft (options left s) ++ map ToRight (options right s)
-options task@(Or left right) s = map (Here . Pick) (choices task) ++ map ToLeft (options left s) ++ map ToRight (options right s)
+options task@(Or left right) s = map (Here . Pick) (choices task)
 options (Edit {a} val)       _ = [ Here (Change (Universe.defaultOf a)), Here Empty ]
 options Watch                _ = [ Here (Change (Universe.defaultOf StateTy)) ]
 options Fail                 _ = []
@@ -162,6 +158,9 @@ normalise : Task a -> State -> ( Task a, State )
 -- Step
 normalise task@(Then this cont) state =
     --FIXME: normalise before???
+    -- let
+    -- ( newThis, newState ) = normalise this state
+    -- in
     case value this state of
         Just v =>
             case cont v of
@@ -181,12 +180,6 @@ normalise (And left right) state =
     ( newRight, newerState ) = normalise right newState
     in
     ( And newLeft newRight, newerState )
-normalise (Or left right) state =
-    let
-    ( newLeft, newState )    = normalise left state
-    ( newRight, newerState ) = normalise right newState
-    in
-    ( Or newLeft newRight, newerState )
 -- State
 normalise (Get) state =
     ( Done state, state )
@@ -208,18 +201,8 @@ handle (Next this cont) event state =
     -- Pass the event to this
     let
     ( newThis, newState ) = handle this event state
-    --FIXME: maybe add a normalise here
-    -- ( newerThis, newerState ) = normalise newThis newState
     in
     ( Next newThis cont, newState )
--- handle task@(Then this cont) (Here (Execute p)) state =
---     case value this state of
---         Just v =>
---             case handle (cont v) (Here (Pick p)) state of
---                 ( Fail, _ )        => ( task, state )
---                 ( next, newState ) => ( next, newState )
---         Nothing =>
---             ( task, state )
 handle (Then this cont) event state =
     -- Pass the event to this and normalise
     let
@@ -248,18 +231,6 @@ handle (Or left right) (Here (Pick Second)) state =
 handle (Or left right) (Here (Pick (Other p))) state =
     -- Pick the second and continue
     handle right (Here (Pick p)) state
-handle (Or left right) (ToLeft event) state =
-    -- Pass the event to left
-    let
-    ( newLeft, newState ) = handle left event state
-    in
-    ( Or newLeft right, newState )
-handle (Or left right) (ToRight event) state =
-    -- Pass the event to right
-    let
-    ( newRight, newState ) = handle right event state
-    in
-    ( Or left newRight, newState )
 handle (Edit _) (Here Empty) state =
     ( Edit Nothing, state )
 handle (Edit {a} val) (Here (Change {b} newVal)) state with (decEq b a)

@@ -8,61 +8,79 @@ import Task.Event
 
 
 -- Tests -----------------------------------------------------------------------
+--
+-- NOTE: Tasks ending in `'` need user input
+--
 
-int : Task (BasicTy IntTy)
-int = Done 42
 
-str : Task (BasicTy StringTy)
-str = Done "Hello"
+-- Helpers --
 
-ask : Int -> Task (BasicTy IntTy)
-ask x = Edit (Just x)
+edit : Int -> Task (BasicTy IntTy)
+edit x = Edit (Just x)
+
+ask : Task (BasicTy IntTy)
+ask = Edit Nothing
+
+
+-- Basic --
+
+fourtytwo : Task (BasicTy IntTy)
+fourtytwo = Done 42
+
+hello : Task (BasicTy StringTy)
+hello = Done "Hello"
 
 inc : Int -> Task (BasicTy IntTy)
-inc x = Edit (Just $ x + 1)
+inc x = Done (x + 1)
 
 add : Int -> Int -> Task (BasicTy IntTy)
-add x y = Edit (Just $ x + y)
+add x y = Done (x + y)
 
 append : String -> String -> Task (BasicTy StringTy)
-append x y = Edit (Just $ x ++ y)
+append x y = Done (x ++ y)
+
+
+-- Steps --
 
 pureStep : Task (BasicTy IntTy)
 pureStep = do
-    x <- int
+    x <- fourtytwo
     inc x
 
 pureStep' : Task (BasicTy IntTy)
 pureStep' =
-    int >>? \x =>
-    (inc x |+| Fail)
+    fourtytwo >>? \x =>
+    inc x
 
 oneStep : Task (BasicTy IntTy)
 oneStep = do
-    x <- ask 0
+    x <- edit 0
     inc x
 
 oneStep' : Task (BasicTy IntTy)
 oneStep' =
-    ask 0 >>? \x =>
-    (inc x |+| Fail)
+    edit 0 >>? \x =>
+    inc x
 
 -- oneStep'' : Task (BasicTy IntTy)
 -- oneStep'' =
---     ask 0 >>*
+--     edit 0 >>*
 --         [ \x => ( True, inc x ) ]
 
 twoSteps : Task (BasicTy IntTy)
 twoSteps = do
-    x <- ask 0
-    y <- ask 0
+    x <- edit 1
+    y <- edit 2
     add x y
 
 twoSteps' : Task (BasicTy IntTy)
 twoSteps' =
-    ask 0 >>? \x =>
-    ((ask 0 >>? \y =>
-    (add x y |+| Fail)) |+| Fail)
+    edit 1 >>? \x =>
+    edit 2 >>? \y =>
+    add x y
+
+
+-- Parallel --
 
 parallel : Task (PairTy (BasicTy IntTy) (BasicTy StringTy))
 parallel = Edit Nothing |*| Edit (Just "Hello")
@@ -70,24 +88,21 @@ parallel = Edit Nothing |*| Edit (Just "Hello")
 parallelStep : Task (BasicTy StringTy)
 parallelStep = do
     ( n, m ) <- parallel
-    Edit (Just (unwords $ replicate (cast n) m))
+    Done (unwords $ replicate (cast n) m)
 
 parallelStep' : Task (BasicTy StringTy)
 parallelStep' =
     parallel >>? \( n, m ) =>
-    (Edit (Just (unwords $ replicate (cast n) m)) |+| Fail)
+    Done (unwords $ replicate (cast n) m)
 
-parallelAuto : Task (BasicTy StringTy)
-parallelAuto =
-    parallel >>? \( n, m ) =>
-    Edit (Just (unwords $ replicate (cast n) m))
 
-parallelWatch : Task (PairTy (BasicTy IntTy) (BasicTy IntTy))
-parallelWatch = Watch |*| Watch
+-- Normalisation --
+--
+-- FIXME: should these automatically simplify?
 
 stablise : Int -> Task (BasicTy IntTy)
 stablise x = do
-    y <- ask x
+    edit x >>? \y =>
     Done y
 
 pair : Task (PairTy (BasicTy IntTy) (BasicTy IntTy))
@@ -103,46 +118,62 @@ inner' =
     pair >>? \( x, y ) =>
     add x y
 
+
+-- Shared Data --
+
 update : Task UnitTy
-update = do
-    x <- Get
-    y <- ask x
-    Put y
-    x <- Get
-    y <- ask x
+update =
+    Get >>= \x =>
+    edit x >>? \y =>
     Put y
 
-control : Task (PairTy UnitTy (BasicTy IntTy))
-control = update |*| Watch
+--FIXME: help!!!
+update2 : Task UnitTy
+update2 = do
+    Get >>= \x =>
+    edit (x+1) >>? \y =>
+    Put y >>= \() =>
+    Get >>= \u =>
+    edit (u+2) >>? \v =>
+    Put v
+
+watch : Show (typeOf a) => Task a -> Task (PairTy a StateTy)
+watch t = t |*| Watch
+
+parallelWatch : Task (PairTy StateTy StateTy)
+parallelWatch = watch Watch
+
+
+-- Choices --
 
 choice : Task (BasicTy IntTy)
-choice = ask 1 |+| ask 2
+choice = edit 1 |+| edit 2
 
 choice3 : Task (BasicTy IntTy)
-choice3 = choice |+| ask 3
+choice3 = choice |+| edit 3
 
 choice1 : Task (BasicTy IntTy)
-choice1 = ask 2 |+| Fail
+choice1 = edit 2 |+| Fail
 
 auto : Task (BasicTy StringTy)
-auto =
-    ask 0 >>? \x =>
+auto = do
+    x <- edit 0
     if x >= 10 then Done "large" else Fail
 
 actions : Task (BasicTy StringTy)
 actions =
-    ask 0 >>? \x =>
+    edit 0 >>? \x =>
     (Done "first" |+| Done "second first" |+| Done "second second")
 
-guarded : Task (BasicTy StringTy)
-guarded =
-    ask 0 >>? \x =>
+guardes : Task (BasicTy StringTy)
+guardes =
+    edit 0 >>? \x =>
     ((if x >= 10 then Done "large" else Fail) |+| (if x >= 100 then Done "very large" else Fail))
 
 partial -- due to `mod` on `0`
-checkModulo : Task (BasicTy StringTy)
-checkModulo =
-    ask 1 >>? \x =>
+branch : Task (BasicTy StringTy)
+branch =
+    edit 1 >>? \x =>
     if x `mod` 3 == 0 then
         Done "multiple of 3"
     else if x `mod` 5 == 0 then
@@ -151,12 +182,11 @@ checkModulo =
         Fail
 
 
-askInt : Task (BasicTy IntTy)
-askInt = Edit (Nothing)
+-- Empty edit --
 
 test : Task (BasicTy IntTy)
-test =
-    askInt |*| askInt >>? \(x, y) =>
+test = do
+    ( x, y ) <- ask |*| ask
     pure (x + y)
 
 
