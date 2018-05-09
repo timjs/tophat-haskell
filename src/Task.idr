@@ -42,6 +42,7 @@ data Task : Universe.Ty -> Type where
 pure : (typeOf a) -> Task a
 pure = Done
 
+--TODO: swap Next and Then
 (>>=) : Show (typeOf a) => Task a -> (typeOf a -> Task b) -> Task b
 (>>=) = Next
 
@@ -100,10 +101,10 @@ state = id
     show (Just x) = show x
 
 ui : Show (typeOf a) => Task a -> State -> String
-ui (Done x)         _ = "pure " ++ show x
+ui (Done x)         _ = "done " ++ show x
 ui Fail             _ = "fail"
 ui (Then this cont) s = ui this s ++ " => <cont>"
-ui (Next this cont) s = ui this s ++ " => <cont>"
+ui (Next this cont) s = ui this s ++ " -> <cont>"
 ui (And left right) s = "(" ++ ui left s ++ " * " ++ ui right s ++ ")"
 ui (Or left right)  s = "(" ++ ui left s ++ " + " ++ ui right s ++ ")"
 ui (Edit val)       _ = "edit " ++ show @{editor_value} val
