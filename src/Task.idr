@@ -153,20 +153,20 @@ options : Task a -> State -> List Event
 options (Done x)             _ = []
 options (Next this next)     s =
     let
-    actions =
+    here =
         case value this s of
             Just _  => [ Here Continue ]
             Nothing => []
     in
-    actions ++ options this s
-options (Then this next)     s = -- map (Here . Execute) (fromMaybe [] $ choices $ next !(value this s)) ++ options this s
-    let
-    actions =
-        case value this s of
-            Just v  => map (Here . Execute) (choices $ next v)
-            Nothing => []
-    in
-    actions ++ options this s
+    here ++ options this s
+options (Then this next)     s = options this s
+    -- let
+    -- here =
+    --     case value this s of
+    --         Just v  => map (Here . Execute) (choices $ next v)
+    --         Nothing => []
+    -- in
+    -- here ++ options this s
 options (And left right)     s = map ToLeft (options left s) ++ map ToRight (options right s)
 options task@(Or left right) s = map (Here . Pick) (choices task) ++ map ToLeft (options left s) ++ map ToRight (options right s)
 options (Edit {a} val)       _ = [ Here (Change (Universe.defaultOf a)), Here Empty ]
@@ -176,32 +176,28 @@ options Get                  _ = []
 options (Put x)              _ = []
 
 normalise : Task a -> State -> ( Task a, State )
--- Combinators
-normalise (Next this cont) state =
-    let
-    ( newThis, newState ) = normalise this state
-    in
-    case newThis of
-        Done a => normalise (cont a) newState
-        _      => ( Next newThis cont, newState )
+-- Step
 normalise task@(Then this cont) state =
+    --FIXME: normalise before???
     case value this state of
         Just v =>
             case cont v of
                 Fail   => ( task, state )
-                -- FIXME: needed for action management
-                Or _ _ => ( task, state )
                 next   => normalise next state
         Nothing =>
             ( task, state )
+-- Evaluate
+normalise (Next this cont) state =
+    let
+    ( newThis, newState ) = normalise this state
+    in
+    ( Next newThis cont, newState )
 normalise (And left right) state =
     let
     ( newLeft, newState )    = normalise left state
     ( newRight, newerState ) = normalise right newState
     in
-    case ( newLeft, newRight ) of
-        ( Done a, Done b )    => ( Done ( a, b ), newerState )
-        ( newLeft, newRight ) => ( And newLeft newRight, newerState )
+    ( And newLeft newRight, newerState )
 normalise (Or left right) state =
     let
     ( newLeft, newState )    = normalise left state
@@ -233,20 +229,21 @@ handle (Next this cont) event state =
     -- ( newerThis, newerState ) = normalise newThis newState
     in
     ( Next newThis cont, newState )
-handle task@(Then this cont) (Here (Execute p)) state =
-    case value this state of
-        Just v =>
-            case handle (cont v) (Here (Pick p)) state of
-                ( Fail, _ )        => ( task, state )
-                ( next, newState ) => ( next, newState )
-        Nothing =>
-            ( task, state )
+-- handle task@(Then this cont) (Here (Execute p)) state =
+--     case value this state of
+--         Just v =>
+--             case handle (cont v) (Here (Pick p)) state of
+--                 ( Fail, _ )        => ( task, state )
+--                 ( next, newState ) => ( next, newState )
+--         Nothing =>
+--             ( task, state )
 handle (Then this cont) event state =
     -- Pass the event to this and normalise
     let
     ( newThis, newState ) = handle this event state
     in
     normalise (Then newThis cont) newState
+--FIXME: normalise after each event handling of And and Or???
 handle (And left right) (ToLeft event) state =
     -- Pass the event to left
     let
@@ -293,7 +290,8 @@ handle task _ state =
     ( task, state )
     -- Case `Done`: evaluation terminated
     -- Case `Fail`: evaluation continues indefinitely
-    -- Cases Get and Put: this case can't happen, it is already evaluated by `normalise`
+    -- Case `Then`: should already be evaluated by `normalise`, otherwise pass events to `this`
+    -- Cases `Get` and `Put`: this case can't happen, it is already evaluated by `normalise`
     -- FIXME: express this in the type system...
 
 init : Task a -> State -> ( Task a, State )
