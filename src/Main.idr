@@ -165,8 +165,8 @@ actions =
     edit 0 >>? \x =>
     (Done "first" |+| Done "second first" |+| Done "second second")
 
-guardes : Task (BasicTy StringTy)
-guardes =
+guards : Task (BasicTy StringTy)
+guards =
     edit 0 >>? \x =>
     ((if x >= 10 then Done "large" else Fail) |+| (if x >= 100 then Done "very large" else Fail))
 
