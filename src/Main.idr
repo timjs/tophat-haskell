@@ -175,13 +175,16 @@ get = do
             putStrLn msg
             get
 
-run : Show (typeOf a) => Task a -> State -> IO ()
-run task state = do
+loop : Show (typeOf a) => Task a -> State -> IO ()
+loop task state = do
     putStrLn $ ui task state
     putStrLn $ "Possibilities: " ++ show (options task state)
     event <- get
     let ( nextTask, nextState ) = handle task event state
-    run nextTask nextState
+    loop nextTask nextState
+
+run : Show (typeOf a) => Task a -> IO ()
+run t = uncurry loop $ init t (state 0)
 
 main : IO ()
-main = uncurry run $ init test (state 0)
+main = run test
