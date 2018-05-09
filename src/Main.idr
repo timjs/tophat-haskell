@@ -34,7 +34,7 @@ pureStep = do
 
 pureStep' : Task (BasicTy IntTy)
 pureStep' =
-    int >>- \x =>
+    int >>? \x =>
     (inc x |+| Fail)
 
 oneStep : Task (BasicTy IntTy)
@@ -44,7 +44,7 @@ oneStep = do
 
 oneStep' : Task (BasicTy IntTy)
 oneStep' =
-    ask 0 >>- \x =>
+    ask 0 >>? \x =>
     (inc x |+| Fail)
 
 -- oneStep'' : Task (BasicTy IntTy)
@@ -60,8 +60,8 @@ twoSteps = do
 
 twoSteps' : Task (BasicTy IntTy)
 twoSteps' =
-    ask 0 >>- \x =>
-    ((ask 0 >>- \y =>
+    ask 0 >>? \x =>
+    ((ask 0 >>? \y =>
     (add x y |+| Fail)) |+| Fail)
 
 parallel : Task (PairTy (BasicTy IntTy) (BasicTy StringTy))
@@ -74,12 +74,12 @@ parallelStep = do
 
 parallelStep' : Task (BasicTy StringTy)
 parallelStep' =
-    parallel >>- \( n, m ) =>
+    parallel >>? \( n, m ) =>
     (Edit (Just (unwords $ replicate (cast n) m)) |+| Fail)
 
 parallelAuto : Task (BasicTy StringTy)
 parallelAuto =
-    parallel >>- \( n, m ) =>
+    parallel >>? \( n, m ) =>
     Edit (Just (unwords $ replicate (cast n) m))
 
 parallelWatch : Task (PairTy (BasicTy IntTy) (BasicTy IntTy))
@@ -100,7 +100,7 @@ inner = do
 
 inner' : Task (BasicTy IntTy)
 inner' =
-    pair >>- \( x, y ) =>
+    pair >>? \( x, y ) =>
     add x y
 
 update : Task UnitTy
@@ -126,23 +126,23 @@ choice1 = ask 2 |+| Fail
 
 auto : Task (BasicTy StringTy)
 auto =
-    ask 0 >>- \x =>
+    ask 0 >>? \x =>
     if x >= 10 then Done "large" else Fail
 
 actions : Task (BasicTy StringTy)
 actions =
-    ask 0 >>- \x =>
+    ask 0 >>? \x =>
     (Done "first" |+| Done "second first" |+| Done "second second")
 
 guarded : Task (BasicTy StringTy)
 guarded =
-    ask 0 >>- \x =>
+    ask 0 >>? \x =>
     ((if x >= 10 then Done "large" else Fail) |+| (if x >= 100 then Done "very large" else Fail))
 
 partial -- due to `mod` on `0`
 checkModulo : Task (BasicTy StringTy)
 checkModulo =
-    ask 1 >>- \x =>
+    ask 1 >>? \x =>
     if x `mod` 3 == 0 then
         Done "multiple of 3"
     else if x `mod` 5 == 0 then
@@ -156,7 +156,7 @@ askInt = Edit (Nothing)
 
 test : Task (BasicTy IntTy)
 test =
-    askInt |*| askInt >>- \(x, y) =>
+    askInt |*| askInt >>? \(x, y) =>
     pure (x + y)
 
 

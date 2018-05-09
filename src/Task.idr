@@ -42,13 +42,12 @@ data Task : Universe.Ty -> Type where
 pure : (typeOf a) -> Task a
 pure = Done
 
---TODO: swap Next and Then
 (>>=) : Show (typeOf a) => Task a -> (typeOf a -> Task b) -> Task b
-(>>=) = Next
+(>>=) = Then
 
-infixl 1 >>-
-(>>-) : Show (typeOf a) => Task a -> (typeOf a -> Task b) -> Task b
-(>>-) = Then
+infixl 1 >>?
+(>>?) : Show (typeOf a) => Task a -> (typeOf a -> Task b) -> Task b
+(>>?) = Next
 
 infixr 3 |*|
 (|*|) : Show (typeOf a) => Show (typeOf b) => Task a -> Task b -> Task (PairTy a b)
