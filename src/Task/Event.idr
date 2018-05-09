@@ -15,17 +15,17 @@ namespace Path
     data Path
         = First
         | Second
-        | Succ Path
+        | Other Path
 
     Show Path where
         show First    = "f"
         show Second   = "s"
-        show (Succ p) = "s " ++ show p
+        show (Other p) = "s " ++ show p
 
     parse : List String -> Either String Path
     parse ["f"]         = pure First
     parse ["s"]         = pure Second
-    parse ("s" :: rest) = map Succ $ parse rest
+    parse ("s" :: rest) = map Other $ parse rest
     parse other           = throw $ "!! '" ++ unwords other ++ "' is not a valid path, type 'help' for more info"
 
 

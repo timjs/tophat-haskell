@@ -145,8 +145,8 @@ value _                _ = Nothing
 choices : Task a -> List Path
 choices (Or Fail Fail)  = []
 choices (Or left Fail)  = [ First ]
-choices (Or Fail right) = [ Second ] ++ map Succ (choices right)
-choices (Or left right) = [ First, Second ] ++ map Succ (choices right)
+choices (Or Fail right) = [ Second ] ++ map Other (choices right)
+choices (Or left right) = [ First, Second ] ++ map Other (choices right)
 choices _               = []
 
 options : Task a -> State -> List Event
@@ -265,7 +265,7 @@ handle (Or left right) (Here (Pick First)) state =
 handle (Or left right) (Here (Pick Second)) state =
     -- Pick the second
     ( right, state )
-handle (Or left right) (Here (Pick (Succ p))) state =
+handle (Or left right) (Here (Pick (Other p))) state =
     -- Pick the second and continue
     handle right (Here (Pick p)) state
 handle (Or left right) (ToLeft event) state =
