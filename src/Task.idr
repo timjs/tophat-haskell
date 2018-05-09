@@ -112,22 +112,6 @@ ui Get              _ = "get"
 ui (Put x)          _ = "put " ++ show x ++ ""
 
 
--- Predicates ------------------------------------------------------------------
-
--- FIXME: is this correct?
-isStable : Task a -> Bool
-isStable (Done x)         = True
-isStable Fail             = False
-isStable (Then this cont) = isStable this
-isStable (Next this cont) = isStable this
-isStable (And left right) = isStable left && isStable right
-isStable (Or left right)  = isStable left && isStable right
-isStable (Edit x)         = False
-isStable Watch            = False
-isStable Get              = True
-isStable (Put x)          = True
-
-
 -- Semantics -------------------------------------------------------------------
 
 value : Task a -> State -> Maybe (typeOf a)
