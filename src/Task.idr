@@ -21,16 +21,16 @@ State = typeOf StateTy
 -- Tasks --
 
 data Task : Universe.Ty -> Type where
-    -- Basic tasks
-    Fail  : Task a
-    Then  : Show (typeOf a) => (this : Task a) -> (next : typeOf a -> Task b) -> Task b
     -- Primitive combinators
+    Then  : Show (typeOf a) => (this : Task a) -> (next : typeOf a -> Task b) -> Task b
     Next  : Show (typeOf a) => (this : Task a) -> (next : typeOf a -> Task b) -> Task b
     And   : Show (typeOf a) => Show (typeOf b) => (left : Task a) -> (right : Task b) -> Task (PairTy a b)
     Or    : Show (typeOf a) => (left : Task a) -> (right : Task a) -> Task a
     -- User interaction
-    Edit  : (val : Maybe (typeOf a)) -> Task a
     Watch : Task StateTy
+    Edit  : (val : Maybe (typeOf a)) -> Task a
+    -- Failure
+    Fail  : Task a
     -- Share interaction
     Get   : Task StateTy
     Put   : (x : typeOf StateTy) -> Task UnitTy
