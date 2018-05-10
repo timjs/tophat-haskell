@@ -35,8 +35,7 @@ data Action : Type where
     Change   : Universe.typeOf b -> Action
     Empty    : Action
     Pick     : Path -> Action
-    Execute  : Path -> Action
-    Continue : Action
+    Continue : Maybe Path -> Action
 
 data Event
     = ToLeft Event
@@ -47,11 +46,11 @@ data Event
 -- Showing ---------------------------------------------------------------------
 
 Show Action where
-    show (Change _)  = "change <val>"
-    show Empty       = "empty"
-    show (Pick p)    = "pick " ++ show p
-    show (Execute p) = "exec " ++ show p
-    show Continue    = "cont"
+    show (Change _)          = "change <val>"
+    show Empty               = "empty"
+    show (Pick p)            = "pick " ++ show p
+    show (Continue Nothing)  = "cont"
+    show (Continue (Just p)) = "cont " ++ show p
 
 Show Event where
     show (ToLeft e)  = "l " ++ show e
@@ -80,8 +79,8 @@ parse ["change", val] with (Universe.Basic.parse val)
   parse ["change", val] | (Just (ty ** v)) = pure $ Here $ Change {b = BasicTy ty} v
 parse ["empty"]                            = pure $ Here $ Empty
 parse ("pick" :: rest)                     = map (Here . Pick) $ Path.parse rest
-parse ("exec" :: rest)                     = map (Here . Execute) $ Path.parse rest
-parse ["cont"]                             = pure $ Here $ Continue
+parse ["cont"]                             = pure . Here . Continue $ Nothing
+parse ("cont" :: rest)                     = map (Here . Continue . Just) $ Path.parse rest
 parse ("l" :: rest)                        = map ToLeft $ parse rest
 parse ("r" :: rest)                        = map ToRight $ parse rest
 parse ["help"]                             = throw usage
