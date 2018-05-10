@@ -22,7 +22,6 @@ State = typeOf StateTy
 
 data Task : Universe.Ty -> Type where
     -- Basic tasks
-    Done  : (x : typeOf a) -> Task a
     Fail  : Task a
     Then  : Show (typeOf a) => (this : Task a) -> (next : typeOf a -> Task b) -> Task b
     -- Primitive combinators
@@ -40,7 +39,7 @@ data Task : Universe.Ty -> Type where
 -- Interface -------------------------------------------------------------------
 
 pure : (typeOf a) -> Task a
-pure = Done
+pure = Edit . Just
 
 (>>=) : Show (typeOf a) => Task a -> (typeOf a -> Task b) -> Task b
 (>>=) = Then
@@ -62,7 +61,7 @@ infixr 2 |+|
 (|+|) x y        = Or x y
 
 unit : Task UnitTy
-unit = Done ()
+unit = pure ()
 
 state : Int -> State
 state = id
@@ -100,7 +99,6 @@ state = id
     show (Just x) = show x
 
 ui : Show (typeOf a) => Task a -> State -> String
-ui (Done x)         _ = "done " ++ show x
 ui Fail             _ = "fail"
 ui (Then this cont) s = ui this s ++ " => <cont>"
 ui (Next this cont) s = ui this s ++ " -> <cont>"
@@ -116,7 +114,6 @@ ui (Put x)          _ = "put " ++ show x ++ ""
 -- Semantics -------------------------------------------------------------------
 
 value : Task a -> State -> Maybe (typeOf a)
-value (Done x)         _ = Just x
 value (Edit val)       _ = val
 value Watch            s = Just s
 value (And left right) s = Just (!(value left s), !(value right s))
@@ -136,7 +133,6 @@ choices (Or left right) = [ First, Second ] ++ map Other (choices right)
 choices _               = []
 
 options : Task a -> State -> List Event
-options (Done x)             _ = []
 options (Next this next)     s =
     let
     here =
@@ -186,7 +182,7 @@ normalise (And left right) state =
     ( And newLeft newRight, newerState )
 -- State
 normalise (Get) state =
-    ( Done state, state )
+    ( pure state, state )
 normalise (Put x) state =
     ( unit, x )
 -- Values
@@ -252,7 +248,6 @@ handle Watch (Here (Change {b} newVal)) state with (decEq b StateTy)
 -- FIXME: Should pass more unhandled events down or not...
 handle task _ state =
     ( task, state )
-    -- Case `Done`: evaluation terminated
     -- Case `Fail`: evaluation continues indefinitely
     -- Case `Then`: should already be evaluated by `normalise`, otherwise pass events to `this`
     -- Cases `Get` and `Put`: this case can't happen, it is already evaluated by `normalise`

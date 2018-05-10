@@ -16,7 +16,7 @@ import Task.Event
 -- Helpers --
 
 edit : Int -> Task (BasicTy IntTy)
-edit x = Edit (Just x)
+edit = pure
 
 ask : Task (BasicTy IntTy)
 ask = Edit Nothing
@@ -25,19 +25,19 @@ ask = Edit Nothing
 -- Basic --
 
 fourtytwo : Task (BasicTy IntTy)
-fourtytwo = Done 42
+fourtytwo = pure 42
 
 hello : Task (BasicTy StringTy)
-hello = Done "Hello"
+hello = pure "Hello"
 
 inc : Int -> Task (BasicTy IntTy)
-inc x = Done (x + 1)
+inc x = pure (x + 1)
 
 add : Int -> Int -> Task (BasicTy IntTy)
-add x y = Done (x + y)
+add x y = pure (x + y)
 
 append : String -> String -> Task (BasicTy StringTy)
-append x y = Done (x ++ y)
+append x y = pure (x ++ y)
 
 
 -- Steps --
@@ -88,12 +88,12 @@ parallel = Edit Nothing |*| Edit (Just "Hello")
 parallelStep : Task (BasicTy StringTy)
 parallelStep = do
     ( n, m ) <- parallel
-    Done (unwords $ replicate (cast n) m)
+    pure (unwords $ replicate (cast n) m)
 
 parallelStep' : Task (BasicTy StringTy)
 parallelStep' =
     parallel >>? \( n, m ) =>
-    Done (unwords $ replicate (cast n) m)
+    pure (unwords $ replicate (cast n) m)
 
 
 -- Normalisation --
@@ -103,10 +103,10 @@ parallelStep' =
 stablise : Int -> Task (BasicTy IntTy)
 stablise x = do
     edit x >>? \y =>
-    Done y
+    pure y
 
 pair : Task (PairTy (BasicTy IntTy) (BasicTy IntTy))
-pair = Done 3 |*| Done 8
+pair = pure 3 |*| pure 8
 
 inner : Task (BasicTy IntTy)
 inner = do
@@ -158,26 +158,26 @@ choice1 = edit 2 |+| Fail
 auto : Task (BasicTy StringTy)
 auto = do
     x <- edit 0
-    if x >= 10 then Done "large" else Fail
+    if x >= 10 then pure "large" else Fail
 
 actions : Task (BasicTy StringTy)
 actions =
     edit 0 >>? \x =>
-    (Done "first" |+| Done "second first" |+| Done "second second")
+    (pure "first" |+| pure "second first" |+| pure "second second")
 
 guards : Task (BasicTy StringTy)
 guards =
     edit 0 >>? \x =>
-    ((if x >= 10 then Done "large" else Fail) |+| (if x >= 100 then Done "very large" else Fail))
+    ((if x >= 10 then pure "large" else Fail) |+| (if x >= 100 then pure "very large" else Fail))
 
 partial -- due to `mod` on `0`
 branch : Task (BasicTy StringTy)
 branch =
     edit 1 >>? \x =>
     if x `mod` 3 == 0 then
-        Done "multiple of 3"
+        pure "multiple of 3"
     else if x `mod` 5 == 0 then
-        Done "multiple of 5"
+        pure "multiple of 5"
     else
         Fail
 
