@@ -68,7 +68,7 @@
 %% Evaluation %%
 
 \newmacro{RelationV}
-  {e \downto v}
+  {e \evaluate v}
 
 
 %% Normalisation %%
@@ -76,46 +76,46 @@
 \newmacro{RelationN}
   {t\st{s} \normalise t'\st{s'}}
 
-\newrule{N-Pure}
+\newrule{N-Interact}
   { }
-  {\Done v\st{s} \normalise \Done v\st{s}}
+  {u\st{s} \normalise u\st{s}}
 
-\newrule{N-Fail}
-  { }
-  {\Fail\st{s} \normalise \Fail\st{s}}
+% \newrule{N-Pure}
+%   { }
+%   {\Done v\st{s} \normalise \Done v\st{s}}
 
-\newrule{N-Edit}
-  { }
-  {\Edit v\st{s} \normalise \Edit v\st{s}}
+% \newrule{N-Fail}
+%   { }
+%   {\Fail\st{s} \normalise \Fail\st{s}}
 
-\newrule{N-Fill}
-  { }
-  {\Fill \tau\st{s} \normalise \Fill \tau\st{s}}
+% \newrule{N-Edit}
+%   { }
+%   {\Edit c\st{s} \normalise \Edit c\st{s}}
 
-\newrule{N-Watch}
-  { }
-  {\Watch l\st{s} \normalise \Watch l\st{s}}
+% \newrule{N-Fill}
+%   { }
+%   {\Fill \beta\st{s} \normalise \Fill \beta\st{s}}
 
-\newrule{N-Then}[t_1' = \Done v]
-  {t_1\st{s} \normalise t_1'\st{s'}   \\
-   e\ v \downto t_2       \\
-   t_2\st{s'} \normalise t_2'\st{s''} }
-  {t_1 \Next e\st{s} \normalise t_2'\st{s''}}
+% \newrule{N-Watch}
+%   { }
+%   {\Watch l\st{s} \normalise \Watch l\st{s}}
 
-\newrule{N-ThenEval}[t_1' \neq \Done v]
-  {t_1\st{s} \normalise t_1'\st{s'}}
-  {t_1 \Next e\st{s} \normalise t_1' \Next e\st{s'}}
+% \newrule{N-Next}[t_1' = \Done v]
+%   {t_1\st{s} \normalise t_1'\st{s'}   \\
+%    e\ v \evaluate t_2       \\
+%    t_2\st{s'} \normalise t_2'\st{s''} }
+%   {t_1 \Next e\st{s} \normalise t_2'\st{s''}}
 
-\newrule{N-WhenStay}[\Value(t_1) = \nothing]
+\newrule{N-ThenStay}[\Observe(t_1) = \nothing]
   {\ }
   {t_1 \Then e\st{s} \normalise t_1 \Then e\st{s}}
 
-\newrule{N-WhenFail}[\Value(t_1) = v \land (t_2 = \Fail \lor t_2 = t_3 \Or t_4)]
-  {e\ v \downto t_2}
+\newrule{N-ThenFail}[\Observe(t_1) = v \land t_2 = \Fail]
+  {e\ v \evaluate t_2}
   {t_1 \Then e\st{s} \normalise t_1 \Then e\st{s}}
 
-\newrule{N-WhenNext}[\Value(t_1) = v \land (t_2 \neq \Fail \lor t_2 \neq t_3 \Or t_4)]
-  {e\ v \downto t_2    \\
+\newrule{N-ThenCont}[\Observe(t_1) = v \land t_2 \neq \Fail]
+  {e\ v \evaluate t_2 \\
    t_2\st{s} \normalise t_2'\st{s'} }
   {t_1 \Then e\st{s} \normalise t_2' \Then e\st{s'}}
 
@@ -124,15 +124,19 @@
    t_2\st{s'} \normalise t_2'\st{s''} }
   {t_1 \And t_2\st{s} \normalise \Done \{v_1, v_2\}\st{s}}
 
-\newrule{N-AndEval}[t_1' \neq \Done v_1 \lor t_2' \neq \Done v_2]
-  {t_1\st{s}  \normalise t_1'\st{s'}  \\
-   t_2\st{s'} \normalise t_2'\st{s''} }
-  {t_1 \And t_2\st{s} \normalise t_1' \And t_2'\st{s}}
+\newrule{N-NextEval}
+  {e_1\st{s} \normalise u_1\st{s'}}
+  {e_1 \Next e_2\st{s} \normalise u_1 \Next e_2\st{s'}}
 
-\newrule{N-OrEval}[t_1' \neq \Done v_1 \land t_2' \neq \Done v_2]
-  {t_1\st{s}  \normalise t_1'\st{s'}  \\
-   t_2\st{s'} \normalise t_2'\st{s''} }
-  {t_1 \Or t_2\st{s} \normalise t_1' \Or t_2'\st{s}}
+\newrule{N-AndEval}
+  {e_1\st{s}  \normalise u_1\st{s'}  \\
+   e_2\st{s'} \normalise u_2\st{s''} }
+  {e_1 \And e_2\st{s} \normalise u_1 \And u_2\st{s}}
+
+% \newrule{N-OrEval}[t_1' \neq \Done v_1 \land t_2' \neq \Done v_2]
+%   {t_1\st{s}  \normalise t_1'\st{s'}  \\
+%    t_2\st{s'} \normalise t_2'\st{s''} }
+%   {t_1 \Or t_2\st{s} \normalise t_1' \Or t_2'\st{s}}
 
 
 %% Handling %%
@@ -156,26 +160,26 @@
   { }
   {\Watch l, s \handle{v'} \Watch l, [l \mapsto v']s}
 
-\newrule{H-Stay'}[\Value(t_1) = \nothing]
+\newrule{H-Stay'}[\Observe(t_1) = \nothing]
   {\ }
   {t_1 \Next e\st{s} \handle{\Continue} t_1 \Next e\st{s}}
 
-\newrule{H-Next'}[\Value(t_1) = v]
-  {e\ v \downto t_2    \\
+\newrule{H-Next'}[\Observe(t_1) = v]
+  {e\ v \evaluate t_2    \\
    t_2\st{s} \normalise t_2'\st{s'} }
   {t_1 \Next e\st{s} \handle{\Continue} t_2'\st{s'}}
 
-\newrule{H-Stay}[\Value(t_1) = \nothing]
+\newrule{H-Stay}[\Observe(t_1) = \nothing]
   {\ }
   {t_1 \Then e\st{s} \handle{\Execute \pi} t_1 \Then e\st{s}}
 
-\newrule{H-Fail}[\Value(t_1) = v \land t_2 = \Fail]
-  {e\ v \downto t_2    \\
+\newrule{H-Fail}[\Observe(t_1) = v \land t_2 = \Fail]
+  {e\ v \evaluate t_2    \\
    t_2\st{s} \handle{\Pick \pi} t_2'\st{s'} }
   {t_1 \Then e\st{s} \handle{\Execute \pi} t_1 \Then e\st{s}}
 
-\newrule{H-Next}[\Value(t_1) = v \land t_2 \neq \Fail]
-  {e\ v \downto t_2    \\
+\newrule{H-Next}[\Observe(t_1) = v \land t_2 \neq \Fail]
+  {e\ v \evaluate t_2    \\
    t_2\st{s} \handle{\Pick \pi} t_2'\st{s'} }
   {t_1 \Then e\st{s} \handle{\Execute \pi} t_2'\st{s'}}
 

@@ -64,15 +64,16 @@
 
 %% Semantic functions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\newmathcommand{downto}[rel]
+\newmathcommand{evaluate}[rel]
   {\Downarrow}
 \newmathcommand{normalise}[rel]
-  {\;\rightarrow\!\shortmid\;}
+  % {\;\rightarrow\!\shortmid\;}
+  {\downarrow}
 \newmacro{handle}[1]
   {\mathrel{\;\xrightarrow{\;#1\;}\;}}
 
-\newmathcommand{Value}[cal]
-  {V}
+\newmathcommand{Observe}[cal]
+  {O}
 
 
 %% Depricated %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

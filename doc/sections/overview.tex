@@ -22,15 +22,14 @@
     &        &\mid& !e                          & – dereference \\
     &        &\mid& e_1 := e_2                  & – assign \\
     &        &\mid& l                           & – location \\
-    &        &\mid& t                           & – task \\
-  Tasks
-    & t      &::= & \Done e                     & – done \\
-    &        &\mid& \Edit e                     & – edit value \\
-    &        &\mid& \Fill \beta                 & – fill value \\
-    &        &\mid& \Watch e                    & – watch location \\
+    &        &\mid& p                           & – pretask \\
+  Pretasks
+    & p      &::= & \Edit e                     & – edit \\
+    &        &\mid& \Fill \beta                 & – fill \\
+    &        &\mid& \Watch e                    & – watch \\
     &        &\mid& e_1 \Next e_2               & – ask \\
     &        &\mid& e_1 \Then e_2               & – sequence \\
-    &        &\mid& e_1 \And e_2                & – pair \\
+    &        &\mid& e_1 \And e_2                & – parallel \\
     &        &\mid& e_1 \Or e_2                 & – choose \\
     &        &\mid& \Fail                       & – fail \\
   Constants
@@ -73,26 +72,35 @@
   Values
     & v      &::= & \lambda x. e                & – abstraction \\
     &        &\mid& \{\}                        & – unit \\
-    &        &\mid& \{v_1, v_2\}                & – pair \\
+    &        &\mid& l                           & – locations \\
+    &        &\mid& c                           & – constant \\
+    &        &\mid& p                           & – pretask \\
+    & u      &::= & \lambda x. e                & – abstraction \\
+    &        &\mid& \{\}                        & – unit \\
+    &        &\mid& l                           & – locations \\
     &        &\mid& c                           & – constant \\
     &        &\mid& t                           & – task \\
-  Task values
-    & u      &::= & \Done c                     & – done \\
-    &        &\mid& \Edit c                     & – edit value \\
+  Tasks
+    & t      &\mid& \Edit e                     & – edit value \\
     &        &\mid& \Fill \beta                 & – fill value \\
-    &        &\mid& \Watch l                    & – watch location \\
-    &        &\mid& u \Next e                   & – ask \\
-    &        &\mid& u_1 \And u_2                & – pair \\
+    &        &\mid& \Watch e                    & – watch location \\
+    &        &\mid& t_1 \Then e_2               & – sequence \\
+    &        &\mid& t_1 \Next e_2               & – ask \\
+    &        &\mid& t_1 \And t_2                & – parallel \\
     &        &\mid& e_1 \Or e_2                 & – choose \\
     &        &\mid& \Fail                       & – fail \\
 \end{grammar}
 
 Note:
 \begin{itemize}
-  \item $u \Then e$ is \emph{not} a task value.
-    Internal steps should be evaluated without user interaction.
-  \item The value of $e_1 \Or e_2$ is itself.
-    Evaluating one or both options before the user makes a choice will result in untimely reference updates.
+  \item $\Edit$ is lazy in it's argument.
+  \item $\Then$ and $\Next$ are strict in their first argument, lazy in their second.
+  \item $\And$ is strict in both arguments.
+  \item $\Or$ is lazy in both arguments.
+    Evaluating one or both options of $e_1 \Or e_2$ before the user makes a choice will result in untimely reference updates.
+  \item Althoug internal steps should be evaluated without user interaction,
+    $t \Then e$ \emph{is} a task value, iff $\Observe(t) = \nothing$.
+    Take for example $t = \Fill \Int$.
 \end{itemize}
 
 
@@ -127,12 +135,12 @@ Note:
 
 \begin{equation*}
   \begin{array}{@{}lcl}
-    \multicolumn{3}{c}{\boxed{\Value : t \times s \to v^?}} \\
-    \Value(\Done v\st{s})      &=& v \\
-    \Value(\Edit v\st{s})      &=& v \\
-    \Value(\Watch l\st{s})     &=& s(l) \\
-    \Value(t_1 \And t_2\st{s}) &=& \{\Value(t_1\st{s}), \Value(t_2\st{s})\} \\
-    \Value(\_)                 &=& \nothing
+    \multicolumn{3}{c}{\boxed{\Observe : t \times s \to v^?}} \\
+    \Observe(\Done v\st{s})      &=& v \\
+    \Observe(\Edit v\st{s})      &=& v \\
+    \Observe(\Watch l\st{s})     &=& s(l) \\
+    \Observe(t_1 \And t_2\st{s}) &=& \{\Observe(t_1\st{s}), \Observe(t_2\st{s})\} \\
+    \Observe(\_)                 &=& \nothing
   \end{array}
 \end{equation*}
 
@@ -150,7 +158,7 @@ Note:
 
 
 \paragraph{Simplifying}
-\todo{Is \refrule{N-And} needed or can we just use $\Value(t)$ to check if we have a pair?}
+\todo{Is \refrule{N-And} needed or can we just use $\Observe(t)$ to check if we have a pair?}
 
 \begin{mathpar}
   \divert{\userule{N-Then}} \\
