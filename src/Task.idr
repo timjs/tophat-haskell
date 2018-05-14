@@ -132,8 +132,8 @@ choices (Or Fail right) = [ Second ] ++ map Other (choices right)
 choices (Or left right) = [ First, Second ] ++ map Other (choices right)
 choices _               = []
 
-options : Task a -> State -> List Event
-options (Next this next)     s =
+actions : Task a -> State -> List Event
+actions (Next this next)     s =
     let
     here =
         case value this s of
@@ -144,15 +144,15 @@ options (Next this next)     s =
                     _          => [ Continue Nothing ]
             Nothing => []
     in
-    map Here here ++ options this s
-options (Then this next)     s = options this s
-options (And left right)     s = map ToLeft (options left s) ++ map ToRight (options right s)
-options task@(Or left right) s = map (Here . Pick) $ choices task
-options (Edit {a} val)       _ = [ Here (Change (Universe.defaultOf a)), Here Empty ]
-options Watch                _ = [ Here (Change (Universe.defaultOf StateTy)) ]
-options Fail                 _ = []
-options Get                  _ = []
-options (Put x)              _ = []
+    map Here here ++ actions this s
+actions (Then this next)     s = actions this s
+actions (And left right)     s = map ToLeft (actions left s) ++ map ToRight (actions right s)
+actions task@(Or left right) s = map (Here . Pick) $ choices task
+actions (Edit {a} val)       _ = [ Here (Change (Universe.defaultOf a)), Here Empty ]
+actions Watch                _ = [ Here (Change (Universe.defaultOf StateTy)) ]
+actions Fail                 _ = []
+actions Get                  _ = []
+actions (Put x)              _ = []
 
 normalise : Task a -> State -> ( Task a, State )
 -- Step
