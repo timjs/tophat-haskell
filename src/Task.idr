@@ -113,17 +113,17 @@ ui (Put x)          _ = "put " ++ show x ++ ""
 
 -- Semantics -------------------------------------------------------------------
 
-value : Task a -> State -> Maybe (typeOf a)
-value (Edit val)       _ = val
-value Watch            s = Just s
-value (And left right) s = Just (!(value left s), !(value right s))
-value Get              s = Just s
-value (Put _)          _ = Just ()
+observe : Task a -> State -> Maybe (typeOf a)
+observe (Edit val)       _ = val
+observe Watch            s = Just s
+observe (And left right) s = Just (!(observe left s), !(observe right s))
+observe Get              s = Just s
+observe (Put _)          _ = Just ()
 -- The rest never has a value because:
 --   * `Or` needs to wait for an user choice
 --   * `Fail` runs forever and doesn't produce a value
 --   * `Next` transforms values to another type
-value _                _ = Nothing
+observe _                _ = Nothing
 
 choices : Task a -> List Path
 choices (Or Fail Fail)  = []
@@ -136,7 +136,7 @@ actions : Task a -> State -> List Event
 actions (Next this next)     s =
     let
     here =
-        case value this s of
+        case observe this s of
             Just v  =>
                 case next v of
                     t@(Or _ _) => map (Continue . Just) $ choices t
@@ -161,7 +161,7 @@ normalise task@(Then this cont) state =
     -- let
     -- ( newThis, newState ) = normalise this state
     -- in
-    case value this state of
+    case observe this state of
         Just v  =>
             case cont v of
                 Fail   => ( task, state )
@@ -192,7 +192,7 @@ normalise task state =
 handle : Task a -> Event -> State -> ( Task a, State )
 handle task@(Next this cont) (Here (Continue futr)) state =
     -- If we pressed Continue...
-    case value this state of
+    case observe this state of
         -- ...and we have a value: we get on with the continuation,
         Just v =>
             case futr of
