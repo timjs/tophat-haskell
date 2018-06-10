@@ -81,21 +81,23 @@
     &        &\mid& c                           & – constant \\
     &        &\mid& t                           & – task \\
   Tasks
-    & t      &\mid& \Edit e                     & – edit value \\
+    & t      &\mid& \Edit u                     & – edit value \\
     &        &\mid& \Fill \beta                 & – fill value \\
-    &        &\mid& \Watch e                    & – watch location \\
-    &        &\mid& t_1 \Then e_2               & – sequence \\
+    &        &\mid& \Watch l                    & – watch location \\
+    &        &\mid& t_1 \Then e_2               & – sequence\footnote{$\where \Observe(t_1) \neq \nothing$} \\
     &        &\mid& t_1 \Next e_2               & – ask \\
     &        &\mid& t_1 \And t_2                & – parallel \\
     &        &\mid& e_1 \Or e_2                 & – choose \\
     &        &\mid& \Fail                       & – fail \\
 \end{grammar}
 
-Note:
+Notes:
 \begin{itemize}
-  \item $\Edit$ is lazy in it's argument.
+  \item Should $\Edit$ and $\Watch$ be a lazy or strict constructors?
   \item $\Then$ and $\Next$ are strict in their first argument, lazy in their second.
+    It doesn't matter what the continuation is.
   \item $\And$ is strict in both arguments.
+    \todo{Why?}
   \item $\Or$ is lazy in both arguments.
     Evaluating one or both options of $e_1 \Or e_2$ before the user makes a choice will result in untimely reference updates.
   \item Althoug internal steps should be evaluated without user interaction,
@@ -131,12 +133,11 @@ Note:
 (As defined by \textcite{pierce2002types})
 
 
-\subsection{Task values}
+\subsection{Task observation}
 
 \begin{equation*}
   \begin{array}{@{}lcl}
     \multicolumn{3}{c}{\boxed{\Observe : t \times s \to v^?}} \\
-    \Observe(\Done v\st{s})      &=& v \\
     \Observe(\Edit v\st{s})      &=& v \\
     \Observe(\Watch l\st{s})     &=& s(l) \\
     \Observe(t_1 \And t_2\st{s}) &=& \{\Observe(t_1\st{s}), \Observe(t_2\st{s})\} \\
