@@ -70,29 +70,41 @@ namespace Basic
 data Ty
     = UnitTy
     | PairTy Universe.Ty Universe.Ty
+    | ListTy Universe.Ty
     | BasicTy Basic.Ty
 
 ||| Conversion of Task types to Idris types.
 typeOf : Universe.Ty -> Type
 typeOf UnitTy       = ()
 typeOf (PairTy x y) = ( typeOf x, typeOf y )
+typeOf (ListTy x)   = List (typeOf x)
 typeOf (BasicTy b)  = Basic.typeOf b
 
 defaultOf : (ty : Universe.Ty) -> Universe.typeOf ty
 defaultOf UnitTy       = ()
 defaultOf (PairTy x y) = ( defaultOf x, defaultOf y )
+defaultOf (ListTy x)   = []
 defaultOf (BasicTy b)  = Basic.defaultOf b
 
 
 -- Lemmas --
 
-Uninhabited (UnitTy = PairTy x y) where
+Uninhabited (UnitTy = PairTy _ _) where
     uninhabited Refl impossible
 
-Uninhabited (UnitTy = BasicTy b) where
+Uninhabited (UnitTy = ListTy _) where
     uninhabited Refl impossible
 
-Uninhabited (PairTy x y = BasicTy b) where
+Uninhabited (UnitTy = BasicTy _) where
+    uninhabited Refl impossible
+
+Uninhabited (PairTy _ _ = ListTy _) where
+    uninhabited Refl impossible
+
+Uninhabited (PairTy _ _ = BasicTy _) where
+    uninhabited Refl impossible
+
+Uninhabited (ListTy _ = BasicTy _) where
     uninhabited Refl impossible
 
 basic_neq : (a = b -> Void) -> (BasicTy a = BasicTy b) -> Void
@@ -112,6 +124,11 @@ both_neq contra_x contra_y Refl = contra_x Refl
 
 DecEq Universe.Ty where
     decEq UnitTy       UnitTy                                             = Yes Refl
+
+    decEq (ListTy a)  (ListTy b)   with (decEq a b)
+      decEq (ListTy b)  (ListTy b) | (Yes Refl)                           = Yes Refl
+      decEq (ListTy a)  (ListTy b) | (No contra)                          = No (?prf contra)
+
     decEq (PairTy x y) (PairTy x' y')     with (decEq x x')
       decEq (PairTy x y) (PairTy x y')    | (Yes Refl)  with (decEq y y')
         decEq (PairTy x y) (PairTy x y)   | (Yes Refl)  | (Yes Refl)      = Yes Refl
@@ -119,12 +136,22 @@ DecEq Universe.Ty where
       decEq (PairTy x y) (PairTy x' y')   | (No contra) with (decEq y y')
         decEq (PairTy x y) (PairTy x' y)  | (No contra) | (Yes Refl)      = No (fst_neq contra)
         decEq (PairTy x y) (PairTy x' y') | (No contra) | (No contra')    = No (both_neq contra contra')
+
     decEq (BasicTy a)  (BasicTy b)   with (decEq a b)
       decEq (BasicTy b)  (BasicTy b) | (Yes Refl)                         = Yes Refl
       decEq (BasicTy a)  (BasicTy b) | (No contra)                        = No (basic_neq contra)
-    decEq UnitTy       (PairTy x y)                                       = No absurd
-    decEq (PairTy x y) UnitTy                                             = No (negEqSym absurd)
-    decEq UnitTy       (BasicTy b)                                        = No absurd
-    decEq (BasicTy b)  UnitTy                                             = No (negEqSym absurd)
-    decEq (PairTy x y) (BasicTy b)                                        = No absurd
-    decEq (BasicTy b)  (PairTy x y)                                       = No (negEqSym absurd)
+
+    decEq UnitTy       (PairTy _ _)                                       = No absurd
+    decEq (PairTy _ _) UnitTy                                             = No (negEqSym absurd)
+    decEq UnitTy       (ListTy _)                                         = No absurd
+    decEq (ListTy _)   UnitTy                                             = No (negEqSym absurd)
+    decEq UnitTy       (BasicTy _)                                        = No absurd
+    decEq (BasicTy _)  UnitTy                                             = No (negEqSym absurd)
+
+    decEq (PairTy _ _) (ListTy _)                                         = No absurd
+    decEq (ListTy _)   (PairTy _ _)                                       = No (negEqSym absurd)
+    decEq (PairTy _ _) (BasicTy _)                                        = No absurd
+    decEq (BasicTy _)  (PairTy _ _)                                       = No (negEqSym absurd)
+
+    decEq (ListTy _)   (BasicTy _)                                        = No absurd
+    decEq (BasicTy _)  (ListTy _)                                         = No (negEqSym absurd)
