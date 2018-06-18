@@ -6,13 +6,15 @@ import Task.Event
 %default total
 %access public export
 
+%hide Language.Reflection.Elab.Tactics.normalise
+
 
 -- Types -----------------------------------------------------------------------
 
 -- State --
 
 StateTy : Universe.Ty
-StateTy = BasicTy IntTy
+StateTy = ListTy (BasicTy IntTy)
 
 State : Type
 State = typeOf StateTy
@@ -62,9 +64,6 @@ infixr 2 |+|
 
 unit : Task UnitTy
 unit = pure ()
-
-state : Int -> State
-state = id
 
 -- infixl 1 >>*
 -- (>>*) : Show (typeOf a) => Task a -> List (typeOf a -> (Bool, Task b)) -> Task b
@@ -253,5 +252,5 @@ handle task _ state =
     -- Cases `Get` and `Put`: this case can't happen, it is already evaluated by `normalise`
     -- FIXME: express this in the type system...
 
-init : Task a -> State -> ( Task a, State )
-init = normalise
+init : Task a -> ( Task a, State )
+init = flip normalise []

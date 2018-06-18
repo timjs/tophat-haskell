@@ -121,21 +121,21 @@ inner' =
 
 -- Shared Data --
 
-update : Task UnitTy
-update =
-    Get >>= \x =>
-    edit x >>? \y =>
-    Put y
+-- update : Task UnitTy
+-- update =
+--     Get >>= \x =>
+--     edit x >>? \y =>
+--     Put y
 
---FIXME: help!!!
-update2 : Task UnitTy
-update2 = do
-    Get >>= \x =>
-    edit (x+1) >>? \y =>
-    Put y >>= \() =>
-    Get >>= \u =>
-    edit (u+2) >>? \v =>
-    Put v
+-- --FIXME: help!!!
+-- update2 : Task UnitTy
+-- update2 = do
+--     Get >>= \x =>
+--     edit (x+1) >>? \y =>
+--     Put y >>= \() =>
+--     Get >>= \u =>
+--     edit (u+2) >>? \v =>
+--     Put v
 
 watch : Show (typeOf a) => Task a -> Task (PairTy a StateTy)
 watch t = t |*| Watch
@@ -214,7 +214,7 @@ loop task state = do
     loop nextTask nextState
 
 run : Show (typeOf a) => Task a -> IO ()
-run t = uncurry loop $ init t (state 0)
+run t = uncurry loop $ init t
 
 main : IO ()
 main = run test
