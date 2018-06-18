@@ -208,7 +208,7 @@ get = do
 loop : Show (typeOf a) => Task a -> State -> IO ()
 loop task state = do
     putStrLn $ ui task state
-    putStrLn $ "Possibilities: " ++ show (options task state)
+    putStrLn $ "Possibilities: " ++ show (actions task state)
     event <- get
     let ( nextTask, nextState ) = handle task event state
     loop nextTask nextState
