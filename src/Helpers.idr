@@ -4,6 +4,19 @@ module Helpers
 %access export
 
 
+-- List extensions -------------------------------------------------------------
+
+replace : Nat -> a -> List a -> List a
+replace Z y (_ :: xs) = y :: xs
+replace n y (x :: xs) = x :: replace (pred n) y xs
+replace _ _ []        = []
+
+delete : Nat -> List a -> List a
+delete Z (_ :: xs) = xs
+delete n (x :: xs) = x :: delete (pred n) xs
+delete _ []        = []
+
+
 -- String decomposition --------------------------------------------------------
 
 strSnoc : String -> Char -> String
