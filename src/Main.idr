@@ -1,17 +1,18 @@
 module Main
 
+import System
+
 import Task
 import Task.Universe
 import Task.Event
+import Helpers
 
 %default total
-
 
 -- Tests -----------------------------------------------------------------------
 --
 -- NOTE: Tasks ending in `'` need user input
 --
-
 
 -- Helpers --
 
@@ -20,6 +21,16 @@ edit = pure
 
 ask : Task (BasicTy IntTy)
 ask = Edit Nothing
+
+modify : (List Int -> List Int) -> Task UnitTy
+modify f = do
+    xs <- Get
+    Put (f xs)
+
+gets : (List Int -> (typeOf b)) -> Task b
+gets f = do
+    xs <- Get
+    pure (f xs)
 
 
 -- Basic --
@@ -121,6 +132,42 @@ inner' =
 
 -- Shared Data --
 
+delete : Nat -> Task UnitTy
+delete i =
+    modify (Helpers.delete i)
+replace : Nat -> Task UnitTy
+replace i =
+    ask >>? \x =>
+    modify (Helpers.replace i x)
+change : Task UnitTy
+change =
+    ask >>? \n =>
+    let i = the Nat (cast n) in
+    Get >>= \xs =>
+    if i <= List.length xs then
+        delete i |+| replace i
+    else
+        Fail
+prepend : Task UnitTy
+prepend =
+    ask >>? \x =>
+    modify ((::) x)
+clear : Task UnitTy
+clear =
+    modify (const [])
+quit : Task UnitTy
+quit = pure ()
+
+mutual
+    repeat : Task UnitTy
+    repeat = do
+        prepend |+| clear |+| change
+        editShared
+
+    editShared : Task UnitTy
+    editShared =
+        repeat |+| quit
+
 -- update : Task UnitTy
 -- update =
 --     Get >>= \x =>
@@ -198,12 +245,15 @@ get : IO Event
 get = do
     putStr "> "
     input <- getLine
-    case Event.parse (words input) of
-        Right event => do
-            pure event
-        Left msg => do
-            putStrLn msg
-            get
+    case input of
+        ":q" => System.exit 0
+        _ =>
+            case Event.parse (words input) of
+                Right event => do
+                    pure event
+                Left msg => do
+                    putStrLn msg
+                    get
 
 loop : Show (typeOf a) => Task a -> State -> IO ()
 loop task state = do
