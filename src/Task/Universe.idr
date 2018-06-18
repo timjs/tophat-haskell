@@ -107,6 +107,9 @@ Uninhabited (PairTy _ _ = BasicTy _) where
 Uninhabited (ListTy _ = BasicTy _) where
     uninhabited Refl impossible
 
+list_neq : (a = b -> Void) -> (ListTy a = ListTy b) -> Void
+list_neq contra Refl = contra Refl
+
 basic_neq : (a = b -> Void) -> (BasicTy a = BasicTy b) -> Void
 basic_neq contra Refl = contra Refl
 
@@ -127,7 +130,7 @@ DecEq Universe.Ty where
 
     decEq (ListTy a)  (ListTy b)   with (decEq a b)
       decEq (ListTy b)  (ListTy b) | (Yes Refl)                           = Yes Refl
-      decEq (ListTy a)  (ListTy b) | (No contra)                          = No (?prf contra)
+      decEq (ListTy a)  (ListTy b) | (No contra)                          = No (list_neq contra)
 
     decEq (PairTy x y) (PairTy x' y')     with (decEq x x')
       decEq (PairTy x y) (PairTy x y')    | (Yes Refl)  with (decEq y y')
