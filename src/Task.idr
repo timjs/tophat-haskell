@@ -53,14 +53,10 @@ infixl 1 >>?
 infixr 3 |*|
 (|*|) : Show (typeOf a) => Show (typeOf b) => Task a -> Task b -> Task (PairTy a b)
 (|*|) = And
--- FIXME: should do the same trick as below, but need to prove `((a, b), c) = (a, (b, c))` for PairTy
--- (|*|) (And x y) z = And x (And y z)
--- (|*|) x y         = And x y
 
 infixr 2 |+|
 (|+|) : Show (typeOf a) => Task a -> Task a -> Task a
-(|+|) (Or x y) z = Or x (Or y z)
-(|+|) x y        = Or x y
+(|+|) = Or
 
 unit : Task UnitTy
 unit = pure ()
@@ -99,11 +95,11 @@ unit = pure ()
 
 ui : Show (typeOf a) => Task a -> State -> String
 ui Fail             _ = "fail"
-ui (Then this cont) s = ui this s ++ " => <cont>"
-ui (Next this cont) s = ui this s ++ " -> <cont>"
-ui (And left right) s = "(" ++ ui left s ++ " * " ++ ui right s ++ ")"
+ui (Then this cont) s = ui this s ++ " >>..."
+ui (Next this cont) s = ui this s ++ " ?>..."
+ui (And left right) s = "(" ++ ui left s ++ "  |*|  " ++ ui right s ++ ")"
 --FIXME: should we present UI's to the user for every or branch?
-ui (Or left right)  s = "(" ++ ui left s ++ " + " ++ ui right s ++ ")"
+ui (Or left right)  s = "(" ++ ui left s ++ "  |+|  " ++ ui right s ++ ")"
 ui (Edit val)       _ = "edit " ++ show @{editor_value} val
 ui Watch            s = "watch " ++ show s
 ui Get              _ = "get"
@@ -126,9 +122,9 @@ value _                _ = Nothing
 
 choices : Task a -> List Path
 choices (Or Fail Fail)  = []
-choices (Or left Fail)  = [ First ]
-choices (Or Fail right) = [ Second ] ++ map Other (choices right)
-choices (Or left right) = [ First, Second ] ++ map Other (choices right)
+choices (Or left Fail)  = map GoLeft (GoHere :: choices left)
+choices (Or Fail right) = map GoRight (GoHere :: choices right)
+choices (Or left right) = map GoLeft (GoHere :: choices left) ++ map GoRight (GoHere :: choices right)
 choices _               = []
 
 actions : Task a -> State -> List Event
@@ -143,12 +139,12 @@ actions (Next this next)     s =
                     _          => [ Continue Nothing ]
             Nothing => []
     in
-    map Here here ++ actions this s
+    map ToThis here ++ actions this s
 actions (Then this next)     s = actions this s
-actions (And left right)     s = map ToLeft (actions left s) ++ map ToRight (actions right s)
-actions task@(Or left right) s = map (Here . Pick) $ choices task
-actions (Edit {a} val)       _ = [ Here (Change (Universe.defaultOf a)), Here Empty ]
-actions Watch                _ = [ Here (Change (Universe.defaultOf StateTy)) ]
+actions (And left right)     s = map ToFirst (actions left s) ++ map ToSecond (actions right s)
+actions task@(Or left right) s = map (ToThis . Pick) $ choices task
+actions (Edit {a} val)       _ = [ ToThis (Change (Universe.defaultOf a)), ToThis Empty ]
+actions Watch                _ = [ ToThis (Change (Universe.defaultOf StateTy)) ]
 actions Fail                 _ = []
 actions Get                  _ = []
 actions (Put x)              _ = []
@@ -189,15 +185,15 @@ normalise task state =
     ( task, state )
 
 handle : Task a -> Event -> State -> ( Task a, State )
-handle task@(Next this cont) (Here (Continue futr)) state =
+handle task@(Next this cont) (ToThis (Continue mp)) state =
     -- If we pressed Continue...
     case value this state of
         -- ...and we have a value: we get on with the continuation,
         Just v =>
-            case futr of
+            case mp of
                 --FIXME: prevent stepping to `Fail`???
                 -- and automatically pick if we recieved a path
-                Just path => handle (cont v) (Here (Pick path)) state
+                Just path => handle (cont v) (ToThis (Pick path)) state
                 -- or just continue otherwise
                 Nothing   => normalise (cont v) state
         -- ...without a value: we stay put and have to wait for a value to appear.
@@ -215,34 +211,34 @@ handle (Then this cont) event state =
     in
     normalise (Then newThis cont) newState
 --FIXME: normalise after each event handling of And and Or???
-handle (And left right) (ToLeft event) state =
+handle (And left right) (ToFirst event) state =
     -- Pass the event to left
     let
     ( newLeft, newState ) = handle left event state
     in
     ( And newLeft right, newState )
-handle (And left right) (ToRight event) state =
+handle (And left right) (ToSecond event) state =
     -- Pass the event to right
     let
     ( newRight, newState ) = handle right event state
     in
     ( And left newRight, newState )
-handle (Or left right) (Here (Pick First)) state =
-    -- Pick the first
-    ( left, state )
-handle (Or left right) (Here (Pick Second)) state =
-    -- Pick the second
-    ( right, state )
-handle (Or left right) (Here (Pick (Other p))) state =
-    -- Pick the second and continue
-    handle right (Here (Pick p)) state
-handle (Edit _) (Here Empty) state =
+handle (Or left _) (ToThis (Pick (GoLeft p))) state =
+    -- Go left
+    handle left (ToThis (Pick p)) state
+handle (Or _ right) (ToThis (Pick (GoRight p))) state =
+    -- Go right
+    handle right (ToThis (Pick p)) state
+handle (Or left right) (ToThis (Pick GoHere)) state =
+    -- Stay
+    ( Or left right, state )
+handle (Edit _) (ToThis Empty) state =
     ( Edit Nothing, state )
-handle (Edit {a} val) (Here (Change {b} newVal)) state with (decEq b a)
-  handle (Edit _) (Here (Change newVal)) state | Yes Refl = ( Edit (Just newVal), state )
+handle (Edit {a} val) (ToThis (Change {b} newVal)) state with (decEq b a)
+  handle (Edit _) (ToThis (Change newVal)) state | Yes Refl = ( Edit (Just newVal), state )
   handle (Edit val) _ state                    | No _     = ( Edit val, state )
-handle Watch (Here (Change {b} newVal)) state with (decEq b StateTy)
-  handle Watch (Here (Change newVal)) _ | Yes Refl = ( Watch, newVal )
+handle Watch (ToThis (Change {b} newVal)) state with (decEq b StateTy)
+  handle Watch (ToThis (Change newVal)) _ | Yes Refl = ( Watch, newVal )
   handle Watch _ state                  | No _     = ( Watch, state )
 -- FIXME: Should pass more unhandled events down or not...
 handle task _ state =

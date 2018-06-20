@@ -132,41 +132,47 @@ inner' =
 
 -- Shared Data --
 
-delete : Nat -> Task UnitTy
-delete i =
-    modify (Helpers.delete i)
-replace : Nat -> Task UnitTy
-replace i =
-    ask >>? \x =>
-    modify (Helpers.replace i x)
-change : Task UnitTy
-change =
-    ask >>? \n =>
-    let i = the Nat (cast n) in
-    Get >>= \xs =>
-    if i <= List.length xs then
-        delete i |+| replace i
-    else
-        Fail
-prepend : Task UnitTy
-prepend =
-    ask >>? \x =>
-    modify ((::) x)
-clear : Task UnitTy
-clear =
-    modify (const [])
-quit : Task UnitTy
-quit = pure ()
+del : Nat -> List a -> List a
+del = Helpers.delete
+rep : Nat -> a -> List a -> List a
+rep = Helpers.replace
 
-mutual
+partial
+editShared : Task UnitTy
+editShared =
+    repeat |+| quit
+where
+    delete : Nat -> Task UnitTy
+    delete i =
+        modify (del i)
+    replace : Nat -> Task UnitTy
+    replace i =
+        ask >>? \x =>
+        modify (rep i x)
+    change : Task UnitTy
+    change =
+        ask >>? \n =>
+        let i = the Nat (cast n) in
+        Get >>= \xs =>
+        if i <= List.length xs then
+            delete i |+| replace i
+        else
+            Fail
+    prepend : Task UnitTy
+    prepend =
+        ask >>? \x =>
+        modify ((::) x)
+    clear : Task UnitTy
+    clear =
+        modify (const [])
+    quit : Task UnitTy
+    quit = pure ()
+
+    partial
     repeat : Task UnitTy
     repeat = do
         prepend |+| clear |+| change
         editShared
-
-    editShared : Task UnitTy
-    editShared =
-        repeat |+| quit
 
 -- update : Task UnitTy
 -- update =
@@ -246,7 +252,7 @@ get = do
     putStr "> "
     input <- getLine
     case input of
-        ":q" => System.exit 0
+        "quit" => System.exit 0
         _ =>
             case Event.parse (words input) of
                 Right event => do

@@ -13,20 +13,20 @@ import Task.Universe
 namespace Path
 
     data Path
-        = First
-        | Second
-        | Other Path
+        = GoLeft Path
+        | GoHere
+        | GoRight Path
 
     Show Path where
-        show First    = "f"
-        show Second   = "s"
-        show (Other p) = "s " ++ show p
+        show (GoLeft p)  = "l " ++ show p
+        show GoHere      = ""
+        show (GoRight p) = "r " ++ show p
 
     parse : List String -> Either String Path
-    parse ["f"]         = pure First
-    parse ["s"]         = pure Second
-    parse ("s" :: rest) = map Other $ parse rest
-    parse other           = throw $ "!! '" ++ unwords other ++ "' is not a valid path, type 'help' for more info"
+    parse ("l" :: rest) = map GoLeft $ parse rest
+    parse []            = pure GoHere
+    parse ("r" :: rest) = map GoRight $ parse rest
+    parse other         = throw $ "!! '" ++ unwords other ++ "' is not a valid path, type 'help' for more info"
 
 
 -- Events ----------------------------------------------------------------------
@@ -38,9 +38,9 @@ data Action : Type where
     Continue : Maybe Path -> Action
 
 data Event
-    = ToLeft Event
-    | Here Action
-    | ToRight Event
+    = ToFirst Event
+    | ToThis Action
+    | ToSecond Event
 
 
 -- Showing ---------------------------------------------------------------------
@@ -53,9 +53,9 @@ Show Action where
     show (Continue (Just p)) = "cont " ++ show p
 
 Show Event where
-    show (ToLeft e)  = "l " ++ show e
-    show (Here e)    = show e
-    show (ToRight e) = "r " ++ show e
+    show (ToFirst e)  = "f " ++ show e
+    show (ToThis a)   = show a
+    show (ToSecond e) = "s " ++ show e
 
 
 -- Parsing ---------------------------------------------------------------------
@@ -66,23 +66,23 @@ usage = unlines
     , "    change <val> : change current editor to <val> "
     , "    empty        : empty current editor"
     , "    pick <path>  : choose amongst first or second option"
-    , "    exec <path>  : execute one of possible options"
     , "    cont         : continue with the next task"
-    , "    l <event>    : send <event> to the left task"
-    , "    r <event>    : send <event> to the right task"
+    , "    cont <path>  : continue with one of possible options"
+    , "    f <event>    : send <event> to the first task"
+    , "    s <event>    : send <event> to the second task"
     , "    help         : show this message"
     ]
 
 parse : List String -> Either String Event
 parse ["change", val] with (Universe.Basic.parse val)
   parse ["change", val] | Nothing          = throw $ "!! Error parsing value '" ++ val ++ "'"
-  parse ["change", val] | (Just (ty ** v)) = pure $ Here $ Change {b = BasicTy ty} v
-parse ["empty"]                            = pure $ Here $ Empty
-parse ("pick" :: rest)                     = map (Here . Pick) $ Path.parse rest
-parse ["cont"]                             = pure . Here . Continue $ Nothing
-parse ("cont" :: rest)                     = map (Here . Continue . Just) $ Path.parse rest
-parse ("l" :: rest)                        = map ToLeft $ parse rest
-parse ("r" :: rest)                        = map ToRight $ parse rest
+  parse ["change", val] | (Just (ty ** v)) = pure $ ToThis $ Change {b = BasicTy ty} v
+parse ["empty"]                            = pure $ ToThis $ Empty
+parse ("pick" :: rest)                     = map (ToThis . Pick) $ Path.parse rest
+parse ["cont"]                             = pure $ ToThis $ Continue $ Nothing
+parse ("cont" :: rest)                     = map (ToThis . Continue . Just) $ Path.parse rest
+parse ("f" :: rest)                        = map ToFirst $ parse rest
+parse ("s" :: rest)                        = map ToSecond $ parse rest
 parse ["help"]                             = throw usage
 parse []                                   = throw ""
 parse other                                = throw $ "!! '" ++ unwords other ++ "' is not a valid command, type 'help' for more info"
