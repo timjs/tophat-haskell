@@ -26,8 +26,9 @@ data Task : Universe.Ty -> Type where
     -- Primitive combinators
     Then  : Show (typeOf a) => (this : Task a) -> (next : typeOf a -> Task b) -> Task b
     Next  : Show (typeOf a) => (this : Task a) -> (next : typeOf a -> Task b) -> Task b
-    And   : Show (typeOf a) => Show (typeOf b) => (left : Task a) -> (right : Task b) -> Task (PairTy a b)
-    Or    : Show (typeOf a) => (left : Task a) -> (right : Task a) -> Task a
+    All   : Show (typeOf a) => Show (typeOf b) => (left : Task a) -> (right : Task b) -> Task (PairTy a b)
+    One   : Show (typeOf a) => (left : Task a) -> (right : Task a) -> Task a
+    Any   : Show (typeOf a) => (left : Task a) -> (right : Task a) -> Task a
     -- User interaction
     Watch : Task StateTy
     Edit  : (val : Maybe (typeOf a)) -> Task a
@@ -50,13 +51,17 @@ infixl 1 >>?
 (>>?) : Show (typeOf a) => Task a -> (typeOf a -> Task b) -> Task b
 (>>?) = Next
 
-infixr 3 |*|
-(|*|) : Show (typeOf a) => Show (typeOf b) => Task a -> Task b -> Task (PairTy a b)
-(|*|) = And
+infixr 3 <&>
+(<&>) : Show (typeOf a) => Show (typeOf b) => Task a -> Task b -> Task (PairTy a b)
+(<&>) = All
 
-infixr 2 |+|
-(|+|) : Show (typeOf a) => Task a -> Task a -> Task a
-(|+|) = Or
+infixr 2 <?>
+(<?>) : Show (typeOf a) => Task a -> Task a -> Task a
+(<?>) = Any
+
+infixr 2 <|>
+(<|>) : Show (typeOf a) => Task a -> Task a -> Task a
+(<|>) = One
 
 unit : Task UnitTy
 unit = pure ()
@@ -70,7 +75,7 @@ unit = pure ()
 --         let
 --         ( guard, next ) = f x
 --         in
---         (if guard then next else fail) |+| convert fs x
+--         (if guard then next else fail) <|> convert fs x
 
 
 -- Applicative and Functor --
@@ -97,9 +102,10 @@ ui : Show (typeOf a) => Task a -> State -> String
 ui Fail             _ = "fail"
 ui (Then this cont) s = ui this s ++ " >>..."
 ui (Next this cont) s = ui this s ++ " ?>..."
-ui (And left right) s = "(" ++ ui left s ++ "  |*|  " ++ ui right s ++ ")"
+ui (All left right) s = "(" ++ ui left s ++ "  <&>  " ++ ui right s ++ ")"
 --FIXME: should we present UI's to the user for every or branch?
-ui (Or left right)  s = "(" ++ ui left s ++ "  |+|  " ++ ui right s ++ ")"
+ui (One left right) s = "(" ++ ui left s ++ "  <?>  " ++ ui right s ++ ")"
+ui (Any left right) s = "(" ++ ui left s ++ "  <|>  " ++ ui right s ++ ")"
 ui (Edit val)       _ = "edit " ++ show @{editor_value} val
 ui Watch            s = "watch " ++ show s
 ui Get              _ = "get"
@@ -111,43 +117,46 @@ ui (Put x)          _ = "put " ++ show x ++ ""
 value : Task a -> State -> Maybe (typeOf a)
 value (Edit val)       _ = val
 value Watch            s = Just s
-value (And left right) s = Just (!(value left s), !(value right s))
+value (All left right) s = Just (!(value left s), !(value right s))
+--NOTE: Uses semigroup instance of Maybe here
+value (Any left right) s = value left s <+> value right s
 value Get              s = Just s
 value (Put _)          _ = Just ()
 -- The rest never has a value because:
---   * `Or` needs to wait for an user choice
+--   * `One` and `Next` need to wait for an user choice
 --   * `Fail` runs forever and doesn't produce a value
---   * `Next` transforms values to another type
+--   * `Then` transforms values to another type
 value _                _ = Nothing
 
 choices : Task a -> List Path
-choices (Or Fail Fail)  = []
-choices (Or left Fail)  = map GoLeft (GoHere :: choices left)
-choices (Or Fail right) = map GoRight (GoHere :: choices right)
-choices (Or left right) = map GoLeft (GoHere :: choices left) ++ map GoRight (GoHere :: choices right)
+choices (One Fail Fail)  = []
+choices (One left Fail)  = map GoLeft (GoHere :: choices left)
+choices (One Fail right) = map GoRight (GoHere :: choices right)
+choices (One left right) = map GoLeft (GoHere :: choices left) ++ map GoRight (GoHere :: choices right)
 choices _               = []
 
 actions : Task a -> State -> List Event
-actions (Next this next)     s =
+actions (Next this next)      s =
     let
     here =
         case value this s of
             Just v  =>
                 case next v of
-                    t@(Or _ _) => map (Continue . Just) $ choices t
+                    t@(One _ _) => map (Continue . Just) $ choices t
                     Fail       => []
                     _          => [ Continue Nothing ]
             Nothing => []
     in
     map ToThis here ++ actions this s
-actions (Then this next)     s = actions this s
-actions (And left right)     s = map ToFirst (actions left s) ++ map ToSecond (actions right s)
-actions task@(Or left right) s = map (ToThis . Pick) $ choices task
-actions (Edit {a} val)       _ = [ ToThis (Change (Universe.defaultOf a)), ToThis Empty ]
-actions Watch                _ = [ ToThis (Change (Universe.defaultOf StateTy)) ]
-actions Fail                 _ = []
-actions Get                  _ = []
-actions (Put x)              _ = []
+actions (Then this next)      s = actions this s
+actions (All left right)      s = map ToFirst (actions left s) ++ map ToSecond (actions right s)
+actions (Any left right)      s = map ToFirst (actions left s) ++ map ToSecond (actions right s)
+actions task@(One left right) s = map (ToThis . Pick) $ choices task
+actions (Edit {a} val)        _ = [ ToThis (Change (Universe.defaultOf a)), ToThis Empty ]
+actions Watch                 _ = [ ToThis (Change (Universe.defaultOf StateTy)) ]
+actions Fail                  _ = []
+actions Get                   _ = []
+actions (Put x)               _ = []
 
 normalise : Task a -> State -> ( Task a, State )
 -- Step
@@ -169,12 +178,23 @@ normalise (Next this cont) state =
     ( newThis, newState ) = normalise this state
     in
     ( Next newThis cont, newState )
-normalise (And left right) state =
+normalise (All left right) state =
     let
     ( newLeft, newState )    = normalise left state
     ( newRight, newerState ) = normalise right newState
     in
-    ( And newLeft newRight, newerState )
+    ( All newLeft newRight, newerState )
+normalise (Any left right) state =
+    let
+    ( newLeft, newState )   = normalise left state
+    ( newRight, newerState ) = normalise right newState
+    in
+    case value newLeft newerState of
+        Just _  => ( newLeft, newerState )
+        Nothing =>
+            case value newRight newerState of
+                Just _  => ( newRight, newerState )
+                Nothing => ( Any newLeft newRight, newerState )
 -- State
 normalise (Get) state =
     ( pure state, state )
@@ -210,28 +230,28 @@ handle (Then this cont) event state =
     ( newThis, newState ) = handle this event state
     in
     normalise (Then newThis cont) newState
---FIXME: normalise after each event handling of And and Or???
-handle (And left right) (ToFirst event) state =
+--FIXME: normalise after each event handling of All and One???
+handle (All left right) (ToFirst event) state =
     -- Pass the event to left
     let
     ( newLeft, newState ) = handle left event state
     in
-    ( And newLeft right, newState )
-handle (And left right) (ToSecond event) state =
+    ( All newLeft right, newState )
+handle (All left right) (ToSecond event) state =
     -- Pass the event to right
     let
     ( newRight, newState ) = handle right event state
     in
-    ( And left newRight, newState )
-handle (Or left _) (ToThis (Pick (GoLeft p))) state =
+    ( All left newRight, newState )
+handle (One left _) (ToThis (Pick (GoLeft p))) state =
     -- Go left
     handle left (ToThis (Pick p)) state
-handle (Or _ right) (ToThis (Pick (GoRight p))) state =
+handle (One _ right) (ToThis (Pick (GoRight p))) state =
     -- Go right
     handle right (ToThis (Pick p)) state
-handle (Or left right) (ToThis (Pick GoHere)) state =
+handle (One left right) (ToThis (Pick GoHere)) state =
     -- Stay
-    ( Or left right, state )
+    ( One left right, state )
 handle (Edit _) (ToThis Empty) state =
     ( Edit Nothing, state )
 handle (Edit {a} val) (ToThis (Change {b} newVal)) state with (decEq b a)
@@ -245,6 +265,7 @@ handle task _ state =
     ( task, state )
     -- Case `Fail`: evaluation continues indefinitely
     -- Case `Then`: should already be evaluated by `normalise`, otherwise pass events to `this`
+    -- Case `Any`: should also be evaluated by `normalise`, otherwise wait for a value in one of the branches
     -- Cases `Get` and `Put`: this case can't happen, it is already evaluated by `normalise`
     -- FIXME: express this in the type system...
 

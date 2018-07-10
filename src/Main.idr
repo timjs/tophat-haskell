@@ -94,7 +94,7 @@ twoSteps' =
 -- Parallel --
 
 parallel : Task (PairTy (BasicTy IntTy) (BasicTy StringTy))
-parallel = Edit Nothing |*| Edit (Just "Hello")
+parallel = Edit Nothing <&> Edit (Just "Hello")
 
 parallelStep : Task (BasicTy StringTy)
 parallelStep = do
@@ -117,7 +117,7 @@ stablise x = do
     pure y
 
 pair : Task (PairTy (BasicTy IntTy) (BasicTy IntTy))
-pair = pure 3 |*| pure 8
+pair = pure 3 <&> pure 8
 
 inner : Task (BasicTy IntTy)
 inner = do
@@ -140,7 +140,7 @@ rep = Helpers.replace
 partial
 editShared : Task UnitTy
 editShared =
-    repeat |+| quit
+    repeat <|> quit
 where
     delete : Nat -> Task UnitTy
     delete i =
@@ -155,7 +155,7 @@ where
         let i = the Nat (cast n) in
         Get >>= \xs =>
         if i <= List.length xs then
-            delete i |+| replace i
+            delete i <|> replace i
         else
             Fail
     prepend : Task UnitTy
@@ -171,7 +171,7 @@ where
     partial
     repeat : Task UnitTy
     repeat = do
-        prepend |+| clear |+| change
+        prepend <|> clear <|> change
         editShared
 
 -- update : Task UnitTy
@@ -191,7 +191,7 @@ where
 --     Put v
 
 watch : Show (typeOf a) => Task a -> Task (PairTy a StateTy)
-watch t = t |*| Watch
+watch t = t <&> Watch
 
 parallelWatch : Task (PairTy StateTy StateTy)
 parallelWatch = watch Watch
@@ -200,13 +200,13 @@ parallelWatch = watch Watch
 -- Choices --
 
 choice : Task (BasicTy IntTy)
-choice = edit 1 |+| edit 2
+choice = edit 1 <|> edit 2
 
 choice3 : Task (BasicTy IntTy)
-choice3 = choice |+| edit 3
+choice3 = choice <|> edit 3
 
 choice1 : Task (BasicTy IntTy)
-choice1 = edit 2 |+| Fail
+choice1 = edit 2 <|> Fail
 
 auto : Task (BasicTy StringTy)
 auto = do
@@ -216,12 +216,12 @@ auto = do
 actions : Task (BasicTy StringTy)
 actions =
     edit 0 >>? \x =>
-    (pure "first" |+| pure "second first" |+| pure "second second")
+    (pure "first" <|> pure "second first" <|> pure "second second")
 
 guards : Task (BasicTy StringTy)
 guards =
     edit 0 >>? \x =>
-    ((if x >= 10 then pure "large" else Fail) |+| (if x >= 100 then pure "very large" else Fail))
+    ((if x >= 10 then pure "large" else Fail) <|> (if x >= 100 then pure "very large" else Fail))
 
 partial -- due to `mod` on `0`
 branch : Task (BasicTy StringTy)
@@ -239,7 +239,7 @@ branch =
 
 test : Task (BasicTy IntTy)
 test = do
-    ( x, y ) <- ask |*| ask
+    ( x, y ) <- ask <&> ask
     pure (x + y)
 
 
