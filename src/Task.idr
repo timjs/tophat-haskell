@@ -99,17 +99,18 @@ unit = pure ()
   show (Just x) = show x
 
 ui : Show (typeOf a) => Task a -> State -> String
-ui (Fail)           _ = "fail"
-ui (Then this cont) s = ui this s ++ " >>..."
-ui (Next this cont) s = ui this s ++ " ?>..."
-ui (All left right) s = "(" ++ ui left s ++ "  <&>  " ++ ui right s ++ ")"
+ui (Fail)           _ = "↯"
+ui (Then this cont) s = ui this s ++ " ▶…"
+ui (Next this cont) s = ui this s ++ " ▷…"
+ui (All left right) s = ui left s ++ "   ×   " ++ ui right s
 --FIXME: should we present UI's to the user for every or branch?
-ui (One left right) s = "(" ++ ui left s ++ "  <?>  " ++ ui right s ++ ")"
-ui (Any left right) s = "(" ++ ui left s ++ "  <|>  " ++ ui right s ++ ")"
-ui (Edit val)       _ = "edit " ++ show @{editor_value} val
-ui (Watch)          s = "watch " ++ show s
-ui (Get)            _ = "get"
-ui (Put x)          _ = "put " ++ show x ++ ""
+ui (One left right) s = ui left s ++ "   ◇   " ++ ui right s
+ui (Any left right) s = ui left s ++ "   ◆   " ++ ui right s
+ui (Edit (Just x))  _ = "□(" ++ show x ++")"
+ui (Edit Nothing)   _ = "□(_)"
+ui (Watch)          s = "■(" ++ show s ++ ")"
+ui (Get)            _ = "↓"
+ui (Put x)          _ = "↑(" ++ show x ++ ")"
 
 
 -- Semantics -------------------------------------------------------------------
