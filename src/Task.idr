@@ -32,6 +32,8 @@ data Task : Universe.Ty -> Type where
   -- User interaction
   Watch : Task StateTy
   Edit  : (val : Maybe (typeOf a)) -> Task a
+  -- Labeling
+  Label : Show (typeOf a) => String -> (this : Task a) -> Task a
   -- Failure
   Fail  : Task a
   -- Share interaction
@@ -62,6 +64,10 @@ infixr 2 <?>
 infixr 2 <|>
 (<|>) : Show (typeOf a) => Task a -> Task a -> Task a
 (<|>) = One
+
+infixr 4 #
+(#) : Show (typeOf a) => String -> Task a -> Task a
+(#) = Label
 
 unit : Task UnitTy
 unit = pure ()
@@ -109,6 +115,7 @@ ui (Any left right) s = ui left s ++ "   ◆   " ++ ui right s
 ui (Edit (Just x))  _ = "□(" ++ show x ++")"
 ui (Edit Nothing)   _ = "□(_)"
 ui (Watch)          s = "■(" ++ show s ++ ")"
+ui (Label _ this)   s = ui this s
 ui (Get)            _ = "↓"
 ui (Put x)          _ = "↑(" ++ show x ++ ")"
 
@@ -156,6 +163,7 @@ actions task@(One left right) s = map (ToThis . Pick) $ choices task
 actions (Edit {a} val)        _ = [ ToThis (Change (Universe.defaultOf a)), ToThis Empty ]
 actions (Watch)               _ = [ ToThis (Change (Universe.defaultOf StateTy)) ]
 actions (Fail)                _ = []
+actions (Label _ this)        s = actions this s
 actions (Get)                 _ = []
 actions (Put x)               _ = []
 
@@ -196,6 +204,12 @@ normalise (Any left right) state =
       case value right_new state_newer of
         Just _  => ( right_new, state_newer )
         Nothing => ( Any left_new right_new, state_newer )
+-- Labeling
+normalise (Label l this) state =
+  let
+    ( this_new, state_new ) = normalise this state
+  in
+  ( Label l this_new, state_new )
 -- State
 normalise (Get) state =
   ( pure state, state )
@@ -261,6 +275,13 @@ handle (Edit {a} val) (ToThis (Change {b} val_new)) state with (decEq b a)
 handle Watch (ToThis (Change {b} val_new)) state with (decEq b StateTy)
   handle Watch (ToThis (Change val_new)) _       | Yes Refl = ( Watch, val_new )
   handle Watch _ state                           | No _     = ( Watch, state )
+-- Labeling
+handle (Label l this) event state =
+  let
+    ( this_new, state_new ) = handle this event state
+  in
+  --FIXME: Should we get rid of label somewhere?
+  ( Label l this_new, state_new )
 -- FIXME: Should pass more unhandled events down or not...
 handle task _ state =
   ( task, state )
