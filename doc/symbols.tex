@@ -1,0 +1,68 @@
+\documentclass
+  [a4paper
+  ,justified
+  ,nofonts
+  ]{tufte-handout}
+
+
+\input macros/imports
+\input macros/setups
+\input macros/general
+
+\usepackage{stmaryrd}
+\usepackage{ifsym}
+
+
+\begin{document}
+
+\title{Symbol tables}
+\author{Tim Steenvoorden}
+% \maketitle
+
+
+\def\L{\blacktriangleleft}
+\def\R{\blacktriangleright}
+\def\l{\vartriangleleft}
+\def\r{\vartriangleright}
+
+\def\ior{\mathbin{\blacklozenge}}
+\def\eor{\mathbin{\lozenge}}
+
+
+\begin{align}
+  a \R b && a \r b \\
+  a \ior b && a \eor b && a \opentimes b \\
+  \\
+  a \R b && a \r b \\
+  a \ior b && a \eor b && a \parallel b \\
+  \\
+  a \R b && a \r b \\
+  a \ior b && a \eor b && a \lrtimes b \\
+  \\
+  a \R b && a \r b \\
+  a \medbullet b && a \oplus b && a \otimes b \\
+  \\
+  a \mathbin{\blacktriangledown} b && a \mathbin{\triangledown} b && a \mathbin{\vartriangle} b && a \mathbin{\blacktriangle} b \\
+  a \veebar b && a \vee b && a \wedge b && a \barwedge b \\
+  a \ominus b && a \oplus b && a \otimes b && a \oslash b \\
+  a \boxminus b && a \boxplus b && a \boxtimes b && a \boxslash b \\
+  a \FilledDiamondshape b && a \Diamondshape b && a \Diamondblack b && a \RightDiamondshape b \\
+  a \filledmeddiamond b && a \meddiamond b && a \diamondvert b && a \RightDiamondshape b \\
+  \\
+  a \lrtimes b && a \ltimes b && a \rtimes b && a \opentimes b \\
+  a \bowtie b && && && a \times b \\
+  a \Join b && a \lJoin b && a \rJoin b && a \openJoin b \\
+  \\
+  a \odot b && a \circ b && a \parallel b \\
+  a \cdot b && a \times b && a \diamond b \\
+  a \lrtimes b && a \bowtie b && a \Join b \\
+  \\
+  a \L\!\R b && a \l\!\r b \\
+  a \r\!\l b && a \bowtie b && a \Join b \\
+  a \triangleright\!\triangleleft b && a \triangleright\!\!\triangleleft b \\
+  a \triangleleft\!\triangleright b && a \triangleleft\!\!\triangleright b \\
+  a \lhd\!\rhd b && a \lhd\!\!\rhd b \\
+  % a \filledtriangleleft\!\filledtriangleright b && a \filledtriangleleft\!\!\filledtriangleright b
+\end{align}
+
+\end{document}
