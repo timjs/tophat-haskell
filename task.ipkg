@@ -7,5 +7,5 @@ main = Main
 modules
     = Task
     , Task.Event
-    , Task.Type
+    , Task.Universe
     , Helpers
