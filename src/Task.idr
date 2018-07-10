@@ -163,7 +163,7 @@ normalise : Task a -> State -> ( Task a, State )
 normalise task@(Then this cont) state =
     --FIXME: normalise before???
     -- let
-    -- ( newThis, newState ) = normalise this state
+    -- ( this_new, state_new ) = normalise this state
     -- in
     case value this state of
         Just v  =>
@@ -175,26 +175,26 @@ normalise task@(Then this cont) state =
 -- Evaluate
 normalise (Next this cont) state =
     let
-    ( newThis, newState ) = normalise this state
+    ( this_new, state_new ) = normalise this state
     in
-    ( Next newThis cont, newState )
+    ( Next this_new cont, state_new )
 normalise (All left right) state =
     let
-    ( newLeft, newState )    = normalise left state
-    ( newRight, newerState ) = normalise right newState
+    ( left_new, state_new )    = normalise left state
+    ( right_new, state_newer ) = normalise right state_new
     in
-    ( All newLeft newRight, newerState )
+    ( All left_new right_new, state_newer )
 normalise (Any left right) state =
     let
-    ( newLeft, newState )   = normalise left state
-    ( newRight, newerState ) = normalise right newState
+    ( left_new, state_new )   = normalise left state
+    ( right_new, state_newer ) = normalise right state_new
     in
-    case value newLeft newerState of
-        Just _  => ( newLeft, newerState )
+    case value left_new state_newer of
+        Just _  => ( left_new, state_newer )
         Nothing =>
-            case value newRight newerState of
-                Just _  => ( newRight, newerState )
-                Nothing => ( Any newLeft newRight, newerState )
+            case value right_new state_newer of
+                Just _  => ( right_new, state_newer )
+                Nothing => ( Any left_new right_new, state_newer )
 -- State
 normalise (Get) state =
     ( pure state, state )
@@ -221,28 +221,28 @@ handle task@(Next this cont) (ToThis (Continue mp)) state =
 handle (Next this cont) event state =
     -- Pass the event to this
     let
-    ( newThis, newState ) = handle this event state
+    ( this_new, state_new ) = handle this event state
     in
-    ( Next newThis cont, newState )
+    ( Next this_new cont, state_new )
 handle (Then this cont) event state =
     -- Pass the event to this and normalise
     let
-    ( newThis, newState ) = handle this event state
+    ( this_new, state_new ) = handle this event state
     in
-    normalise (Then newThis cont) newState
+    normalise (Then this_new cont) state_new
 --FIXME: normalise after each event handling of All and One???
 handle (All left right) (ToFirst event) state =
     -- Pass the event to left
     let
-    ( newLeft, newState ) = handle left event state
+    ( left_new, state_new ) = handle left event state
     in
-    ( All newLeft right, newState )
+    ( All left_new right, state_new )
 handle (All left right) (ToSecond event) state =
     -- Pass the event to right
     let
-    ( newRight, newState ) = handle right event state
+    ( right_new, state_new ) = handle right event state
     in
-    ( All left newRight, newState )
+    ( All left right_new, state_new )
 handle (One left _) (ToThis (Pick (GoLeft p))) state =
     -- Go left
     handle left (ToThis (Pick p)) state
@@ -254,11 +254,11 @@ handle (One left right) (ToThis (Pick GoHere)) state =
     ( One left right, state )
 handle (Edit _) (ToThis Empty) state =
     ( Edit Nothing, state )
-handle (Edit {a} val) (ToThis (Change {b} newVal)) state with (decEq b a)
-  handle (Edit _) (ToThis (Change newVal)) state | Yes Refl = ( Edit (Just newVal), state )
+handle (Edit {a} val) (ToThis (Change {b} val_new)) state with (decEq b a)
+  handle (Edit _) (ToThis (Change val_new)) state | Yes Refl = ( Edit (Just val_new), state )
   handle (Edit val) _ state                    | No _     = ( Edit val, state )
-handle Watch (ToThis (Change {b} newVal)) state with (decEq b StateTy)
-  handle Watch (ToThis (Change newVal)) _ | Yes Refl = ( Watch, newVal )
+handle Watch (ToThis (Change {b} val_new)) state with (decEq b StateTy)
+  handle Watch (ToThis (Change val_new)) _ | Yes Refl = ( Watch, val_new )
   handle Watch _ state                  | No _     = ( Watch, state )
 -- FIXME: Should pass more unhandled events down or not...
 handle task _ state =
