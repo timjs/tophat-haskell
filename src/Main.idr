@@ -24,13 +24,13 @@ ask = Edit Nothing
 
 modify : (List Int -> List Int) -> Task UnitTy
 modify f = do
-    xs <- Get
-    Put (f xs)
+  xs <- Get
+  Put (f xs)
 
 gets : (List Int -> (typeOf b)) -> Task b
 gets f = do
-    xs <- Get
-    pure (f xs)
+  xs <- Get
+  pure (f xs)
 
 
 -- Basic --
@@ -55,40 +55,40 @@ append x y = pure (x ++ y)
 
 pureStep : Task (BasicTy IntTy)
 pureStep = do
-    x <- fourtytwo
-    inc x
+  x <- fourtytwo
+  inc x
 
 pureStep' : Task (BasicTy IntTy)
 pureStep' =
-    fourtytwo >>? \x =>
-    inc x
+  fourtytwo >>? \x =>
+  inc x
 
 oneStep : Task (BasicTy IntTy)
 oneStep = do
-    x <- edit 0
-    inc x
+  x <- edit 0
+  inc x
 
 oneStep' : Task (BasicTy IntTy)
 oneStep' =
-    edit 0 >>? \x =>
-    inc x
+  edit 0 >>? \x =>
+  inc x
 
 -- oneStep'' : Task (BasicTy IntTy)
 -- oneStep'' =
---     edit 0 >>*
---         [ \x => ( True, inc x ) ]
+--   edit 0 >>*
+--     [ \x => ( True, inc x ) ]
 
 twoSteps : Task (BasicTy IntTy)
 twoSteps = do
-    x <- edit 1
-    y <- edit 2
-    add x y
+  x <- edit 1
+  y <- edit 2
+  add x y
 
 twoSteps' : Task (BasicTy IntTy)
 twoSteps' =
-    edit 1 >>? \x =>
-    edit 2 >>? \y =>
-    add x y
+  edit 1 >>? \x =>
+  edit 2 >>? \y =>
+  add x y
 
 
 -- Parallel --
@@ -98,13 +98,13 @@ parallel = Edit Nothing <&> Edit (Just "Hello")
 
 parallelStep : Task (BasicTy StringTy)
 parallelStep = do
-    ( n, m ) <- parallel
-    pure (unwords $ replicate (cast n) m)
+  ( n, m ) <- parallel
+  pure (unwords $ replicate (cast n) m)
 
 parallelStep' : Task (BasicTy StringTy)
 parallelStep' =
-    parallel >>? \( n, m ) =>
-    pure (unwords $ replicate (cast n) m)
+  parallel >>? \( n, m ) =>
+  pure (unwords $ replicate (cast n) m)
 
 
 -- Normalisation --
@@ -113,21 +113,21 @@ parallelStep' =
 
 stablise : Int -> Task (BasicTy IntTy)
 stablise x = do
-    edit x >>? \y =>
-    pure y
+  edit x >>? \y =>
+  pure y
 
 pair : Task (PairTy (BasicTy IntTy) (BasicTy IntTy))
 pair = pure 3 <&> pure 8
 
 inner : Task (BasicTy IntTy)
 inner = do
-    ( x, y ) <- pair
-    add x y
+  ( x, y ) <- pair
+  add x y
 
 inner' : Task (BasicTy IntTy)
 inner' =
-    pair >>? \( x, y ) =>
-    add x y
+  pair >>? \( x, y ) =>
+  add x y
 
 
 -- Shared Data --
@@ -140,55 +140,55 @@ rep = Helpers.replace
 partial
 editShared : Task UnitTy
 editShared =
-    repeat <|> quit
+  repeat <|> quit
 where
-    delete : Nat -> Task UnitTy
-    delete i =
-        modify (del i)
-    replace : Nat -> Task UnitTy
-    replace i =
-        ask >>? \x =>
-        modify (rep i x)
-    change : Task UnitTy
-    change =
-        ask >>? \n =>
-        let i = the Nat (cast n) in
-        Get >>= \xs =>
-        if i <= List.length xs then
-            delete i <|> replace i
-        else
-            Fail
-    prepend : Task UnitTy
-    prepend =
-        ask >>? \x =>
-        modify ((::) x)
-    clear : Task UnitTy
-    clear =
-        modify (const [])
-    quit : Task UnitTy
-    quit = pure ()
+  delete : Nat -> Task UnitTy
+  delete i =
+    modify (del i)
+  replace : Nat -> Task UnitTy
+  replace i =
+    ask >>? \x =>
+    modify (rep i x)
+  change : Task UnitTy
+  change =
+    ask >>? \n =>
+    let i = the Nat (cast n) in
+    Get >>= \xs =>
+    if i <= List.length xs then
+      delete i <|> replace i
+    else
+      Fail
+  prepend : Task UnitTy
+  prepend =
+    ask >>? \x =>
+    modify ((::) x)
+  clear : Task UnitTy
+  clear =
+    modify (const [])
+  quit : Task UnitTy
+  quit = pure ()
 
-    partial
-    repeat : Task UnitTy
-    repeat = do
-        prepend <|> clear <|> change
-        editShared
+  partial
+  repeat : Task UnitTy
+  repeat = do
+    prepend <|> clear <|> change
+    editShared
 
 -- update : Task UnitTy
 -- update =
---     Get >>= \x =>
---     edit x >>? \y =>
---     Put y
+--   Get >>= \x =>
+--   edit x >>? \y =>
+--   Put y
 
 -- --FIXME: help!!!
 -- update2 : Task UnitTy
 -- update2 = do
---     Get >>= \x =>
---     edit (x+1) >>? \y =>
---     Put y >>= \() =>
---     Get >>= \u =>
---     edit (u+2) >>? \v =>
---     Put v
+--   Get >>= \x =>
+--   edit (x+1) >>? \y =>
+--   Put y >>= \() =>
+--   Get >>= \u =>
+--   edit (u+2) >>? \v =>
+--   Put v
 
 watch : Show (typeOf a) => Task a -> Task (PairTy a StateTy)
 watch t = t <&> Watch
@@ -210,37 +210,37 @@ choice1 = edit 2 <|> Fail
 
 auto : Task (BasicTy StringTy)
 auto = do
-    x <- edit 0
-    if x >= 10 then pure "large" else Fail
+  x <- edit 0
+  if x >= 10 then pure "large" else Fail
 
 actions : Task (BasicTy StringTy)
 actions =
-    edit 0 >>? \x =>
-    (pure "first" <|> pure "second first" <|> pure "second second")
+  edit 0 >>? \x =>
+  (pure "first" <|> pure "second first" <|> pure "second second")
 
 guards : Task (BasicTy StringTy)
 guards =
-    edit 0 >>? \x =>
-    ((if x >= 10 then pure "large" else Fail) <|> (if x >= 100 then pure "very large" else Fail))
+  edit 0 >>? \x =>
+  ((if x >= 10 then pure "large" else Fail) <|> (if x >= 100 then pure "very large" else Fail))
 
 partial -- due to `mod` on `0`
 branch : Task (BasicTy StringTy)
 branch =
-    edit 1 >>? \x =>
-    if x `mod` 3 == 0 then
-        pure "multiple of 3"
-    else if x `mod` 5 == 0 then
-        pure "multiple of 5"
-    else
-        Fail
+  edit 1 >>? \x =>
+  if x `mod` 3 == 0 then
+    pure "multiple of 3"
+  else if x `mod` 5 == 0 then
+    pure "multiple of 5"
+  else
+    Fail
 
 
 -- Empty edit --
 
 test : Task (BasicTy IntTy)
 test = do
-    ( x, y ) <- ask <&> ask
-    pure (x + y)
+  ( x, y ) <- ask <&> ask
+  pure (x + y)
 
 
 -- Running ---------------------------------------------------------------------
@@ -249,25 +249,25 @@ test = do
 
 get : IO Event
 get = do
-    putStr "> "
-    input <- getLine
-    case input of
-        "quit" => System.exit 0
-        _ =>
-            case Event.parse (words input) of
-                Right event => do
-                    pure event
-                Left msg => do
-                    putStrLn msg
-                    get
+  putStr "> "
+  input <- getLine
+  case input of
+    "quit" => System.exit 0
+    _ =>
+      case Event.parse (words input) of
+        Right event => do
+          pure event
+        Left msg => do
+          putStrLn msg
+          get
 
 loop : Show (typeOf a) => Task a -> State -> IO ()
 loop task state = do
-    putStrLn $ ui task state
-    putStrLn $ "Possibilities: " ++ show (actions task state)
-    event <- get
-    let ( nextTask, nextState ) = handle task event state
-    loop nextTask nextState
+  putStrLn $ ui task state
+  putStrLn $ "Possibilities: " ++ show (actions task state)
+  event <- get
+  let ( nextTask, nextState ) = handle task event state
+  loop nextTask nextState
 
 run : Show (typeOf a) => Task a -> IO ()
 run t = uncurry loop $ init t
