@@ -81,15 +81,16 @@
     &        &\mid& c                           & – constant \\
     &        &\mid& t                           & – task \\
   Tasks
-    & t      &\mid& \Edit u                     & – edit value \\
+    & t      &::= & \Edit u                     & – edit value \\
     &        &\mid& \Fill \beta                 & – fill value \\
     &        &\mid& \Watch l                    & – watch location \\
-    &        &\mid& t_1 \Then e_2               & – sequence\footnote{$\where \Observe(t_1) \neq \nothing$} \\
+    &        &\mid& t_1 \Then e_2               & – sequence\footnotemark \\
     &        &\mid& t_1 \Next e_2               & – ask \\
     &        &\mid& t_1 \And t_2                & – parallel \\
     &        &\mid& e_1 \Or e_2                 & – choose \\
     &        &\mid& \Fail                       & – fail \\
 \end{grammar}
+\footnotetext{$\where \Observe(t_1) \neq \nothing$}
 
 Notes:
 \begin{itemize}
