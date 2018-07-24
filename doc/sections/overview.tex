@@ -26,11 +26,11 @@
   Pretasks
     & p      &::= & \Edit e                     & – edit \\
     &        &\mid& \Fill \beta                 & – fill \\
-    &        &\mid& \Watch e                    & – watch \\
+    &        &\mid& \Change e                    & – watch \\
     &        &\mid& e_1 \Next e_2               & – ask \\
     &        &\mid& e_1 \Then e_2               & – sequence \\
-    &        &\mid& e_1 \And e_2                & – parallel \\
-    &        &\mid& e_1 \Or e_2                 & – choose \\
+    &        &\mid& e_1 \All e_2                & – parallel \\
+    &        &\mid& e_1 \One e_2                 & – choose \\
     &        &\mid& \Fail                       & – fail \\
   Constants
     & c      &::= & B \in \BB                   & – boolean \\
@@ -83,24 +83,24 @@
   Tasks
     & t      &::= & \Edit u                     & – edit value \\
     &        &\mid& \Fill \beta                 & – fill value \\
-    &        &\mid& \Watch l                    & – watch location \\
+    &        &\mid& \Change l                    & – watch location \\
     &        &\mid& t_1 \Then e_2               & – sequence\footnotemark \\
     &        &\mid& t_1 \Next e_2               & – ask \\
-    &        &\mid& t_1 \And t_2                & – parallel \\
-    &        &\mid& e_1 \Or e_2                 & – choose \\
+    &        &\mid& t_1 \All t_2                & – parallel \\
+    &        &\mid& e_1 \One e_2                 & – choose \\
     &        &\mid& \Fail                       & – fail \\
 \end{grammar}
 \footnotetext{$\where \Observe(t_1) \neq \nothing$}
 
 Notes:
 \begin{itemize}
-  \item Should $\Edit$ and $\Watch$ be a lazy or strict constructors?
+  \item Should $\Edit$ and $\Change$ be a lazy or strict constructors?
   \item $\Then$ and $\Next$ are strict in their first argument, lazy in their second.
     It doesn't matter what the continuation is.
-  \item $\And$ is strict in both arguments.
+  \item $\All$ is strict in both arguments.
     \todo{Why?}
-  \item $\Or$ is lazy in both arguments.
-    Evaluating one or both options of $e_1 \Or e_2$ before the user makes a choice will result in untimely reference updates.
+  \item $\One$ is lazy in both arguments.
+    Evaluating one or both options of $e_1 \One e_2$ before the user makes a choice will result in untimely reference updates.
   \item Althoug internal steps should be evaluated without user interaction,
     $t \Then e$ \emph{is} a task value, iff $\Observe(t) = \nothing$.
     Take for example $t = \Fill \Int$.
@@ -140,8 +140,8 @@ Notes:
   \begin{array}{@{}lcl}
     \multicolumn{3}{c}{\boxed{\Observe : t \times s \to v^?}} \\
     \Observe(\Edit v\st{s})      &=& v \\
-    \Observe(\Watch l\st{s})     &=& s(l) \\
-    \Observe(t_1 \And t_2\st{s}) &=& \{\Observe(t_1\st{s}), \Observe(t_2\st{s})\} \\
+    \Observe(\Change l\st{s})     &=& s(l) \\
+    \Observe(t_1 \All t_2\st{s}) &=& \{\Observe(t_1\st{s}), \Observe(t_2\st{s})\} \\
     \Observe(\_)                 &=& \nothing
   \end{array}
 \end{equation*}
@@ -234,8 +234,7 @@ Notes:
 
 \paragraph{Passing}
 
-\renewcommand*{\AndOr}{\Both}
-(We use $\AndOr \in \{\And, \Or\}$.
+(We use $\AndOr \in \{\All, \One\}$.
 Note that \refrule{H-Pass} is the place where we reuse $\normalise$.)
 
 \begin{mathpar}

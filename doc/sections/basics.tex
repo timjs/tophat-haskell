@@ -28,7 +28,7 @@ For this we refer to standard work like \textcite{pierce2002types} and \textcite
     &   &\mid& S              & – strings \\
     &   &\mid& t              & – tasks \\
   Tasks
-    & t &::= & \Done e        & – finished task \\
+    & t &::= & \ldots         &  \\
 \end{grammar}
 Expressions are just applications, variables or values.
 We add a general notion of operators, represented by $\star$.
@@ -37,10 +37,10 @@ Most important, \emph{tasks are values}.
 
 For now, the only way to create a task is by \emph{quoting} a pure expression
 and thereby lifting it into the task world.
-This means we can create very dull tasks containing values like, for example, $\Done 1$,
+This means we can create very dull tasks containing values like, for example, $\Edit 1$,
 which is a task having the integer $1$,
-and $\Done \astring{Hello}$,\footnote{
-  Mind the checkmark $\Done$ in front of the expression!
+and $\Edit \astring{Hello}$,\footnote{
+  Mind the box $\Edit$ in front of the expression!
 }
 a task always containing the string $\astring{Hello}$.
 We will use double quotation marks ($""$) to denote strings.

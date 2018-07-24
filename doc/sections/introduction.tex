@@ -14,9 +14,9 @@ making our language more powerful after every addition:
 \begin{itemize}
   \item editors with a value ($\Edit v$) and without a value ($\Fill$);
   \item sequential composition of tasks ($t \Then e$);
-  \item pairing tasks ($t_1 \And t_2$);
-  \item giving a choice between tasks ($t_1 \Or t_2$);
-  \item watching shared data ($\Watch l$).
+  \item pairing tasks ($t_1 \All t_2$);
+  \item giving a choice between tasks ($t_1 \One t_2$);
+  \item watching and chainging shared data ($\Change l$).
 \end{itemize}
 
 Compared to previous attempts,
@@ -26,7 +26,7 @@ this system distinguishes itself by the following.
     There is a clear distinction between the underlaying \emph{host language} and the task layer (\emph{object language}) on top of it.
   \item
     There is no notion of values which can be stable or unstable.
-    Our language has pure values lifted into the task world ($\Done e$)\footnote{
+    Our language has pure values lifted into the task world ($\Edit e$)\footnote{
       This makes the system a pointed functor.}
     and editors which have a value or don't have a value.
   \item

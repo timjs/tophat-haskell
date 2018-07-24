@@ -24,10 +24,6 @@
 \newmacro{RelationT}
   {\Gamma\st{\Sigma} \infers e : \tau}
 
-\newrule{T-Done}
-  {\Gamma\st{\Sigma} \infers e : \tau}
-  {\Gamma\st{\Sigma} \infers \Done e : \Task \tau}
-
 \newrule{T-Fail}
   {\ }
   {\Gamma\st{\Sigma} \infers \Fail : \Task \tau}
@@ -40,9 +36,9 @@
   {\ }
   {\Gamma\st{\Sigma} \infers \Fill \beta : \Task \beta}
 
-\newrule{T-Watch}
+\newrule{T-Change}
   {\Gamma, \Sigma \infers e : \beta}
-  {\Gamma, \Sigma \infers \Watch e : \Task \beta}
+  {\Gamma, \Sigma \infers \Change e : \Task \beta}
 
 \newrule{T-Next}
   {\Gamma\st{\Sigma} \infers e_1 : \Task \tau_1 \\
@@ -54,15 +50,15 @@
    \Gamma\st{\Sigma} \infers e_2 : \tau_1 \to \Task \tau_2}
   {\Gamma\st{\Sigma} \infers e_1 \Then e_2 : \Task \tau_2}
 
-\newrule{T-And}
+\newrule{T-All}
   {\Gamma\st{\Sigma} \infers e_1 : \Task \tau_1 \\
    \Gamma\st{\Sigma} \infers e_2 : \Task \tau_2}
-  {\Gamma\st{\Sigma} \infers e_1 \And e_2 : \Task\,(\tau_1 \times \tau_2)}
+  {\Gamma\st{\Sigma} \infers e_1 \All e_2 : \Task\,(\tau_1 \times \tau_2)}
 
-\newrule{T-Or}
+\newrule{T-One}
   {\Gamma\st{\Sigma} \infers e_1 : \Task \tau \\
    \Gamma\st{\Sigma} \infers e_2 : \Task \tau }
-  {\Gamma\st{\Sigma} \infers e_1 \Or e_2 : \Task \tau}
+  {\Gamma\st{\Sigma} \infers e_1 \One e_2 : \Task \tau}
 
 
 %% Evaluation %%
@@ -80,10 +76,6 @@
   { }
   {u\st{s} \normalise u\st{s}}
 
-% \newrule{N-Pure}
-%   { }
-%   {\Done v\st{s} \normalise \Done v\st{s}}
-
 % \newrule{N-Fail}
 %   { }
 %   {\Fail\st{s} \normalise \Fail\st{s}}
@@ -96,11 +88,11 @@
 %   { }
 %   {\Fill \beta\st{s} \normalise \Fill \beta\st{s}}
 
-% \newrule{N-Watch}
+% \newrule{N-Change}
 %   { }
-%   {\Watch l\st{s} \normalise \Watch l\st{s}}
+%   {\Change l\st{s} \normalise \Change l\st{s}}
 
-% \newrule{N-Next}[t_1' = \Done v]
+% \newrule{N-Next}[t_1' = \Edit v]
 %   {t_1\st{s} \normalise t_1'\st{s'}   \\
 %    e\ v \evaluate t_2       \\
 %    t_2\st{s'} \normalise t_2'\st{s''} }
@@ -119,10 +111,10 @@
    t_2\st{s} \normalise t_2'\st{s'} }
   {t_1 \Then e\st{s} \normalise t_2' \Then e\st{s'}}
 
-\newrule{N-And}[t_1' = \Done v_1 \land t_2' = \Done v_2]
+\newrule{N-All}[t_1' = \Edit v_1 \land t_2' = \Edit v_2]
   {t_1\st{s}  \normalise t_1'\st{s'}  \\
    t_2\st{s'} \normalise t_2'\st{s''} }
-  {t_1 \And t_2\st{s} \normalise \Done \{v_1, v_2\}\st{s}}
+  {t_1 \All t_2\st{s} \normalise \Edit \{v_1, v_2\}\st{s}}
 
 \newrule{N-NextEval}
   {e_1\st{s} \normalise u_1\st{s'}}
@@ -131,12 +123,12 @@
 \newrule{N-AndEval}
   {e_1\st{s}  \normalise u_1\st{s'}  \\
    e_2\st{s'} \normalise u_2\st{s''} }
-  {e_1 \And e_2\st{s} \normalise u_1 \And u_2\st{s}}
+  {e_1 \All e_2\st{s} \normalise u_1 \All u_2\st{s}}
 
-% \newrule{N-OrEval}[t_1' \neq \Done v_1 \land t_2' \neq \Done v_2]
+% \newrule{N-OrEval}[t_1' \neq \Edit v_1 \land t_2' \neq \Edit v_2]
 %   {t_1\st{s}  \normalise t_1'\st{s'}  \\
 %    t_2\st{s'} \normalise t_2'\st{s''} }
-%   {t_1 \Or t_2\st{s} \normalise t_1' \Or t_2'\st{s}}
+%   {t_1 \One t_2\st{s} \normalise t_1' \One t_2'\st{s}}
 
 
 %% Handling %%
@@ -158,7 +150,7 @@
 
 \newrule{H-Store}[\Sigma(l), v' : \tau]
   { }
-  {\Watch l, s \handle{v'} \Watch l, [l \mapsto v']s}
+{\Change l, s \handle{v'} \Change l, [l \mapsto v']s}
 
 \newrule{H-Stay'}[\Observe(t_1) = \nothing]
   {\ }
@@ -194,17 +186,15 @@
 
 \newrule{H-First}[t_1 \neq \Fail]
   {\ }
-  {t_1 \Or t_2\st{s} \handle{\Pick \First} t_1\st{s}}
+  {t_1 \One t_2\st{s} \handle{\Pick \First} t_1\st{s}}
 
 \newrule{H-Second}[t_2 \neq \Fail]
   {\ }
-  {t_1 \Or t_2\st{s} \handle{\Pick \Second} t_2\st{s}}
+  {t_1 \One t_2\st{s} \handle{\Pick \Second} t_2\st{s}}
 
 \newrule{H-Other}[t_2 \neq \Fail]
   {t_2\st{s} \handle{\Pick \pi} t_2'\st{s'}}
-  {t_1 \Or t_2\st{s} \handle{\Pick \Other \pi} t_2'\st{s'}}
-
-\newmacro{AndOr}{\Both}
+  {t_1 \One t_2\st{s} \handle{\Pick \Other \pi} t_2'\st{s'}}
 
 \newrule{H-Left}
   {t_1\st{s} \handle{\eta} t_1'\st{s'} }
