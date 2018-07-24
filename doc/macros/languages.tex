@@ -1,0 +1,115 @@
+
+%% Styles %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\lstdefinestyle{natural}
+  {columns=fullflexible
+  ,gobble=2
+  ,breaklines=true
+  ,breakatwhitespace=true
+  ,literate=
+    %{.}{{$\cdot$}}1
+    %{.}{{\ }}1
+    {<<}{{$\<$}}1
+    {>>}{{$\>$}}1
+    {->}{{$\to$\ }}2
+    % {--}{{--}}1
+    %{_}{{\ }}1
+    %{\ "}{{\ \textquotedblleft}}2
+    %{"\ }{{\textquotedblright\ }}2
+  ,basicstyle={\sffamily}
+  ,keywordstyle=[1]{\bfseries}
+  ,keywordstyle=[2]{\scshape}
+  ,keywordstyle=[3]{}
+  %,commentstyle={\itshape}
+  %,identifierstyle={\itshape}
+  ,emphstyle={\itshape}
+  %,stringstyle={\rmfamily}
+  ,showstringspaces=false
+  ,texcl=true
+  ,mathescape=true
+  %,escapechar=\$
+  %,escapeinside={\{\}}
+  ,xleftmargin=1\parindent
+  }
+
+\lstdefinestyle{flexible}
+  {columns=flexible
+  ,gobble=2
+  ,fontadjust=true
+  ,basicstyle={\ttfamily\small}
+  ,commentstyle={\itshape}
+  ,keywordstyle={\bfseries}
+  %,identifierstyle={\itshape}
+  %,stringstyle={\ttfamily}
+  ,emphstyle={\itshape}
+  ,showstringspaces=false
+  ,texcl=true
+  ,mathescape=true
+  %,escapechar=\$
+  %,escapeinside={\{\}}
+  ,xleftmargin=1\parindent
+  }
+
+\lstdefinestyle{literate}
+  {literate=
+    {\\}{{$\lambda$}}1
+    {\\\$}{{\$}}1 %NOTE: otherwise eaten by `\`, NOTE: prevents \$ to be parsed as math escape
+    {\\/}{{$\vee$}}1
+    {/\\}{{$\wedge$}}1
+    {A.}{{$\forall$}}1
+    {E.}{{$\exist$}}1
+    {->}{{$\rightarrow$ }}1
+    {<-}{{$\leftarrow$}}1
+    {<=}{{$\leq$}}1
+    {>=}{{$\geq$}}1
+    {>>=}{{>>=}}3 %NOTE: otherwise eaten by `>=`
+    {\{|}{{$\{\!|\!$}}1
+    {|\}}{{$\!|\!\}$}}1
+    {\{|*|\}}{{$\{\!|\!\!\star\!\!|\!\}$}}3
+  }
+
+
+%% Definitions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Flows %%
+
+\lstdefinelanguage{flows}
+  {sensitive=true
+  ,morekeywords=[1]{module,where,define,using,as,yielding,share,holding,with,do,for,fork,then,when,next,done,on,and,or,not,readonly,writeonly,readwrite}
+  ,morekeywords=[2]{Bool,Int,String,Shared,List, Date,Document,Photo, Citizen,Company,Declaration}
+  ,morekeywords=[3]{True,False,Just,Nothing,List}
+  ,morestring=[b]"
+  ,morecomment=[l]--
+  ,morecomment=[n]{\{-}{-\}}
+  }[keywords,strings,comments]
+
+% \lstMakeShortInline[language=flows,style=natural] | % |
+\lstnewenvironment{FLOW}[1][]
+  {\lstset{language=flows,style=natural,#1}}
+  {}
+\newmacro{FL}[1][1]
+  {\lstinline[language=flows,style=natural,#1]}
+\newmacro{includeFLOW}[2][]
+  {\lstinputlisting[language=flows,style=natural,#1]{#2}}
+
+
+%% Clean %%
+
+\lstdefinelanguage{clean}
+  {sensitive=true
+  %,alsoletter={ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_`}
+  %,alsoletter={~!@\#$\%^\&*-+=?<>:|\\} %$
+  ,morekeywords={from,definition,implementation,import,module,system,code,inline,if,case,of,let,let!,in,where,with,class,instance,generic,derive,dynamic,infix,infixl,infixr}
+  ,morestring=[b]"
+  ,morestring=[b]'
+  ,morecomment=[l]//
+  ,morecomment=[n]{/*}{*/}
+  }[keywords,strings,comments]
+
+\lstnewenvironment{CLEAN}[1][]
+  {\lstset{language=clean,style=flexible,#1}}
+  {}
+\newmacro{CL}[1][1]
+  {\lstinline[language=clean,style=flexible,#1]}
+\newmacro{includeCLEAN}[2][1]
+  {\lstinputlisting[language=clean,style=flexible,#1]{#2}}

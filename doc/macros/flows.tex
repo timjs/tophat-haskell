@@ -1,0 +1,92 @@
+
+\newkeyword[Module]{module}
+\newkeyword[Where]{where}
+\newkeyword[Define]{define}
+\newkeyword[Using]{using}
+\newkeyword[As]{as}
+\newkeyword[Yielding]{yielding}
+\newkeyword[Share]{share}
+\newkeyword[Holding]{holding}
+\newkeyword[ReadOnly]{readonly}
+\newkeyword[WriteOnly]{writeonly}
+\newkeyword[ReadWrite]{readwrite}
+
+\newkeyword[With]{with}
+\newkeyword[Do]{do}
+\newkeyword[For]{for}
+\newkeyword[Fork]{fork}
+
+\newkeyword[Next]{next}
+\newkeyword[When]{when}
+\newkeyword[Then]{then}
+\newkeyword[Done]{done}
+
+\let\And\relax
+\newkeyword[On]{on}
+\newkeyword[And]{and}
+\newkeyword[Or]{or}
+\newkeyword[Not]{not}
+
+\newvalue{True}
+\newvalue{False}
+
+\newvalue{Ok}
+\newvalue{Cancel}
+\newvalue{Continue}
+
+\newvalue[Enter]{enter}
+\newvalue[View]{view}
+\newvalue[Watch]{watch}
+\newvalue[Update]{update}
+\newvalue[Hole]{?}
+
+\newtype[Unit]{\{\}}
+\newtype{Bool}
+\newtype{Int}
+\newtype{String}
+\newtype{Shared}
+
+\newmacro{Tr}[1]
+  {\llbracket #1 \rrbracket}
+
+\newmacro{Many}[1]
+  {\overline{#1}}
+
+\newmacro{Sequence}[1]
+  {(\Many{#1})}
+\newmacro{Record}[1]
+  {\{\Many{#1}\}}
+\newmacro{Variant}[1]
+  {\<\Many{#1}\>}
+\newmacro{List}[1]
+  {[\Many{#1}]}
+
+\newmacro{Forall}[1]
+  %{\ensuremath{\forall{#1.}}}
+  {\ensuremath{\text{for each }#1}}
+\newmacro{Exists}[1]
+  %{\ensuremath{\exists{#1.}}}
+  {\ensuremath{\text{for some }#1}}
+
+\newmacro{MODULE}
+  {\Module x\allowbreak \Where\:(d_i)^+}
+\newmacro{DEFINE}
+  {\Define x\allowbreak\:(\Using \tau)^?\allowbreak \As f\allowbreak\:(\Yielding \sigma)^?}
+\newmacro{SHARE}
+  {\Share x\allowbreak \Holding \beta\allowbreak\:(w)^?}
+\newmacro{SEQUENCE}
+  {t\;s}
+\newmacro{APPLY}
+  {(\With a)^?\allowbreak \Do r\allowbreak\:(\For p)^?}
+\newmacro{PARALLEL}
+  {(\Fork f_i)^+}
+\newmacro{NEXT}
+  {\Next f}
+\newmacro{WHEN}
+  {(\When c_i \Then f_i)^+}%\allowbreak\:(\Next f_{n+1})^?}
+\newmacro{DONE}
+  {\Done}
+
+\newmathcommand{Bound}  [op]{\mathit{Bound}}
+\newmathcommand{Free}   [op]{\mathit{Free}}
+\newmathcommand{Options}[op]{\mathit{Options}}

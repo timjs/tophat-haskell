@@ -1,0 +1,11 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/timjs/latex-macros
+	branch = master
+	commit = 4dbc0a758c4e87b53bd98b7f09bd03d3c1b7a19d
+	parent = d79bd38cc697135a3091133e6fd5e77e8e6656ec
+	cmdver = 0.3.1

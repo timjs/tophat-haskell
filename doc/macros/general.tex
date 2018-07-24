@@ -1,0 +1,211 @@
+% !TEX root=../main.tex
+
+\input macros/auxiliaries
+
+
+%% Text %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\providemacro{marginnote}
+  {\marginpar}
+\providemacro{smallcaps}
+  {\textsc}
+
+\newmacro{alert}[1]
+  {\textbf{#1}}
+\newmacro{divert}[1]
+  {\textcolor{gray}{#1}}
+\newmacro{enquote}[1]
+  {``#1''}
+\newmacro{fix}[1]
+  {\colorbox{yellow}{#1}\marginnote{\colorbox{yellow}{$\star$}}}
+\newmacro{todo}[1]
+  {\textcolor{red}{$\star$}\marginnote{\textcolor{red}{#1}}}
+
+\newenvironment{fadeout}
+  {\color{gray}}
+  {}
+\newenvironment{emphasize}
+  {\begin{quote}\itshape}
+  {\end{quote}}
+
+
+%% Lists %%
+%% NOTE: requires `paralist`
+
+%% Use compact lists by default
+\renewenvironment{itemize}
+  {\begin{compactitem}}
+  {\end{compactitem}}
+\renewenvironment{enumerate}
+  {\begin{compactenum}}
+  {\end{compactenum}}
+\renewenvironment{description}
+  {\begin{compactdesc}}
+  {\end{compactdesc}}
+%% Define starred versions as in-paragraph-lists
+\newenvironment{itemize*}
+  {\begin{inparaitem}}
+  {\end{inparaitem}}
+\newenvironment{enumerate*}[1][1=(i)]
+  {\begin{inparaenum}[#1]}
+  {\end{inparaenum}}
+\newenvironment{description*}
+  {\begin{inparadesc}}
+  {\end{inparadesc}}
+
+
+%% Quotations %%
+%% NOTE: requires `quoting`
+
+\let\quote\quoting
+\let\endquote\endquoting
+\renewenvironment{quotation}
+  {\ClassError{Please use the `quote` environment instead of `quotation`}}
+
+
+%% Column types %%
+%% NOTE: requires `array`
+
+\newcolumntype{L}{>{$}l<{$}}
+\newcolumntype{C}{>{$}c<{$}}
+\newcolumntype{R}{>{$}r<{$}}
+\newcolumntype{T}{>{\ttfamily}l}
+\newcolumntype{S}{>{\sffamily}l}
+
+
+%% References %%
+%% NOTE: requires `cleveref`
+
+\let\autoref\cref
+\let\Autoref\Cref
+\let\autopageref\cpageref
+
+
+%% Citations %%
+%% NOTE: requires `natbib`
+
+\let\cite\citep
+\let\Cite\Citep
+\let\textcite\citet
+\let\Textcite\Citet
+
+
+%% Blocks %%
+
+\newenvironment{block}
+  {\begin{center}}
+  {\end{center}}
+
+
+%% Logos %%
+
+%% \newlogo[.name.]{.text.}
+\newmacro{newlogo}[2][1]
+  {\ifthenelse{\isempty{#1}}
+     {\newlogoaux{#2}{\smallcaps{\lowercase{#2}}}}
+     {\newlogoaux{#1}{#2}}}
+\newmacro{newlogoaux}[2]
+  {\newmacro{#1}{#2\xspace}}
+
+
+%% Languages %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%NOTE: `\mathrel` gives a single space width between keywords but removes it after another relational operator.
+%%      `\mathop`  gives just a small skip, but doesn't has above bug.
+\newmacro{newoperator}[1]
+  {\newmathcommand{#1}[op]}
+\newmacro{newkeyword}[2][1]
+  %%FIXME: this is to complicated: {\newoperator{\ifthenelse{\isempty{#1}}{#2}{#1}}{\text{\sffamily\bfseries #2}}}
+  {\ifthenelse{\isempty{#1}}
+    {\newoperator{#2}{\text{\sffamily\bfseries #2}}}
+    {\newoperator{#1}{\text{\sffamily\bfseries #2}}}}
+\newmacro{newvalue}[2][1]
+  {\ifthenelse{\isempty{#1}}
+    {\newoperator{#2}{\text{\sffamily #2}}}
+    {\newoperator{#1}{\text{\sffamily #2}}}}
+\newmacro{newtype}[2][1]
+  {\ifthenelse{\isempty{#1}}
+    {\newoperator{#2}{\text{\sffamily\scshape #2}}}
+    {\newoperator{#1}{\text{\sffamily\scshape #2}}}}
+
+
+%% Math %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Symbols %%
+
+%% NOTE: change this to \emptyset when using a font that includes a nice standard emptyset
+\let\nothing\varnothing
+
+
+%% Braces %%
+
+\let\<\langle
+\let\>\rangle
+
+\newmathcommand{llbrace}[open] {\{\!|}
+\newmathcommand{rrbrace}[close]{|\!\}}
+
+
+%% Operators %%
+
+\let\lt<
+\let\gt>
+
+\newmathcommand{append}[bin]
+  {+\!\!+}
+
+
+%% Shortcuts %%
+
+\newmathcommand{powerset}[cal]{P}
+
+\newmathcommand{n}{\underline{n}}
+
+\newmathcommand{NN}  [bb]{N}
+\newmathcommand{ZZ}  [bb]{Z}
+\newmathcommand{EE}  [bb]{E}
+\newmathcommand{OO}  [bb]{O}
+\newmathcommand{QQ}  [bb]{A}
+\newmathcommand{RR}  [bb]{R}
+\newmathcommand{CC}  [bb]{C}
+\newmathcommand{HH}  [bb]{H}
+
+\newmathcommand{LL}  [bb]{L}
+\newmathcommand{UU}  [bb]{U}
+\newmathcommand{BB}  [bb]{B}
+\renewmathcommand{SS}[bb]{S}
+
+\let\to\rightarrow
+\let\implies\Rightarrow
+\let\infers\vdash
+
+
+%% Hints and local definitions %%
+
+\newmacro{hint}[1]
+  {\quad\text{\{ #1 \}}}
+
+\newmathcommand{when}[op]
+  {\mathbf{when}}
+\newmathcommand{where}[op]
+  {\mathbf{where}}
+\newmathcommand{impossible}[op]
+  {\mathrm{impossible}}
+
+
+%% Environments %%
+
+\let\group\begingroup
+
+\newenvironment*{marginequation}[1][1=0pt]
+  {\begin{marginfigure}[#1]\equation}
+  {\endequation\end{marginfigure}}
+
+\newenvironment*{marginequation*}[1][1=0pt]
+  {\begin{marginfigure}[#1]\equation\nonumber}
+  {\endequation\end{marginfigure}}
+
+\newenvironment*{grammar}
+  %%NOTE: the `@{}` suppreses `\tabcolsep` before the first column
+  {\begin{block}\begin{tabular}{@{}rRCLl}}
+  {\end{tabular}\end{block}}

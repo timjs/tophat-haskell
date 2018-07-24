@@ -1,0 +1,65 @@
+% !TEX root=../main.tex
+
+% \captionsetup{font={small,up}}
+
+
+%% Fixes %%
+
+\frenchspacing
+
+\newlength{\hugeskipamount}
+\setlength{\hugeskipamount}  {1.2500\baselineskip plus 0.3750\baselineskip minus 0.3750\baselineskip}
+\setlength{\bigskipamount}   {0.7500\baselineskip plus 0.2500\baselineskip minus 0.2500\baselineskip}
+\setlength{\medskipamount}   {0.3750\baselineskip plus 0.1250\baselineskip minus 0.1250\baselineskip}
+\setlength{\smallskipamount} {0.1875\baselineskip plus 0.0625\baselineskip minus 0.0625\baselineskip}
+
+
+%% Spacing %%
+%%NOTE: requires 'titlesec'
+
+% \widowpenalty=150
+% \clubpenalty=150
+
+% \titlespacing*{\section}{0pt}{\hugeskipamount}{\bigskipamount}
+% \titlespacing*{\subsection}{0pt}{\bigskipamount}{\medskipamount}
+% \titlespacing*{\paragraph}{0pt}{\medskipamount}{1em}
+
+
+%% Quoting %%
+%%NOTE: requires 'quoting'
+
+\quotingsetup
+  {font=itshape
+  ,leftmargin=\parindent
+  ,listvskip}
+
+
+%% Numbering %%
+
+% \setcounter{secnumdepth}{2}
+
+
+%% Floats %%
+
+\setlength{\abovecaptionskip}{\medskipamount}
+\setlength{\floatsep}        {\medskipamount}
+\setlength{\textfloatsep}    {\bigskipamount}
+\setlength{\intextsep}       {\medskipamount}
+\setlength{\dblfloatsep}     {\medskipamount}
+\setlength{\dbltextfloatsep} {\bigskipamount}
+
+
+%% Compact lists %%
+%% NOTE: requires `paralist`
+
+\setlength{\pltopsep}   {\medskipamount}
+\setlength{\plpartopsep}{\parskip}
+\setlength{\plitemsep}  {\parskip}
+\setlength{\plparsep}   {\parskip}
+
+
+%% Tabular strech %%
+%% NOTE: requires `array`
+
+% \renewmacro{arraystretch}
+%   {1.1}

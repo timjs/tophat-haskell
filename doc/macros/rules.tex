@@ -1,0 +1,12 @@
+% !TEX root=../main.tex
+
+%% Helpers %%
+
+\newmacro{newrule}[4][2]
+  {\newmacro{#1}{\inferrule*[lab={#1},right={$#2$}]
+    {#3}
+    {#4}}}
+\newmacro{userule}
+  {\usemacro}
+\newmacro{refrule}
+  {\textsc}
