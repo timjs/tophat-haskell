@@ -68,10 +68,11 @@ Most important, \emph{tasks are values}.
 \begin{grammar}
   Types
     & \tau &::= & \tau_1 \to \tau_2 & – abstractions \\
-    &      &\mid& \Bool             & – booleans \\
+    &      &\mid& \beta             & – basic types \\
+    &      &\mid& \Task \tau        & – tasks \\
+    &\beta &::= & \Bool             & – booleans \\
     &      &\mid& \Int              & – integers \\
     &      &\mid& \String           & – strings \\
-    &      &\mid& \Task \tau        & – tasks \\
 \end{grammar}
 Typing of our expressions $e$ is as to be expected,
 and won't be given in this document.
