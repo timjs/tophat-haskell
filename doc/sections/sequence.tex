@@ -28,7 +28,7 @@ Syntactically this leads to
 \begin{grammar}
   Tasks
     & t & ::=& \ldots   & \\
-    &   &\mid& t \Next e & – sequence \\
+    &   &\mid& t \ExThen e & – sequence \\
 \end{grammar}
 And the accompanied typing rule looks like
 \begin{equation*}
@@ -58,7 +58,7 @@ till the moment we need an event to continue.
 \begin{grammar}
   Actions
     & \alpha & ::=& \ldots & \\
-    &        &\mid& \Continue  & – continue with next task \\
+    &        &\mid& \Next  & – continue with next task \\
 \end{grammar}
 
 \begin{equation*}

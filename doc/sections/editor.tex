@@ -76,7 +76,7 @@ The typing rule becomes:
 
 \subsection{Events}
 
-To interact with an editor,
+To change values in an editor,
 we should interact with the user with some kind of interface.
 In a graphical setting,
 we can present the user an input box.
@@ -92,29 +92,33 @@ It does not matter how these events are sent to the application.
 This can be by pushing a button,
 entering text in an input box,
 committing some text on a command line,
-or sending it over a web socket.
+sending it over a web socket,
+etc.
 
-We define a new syntactic category of \emph{events} $\eta$.
-For now, they only contain \emph{actions} $\alpha$,
-we will introduce new events in a later section.
+We define a new syntactic category of events $\eta$.
+For now, they only contain \emph{actions} $\alpha$.
+We will introduce new events in a later section.
 As we already discussed before,
-there are two actions that can be handled by editors:
+there are three actions that can be handled by editors:
 \begin{enumerate*}
+  \item filling in an unvalued editor;
   \item changing the value; or
   \item clearing the value.
 \end{enumerate*}
+Hereof, the first two can be merged into one action.
 \begin{grammar}
   Events
     & \eta   & ::=& \alpha & – action \\
   Actions
     & \alpha & ::=& v      & – change editor to value \\
-    &        &\mid& \Empty & – empty an editor \\
+    &        &\mid& \Clear & – clear an editor \\
 \end{grammar}
-The value of an editor, empty or not, can be changed to a value $v$ by just sending the value as an event.
-To clear a valued editor, we send the $\Empty$ action.
+The value of an editor, empty or not, can be changed to a value $v$ by just sending the value as an action.
+To clear a valued editor, we send the $\Clear$ action.
 
 Handling events is done by a new semantic relation.
 This relation takes a task $t$ and an event $\eta$ which results in a new task $t'$.
+\todo{Add task vs pretask somewhere here...}
 We write
 \begin{equation*}
   \boxed{\RelationH}
@@ -122,22 +126,23 @@ We write
 Formalising our intuition from previous paragraphs,
 we need three rules to describe the transitions of editors.
 \begin{equation*}
-  \userule{H-Change} \qquad \userule{H-Clear} \qquad \userule{H-Enter}
+  \userule{H-Change} \qquad \userule{H-Clear} \qquad \userule{H-Fill}
 \end{equation*}
 Note that the conditions to the right of the rules take care of typing.
 They make sure the type of the entered value and the type of the editor are the same.
 
 
-\subsection{Example}
+\subsection{Interactive session}
 
-Now, we can make a still dull but interactive example of a workflow.
+Now, we can make a dull but interactive example of a workflow.
 How could an interactive session with the user look like when we start with a simple workflow with one editor,
-containing the value two?\todo{We should probably add a rule that doesn't change a task when the event doesn't match\ldots}
+containing the value two?
+\todo{We should probably add a rule that doesn't change a task when the event doesn't match\ldots}
 \begin{align*}
     & \Edit 2 \\
   \handle{5} & \hint{change value to five} \\
     & \Edit 5 \\
-  \handle{\Empty} & \hint{clear the current value} \\
+  \handle{\Clear} & \hint{clear the current value} \\
     & \Fill \Int \\
   \handle{50} & \hint{enter the value fifty} \\
     & \Edit 50 \\

@@ -27,7 +27,7 @@
     & p      &::= & \Edit e                     & – edit \\
     &        &\mid& \Fill \beta                 & – fill \\
     &        &\mid& \Change e                    & – watch \\
-    &        &\mid& e_1 \Next e_2               & – ask \\
+    &        &\mid& e_1 \ExThen e_2               & – ask \\
     &        &\mid& e_1 \Then e_2               & – sequence \\
     &        &\mid& e_1 \All e_2                & – parallel \\
     &        &\mid& e_1 \One e_2                 & – choose \\
@@ -44,9 +44,9 @@
     &        &\mid& \Right \eta                 & – pass to right \\
   Actions
     & \alpha & ::=& v                           & – change \\
-    &        &\mid& \Empty                      & – empty \\
+    &        &\mid& \Clear                      & – empty \\
     &        &\mid& \Pick \pi                   & – pick \\
-    &        &\mid& \Continue                   & – continue \\
+    &        &\mid& \Next                   & – continue \\
   Paths
     & \pi    & ::=& \First                      & – pick first \\
     &        &\mid& \Second                     & – pick second \\
@@ -85,7 +85,7 @@
     &        &\mid& \Fill \beta                 & – fill value \\
     &        &\mid& \Change l                    & – watch location \\
     &        &\mid& t_1 \Then e_2               & – sequence\footnotemark \\
-    &        &\mid& t_1 \Next e_2               & – ask \\
+    &        &\mid& t_1 \ExThen e_2               & – ask \\
     &        &\mid& t_1 \All t_2                & – parallel \\
     &        &\mid& e_1 \One e_2                 & – choose \\
     &        &\mid& \Fail                       & – fail \\
@@ -95,7 +95,7 @@
 Notes:
 \begin{itemize}
   \item Should $\Edit$ and $\Change$ be a lazy or strict constructors?
-  \item $\Then$ and $\Next$ are strict in their first argument, lazy in their second.
+  \item $\Then$ and $\ExThen$ are strict in their first argument, lazy in their second.
     It doesn't matter what the continuation is.
   \item $\All$ is strict in both arguments.
     \todo{Why?}
