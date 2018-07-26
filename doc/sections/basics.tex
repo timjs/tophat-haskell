@@ -25,19 +25,21 @@ For this we refer to standard work like \textcite{pierce2002types} and \textcite
     &   &\mid& c                  & – constants \\
     &   &\mid& e_1 \star e_2      & – operator \\
     &   &\mid& \If{e_1}{e_2}{e_3} & – test \\
-    &   &\mid& t                  & – tasks \\
+    &   &\mid& p                  & – pretasks \\
   Constants
     & c &::= & B                  & – booleans \\
     &   &\mid& I                  & – integers \\
     &   &\mid& S                  & – strings \\
-  Tasks
-    & t &::= & \ldots             & (to be defined) \\
+  Pretasks
+    & p &::= & \ldots             & (to be defined) \\
 \end{grammar}
 Expressions are just applications, abstractions, variables or constants.
 Constants can be booleans, integers or strings.
 The $\star$ represents a general notion of operators.
 With $\If{}{}{}$ one can do basic branching.
-The syntactic category of tasks will be defined in the upcoming sections.
+The syntactic category of pretasks will be defined in the upcoming sections.
+Pretasks $p$ are tasks \emph{in making}.
+The difference with a \emph{task} will be discussed in \autoref{sec:tasks-vs-pretasks}.
 
 We will use double quotation marks ($\astring{}$) to denote strings.
 Integers are denoted by their decimal representation,
