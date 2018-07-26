@@ -1,32 +1,55 @@
 % !TEX root=../main.tex
 
-\section{Just an editor}
+\section{Editors: interaction with the end user}
 
-Till now we don't have any interaction with the end user.
-The only things we can create are pure task, containing a value.
-It is kind of hard to claim we model \emph{interactive} workflows without any user interaction at all.
-% At the core of interactive workflows are user interaction.
-An end user should be able to enter information into the system,
+We claim to create a language to model \emph{interactive} workflows.
+We define interaction as
+\begin{quote}
+  communication with the end user of the system.
+\end{quote}
+The way to communicate with the user in our language is an \emph{editor}.
+Using an editor,
+a user can enter information into the system,
 clear it, reenter it et cetera.
-This is modelled by an \emph{editor}.
 Editors may or may not contain a current value.
-When an editor has a value, it can be \emph{changed} or \emph{cleared}.
-When it is empty, a value can be \emph{reentered}.
+When an editor has a value, it can be \emph{changed} or it can be \emph{cleared}.
+When it is empty, a value can be \emph{filled}.
+This is depicted as a state diagram in \autoref{fig:editor-state} below.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.5\textwidth]{figures/editor-state-crop.pdf}
+  \caption{State of an editor and its possible transitions}
+  \label{fig:editor-state}
+\end{figure}
 
 For this purpose, we extend our task language with two constructs:
-a valued editor $\Edit v$ and an empty editor $\Fill \tau$.
+a valued editor $\Edit e$ and an unvalued editor $\Fill \beta$.
+%, which contains the expression $e$, which expects a value of type $\tau$.
 \begin{grammar}
-  Tasks
-    & t & ::=& \ldots      & \\
-    &   &\mid& \Edit v     & – valued editor \\
-    &   &\mid& \Fill \tau  & – empty editor \\
+  Pretasks
+    & p & ::=& \ldots      & \\
+    &   &\mid& \Edit e     & – valued editor \\
+    &   &\mid& \Fill \tau  & – unvalued editor \\
 \end{grammar}
+Some examples:
+\begin{itemize}
+  \item $\Edit 2$ is a valued editor with value $2$.
+  \item $\Fill \String$ is an unvalued editor.
+    The user can enter something of type $\String$.
+  \item $\Edit ((\lambda x . x)\ 5)$ is a valued editor which,
+    after evaluation, will contain the value $5$.
+\end{itemize}
 
-Valued editors contain a value $v$ and therefore inherit the type of $v$.
-This is expressed by the following typing rule for edit.
+Valued editors contain an expression $e$.
+Therefore they inherit the type of $e$,
+but embedded in the container type $\Task$.
+For now, we only accept expressions of a basic type $\beta$ as a value of an editor.
+This is expressed by the following typing rule for a valued editor.
 \begin{equation*}
   \userule{T-Edit}
 \end{equation*}
+
 Empty editors do not have a value,
 but, because we strive to a fully typed system,
 we like to assign a type to them.
