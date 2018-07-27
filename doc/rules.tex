@@ -53,12 +53,12 @@
 \newrule{T-All}
   {\Gamma\st{\Sigma} \infers e_1 : \Task \tau_1 \\
    \Gamma\st{\Sigma} \infers e_2 : \Task \tau_2}
-  {\Gamma\st{\Sigma} \infers e_1 \All e_2 : \Task\,(\tau_1 \times \tau_2)}
+  {\Gamma\st{\Sigma} \infers e_1 \And e_2 : \Task\,(\tau_1 \times \tau_2)}
 
 \newrule{T-One}
   {\Gamma\st{\Sigma} \infers e_1 : \Task \tau \\
    \Gamma\st{\Sigma} \infers e_2 : \Task \tau }
-  {\Gamma\st{\Sigma} \infers e_1 \One e_2 : \Task \tau}
+  {\Gamma\st{\Sigma} \infers e_1 \ExOr e_2 : \Task \tau}
 
 
 %% Evaluation %%
@@ -114,7 +114,7 @@
 \newrule{N-All}[t_1' = \Edit v_1 \land t_2' = \Edit v_2]
   {t_1\st{s}  \normalise t_1'\st{s'}  \\
    t_2\st{s'} \normalise t_2'\st{s''} }
-  {t_1 \All t_2\st{s} \normalise \Edit \{v_1, v_2\}\st{s}}
+  {t_1 \And t_2\st{s} \normalise \Edit \{v_1, v_2\}\st{s}}
 
 \newrule{N-NextEval}
   {e_1\st{s} \normalise u_1\st{s'}}
@@ -123,12 +123,12 @@
 \newrule{N-AndEval}
   {e_1\st{s}  \normalise u_1\st{s'}  \\
    e_2\st{s'} \normalise u_2\st{s''} }
-  {e_1 \All e_2\st{s} \normalise u_1 \All u_2\st{s}}
+  {e_1 \And e_2\st{s} \normalise u_1 \And u_2\st{s}}
 
 % \newrule{N-OrEval}[t_1' \neq \Edit v_1 \land t_2' \neq \Edit v_2]
 %   {t_1\st{s}  \normalise t_1'\st{s'}  \\
 %    t_2\st{s'} \normalise t_2'\st{s''} }
-%   {t_1 \One t_2\st{s} \normalise t_1' \One t_2'\st{s}}
+%   {t_1 \ExOr t_2\st{s} \normalise t_1' \ExOr t_2'\st{s}}
 
 
 %% Handling %%
@@ -186,15 +186,15 @@
 
 \newrule{H-First}[t_1 \neq \Fail]
   {\ }
-  {t_1 \One t_2\st{s} \handle{\Pick \First} t_1\st{s}}
+  {t_1 \ExOr t_2\st{s} \handle{\Pick \First} t_1\st{s}}
 
 \newrule{H-Second}[t_2 \neq \Fail]
   {\ }
-  {t_1 \One t_2\st{s} \handle{\Pick \Second} t_2\st{s}}
+  {t_1 \ExOr t_2\st{s} \handle{\Pick \Second} t_2\st{s}}
 
 \newrule{H-Other}[t_2 \neq \Fail]
   {t_2\st{s} \handle{\Pick \pi} t_2'\st{s'}}
-  {t_1 \One t_2\st{s} \handle{\Pick \Other \pi} t_2'\st{s'}}
+  {t_1 \ExOr t_2\st{s} \handle{\Pick \Other \pi} t_2'\st{s'}}
 
 \newrule{H-Left}
   {t_1\st{s} \handle{\eta} t_1'\st{s'} }

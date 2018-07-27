@@ -73,6 +73,42 @@
 
 %% Definitions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%% Tasks %%
+
+\lstdefinelanguage{tasks}
+  {sensitive=true
+  ,morekeywords=[1]{if,then,else,case,of}
+  ,morekeywords=[2]{Bool,Int,String,Store,List}
+  ,morestring=[b]"
+  ,morecomment=[l]--
+  ,morecomment=[n]{\{-}{-\}}
+  }[keywords,strings,comments]
+\lstdefinestyle{tasks}
+  {style=natural
+  ,literate=
+    {\\}{{$\lambda$}}1
+    {>>=}{{$\Then$\ }}1
+    {>>?}{{$\ExThen$\ }}1
+    {<&>}{{$\And$\ }}1
+    {<|>}{{$\Or$\ }}1
+    {<?>}{{$\ExOr$\ }}1
+    {edit}{{$\Edit$}}1
+    {fill}{{$\Fill$}}1
+    {change}{{$\Change$}}1
+    {fail}{{$\Fail$}}1
+    {==}{{$\equiv$\ }}1
+    {/=}{{$\nequiv$\ }}1
+  }
+
+\lstnewenvironment{TASK}[1][]
+  {\lstset{language=tasks,style=tasks,#1}}
+  {}
+\newmacro{TS}[1][1]
+  {\lstinline[language=tasks,style=tasks,#1]}
+\newmacro{includeTASK}[2][]
+  {\lstinputlisting[language=tasks,style=tasks,#1]{#2}}
+
+
 %% Flows %%
 
 \lstdefinelanguage{flows}

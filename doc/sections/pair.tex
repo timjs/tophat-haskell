@@ -15,7 +15,7 @@
     &      &\mid& \tau_1 \times \tau_2 & – product type \\
   Tasks
     & t    & ::=& \ldots               & \\
-    &      &\mid& t_1 \All t_2         & – task pairing \\
+    &      &\mid& t_1 \And t_2         & – task pairing \\
   Events
     & \eta & ::=& \alpha               & – action \\
     &      &\mid& \Left \eta           & – pass to left \\
@@ -32,7 +32,7 @@
 
 The rule \refrule{N-AndEval} covers the other three cases and makes sure both $t_1$ and $t_2$ will be normalised towards a value as much as possible.
 
-\renewcommand*{\AndOr}{\All}
+\renewcommand*{\AndOr}{\And}
 
 \todo{No normalise here?}
 \begin{equation*}

@@ -13,13 +13,13 @@ Each section will introduce one of the following basic constructs,
 making our language more powerful after every addition:
 \begin{itemize}
   \item interactive \emph{editors} with a value ($\Edit v$) and without a value ($\Fill$);
-  \item parallel composition or \emph{pairing} of tasks ($t_1 \All t_2$);
+  \item parallel composition or \emph{pairing} of tasks ($t_1 \And t_2$);
   \item sequential composition or \emph{stepping} of tasks ($t \Then e$);
-  \item making a \emph{choice} between tasks ($t_1 \Any t_2$) and the \emph{failure} task ($\Fail$);
+  \item making a \emph{choice} between tasks ($t_1 \Or t_2$) and the \emph{failure} task ($\Fail$);
 \end{itemize}
 Additionally, we will discuss two convenience combinators and one extension using shared data:
 \begin{itemize}
-  \item giving the user an explicit choice ($t_1 \One t_2$);
+  \item giving the user an explicit choice ($t_1 \ExOr t_2$);
   \item continuing to the next task on a user's request ($t_1 \ExThen t_2$);
   \item watching and changing shared data ($\Change l$).
 \end{itemize}

@@ -21,7 +21,7 @@
 \newvalue{True}
 \newvalue{False}
 
-\newmacro{astring}[1]
+\newmacro{str}[1]
   {\text{``#1''}}
 
 
@@ -29,19 +29,23 @@
 
 \newtype{Unit}
 \newtype{Bool}
+\newtype{Nat}
 \newtype{Int}
 \newtype{String}
 \newtype[Reference]{Ref}
 \newtype{Task}
 
+\newtype{Euro}
+
 
 %% Object language %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\let\And\relax
 \newoperator{Then}  {\blacktriangleright}
 \newoperator{ExThen}{\vartriangleright}
-\newoperator{All}   {\Join}
-\newoperator{Any}   {\blacklozenge}
-\newoperator{One}   {\lozenge}
+\newoperator{And}   {\Join}
+\newoperator{Or}    {\blacklozenge}
+\newoperator{ExOr}  {\;\lozenge\;}
 \newoperator{Edit}  {\square}
 \newoperator{Fill}  {\boxtimes}
 \newoperator{Change}{\blacksquare}
