@@ -1,3 +1,63 @@
 % !TEX root=../main.tex
 
 \section{Giving more choice}
+
+\subsection{Example: vending machine}
+
+Let us model a vending machine.
+In a simple process algebra we can write
+\begin{equation*}
+  ?\text{2e}; (!\text{tea}\ \oplus\ ?\text{1e}; !\text{coffee}).
+\end{equation*}
+Which reads:
+users should insert 2 Euros,
+after which they need to make a choice between tea,
+or entering another Euro which results in coffee.
+So $?\text{2e}$ and $?\text{1e}$ mean an input of respectively 2 and 1 Euro,
+and $!\text{tea}$ and $!\text{coffee}$ are the outputs.
+We use $\oplus$ as an external choice operation.
+
+We can model this vending machine using tasks as follows.
+\begin{align*}
+  & \Fill \Euro \Then \lambda n.
+  \IF n \equiv \text{2,00} \THEN \\
+  &   \quad \Edit \str{tea}
+    \ExOr
+      \Fill \Euro \Then \lambda m.
+      \IF m \equiv \text{1,00} \THEN
+        \Edit \str{coffee}
+      \ELSE
+        \Fail \\
+  & \ELSE \Fail
+\end{align*}
+Where we use a new type $\Euro$ to represent amounts of money.
+
+We see that in the task world we reason with concrete \emph{values} of a specified \emph{type}.
+Only when the user inserted exactly two euros,
+we will step to the next task.
+In all other cases,
+the step will \emph{fail} and we stay where we are.
+After the first step,
+users need to make an \emph{explicit} choice by selecting tea or selecting the option to enter more coins.
+
+The task world explicitly captures that users can, for example, insert five euros:
+The step will not be taken.
+Also, it implicitly captures that the user can get his money back.
+This can be implemented by a button on the vending machine which sends the \emph{clear} event to the task.
+Next to an input field in a graphical user interface,
+a coin insertion component is another way to present the concept of an editor to an end user.
+
+
+% \begin{TASK}
+%   fill Euro >>= \ n.
+%     if n == 2 then
+%         edit "tea"
+%       <?>
+%         fill Euro >>= \ m.
+%         if m == 1 then
+%           edit "coffee"
+%         else
+%           fail
+%     else
+%       fail
+% \end{TASK}
