@@ -35,10 +35,11 @@ a valued editor $\Edit e$ and an unvalued editor $\Fill \beta$.
 Some examples:
 \begin{itemize}
   \item $\Edit 2$ is a valued editor with value $2$.
-  \item $\Fill \String$ is an unvalued editor.
-    The user can enter something of type $\String$.
+  \item $\Fill \String$ is an unvalued editor,
+    asking the user to enter some string.
   \item $\Edit ((\lambda x . x)\ 5)$ is a valued editor which,
-    after evaluation, will contain the value $5$.
+    after normalisation, will contain the value $5$.
+    (We will discuss normalisation in \autoref{sec:normalisation}.)
 \end{itemize}
 
 Valued editors contain an expression $e$.
@@ -132,7 +133,7 @@ Note that the conditions to the right of the rules take care of typing.
 They make sure the type of the entered value and the type of the editor are the same.
 
 
-\subsection{Interactive session}
+\subsection{Example: an interactive session}
 
 Now, we can make a dull but interactive example of a workflow.
 How could an interactive session with the user look like when we start with a simple workflow with one editor,
