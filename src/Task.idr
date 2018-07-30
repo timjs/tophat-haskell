@@ -38,7 +38,7 @@ data Task : Universe.Ty -> Type where
   Fail  : Task a
   -- Share interaction
   Get   : Task StateTy
-  Put   : (x : typeOf StateTy) -> Task UnitTy
+  Put   : (x : typeOf StateTy) -> Task (BasicTy UnitTy)
 
 delabel : Task a -> Task a
 delabel (Label _ t) = delabel t
@@ -64,7 +64,7 @@ keeper _         = False
 pure : (typeOf a) -> Task a
 pure = Edit . Just
 
-unit : Task UnitTy
+unit : Task (BasicTy UnitTy)
 unit = pure ()
 
 (>>=) : Show (typeOf a) => Task a -> (typeOf a -> Task b) -> Task b

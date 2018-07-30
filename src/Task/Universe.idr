@@ -12,22 +12,34 @@ import Helpers
 namespace Basic
 
   data Ty
-    = BoolTy
+    = UnitTy
+    | BoolTy
     | IntTy
     | StringTy
 
   typeOf : Ty -> Type
+  typeOf UnitTy   = ()
   typeOf BoolTy   = Bool
   typeOf IntTy    = Int
   typeOf StringTy = String
 
   defaultOf : (ty : Ty) -> typeOf ty
+  defaultOf UnitTy   = ()
   defaultOf BoolTy   = False
   defaultOf IntTy    = 0
   defaultOf StringTy = ""
 
 
   -- Lemmas --
+
+  Uninhabited (UnitTy = BoolTy) where
+    uninhabited Refl impossible
+
+  Uninhabited (UnitTy = IntTy) where
+    uninhabited Refl impossible
+
+  Uninhabited (UnitTy = StringTy) where
+    uninhabited Refl impossible
 
   Uninhabited (BoolTy = IntTy) where
     uninhabited Refl impossible
@@ -42,9 +54,16 @@ namespace Basic
   -- Decidablility --
 
   DecEq Ty where
+    decEq UnitTy   UnitTy   = Yes Refl
     decEq BoolTy   BoolTy   = Yes Refl
     decEq IntTy    IntTy    = Yes Refl
     decEq StringTy StringTy = Yes Refl
+    decEq UnitTy   BoolTy   = No absurd
+    decEq BoolTy   UnitTy   = No (negEqSym absurd)
+    decEq UnitTy   IntTy    = No absurd
+    decEq IntTy    BoolTy   = No (negEqSym absurd)
+    decEq UnitTy   StringTy = No absurd
+    decEq StringTy UnitTy   = No (negEqSym absurd)
     decEq BoolTy   IntTy    = No absurd
     decEq IntTy    BoolTy   = No (negEqSym absurd)
     decEq BoolTy   StringTy = No absurd
@@ -56,6 +75,7 @@ namespace Basic
   -- Parsing --
 
   parse : String -> Maybe (b : Ty ** typeOf b)
+  parse "()"                                                        = Just $ (UnitTy ** ())
   parse "True"                                                      = Just $ (BoolTy ** True)
   parse "False"                                                     = Just $ (BoolTy ** False)
   parse s   with (the (Maybe Int) (parseInteger s))
@@ -68,35 +88,23 @@ namespace Basic
 -- Full universe ---------------------------------------------------------------
 
 data Ty
-  = UnitTy
-  | PairTy Universe.Ty Universe.Ty
+  = PairTy Universe.Ty Universe.Ty
   | ListTy Universe.Ty
   | BasicTy Basic.Ty
 
 ||| Conversion of Task types to Idris types.
 typeOf : Universe.Ty -> Type
-typeOf UnitTy       = ()
 typeOf (PairTy x y) = ( typeOf x, typeOf y )
 typeOf (ListTy x)   = List (typeOf x)
 typeOf (BasicTy b)  = Basic.typeOf b
 
 defaultOf : (ty : Universe.Ty) -> Universe.typeOf ty
-defaultOf UnitTy       = ()
 defaultOf (PairTy x y) = ( defaultOf x, defaultOf y )
 defaultOf (ListTy x)   = []
 defaultOf (BasicTy b)  = Basic.defaultOf b
 
 
 -- Lemmas --
-
-Uninhabited (UnitTy = PairTy _ _) where
-  uninhabited Refl impossible
-
-Uninhabited (UnitTy = ListTy _) where
-  uninhabited Refl impossible
-
-Uninhabited (UnitTy = BasicTy _) where
-  uninhabited Refl impossible
 
 Uninhabited (PairTy _ _ = ListTy _) where
   uninhabited Refl impossible
@@ -126,8 +134,6 @@ both_neq contra_x contra_y Refl = contra_x Refl
 -- Decidablility --
 
 DecEq Universe.Ty where
-  decEq UnitTy     UnitTy                                           = Yes Refl
-
   decEq (ListTy a)  (ListTy b)   with (decEq a b)
     decEq (ListTy b)  (ListTy b) | (Yes Refl)                       = Yes Refl
     decEq (ListTy a)  (ListTy b) | (No contra)                      = No (list_neq contra)
@@ -143,13 +149,6 @@ DecEq Universe.Ty where
   decEq (BasicTy a)  (BasicTy b)   with (decEq a b)
     decEq (BasicTy b)  (BasicTy b) | (Yes Refl)                     = Yes Refl
     decEq (BasicTy a)  (BasicTy b) | (No contra)                    = No (basic_neq contra)
-
-  decEq UnitTy       (PairTy _ _)                                   = No absurd
-  decEq (PairTy _ _) UnitTy                                         = No (negEqSym absurd)
-  decEq UnitTy       (ListTy _)                                     = No absurd
-  decEq (ListTy _)   UnitTy                                         = No (negEqSym absurd)
-  decEq UnitTy       (BasicTy _)                                    = No absurd
-  decEq (BasicTy _)  UnitTy                                         = No (negEqSym absurd)
 
   decEq (PairTy _ _) (ListTy _)                                     = No absurd
   decEq (ListTy _)   (PairTy _ _)                                   = No (negEqSym absurd)

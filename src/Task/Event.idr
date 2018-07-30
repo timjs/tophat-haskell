@@ -58,6 +58,7 @@ usage = unlines
   , "    help         : show this message"
   , ""
   , "where values <val> can be:"
+  , "    ()          (Unit)"
   , "    True, False (Booleans)"
   , "    1, 32, -42  (Integers)"
   , "    \"Hello\"   (Strings)"

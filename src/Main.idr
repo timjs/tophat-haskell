@@ -22,7 +22,7 @@ edit = pure
 ask : Task (BasicTy IntTy)
 ask = Edit Nothing
 
-modify : (List Int -> List Int) -> Task UnitTy
+modify : (List Int -> List Int) -> Task (BasicTy UnitTy)
 modify f = do
   xs <- Get
   Put (f xs)
@@ -138,18 +138,18 @@ rep : Nat -> a -> List a -> List a
 rep = Helpers.replace
 
 partial
-editShared : Task UnitTy
+editShared : Task (BasicTy UnitTy)
 editShared =
   repeat <|> quit
 where
-  delete : Nat -> Task UnitTy
+  delete : Nat -> Task (BasicTy UnitTy)
   delete i =
     modify (del i)
-  replace : Nat -> Task UnitTy
+  replace : Nat -> Task (BasicTy UnitTy)
   replace i =
     ask >>? \x =>
     modify (rep i x)
-  change : Task UnitTy
+  change : Task (BasicTy UnitTy)
   change =
     ask >>? \n =>
     let i = the Nat (cast n) in
@@ -158,30 +158,30 @@ where
       delete i <|> replace i
     else
       Fail
-  prepend : Task UnitTy
+  prepend : Task (BasicTy UnitTy)
   prepend =
     ask >>? \x =>
     modify ((::) x)
-  clear : Task UnitTy
+  clear : Task (BasicTy UnitTy)
   clear =
     modify (const [])
-  quit : Task UnitTy
+  quit : Task (BasicTy UnitTy)
   quit = pure ()
 
   partial
-  repeat : Task UnitTy
+  repeat : Task (BasicTy UnitTy)
   repeat = do
     prepend <|> clear <|> change
     editShared
 
--- update : Task UnitTy
+-- update : Task (BasicTy UnitTy)
 -- update =
 --   Get >>= \x =>
 --   edit x >>? \y =>
 --   Put y
 
 -- --FIXME: help!!!
--- update2 : Task UnitTy
+-- update2 : Task (BasicTy UnitTy)
 -- update2 = do
 --   Get >>= \x =>
 --   edit (x+1) >>? \y =>
