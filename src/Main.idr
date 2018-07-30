@@ -213,8 +213,8 @@ auto = do
   x <- edit 0
   if x >= 10 then pure "large" else Fail
 
-actions : Task (BasicTy StringTy)
-actions =
+events : Task (BasicTy StringTy)
+events =
   edit 0 >>? \x =>
   (pure "first" <|> pure "second first" <|> pure "second second")
 
@@ -264,7 +264,7 @@ get = do
 loop : Show (typeOf a) => Task a -> State -> IO ()
 loop task state = do
   putStrLn $ ui task state
-  putStrLn $ "Possibilities: " ++ show (actions task state)
+  putStrLn $ "Possibilities: " ++ show (events task state)
   event <- get
   let ( nextTask, nextState ) = handle task event state
   loop nextTask nextState
