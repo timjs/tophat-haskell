@@ -33,7 +33,7 @@ data Task : Universe.Ty -> Type where
   Watch : Task StateTy
   Edit  : (val : Maybe (typeOf a)) -> Task a
   -- Labeling
-  Label : Show (typeOf a) => String -> (this : Task a) -> Task a
+  Label : Show (typeOf a) => Label -> (this : Task a) -> Task a
   -- Failure
   Fail  : Task a
   -- Share interaction
@@ -45,6 +45,9 @@ data Task : Universe.Ty -> Type where
 
 pure : (typeOf a) -> Task a
 pure = Edit . Just
+
+unit : Task UnitTy
+unit = pure ()
 
 (>>=) : Show (typeOf a) => Task a -> (typeOf a -> Task b) -> Task b
 (>>=) = Then
@@ -66,11 +69,8 @@ infixr 2 <|>
 (<|>) = One
 
 infixr 4 #
-(#) : Show (typeOf a) => String -> Task a -> Task a
+(#) : Show (typeOf a) => Label -> Task a -> Task a
 (#) = Label
-
-unit : Task UnitTy
-unit = pure ()
 
 -- infixl 1 >>*
 -- (>>*) : Show (typeOf a) => Task a -> List (typeOf a -> (Bool, Task b)) -> Task b
@@ -100,10 +100,6 @@ unit = pure ()
 
 -- Showing ---------------------------------------------------------------------
 
-[editor_value] Show a => Show (Maybe a) where
-  show Nothing  = "<no value>"
-  show (Just x) = show x
-
 ui : Show (typeOf a) => Task a -> State -> String
 ui (Fail)           _ = "↯"
 ui (Then this cont) s = ui this s ++ " ▶…"
@@ -128,6 +124,7 @@ value (Watch)          s = Just s
 value (All left right) s = MkPair <$> value left s <*> (value right s)
 --NOTE: Uses semigroup instance of Maybe here
 value (Any left right) s = value left s <+> value right s
+value (Label _ this)   s = value this s
 value (Get)            s = Just s
 value (Put _)          _ = Just ()
 -- The rest never has a value because:
