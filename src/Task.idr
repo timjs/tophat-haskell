@@ -79,13 +79,13 @@ infixr 3 <&>
 (<&>) : Show (typeOf a) => Show (typeOf b) => Task a -> Task b -> Task (PairTy a b)
 (<&>) = All
 
-infixr 2 <?>
-(<?>) : Show (typeOf a) => Task a -> Task a -> Task a
-(<?>) = Any
-
 infixr 2 <|>
 (<|>) : Show (typeOf a) => Task a -> Task a -> Task a
-(<|>) = One
+(<|>) = Any
+
+infixr 2 <?>
+(<?>) : Show (typeOf a) => Task a -> Task a -> Task a
+(<?>) = One
 
 infixr 4 #
 (#) : Show (typeOf a) => Label -> Task a -> Task a
