@@ -57,7 +57,7 @@ Only when referring to operators in general we will use $\star$.
 
 \begin{grammar}
   Values
-    & v &\mid& \lambda x.\ e  & – abstractions \\
+    & v &::= & \lambda x.\ e  & – abstractions \\
     &   &\mid& c              & – constants \\
     &   &\mid& t              & – tasks \\
 \end{grammar}
@@ -70,8 +70,9 @@ Most important, \emph{tasks are values}.
 \begin{grammar}
   Types
     & \tau &::= & \tau_1 \to \tau_2 & – abstractions \\
-    &      &\mid& \beta             & – basic types \\
+    &      &\mid& \beta             & – basics \\
     &      &\mid& \Task \tau        & – tasks \\
+  Basics
     &\beta &::= & \Bool             & – booleans \\
     &      &\mid& \Int              & – integers \\
     &      &\mid& \String           & – strings \\
