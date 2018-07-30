@@ -253,12 +253,6 @@ handle Watch (ToHere (Change {b} val_new)) state with (decEq b StateTy)
   handle Watch (ToHere (Change val_new)) _       | Yes Refl = ( Watch, val_new )
   handle Watch _ state                           | No _     = ( Watch, state )
 -- Pass to this --
-handle (Next this cont) event state =
-  -- Pass the event to this and normalise
-  let
-    ( this_new, state_new ) = handle this event state
-  in
-  normalise (Next this_new cont) state_new
 handle (Then this cont) event state =
   -- Pass the event to this and normalise
   let
@@ -307,6 +301,12 @@ handle task@(Next this cont) (ToHere (Continue (Just label))) state =
   case value this state of
     Just v  => handle (cont v) (ToHere (Pick label)) state
     Nothing => ( task, state )
+handle (Next this cont) event state =
+  -- Pass the event to this and normalise
+  let
+    ( this_new, state_new ) = handle this event state
+  in
+  normalise (Next this_new cont) state_new
 -- Label
 handle (Label l this) event state with ( keeper this )
   | True =
@@ -316,15 +316,10 @@ handle (Label l this) event state with ( keeper this )
       ( Label l this_new, state_new )
   | False = handle this event state
 -- Rest
-handle (Fail) _ state =
-  -- Evaluation continues indefinitely
-  ( Fail, state )
-handle (Get) _ state =
-  -- This case can't happen, it is already evaluated by `normalise`
-  ( Get, state )
-handle (Put x) _ state =
-  -- This case can't happen, it is already evaluated by `normalise`
-  ( Put x, state )
+handle task _ state =
+  -- Case `Fail`: Evaluation continues indefinitely
+  -- Cases `Get` and `Put`: This case can't happen, it is already evaluated by `normalise`
+  ( task, state )
 
 init : Task a -> ( Task a, State )
 init = flip normalise []
