@@ -61,7 +61,7 @@ namespace Basic
     decEq UnitTy   BoolTy   = No absurd
     decEq BoolTy   UnitTy   = No (negEqSym absurd)
     decEq UnitTy   IntTy    = No absurd
-    decEq IntTy    BoolTy   = No (negEqSym absurd)
+    decEq IntTy    UnitTy   = No (negEqSym absurd)
     decEq UnitTy   StringTy = No absurd
     decEq StringTy UnitTy   = No (negEqSym absurd)
     decEq BoolTy   IntTy    = No absurd
