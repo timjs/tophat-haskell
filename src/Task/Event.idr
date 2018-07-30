@@ -14,13 +14,34 @@ Label : Type
 Label = String
 
 
+-- Paths -----------------------------------------------------------------------
+
+namespace Path
+
+  data Path
+    = GoLeft Path
+    | GoHere
+    | GoRight Path
+
+  Show Path where
+    show (GoLeft p)  = "l " ++ show p
+    show GoHere      = ""
+    show (GoRight p) = "r " ++ show p
+
+  parse : List String -> Either String Path
+  parse ("l" :: rest) = map GoLeft $ parse rest
+  parse []            = pure GoHere
+  parse ("r" :: rest) = map GoRight $ parse rest
+  parse other         = throw $ "!! '" ++ unwords other ++ "' is not a valid path, type 'help' for more info"
+
+
 -- Events ----------------------------------------------------------------------
 
-data Action : Type where
-  Change   : Universe.typeOf b -> Action
-  Clear    : Action
-  Pick     : Label -> Action
-  Continue : Maybe Label -> Action
+data Action
+  = Change (Universe.typeOf b)
+  | Clear
+  | Pick Path
+  | Continue (Maybe Path)
 
 data Event
   = ToLeft Event
@@ -33,9 +54,9 @@ data Event
 Show Action where
   show (Change _)          = "change <val>"
   show (Clear)             = "clear"
-  show (Pick l)            = "pick " ++ l
+  show (Pick p)            = "pick " ++ show p
   show (Continue Nothing)  = "cont"
-  show (Continue (Just l)) = "cont " ++ l
+  show (Continue (Just p)) = "cont " ++ show p
 
 Show Event where
   show (ToLeft e)  = "l " ++ show e
@@ -50,9 +71,9 @@ usage = unlines
   [ ":: Possible events are:"
   , "    change <val> : change current editor to <val> "
   , "    clear        : clear current editor"
-  , "    pick <label> : choose amongst the possible options"
+  , "    pick <path>  : choose amongst the possible options"
   , "    cont         : continue with the next task"
-  , "    cont <label> : continue with one of possible options"
+  , "    cont <path>  : continue with one of possible options"
   , "    l <event>    : send <event> to the left task"
   , "    r <event>    : send <event> to the right task"
   , "    help         : show this message"
@@ -69,9 +90,9 @@ parse ["change", val] with (Universe.Basic.parse val)
   parse ["change", val] | Nothing          = throw $ "!! Error parsing value '" ++ val ++ "'"
   parse ["change", val] | (Just (ty ** v)) = pure $ ToHere $ Change {b = BasicTy ty} v
 parse ["clear"]                            = pure $ ToHere $ Clear
-parse ["pick", label]                      = pure $ ToHere $ Pick label
+parse ("pick" :: rest)                     = map (ToHere . Pick) $ Path.parse rest
 parse ["cont"]                             = pure $ ToHere $ Continue Nothing
-parse ["cont", label]                      = pure $ ToHere $ Continue (Just label)
+parse ("cont" :: rest)                     = map (ToHere . Continue . Just) $ Path.parse rest
 parse ("l" :: rest)                        = map ToLeft $ parse rest
 parse ("r" :: rest)                        = map ToRight $ parse rest
 parse ["help"]                             = throw usage

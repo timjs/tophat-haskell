@@ -41,14 +41,17 @@ data Task : Universe.Ty -> Type where
   Get   : Task StateTy
   Put   : (x : typeOf StateTy) -> Task (BasicTy UnitTy)
 
+
+-- Labels --
+
 delabel : Task a -> Task a
 delabel (Label _ t) = delabel t
 delabel t           = t
 
 infix 6 =~, /~
 (=~) : Label -> Task a -> Bool
-(=~) l' (Label l _) = l' == l
-(=~) _ _            = False
+(=~) k (Label l _) = l == l
+(=~) _ _           = False
 
 (/~) : Label -> Task a -> Bool
 (/~) l t = not (l =~ t)
@@ -127,10 +130,12 @@ ui (All left right) s = ui left s ++ "   ⋈   " ++ ui right s
 ui (Any left right) s = ui left s ++ "   ◆   " ++ ui right s
 ui (One left right) s =
   case ( left, right ) of
-    ( Label l _, Label r _ ) => l ++ "   ◇   " ++ r
-    ( Label l _, _         ) => l ++ "   ◇   …"
-    ( _        , Label r _ ) =>     "…   ◇   " ++ r
-    ( _        , _         ) =>     "…   ◇   …"
+    ( Label l _ , Label r _  ) =>      l ++ "   ◇   " ++ r
+    -- ( Label l _ , t@(Or _ _) ) =>      l ++ "   ◇   " ++ show t
+    -- ( t@(Or _ _), Label r _  ) => show t ++ "   ◇   " ++ r
+    ( Label l _ , _          ) =>      l ++ "   ◇   …"
+    ( _         , Label r _  ) =>          "…   ◇   " ++ r
+    ( _         , _          ) =>          "…   ◇   …"
 ui (Fail)           _ = "↯"
 ui (Then this cont) s = ui this s ++ " ▶…"
 ui (Next this cont) s = ui this s ++ " ▷…"
@@ -156,16 +161,14 @@ value (Put _)          _ = Just ()
 --   * `Then` transforms values to another type
 value _                _ = Nothing
 
-mutual
-  labels : Task a -> List Label
-  labels (Label l task)   = l :: labels task
-  labels (One left right) = choices left ++ choices right
-  labels _                = []
-
-  choices : Task a -> List Label
-  choices task with ( delabel task )
-    | Fail  = []
-    | _     = labels task
+choices : Task a -> List Path
+choices (One left right) =
+  case ( delabel left, delabel right ) of
+    ( Fail, Fail  ) => []
+    ( left, Fail  ) => map GoLeft (GoHere :: choices left)
+    ( Fail, right ) => map GoRight (GoHere :: choices right)
+    ( left, right ) => map GoLeft (GoHere :: choices left) ++ map GoRight (GoHere :: choices right)
+choices _           = []
 
 events : Task a -> State -> List Event
 events (Edit {a} val)   _ = [ ToHere (Change (Universe.defaultOf a)), ToHere Clear ]
@@ -185,10 +188,10 @@ events (Next this next) s =
   map ToHere here ++ events this s
   where
     go : Task a -> List Action
-    go task = case delabel task of
-      One _ _ => map (Continue . Just) $ choices task
-      Fail    => []
-      _       => [ Continue Nothing ]
+    go task with ( delabel task )
+      | t@(One _ _) = map (Continue . Just) $ choices t
+      | Fail        = []
+      | _           = [ Continue Nothing ]
 events (Label _ this)   s = events this s
 events (Get)            _ = []
 events (Put x)          _ = []
@@ -291,14 +294,15 @@ handle (Any left right) (ToRight event) state =
   in
   ( Any left right_new, state_new )
 -- Interact
-handle (One left right) (ToHere (Pick label)) state =
-  if label =~ left then
-    normalise left state
-  else if label =~ right then
-    normalise right state
-  else
-    -- Stay
-    ( One left right, state )
+handle (One left _) (ToHere (Pick (GoLeft p))) state =
+  -- Go left
+  handle left (ToHere (Pick p)) state
+handle (One _ right) (ToHere (Pick (GoRight p))) state =
+  -- Go right
+  handle right (ToHere (Pick p)) state
+handle (One left right) (ToHere (Pick GoHere)) state =
+  -- Go here
+  ( One left right, state )
 handle task@(Next this cont) (ToHere (Continue Nothing)) state =
   -- When pressed continue rewrite to an internal step
   normalise (Then this cont) state
