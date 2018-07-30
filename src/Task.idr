@@ -125,7 +125,12 @@ ui (Edit Nothing)   _ = "□(_)"
 ui (Watch)          s = "■(" ++ show s ++ ")"
 ui (All left right) s = ui left s ++ "   ⋈   " ++ ui right s
 ui (Any left right) s = ui left s ++ "   ◆   " ++ ui right s
-ui (One left right) s = "…   ◇   …"
+ui (One left right) s =
+  case ( left, right ) of
+    ( Label l _, Label r _ ) => l ++ "   ◇   " ++ r
+    ( Label l _, _         ) => l ++ "   ◇   …"
+    ( _        , Label r _ ) =>     "…   ◇   " ++ r
+    ( _        , _         ) =>     "…   ◇   …"
 ui (Fail)           _ = "↯"
 ui (Then this cont) s = ui this s ++ " ▶…"
 ui (Next this cont) s = ui this s ++ " ▷…"
