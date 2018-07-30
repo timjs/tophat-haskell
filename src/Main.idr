@@ -73,11 +73,6 @@ oneStep' =
   edit 0 >>? \x =>
   inc x
 
--- oneStep'' : Task (BasicTy IntTy)
--- oneStep'' =
---   edit 0 >>*
---     [ \x => ( True, inc x ) ]
-
 twoSteps : Task (BasicTy IntTy)
 twoSteps = do
   x <- edit 1
@@ -110,11 +105,6 @@ parallelStep' =
 -- Normalisation --
 --
 -- FIXME: should these automatically simplify?
-
-stablise : Int -> Task (BasicTy IntTy)
-stablise x = do
-  edit x >>? \y =>
-  pure y
 
 pair : Task (PairTy (BasicTy IntTy) (BasicTy IntTy))
 pair = pure 3 <&> pure 8
@@ -206,7 +196,16 @@ choice3 : Task (BasicTy IntTy)
 choice3 = choice <|> edit 3
 
 choice1 : Task (BasicTy IntTy)
-choice1 = edit 2 <|> Fail
+choice1 = Fail <|> edit 2
+
+pick : Task (BasicTy IntTy)
+pick = "Left" # edit 1 <?> "Right" # edit 2
+
+pick3 : Task (BasicTy IntTy)
+pick3 = "Up" # pick <?> "Down" # edit 3
+
+pick1 : Task (BasicTy IntTy)
+pick1 = "Fail" # Fail <?> "Cont" # edit 2
 
 auto : Task (BasicTy StringTy)
 auto = do
