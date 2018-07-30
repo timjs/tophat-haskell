@@ -23,20 +23,21 @@ State = typeOf StateTy
 -- Tasks --
 
 data Task : Universe.Ty -> Type where
-  -- Primitive combinators
+  -- Core
+  Edit  : (val : Maybe (typeOf a)) -> Task a
+  Watch : Task StateTy
+  -- Parallel
+  All   : Show (typeOf a) => Show (typeOf b) => (left : Task a) -> (right : Task b) -> Task (PairTy a b)
+  -- Choice
+  Any   : Show (typeOf a) => (left : Task a) -> (right : Task a) -> Task a
+  One   : Show (typeOf a) => (left : Task a) -> (right : Task a) -> Task a
+  Fail  : Task a
+  -- Sequence
   Then  : Show (typeOf a) => (this : Task a) -> (next : typeOf a -> Task b) -> Task b
   Next  : Show (typeOf a) => (this : Task a) -> (next : typeOf a -> Task b) -> Task b
-  All   : Show (typeOf a) => Show (typeOf b) => (left : Task a) -> (right : Task b) -> Task (PairTy a b)
-  One   : Show (typeOf a) => (left : Task a) -> (right : Task a) -> Task a
-  Any   : Show (typeOf a) => (left : Task a) -> (right : Task a) -> Task a
-  -- User interaction
-  Watch : Task StateTy
-  Edit  : (val : Maybe (typeOf a)) -> Task a
-  -- Labeling
+  -- Labels
   Label : Show (typeOf a) => Label -> (this : Task a) -> Task a
-  -- Failure
-  Fail  : Task a
-  -- Share interaction
+  -- State
   Get   : Task StateTy
   Put   : (x : typeOf StateTy) -> Task (BasicTy UnitTy)
 
@@ -119,16 +120,15 @@ infixr 4 #
 -- Showing ---------------------------------------------------------------------
 
 ui : Show (typeOf a) => Task a -> State -> String
-ui (Fail)           _ = "↯"
-ui (Then this cont) s = ui this s ++ " ▶…"
-ui (Next this cont) s = ui this s ++ " ▷…"
-ui (All left right) s = ui left s ++ "   ×   " ++ ui right s
---FIXME: should we present UI's to the user for every or branch?
-ui (One left right) s = ui left s ++ "   ◇   " ++ ui right s
-ui (Any left right) s = ui left s ++ "   ◆   " ++ ui right s
 ui (Edit (Just x))  _ = "□(" ++ show x ++")"
 ui (Edit Nothing)   _ = "□(_)"
 ui (Watch)          s = "■(" ++ show s ++ ")"
+ui (All left right) s = ui left s ++ "   ⋈   " ++ ui right s
+ui (Any left right) s = ui left s ++ "   ◆   " ++ ui right s
+ui (One left right) s = "…   ◇   …"
+ui (Fail)           _ = "↯"
+ui (Then this cont) s = ui this s ++ " ▶…"
+ui (Next this cont) s = ui this s ++ " ▷…"
 ui (Label _ this)   s = ui this s
 ui (Get)            _ = "↓"
 ui (Put x)          _ = "↑(" ++ show x ++ ")"
@@ -163,6 +163,12 @@ mutual
     | _     = labels task
 
 events : Task a -> State -> List Event
+events (Edit {a} val)   _ = [ ToHere (Change (Universe.defaultOf a)), ToHere Clear ]
+events (Watch)          _ = [ ToHere (Change (Universe.defaultOf StateTy)) ]
+events (All left right) s = map ToLeft (events left s) ++ map ToRight (events right s)
+events (Any left right) s = map ToLeft (events left s) ++ map ToRight (events right s)
+events (One left right) s = map (ToHere . Pick) $ choices left ++ choices right
+events (Fail)           _ = []
 events (Then this next) s = events this s
 events (Next this next) s =
   let
@@ -178,18 +184,12 @@ events (Next this next) s =
       One _ _ => map (Continue . Just) $ choices task
       Fail    => []
       _       => [ Continue Nothing ]
-events (All left right) s = map ToLeft (events left s) ++ map ToRight (events right s)
-events (Any left right) s = map ToLeft (events left s) ++ map ToRight (events right s)
-events (One left right) s = map (ToHere . Pick) $ choices left ++ choices right
-events (Edit {a} val)   _ = [ ToHere (Change (Universe.defaultOf a)), ToHere Clear ]
-events (Watch)          _ = [ ToHere (Change (Universe.defaultOf StateTy)) ]
-events (Fail)           _ = []
 events (Label _ this)   s = events this s
 events (Get)            _ = []
 events (Put x)          _ = []
 
 normalise : Task a -> State -> ( Task a, State )
--- Step
+-- Step --
 normalise task@(Then this cont) state =
   --FIXME: normalise before???
   -- let
@@ -202,12 +202,7 @@ normalise task@(Then this cont) state =
         next => normalise next state
     Nothing =>
       ( task, state )
--- Evaluate
-normalise (Next this cont) state =
-  let
-    ( this_new, state_new ) = normalise this state
-  in
-  ( Next this_new cont, state_new )
+-- Evaluate --
 normalise (All left right) state =
   let
     ( left_new, state_new )    = normalise left state
@@ -225,48 +220,53 @@ normalise (Any left right) state =
       case value right_new state_newer of
         Just _  => ( right_new, state_newer )
         Nothing => ( Any left_new right_new, state_newer )
--- Labeling
-normalise (Label l this) state =
+normalise (Next this cont) state =
   let
     ( this_new, state_new ) = normalise this state
   in
-  ( Label l this_new, state_new )
--- State
+  ( Next this_new cont, state_new )
+-- Label --
+normalise (Label l this) state with ( keeper this )
+  | True =
+      let
+        ( this_new, state_new ) = normalise this state
+      in
+      ( Label l this_new, state_new )
+  | False = normalise this state
+-- State --
 normalise (Get) state =
   ( pure state, state )
 normalise (Put x) state =
   ( unit, x )
--- Values
+-- Values --
 normalise task state =
   ( task, state )
 
 handle : Task a -> Event -> State -> ( Task a, State )
-handle task@(Next this cont) (ToHere (Continue mp)) state =
-  -- If we pressed Continue...
-  case value this state of
-    -- ...and we have a value: we get on with the continuation,
-    Just v =>
-      case mp of
-        --FIXME: prevent stepping to `Fail`???
-        -- and automatically pick if we recieved a path
-        Just label => handle (cont v) (ToHere (Pick label)) state
-        -- or just continue otherwise
-        Nothing   => normalise (cont v) state
-    -- ...without a value: we stay put and have to wait for a value to appear.
-    Nothing => ( task, state )
+-- Edit --
+handle (Edit _) (ToHere Clear) state =
+  ( Edit Nothing, state )
+handle (Edit {a} val) (ToHere (Change {b} val_new)) state with (decEq b a)
+  handle (Edit _) (ToHere (Change val_new)) state         | Yes Refl = ( Edit (Just val_new), state )
+  handle (Edit val) _ state                               | No _     = ( Edit val, state )
+handle Watch (ToHere (Change {b} val_new)) state with (decEq b StateTy)
+  handle Watch (ToHere (Change val_new)) _       | Yes Refl = ( Watch, val_new )
+  handle Watch _ state                           | No _     = ( Watch, state )
+-- Pass to this --
 handle (Next this cont) event state =
-  -- Pass the event to this
+  -- Pass the event to this and normalise
   let
     ( this_new, state_new ) = handle this event state
   in
-  ( Next this_new cont, state_new )
+  normalise (Next this_new cont) state_new
 handle (Then this cont) event state =
   -- Pass the event to this and normalise
   let
     ( this_new, state_new ) = handle this event state
   in
   normalise (Then this_new cont) state_new
---FIXME: normalise after each event handling of All and One???
+-- Pass to left or right --
+--FIXME: normalise after each event handling of All, Any and One???
 handle (All left right) (ToLeft event) state =
   -- Pass the event to left
   let
@@ -291,6 +291,7 @@ handle (Any left right) (ToRight event) state =
     ( right_new, state_new ) = handle right event state
   in
   ( Any left right_new, state_new )
+-- Interact
 handle (One left right) (ToHere (Pick label)) state =
   if label =~ left then
     normalise left state
@@ -299,15 +300,20 @@ handle (One left right) (ToHere (Pick label)) state =
   else
     -- Stay
     ( One left right, state )
-handle (Edit _) (ToHere Clear) state =
-  ( Edit Nothing, state )
-handle (Edit {a} val) (ToHere (Change {b} val_new)) state with (decEq b a)
-  handle (Edit _) (ToHere (Change val_new)) state         | Yes Refl = ( Edit (Just val_new), state )
-  handle (Edit val) _ state                               | No _     = ( Edit val, state )
-handle Watch (ToHere (Change {b} val_new)) state with (decEq b StateTy)
-  handle Watch (ToHere (Change val_new)) _       | Yes Refl = ( Watch, val_new )
-  handle Watch _ state                           | No _     = ( Watch, state )
--- Labeling
+handle task@(Next this cont) (ToHere (Continue mp)) state =
+  -- If we pressed Continue...
+  case value this state of
+    -- ...and we have a value: we get on with the continuation,
+    Just v =>
+      case mp of
+        --FIXME: prevent stepping to `Fail`???
+        -- and automatically pick if we recieved a path
+        Just label => handle (cont v) (ToHere (Pick label)) state
+        -- or just continue otherwise
+        Nothing   => normalise (cont v) state
+    -- ...without a value: we stay put and have to wait for a value to appear.
+    Nothing => ( task, state )
+-- Label
 handle (Label l this) event state with ( keeper this )
   | True =
       let
@@ -315,6 +321,7 @@ handle (Label l this) event state with ( keeper this )
       in
       ( Label l this_new, state_new )
   | False = handle this event state
+-- Rest
 handle (Fail) _ state =
   -- Evaluation continues indefinitely
   ( Fail, state )
