@@ -125,7 +125,7 @@ ui (Put x)          _ = "↑(" ++ show x ++ ")"
 value : Task a -> State -> Maybe (typeOf a)
 value (Edit val)       _ = val
 value (Watch)          s = Just s
-value (All left right) s = Just (!(value left s), !(value right s))
+value (All left right) s = MkPair <$> value left s <*> (value right s)
 --NOTE: Uses semigroup instance of Maybe here
 value (Any left right) s = value left s <+> value right s
 value (Get)            s = Just s
