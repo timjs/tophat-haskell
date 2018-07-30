@@ -128,14 +128,13 @@ ui (Edit Nothing)   _ = "□(_)"
 ui (Watch)          s = "■(" ++ show s ++ ")"
 ui (All left right) s = ui left s ++ "   ⋈   " ++ ui right s
 ui (Any left right) s = ui left s ++ "   ◆   " ++ ui right s
-ui (One left right) s =
-  case ( left, right ) of
-    ( Label l _ , Label r _  ) =>      l ++ "   ◇   " ++ r
-    -- ( Label l _ , t@(Or _ _) ) =>      l ++ "   ◇   " ++ show t
-    -- ( t@(Or _ _), Label r _  ) => show t ++ "   ◇   " ++ r
-    ( Label l _ , _          ) =>      l ++ "   ◇   …"
-    ( _         , Label r _  ) =>          "…   ◇   " ++ r
-    ( _         , _          ) =>          "…   ◇   …"
+ui (One left right) s with ( left, right )
+  | ( Label l _ , Label r _  ) =      l ++ "   ◇   " ++ r
+  -- | ( Label l _ , t@(Or _ _) ) =      l ++ "   ◇   " ++ show t
+  -- | ( t@(Or _ _), Label r _  ) = show t ++ "   ◇   " ++ r
+  | ( Label l _ , _          ) =      l ++ "   ◇   …"
+  | ( _         , Label r _  ) =          "…   ◇   " ++ r
+  | ( _         , _          ) =          "…   ◇   …"
 ui (Fail)           _ = "↯"
 ui (Then this cont) s = ui this s ++ " ▶…"
 ui (Next this cont) s = ui this s ++ " ▷…"
@@ -163,6 +162,7 @@ value _                _ = Nothing
 
 choices : Task a -> List Path
 choices (One left right) =
+  --XXX: No with-block possible?
   case ( delabel left, delabel right ) of
     ( Fail, Fail  ) => []
     ( left, Fail  ) => map GoLeft (GoHere :: choices left)

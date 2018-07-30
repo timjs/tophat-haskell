@@ -87,14 +87,14 @@ usage = unlines
 
 parse : List String -> Either String Event
 parse ["change", val] with (Universe.Basic.parse val)
-  parse ["change", val] | Nothing          = throw $ "!! Error parsing value '" ++ val ++ "'"
-  parse ["change", val] | (Just (ty ** v)) = pure $ ToHere $ Change {b = BasicTy ty} v
-parse ["clear"]                            = pure $ ToHere $ Clear
-parse ("pick" :: rest)                     = map (ToHere . Pick) $ Path.parse rest
-parse ["cont"]                             = pure $ ToHere $ Continue Nothing
-parse ("cont" :: rest)                     = map (ToHere . Continue . Just) $ Path.parse rest
-parse ("l" :: rest)                        = map ToLeft $ parse rest
-parse ("r" :: rest)                        = map ToRight $ parse rest
-parse ["help"]                             = throw usage
-parse []                                   = throw ""
-parse other                                = throw $ "!! '" ++ unwords other ++ "' is not a valid command, type 'help' for more info"
+  | Nothing            = throw $ "!! Error parsing value '" ++ val ++ "'"
+  | (Just (ty ** v))   = pure $ ToHere $ Change {b = BasicTy ty} v
+parse ["clear"]        = pure $ ToHere $ Clear
+parse ("pick" :: rest) = map (ToHere . Pick) $ Path.parse rest
+parse ["cont"]         = pure $ ToHere $ Continue Nothing
+parse ("cont" :: rest) = map (ToHere . Continue . Just) $ Path.parse rest
+parse ("l" :: rest)    = map ToLeft $ parse rest
+parse ("r" :: rest)    = map ToRight $ parse rest
+parse ["help"]         = throw usage
+parse []               = throw ""
+parse other            = throw $ "!! '" ++ unwords other ++ "' is not a valid command, type 'help' for more info"
