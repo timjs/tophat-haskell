@@ -30,15 +30,12 @@ data Event
 
 -- Showing ---------------------------------------------------------------------
 
-unquote : String -> String
-unquote s = substr 1 (pred $ pred $ length s) s
-
 Show Action where
   show (Change _)          = "change <val>"
   show (Clear)             = "clear"
-  show (Pick l)            = "pick " ++ unquote (show l)
+  show (Pick l)            = "pick " ++ l
   show (Continue Nothing)  = "cont"
-  show (Continue (Just l)) = "cont " ++ unquote (show l)
+  show (Continue (Just l)) = "cont " ++ l
 
 Show Event where
   show (ToLeft e)  = "l " ++ show e
