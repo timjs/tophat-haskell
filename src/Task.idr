@@ -300,18 +300,12 @@ handle (One left right) (ToHere (Pick label)) state =
   else
     -- Stay
     ( One left right, state )
-handle task@(Next this cont) (ToHere (Continue mp)) state =
-  -- If we pressed Continue...
+handle task@(Next this cont) (ToHere (Continue Nothing)) state =
+  -- When pressed continue rewrite to an internal step
+  normalise (Then this cont) state
+handle task@(Next this cont) (ToHere (Continue (Just label))) state =
   case value this state of
-    -- ...and we have a value: we get on with the continuation,
-    Just v =>
-      case mp of
-        --FIXME: prevent stepping to `Fail`???
-        -- and automatically pick if we recieved a path
-        Just label => handle (cont v) (ToHere (Pick label)) state
-        -- or just continue otherwise
-        Nothing   => normalise (cont v) state
-    -- ...without a value: we stay put and have to wait for a value to appear.
+    Just v  => handle (cont v) (ToHere (Pick label)) state
     Nothing => ( task, state )
 -- Label
 handle (Label l this) event state with ( keeper this )
