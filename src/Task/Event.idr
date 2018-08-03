@@ -24,9 +24,9 @@ namespace Path
     | GoRight Path
 
   Show Path where
-    show (GoLeft p)  = "l " ++ show p
+    show (GoLeft p)  = " l" ++ show p
     show GoHere      = ""
-    show (GoRight p) = "r " ++ show p
+    show (GoRight p) = " r" ++ show p
 
   parse : List String -> Either String Path
   parse ("l" :: rest) = map GoLeft $ parse rest
@@ -54,9 +54,9 @@ data Event
 Show Action where
   show (Change _)          = "change <val>"
   show (Clear)             = "clear"
-  show (Pick p)            = "pick " ++ show p
+  show (Pick p)            = "pick" ++ show p
   show (Continue Nothing)  = "cont"
-  show (Continue (Just p)) = "cont " ++ show p
+  show (Continue (Just p)) = "cont" ++ show p
 
 Show Event where
   show (ToLeft e)  = "l " ++ show e
