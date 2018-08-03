@@ -189,33 +189,38 @@ parallelWatch = watch Watch
 
 -- Choices --
 
-choice : Task (BasicTy IntTy)
-choice = edit 1 <|> edit 2
+pick1 : Task (BasicTy IntTy)
+pick1 = Fail <|> edit 0
 
-choice3 : Task (BasicTy IntTy)
-choice3 = choice <|> edit 3
-
-choice1 : Task (BasicTy IntTy)
-choice1 = Fail <|> edit 2
-
-pick : Task (BasicTy IntTy)
-pick = "Left" # edit 1 <?> "Right" # edit 2
+pick2 : Task (BasicTy IntTy)
+pick2 = edit 1 <|> edit 2
 
 pick3 : Task (BasicTy IntTy)
-pick3 = "Up" # pick <?> "Down" # edit 3
+pick3 = pick2 <|> edit 3
 
-pick1 : Task (BasicTy IntTy)
-pick1 = "Fail" # Fail <?> "Cont" # edit 2
+pick1' : Task (BasicTy IntTy)
+pick1' = "Fail" # Fail <?> "Cont" # edit 0
+
+pick2' : Task (BasicTy IntTy)
+pick2' = "First" # edit 1 <?> "Second" # edit 2
+
+pick3' : Task (BasicTy IntTy)
+pick3' = pick2' <?> "Third" # edit 3
 
 auto : Task (BasicTy StringTy)
 auto = do
   x <- edit 0
   if x >= 10 then pure "large" else Fail
 
-events : Task (BasicTy StringTy)
+events : Task (BasicTy IntTy)
 events =
   edit 0 >>? \x =>
-  (pure "first" <|> pure "second first" <|> pure "second second")
+  pick3
+
+events' : Task (BasicTy IntTy)
+events' =
+  edit 0 >>? \x =>
+  pick3'
 
 guards : Task (BasicTy StringTy)
 guards =
