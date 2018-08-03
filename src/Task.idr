@@ -319,11 +319,10 @@ handle Watch (ToHere (Change {b} val_new)) state with (decEq b StateTy)
   handle Watch (ToHere (Change val_new)) _       | No _     = throw CouldNotChange
 -- Pass to this --
 handle (Then this cont) event state = do
-  -- Pass the event to this and normalise
+  -- Pass the event to this
   ( this_new, state_new ) <- handle this event state
-  ok $ normalise (Then this_new cont) state_new
+  ok ( Then this_new cont, state_new )
 -- Pass to left or right --
---FIXME: normalise after each event handling of All, Any and One???
 handle (All left right) (ToLeft event) state = do
   -- Pass the event to left
   ( left_new, state_new ) <- handle left event state
@@ -356,7 +355,7 @@ handle (One left right) (ToHere (Pick GoHere)) state =
   ok ( One left right, state )
 handle task@(Next this cont) (ToHere (Continue Nothing)) state =
   -- When pressed continue rewrite to an internal step
-  ok $ normalise (Then this cont) state
+  ok ( Then this cont, state )
 handle task@(Next this cont) (ToHere (Continue (Just l))) state =
   case value this state of
     Just v  =>
@@ -368,9 +367,9 @@ handle task@(Next this cont) (ToHere (Continue (Just l))) state =
         Nothing => throw $ CouldNotFind l
     Nothing => throw CouldNotContinue
 handle (Next this cont) event state = do
-  -- Pass the event to this and normalise
+  -- Pass the event to this
   ( this_new, state_new ) <- handle this event state
-  ok $ normalise (Next this_new cont) state_new
+  ok ( Next this_new cont, state_new )
 -- Label
 handle (Label l this) event state with ( keeper this )
   | True = do
