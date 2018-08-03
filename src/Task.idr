@@ -339,7 +339,13 @@ handle task@(Next this cont) (ToHere (Continue Nothing)) state =
   normalise (Then this cont) state
 handle task@(Next this cont) (ToHere (Continue (Just l))) state =
   case value this state of
-    Just v  => handle (cont v) (ToHere (PickAt l)) state
+    Just v  =>
+      let
+        next = cont v
+      in
+      case find l next of
+        Just p  => handle next (ToHere (Pick p)) state
+        Nothing => ( task, state )
     Nothing => ( task, state )
 handle (Next this cont) event state =
   -- Pass the event to this and normalise
