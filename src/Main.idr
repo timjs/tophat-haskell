@@ -130,7 +130,7 @@ rep = Helpers.replace
 partial
 editShared : Task (BasicTy UnitTy)
 editShared =
-  repeat <|> quit
+  repeat <?> "Quit" # quit
 where
   delete : Nat -> Task (BasicTy UnitTy)
   delete i =
@@ -143,9 +143,9 @@ where
   change =
     ask >>? \n =>
     let i = the Nat (cast n) in
-    Get >>= \xs =>
+    get >>= \xs =>
     if i <= List.length xs then
-      delete i <|> replace i
+      "Delete" # delete i <?> "Replace" # replace i
     else
       Fail
   prepend : Task (BasicTy UnitTy)
@@ -161,7 +161,7 @@ where
   partial
   repeat : Task (BasicTy UnitTy)
   repeat = do
-    prepend <|> clear <|> change
+    "Prepend" # prepend <?> "Clear" # clear <?> "Change" # change
     editShared
 
 -- update : Task (BasicTy UnitTy)
