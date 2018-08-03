@@ -8,6 +8,13 @@ import Task.Event
 
 %hide Language.Reflection.Elab.Tactics.normalise
 
+infix  6 =~, /~
+
+infixr 4 #
+infixl 3 <*>, <&>
+infixr 2 <|>, <?>
+infixl 1 >>=, >>?
+
 
 -- Types -----------------------------------------------------------------------
 
@@ -42,57 +49,42 @@ data Task : Universe.Ty -> Type where
   Put   : (x : typeOf StateTy) -> Task (BasicTy UnitTy)
 
 
--- Labels --
+-- Interfaces ------------------------------------------------------------------
 
-delabel : Task a -> Task a
-delabel (Label _ t) = delabel t
-delabel t           = t
-
-infix 6 =~, /~
-(=~) : Label -> Task a -> Bool
-(=~) k (Label l _) = l == l
-(=~) _ _           = False
-
-(/~) : Label -> Task a -> Bool
-(/~) l t = not (l =~ t)
-
-keeper : Task a -> Bool
-keeper (Edit _)  = True
-keeper (All _ _) = True
-keeper (Fail)    = True
-keeper _         = False
-
-
--- Interface -------------------------------------------------------------------
+-- Monoidal --
 
 pure : (typeOf a) -> Task a
 pure = Edit . Just
 
+(<&>) : Show (typeOf a) => Show (typeOf b) => Task a -> Task b -> Task (PairTy a b)
+(<&>) = All
+
 unit : Task (BasicTy UnitTy)
 unit = pure ()
+
+-- (<*>) : Show (typeOf a) => Show (typeOf b) => Task (FunTy a b) -> Task a -> Task b
+-- (<*>) t1 t2 = (\f,x => f x) <$> t1 <&> t2
+
+
+-- Alternative --
+
+(<|>) : Show (typeOf a) => Task a -> Task a -> Task a
+(<|>) = Any
+
+(<?>) : Show (typeOf a) => Task a -> Task a -> Task a
+(<?>) = One
+
+fail : Task a
+fail = Fail
+
+
+-- Monad --
 
 (>>=) : Show (typeOf a) => Task a -> (typeOf a -> Task b) -> Task b
 (>>=) = Then
 
-infixl 1 >>?
 (>>?) : Show (typeOf a) => Task a -> (typeOf a -> Task b) -> Task b
 (>>?) = Next
-
-infixr 3 <&>
-(<&>) : Show (typeOf a) => Show (typeOf b) => Task a -> Task b -> Task (PairTy a b)
-(<&>) = All
-
-infixr 2 <|>
-(<|>) : Show (typeOf a) => Task a -> Task a -> Task a
-(<|>) = Any
-
-infixr 2 <?>
-(<?>) : Show (typeOf a) => Task a -> Task a -> Task a
-(<?>) = One
-
-infixr 4 #
-(#) : Show (typeOf a) => Label -> Task a -> Task a
-(#) = Label
 
 -- infixl 1 >>*
 -- (>>*) : Show (typeOf a) => Task a -> List (typeOf a -> (Bool, Task b)) -> Task b
@@ -106,18 +98,53 @@ infixr 4 #
 --     (if guard then next else fail) <|> convert fs x
 
 
--- Applicative and Functor --
-
--- (<*>) : Show (typeOf a) => Show (typeOf b) => Task (FUN a b) -> Task a -> Task b
--- (<*>) t1 t2 = do
---   f <- t1
---   x <- t2
---   pure $ f x
+-- Functor --
 
 (<$>) : Show (typeOf a) => (typeOf a -> typeOf b) -> Task a -> Task b
 (<$>) f t = do
   x <- t
   pure $ f x
+
+
+-- Labels --
+
+||| Infix operator to label a task
+(#) : Show (typeOf a) => Label -> Task a -> Task a
+(#) = Label
+
+||| Remove as much labels as possible from a task.
+|||
+||| Usefull to deeply match task constructors while ignoring labels.
+delabel : Task a -> Task a
+delabel (Label _ t) = delabel t
+delabel t           = t
+
+||| Match a label to a task.
+(=~) : Label -> Task a -> Bool
+(=~) k (Label l _) = l == l
+(=~) _ _           = False
+
+||| Negation of `(=~)`.
+(/~) : Label -> Task a -> Bool
+(/~) l t = not (l =~ t)
+
+||| Depth first search for a label on a task tree.
+|||
+||| Returns the path of the found task.
+find : Label -> Task a -> Maybe Path
+find k (Label l this) with ( k == l )
+  | True                = Just GoHere
+  | False               = find k this
+find k (One left right) = map GoLeft (find k left) <|> map GoRight (find k right)
+--FIXME: more cases needed?
+find k _                = Nothing
+
+||| Check if a task constructor keeps its label after stepping or loses it.
+keeper : Task a -> Bool
+keeper (Edit _)  = True
+keeper (All _ _) = True
+keeper (Fail)    = True
+keeper _         = False
 
 
 -- Showing ---------------------------------------------------------------------
@@ -149,8 +176,7 @@ value : Task a -> State -> Maybe (typeOf a)
 value (Edit val)       _ = val
 value (Watch)          s = Just s
 value (All left right) s = MkPair <$> value left s <*> (value right s)
---NOTE: Uses semigroup instance of Maybe here
-value (Any left right) s = value left s <+> value right s
+value (Any left right) s = value left s <|> value right s
 value (Label _ this)   s = value this s
 value (Get)            s = Just s
 value (Put _)          _ = Just ()
