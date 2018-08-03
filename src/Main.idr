@@ -253,7 +253,7 @@ test = do
 
 get : IO Event
 get = do
-  putStr "> "
+  putStr ">> "
   input <- getLine
   case input of
     "quit" => System.exit 0
@@ -270,12 +270,12 @@ loop task state = do
   putStrLn $ ui task state
   putStrLn $ "Possibilities: " ++ show (events task state)
   event <- get
-  case handle task event state of
+  case drive task event state of
     Left error => do
       putStrLn $ "!! " ++ (show error)
       loop task state
-    Right ( nextTask, nextState ) =>
-      loop nextTask nextState
+    Right ( task_new, state_new ) =>
+      loop task_new state_new
 
 run : Show (typeOf a) => Task a -> IO ()
 run t = uncurry loop $ init t

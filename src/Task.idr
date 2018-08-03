@@ -369,5 +369,12 @@ handle task _ state =
   -- Cases `Get` and `Put`: This case can't happen, it is already evaluated by `normalise`
   ok ( task, state )
 
+drive : Task a -> Event -> State -> Either CouldNotHandle ( Task a, State )
+drive task event state =
+  uncurry normalise <$> handle task event state
+-- do
+--   ( task_new, state_new ) <- handle task event state
+--   ok $ normalise task_new state_new
+
 init : Task a -> ( Task a, State )
 init = flip normalise []
