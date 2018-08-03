@@ -1,8 +1,7 @@
 module Task.Event
 
-import Control.Catchable
-
 import Task.Universe
+import Helpers
 
 %default total
 %access public export
@@ -35,7 +34,7 @@ namespace Path
 
   parse : List String -> Either String Path
   parse ("l" :: rest) = map GoLeft $ parse rest
-  parse []            = pure GoHere
+  parse []            = ok GoHere
   parse ("r" :: rest) = map GoRight $ parse rest
   parse other         = throw $ "!! '" ++ unwords other ++ "' is not a valid path, type 'help' for more info"
 
@@ -96,14 +95,14 @@ usage = unlines
 parse : List String -> Either String Event
 parse ["change", val] with (Universe.Basic.parse val)
   | Nothing            = throw $ "!! Error parsing value '" ++ val ++ "'"
-  | (Just (ty ** v))   = pure $ ToHere $ Change {b = BasicTy ty} v
-parse ["clear"]        = pure $ ToHere $ Clear
+  | (Just (ty ** v))   = ok $ ToHere $ Change {b = BasicTy ty} v
+parse ["clear"]        = ok $ ToHere $ Clear
 parse ["pick", label] with ( isLabel label )
-  | True               = pure $ ToHere $ PickAt label
+  | True               = ok $ ToHere $ PickAt label
   | False              = map (ToHere . Pick) $ Path.parse [label]
 parse ("pick" :: rest) = map (ToHere . Pick) $ Path.parse rest
-parse ["cont"]         = pure $ ToHere $ Continue Nothing
-parse [ "cont", label] = pure $ ToHere $  Continue $ Just label
+parse ["cont"]         = ok $ ToHere $ Continue Nothing
+parse [ "cont", label] = ok $ ToHere $  Continue $ Just label
 parse ("l" :: rest)    = map ToLeft $ parse rest
 parse ("r" :: rest)    = map ToRight $ parse rest
 parse ["help"]         = throw usage

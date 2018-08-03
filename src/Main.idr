@@ -270,8 +270,12 @@ loop task state = do
   putStrLn $ ui task state
   putStrLn $ "Possibilities: " ++ show (events task state)
   event <- get
-  let ( nextTask, nextState ) = handle task event state
-  loop nextTask nextState
+  case handle task event state of
+    Left error => do
+      putStrLn $ "!! " ++ (show error)
+      loop task state
+    Right ( nextTask, nextState ) =>
+      loop nextTask nextState
 
 run : Show (typeOf a) => Task a -> IO ()
 run t = uncurry loop $ init t

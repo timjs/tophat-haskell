@@ -2,6 +2,7 @@ module Task
 
 import Task.Universe
 import Task.Event
+import Helpers
 
 %default total
 %access public export
@@ -47,6 +48,21 @@ data Task : Universe.Ty -> Type where
   -- State
   Get   : Task StateTy
   Put   : (x : typeOf StateTy) -> Task (BasicTy UnitTy)
+
+
+-- Errors --
+
+data CouldNotHandle
+  = CouldNotChange
+  | CouldNotFind Label
+  | CouldNotContinue
+  | NotApplicable
+
+Show CouldNotHandle where
+  show (CouldNotChange)   = "Could not change value because types do not match"
+  show (CouldNotFind l)   = "Could not find label `" ++ l ++ "`"
+  show (CouldNotContinue) = "Could not continue"
+  show (NotApplicable)    = "Not applicable event"
 
 
 -- Interfaces ------------------------------------------------------------------
@@ -277,54 +293,44 @@ normalise (Put x) state =
 normalise task state =
   ( task, state )
 
-handle : Task a -> Event -> State -> ( Task a, State )
+handle : Task a -> Event -> State -> Either CouldNotHandle ( Task a, State )
 -- Edit --
 handle (Edit _) (ToHere Clear) state =
-  ( Edit Nothing, state )
+  ok ( Edit Nothing, state )
 handle (Edit {a} val) (ToHere (Change {b} val_new)) state with (decEq b a)
-  handle (Edit _) (ToHere (Change val_new)) state         | Yes Refl = ( Edit (Just val_new), state )
-  handle (Edit val) _ state                               | No _     = ( Edit val, state )
+  handle (Edit _) (ToHere (Change val_new)) state         | Yes Refl = ok ( Edit (Just val_new), state )
+  handle (Edit val) (ToHere (Change val_new)) _           | No _     = throw CouldNotChange
 handle Watch (ToHere (Change {b} val_new)) state with (decEq b StateTy)
-  handle Watch (ToHere (Change val_new)) _       | Yes Refl = ( Watch, val_new )
-  handle Watch _ state                           | No _     = ( Watch, state )
+  handle Watch (ToHere (Change val_new)) _       | Yes Refl = ok ( Watch, val_new )
+  handle Watch (ToHere (Change val_new)) _       | No _     = throw CouldNotChange
 -- Pass to this --
-handle (Then this cont) event state =
+handle (Then this cont) event state = do
   -- Pass the event to this and normalise
-  let
-    ( this_new, state_new ) = handle this event state
-  in
-  normalise (Then this_new cont) state_new
+  ( this_new, state_new ) <- handle this event state
+  ok $ normalise (Then this_new cont) state_new
 -- Pass to left or right --
 --FIXME: normalise after each event handling of All, Any and One???
-handle (All left right) (ToLeft event) state =
+handle (All left right) (ToLeft event) state = do
   -- Pass the event to left
-  let
-    ( left_new, state_new ) = handle left event state
-  in
-  ( All left_new right, state_new )
-handle (All left right) (ToRight event) state =
+  ( left_new, state_new ) <- handle left event state
+  ok ( All left_new right, state_new )
+handle (All left right) (ToRight event) state = do
   -- Pass the event to right
-  let
-    ( right_new, state_new ) = handle right event state
-  in
-  ( All left right_new, state_new )
-handle (Any left right) (ToLeft event) state =
+  ( right_new, state_new ) <- handle right event state
+  ok ( All left right_new, state_new )
+handle (Any left right) (ToLeft event) state = do
   -- Pass the event to left
-  let
-    ( left_new, state_new ) = handle left event state
-  in
-  ( Any left_new right, state_new )
-handle (Any left right) (ToRight event) state =
+  ( left_new, state_new ) <- handle left event state
+  ok ( Any left_new right, state_new )
+handle (Any left right) (ToRight event) state = do
   -- Pass the event to right
-  let
-    ( right_new, state_new ) = handle right event state
-  in
-  ( Any left right_new, state_new )
+  ( right_new, state_new ) <- handle right event state
+  ok ( Any left right_new, state_new )
 -- Interact
 handle task@(One _ _) (ToHere (PickAt l)) state =
   case find l task of
     Just p  => handle task (ToHere (Pick p)) state
-    Nothing => ( task, state )
+    Nothing => throw $ CouldNotFind l
 handle (One left _) (ToHere (Pick (GoLeft p))) state =
   -- Go left
   handle left (ToHere (Pick p)) state
@@ -333,10 +339,10 @@ handle (One _ right) (ToHere (Pick (GoRight p))) state =
   handle right (ToHere (Pick p)) state
 handle (One left right) (ToHere (Pick GoHere)) state =
   -- Go here
-  ( One left right, state )
+  ok ( One left right, state )
 handle task@(Next this cont) (ToHere (Continue Nothing)) state =
   -- When pressed continue rewrite to an internal step
-  normalise (Then this cont) state
+  ok $ normalise (Then this cont) state
 handle task@(Next this cont) (ToHere (Continue (Just l))) state =
   case value this state of
     Just v  =>
@@ -345,27 +351,23 @@ handle task@(Next this cont) (ToHere (Continue (Just l))) state =
       in
       case find l next of
         Just p  => handle next (ToHere (Pick p)) state
-        Nothing => ( task, state )
-    Nothing => ( task, state )
-handle (Next this cont) event state =
+        Nothing => throw $ CouldNotFind l
+    Nothing => throw CouldNotContinue
+handle (Next this cont) event state = do
   -- Pass the event to this and normalise
-  let
-    ( this_new, state_new ) = handle this event state
-  in
-  normalise (Next this_new cont) state_new
+  ( this_new, state_new ) <- handle this event state
+  ok $ normalise (Next this_new cont) state_new
 -- Label
 handle (Label l this) event state with ( keeper this )
-  | True =
-      let
-        ( this_new, state_new ) = handle this event state
-      in
-      ( Label l this_new, state_new )
+  | True = do
+      ( this_new, state_new ) <- handle this event state
+      ok ( Label l this_new, state_new )
   | False = handle this event state
 -- Rest
 handle task _ state =
   -- Case `Fail`: Evaluation continues indefinitely
   -- Cases `Get` and `Put`: This case can't happen, it is already evaluated by `normalise`
-  ( task, state )
+  ok ( task, state )
 
 init : Task a -> ( Task a, State )
 init = flip normalise []

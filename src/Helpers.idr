@@ -1,5 +1,7 @@
 module Helpers
 
+import public Control.Catchable
+
 %default total
 %access export
 
@@ -15,6 +17,12 @@ delete : Nat -> List a -> List a
 delete Z (_ :: xs) = xs
 delete n (x :: xs) = x :: delete (pred n) xs
 delete _ []        = []
+
+
+-- Catchable extensions --------------------------------------------------------
+
+ok : Applicative f => Catchable f e => a -> f a
+ok = pure
 
 
 -- String decomposition --------------------------------------------------------
