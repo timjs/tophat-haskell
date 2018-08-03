@@ -290,12 +290,12 @@ normalise (Next this cont) state =
   ( Next this_new cont, state_new )
 -- Label --
 normalise (Label l this) state with ( keeper this )
-  | True =
+  | False = normalise this state
+  | True  =
       let
         ( this_new, state_new ) = normalise this state
       in
       ( Label l this_new, state_new )
-  | False = normalise this state
 -- State --
 normalise (Get) state =
   ( pure state, state )
@@ -340,8 +340,8 @@ handle (Any left right) (ToRight event) state = do
 -- Interact
 handle task@(One _ _) (ToHere (PickAt l)) state =
   case find l task of
-    Just p  => handle task (ToHere (Pick p)) state
     Nothing => throw $ CouldNotFind l
+    Just p  => handle task (ToHere (Pick p)) state
 handle (One left _) (ToHere (Pick (GoLeft p))) state =
   -- Go left
   handle left (ToHere (Pick p)) state
@@ -356,24 +356,24 @@ handle task@(Next this cont) (ToHere (Continue Nothing)) state =
   ok ( Then this cont, state )
 handle task@(Next this cont) (ToHere (Continue (Just l))) state =
   case value this state of
+    Nothing => throw CouldNotContinue
     Just v  =>
       let
         next = cont v
       in
       case find l next of
-        Just p  => handle next (ToHere (Pick p)) state
         Nothing => throw $ CouldNotFind l
-    Nothing => throw CouldNotContinue
+        Just p  => handle next (ToHere (Pick p)) state
 handle (Next this cont) event state = do
   -- Pass the event to this
   ( this_new, state_new ) <- handle this event state
   ok ( Next this_new cont, state_new )
 -- Label
 handle (Label l this) event state with ( keeper this )
+  | False = handle this event state
   | True = do
       ( this_new, state_new ) <- handle this event state
       ok ( Label l this_new, state_new )
-  | False = handle this event state
 -- Rest
 handle task _ state =
   -- Case `Fail`: Evaluation continues indefinitely
