@@ -130,6 +130,7 @@ delabel t           = t
 
 ||| Collect all labels in an external choice
 labels : Task a -> List Label
+labels (Label _ Fail)   = []
 labels (Label l this)   = l :: labels this
 labels (One left right) = labels left ++ labels right
 labels _                = []
