@@ -128,6 +128,12 @@ delabel t           = t
 (/~) : Label -> Task a -> Bool
 (/~) l t = not (l =~ t)
 
+||| Collect all labels in an external choice
+labels : Task a -> List Label
+labels (Label l this)   = l :: labels this
+labels (One left right) = labels left ++ labels right
+labels _                = []
+
 ||| Depth first search for a label on a task tree.
 |||
 ||| Returns the path of the found task.
@@ -155,13 +161,7 @@ ui (Edit Nothing)   _ = "□(_)"
 ui (Watch)          s = "■(" ++ show s ++ ")"
 ui (All left right) s = ui left s ++ "   ⋈   " ++ ui right s
 ui (Any left right) s = ui left s ++ "   ◆   " ++ ui right s
-ui (One left right) s with ( left, right )
-  | ( Label l _ , Label r _  ) =      l ++ "   ◇   " ++ r
-  -- | ( Label l _ , t@(Or _ _) ) =      l ++ "   ◇   " ++ show t
-  -- | ( t@(Or _ _), Label r _  ) = show t ++ "   ◇   " ++ r
-  | ( Label l _ , _          ) =      l ++ "   ◇   …"
-  | ( _         , Label r _  ) =          "…   ◇   " ++ r
-  | ( _         , _          ) =          "…   ◇   …"
+ui (One left right) s =             "…   ◇   …"
 ui (Fail)           _ = "↯"
 ui (Then this cont) s = ui this s ++ " ▶…"
 ui (Next this cont) s = ui this s ++ " ▷…"
@@ -201,7 +201,7 @@ events (Edit {a} val)   _ = [ ToHere (Change (Universe.defaultOf a)), ToHere Cle
 events (Watch)          _ = [ ToHere (Change (Universe.defaultOf StateTy)) ]
 events (All left right) s = map ToLeft (events left s) ++ map ToRight (events right s)
 events (Any left right) s = map ToLeft (events left s) ++ map ToRight (events right s)
-events this@(One _ _)   s = map (ToHere . Pick) $ choices this
+events this@(One _ _)   s = map (ToHere . Pick) $ map Left (labels this) ++ map Right (choices this)
 events (Fail)           _ = []
 events (Then this next) s = events this s
 events (Next this next) s =
@@ -215,9 +215,9 @@ events (Next this next) s =
   where
     go : Task a -> List Action
     go task with ( delabel task )
-      | t@(One _ _) = map (Continue . Just) $ choices t
-      | Fail        = []
-      | _           = [ Continue Nothing ]
+      | One _ _ = map (Continue . Just) $ labels task
+      | Fail    = []
+      | _       = [ Continue Nothing ]
 events (Label _ this)   s = events this s
 events (Get)            _ = []
 events (Put x)          _ = []
@@ -320,21 +320,25 @@ handle (Any left right) (ToRight event) state =
   in
   ( Any left right_new, state_new )
 -- Interact
-handle (One left _) (ToHere (Pick (GoLeft p))) state =
+handle task@(One _ _) (ToHere (Pick (Left l))) state =
+  case find l task of
+    Just p  => handle task (ToHere (Pick (Right p))) state
+    Nothing => ( task, state )
+handle (One left _) (ToHere (Pick (Right (GoLeft p)))) state =
   -- Go left
-  handle left (ToHere (Pick p)) state
-handle (One _ right) (ToHere (Pick (GoRight p))) state =
+  handle left (ToHere (Pick (Right p))) state
+handle (One _ right) (ToHere (Pick (Right (GoRight p)))) state =
   -- Go right
-  handle right (ToHere (Pick p)) state
-handle (One left right) (ToHere (Pick GoHere)) state =
+  handle right (ToHere (Pick (Right p))) state
+handle (One left right) (ToHere (Pick (Right GoHere))) state =
   -- Go here
   ( One left right, state )
 handle task@(Next this cont) (ToHere (Continue Nothing)) state =
   -- When pressed continue rewrite to an internal step
   normalise (Then this cont) state
-handle task@(Next this cont) (ToHere (Continue (Just label))) state =
+handle task@(Next this cont) (ToHere (Continue (Just l))) state =
   case value this state of
-    Just v  => handle (cont v) (ToHere (Pick label)) state
+    Just v  => handle (cont v) (ToHere (Pick (Left l))) state
     Nothing => ( task, state )
 handle (Next this cont) event state =
   -- Pass the event to this and normalise

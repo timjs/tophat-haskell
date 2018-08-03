@@ -13,6 +13,11 @@ import Task.Universe
 Label : Type
 Label = String
 
+isLabel : String -> Bool
+isLabel s               with ( strM s )
+ isLabel ""             | StrNil      = False
+ isLabel (strCons c cs) | StrCons c _ = isUpper c
+
 
 -- Paths -----------------------------------------------------------------------
 
@@ -40,8 +45,8 @@ namespace Path
 data Action
   = Change (Universe.typeOf b)
   | Clear
-  | Pick Path
-  | Continue (Maybe Path)
+  | Pick (Either Label Path)
+  | Continue (Maybe Label)
 
 data Event
   = ToLeft Event
@@ -54,9 +59,10 @@ data Event
 Show Action where
   show (Change _)          = "change <val>"
   show (Clear)             = "clear"
-  show (Pick p)            = "pick" ++ show p
+  show (Pick (Left l))     = "pick " ++ l
+  show (Pick (Right p))    = "pick" ++ show p
   show (Continue Nothing)  = "cont"
-  show (Continue (Just p)) = "cont" ++ show p
+  show (Continue (Just l)) = "cont " ++ l
 
 Show Event where
   show (ToLeft e)  = "l " ++ show e
@@ -72,8 +78,9 @@ usage = unlines
   , "    change <val> : change current editor to <val> "
   , "    clear        : clear current editor"
   , "    pick <path>  : choose amongst the possible options"
+  , "    pick <label> : choose amongst the possible options"
   , "    cont         : continue with the next task"
-  , "    cont <path>  : continue with one of possible options"
+  , "    cont <label> : continue with one of possible options"
   , "    l <event>    : send <event> to the left task"
   , "    r <event>    : send <event> to the right task"
   , "    help         : show this message"
@@ -90,9 +97,12 @@ parse ["change", val] with (Universe.Basic.parse val)
   | Nothing            = throw $ "!! Error parsing value '" ++ val ++ "'"
   | (Just (ty ** v))   = pure $ ToHere $ Change {b = BasicTy ty} v
 parse ["clear"]        = pure $ ToHere $ Clear
-parse ("pick" :: rest) = map (ToHere . Pick) $ Path.parse rest
+parse ["pick", label] with ( isLabel label )
+  | True               = pure $ ToHere $ Pick $ Left label
+  | False              = map (ToHere . Pick . Right) $ Path.parse [label]
+parse ("pick" :: rest) = map (ToHere . Pick . Right) $ Path.parse rest
 parse ["cont"]         = pure $ ToHere $ Continue Nothing
-parse ("cont" :: rest) = map (ToHere . Continue . Just) $ Path.parse rest
+parse [ "cont", label] = pure $ ToHere $  Continue $ Just label
 parse ("l" :: rest)    = map ToLeft $ parse rest
 parse ("r" :: rest)    = map ToRight $ parse rest
 parse ["help"]         = throw usage
