@@ -24,12 +24,12 @@ ask = Edit Nothing
 
 modify : (List Int -> List Int) -> Task (BasicTy UnitTy)
 modify f = do
-  xs <- Get
-  Put (f xs)
+  xs <- get
+  put (f xs)
 
 gets : (List Int -> (typeOf b)) -> Task b
 gets f = do
-  xs <- Get
+  xs <- get
   pure (f xs)
 
 
@@ -166,19 +166,19 @@ where
 
 -- update : Task (BasicTy UnitTy)
 -- update =
---   Get >>= \x =>
+--   get >>= \x =>
 --   edit x >>? \y =>
---   Put y
+--   put y
 
 -- --FIXME: help!!!
 -- update2 : Task (BasicTy UnitTy)
 -- update2 = do
---   Get >>= \x =>
+--   get >>= \x =>
 --   edit (x+1) >>? \y =>
---   Put y >>= \() =>
---   Get >>= \u =>
+--   put y >>= \() =>
+--   get >>= \u =>
 --   edit (u+2) >>? \v =>
---   Put v
+--   put v
 
 watch : Show (typeOf a) => Task a -> Task (PairTy a StateTy)
 watch t = t <&> Watch

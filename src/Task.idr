@@ -122,6 +122,15 @@ fail = Fail
   pure $ f x
 
 
+-- State --
+
+get : Task StateTy
+get = Get
+
+put : typeOf StateTy -> Task (BasicTy UnitTy)
+put = Put
+
+
 -- Labels --
 
 ||| Infix operator to label a task
