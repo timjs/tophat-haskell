@@ -255,18 +255,16 @@ events (Put x)          _ = []
 
 normalise : Task a -> State -> ( Task a, State )
 -- Step --
-normalise task@(Then this cont) state =
-  --FIXME: normalise before???
-  -- let
-  --   ( this_new, state_new ) = normalise this state
-  -- in
-  case value this state of
+normalise (Then this cont) state =
+  let
+    ( this_new, state_new ) = normalise this state
+  in
+  case value this_new state_new of
+    Nothing => ( Then this_new cont, state_new )
     Just v  =>
       case cont v of
-        Fail => ( task, state )
-        next => normalise next state
-    Nothing =>
-      ( task, state )
+        Fail => ( Then this_new cont, state_new )
+        next => normalise next state_new
 -- Evaluate --
 normalise (All left right) state =
   let
