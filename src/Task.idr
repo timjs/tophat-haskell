@@ -191,7 +191,7 @@ ui (One left right) s =             "…   ◇   …"
 ui (Fail)           _ = "↯"
 ui (Then this cont) s = ui this s ++ " ▶…"
 ui (Next this cont) s = ui this s ++ " ▷…"
-ui (Label _ this)   s = ui this s
+ui (Label l this)   s = l ++ " # " ++ ui this s
 ui (Get)            _ = "↓"
 ui (Put x)          _ = "↑(" ++ show x ++ ")"
 
