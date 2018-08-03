@@ -201,7 +201,7 @@ events (Edit {a} val)   _ = [ ToHere (Change (Universe.defaultOf a)), ToHere Cle
 events (Watch)          _ = [ ToHere (Change (Universe.defaultOf StateTy)) ]
 events (All left right) s = map ToLeft (events left s) ++ map ToRight (events right s)
 events (Any left right) s = map ToLeft (events left s) ++ map ToRight (events right s)
-events this@(One _ _)   s = map (ToHere . Pick) $ map Left (labels this) ++ map Right (choices this)
+events this@(One _ _)   s = map (ToHere . PickAt) (labels this) ++ map (ToHere . Pick) (choices this)
 events (Fail)           _ = []
 events (Then this next) s = events this s
 events (Next this next) s =
@@ -320,17 +320,17 @@ handle (Any left right) (ToRight event) state =
   in
   ( Any left right_new, state_new )
 -- Interact
-handle task@(One _ _) (ToHere (Pick (Left l))) state =
+handle task@(One _ _) (ToHere (PickAt l)) state =
   case find l task of
-    Just p  => handle task (ToHere (Pick (Right p))) state
+    Just p  => handle task (ToHere (Pick p)) state
     Nothing => ( task, state )
-handle (One left _) (ToHere (Pick (Right (GoLeft p)))) state =
+handle (One left _) (ToHere (Pick (GoLeft p))) state =
   -- Go left
-  handle left (ToHere (Pick (Right p))) state
-handle (One _ right) (ToHere (Pick (Right (GoRight p)))) state =
+  handle left (ToHere (Pick p)) state
+handle (One _ right) (ToHere (Pick (GoRight p))) state =
   -- Go right
-  handle right (ToHere (Pick (Right p))) state
-handle (One left right) (ToHere (Pick (Right GoHere))) state =
+  handle right (ToHere (Pick p)) state
+handle (One left right) (ToHere (Pick GoHere)) state =
   -- Go here
   ( One left right, state )
 handle task@(Next this cont) (ToHere (Continue Nothing)) state =
@@ -338,7 +338,7 @@ handle task@(Next this cont) (ToHere (Continue Nothing)) state =
   normalise (Then this cont) state
 handle task@(Next this cont) (ToHere (Continue (Just l))) state =
   case value this state of
-    Just v  => handle (cont v) (ToHere (Pick (Left l))) state
+    Just v  => handle (cont v) (ToHere (PickAt l)) state
     Nothing => ( task, state )
 handle (Next this cont) event state =
   -- Pass the event to this and normalise

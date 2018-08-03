@@ -45,7 +45,8 @@ namespace Path
 data Action
   = Change (Universe.typeOf b)
   | Clear
-  | Pick (Either Label Path)
+  | Pick Path
+  | PickAt Label
   | Continue (Maybe Label)
 
 data Event
@@ -59,8 +60,8 @@ data Event
 Show Action where
   show (Change _)          = "change <val>"
   show (Clear)             = "clear"
-  show (Pick (Left l))     = "pick " ++ l
-  show (Pick (Right p))    = "pick" ++ show p
+  show (Pick p)            = "pick" ++ show p
+  show (PickAt l)          = "pick " ++ l
   show (Continue Nothing)  = "cont"
   show (Continue (Just l)) = "cont " ++ l
 
@@ -98,9 +99,9 @@ parse ["change", val] with (Universe.Basic.parse val)
   | (Just (ty ** v))   = pure $ ToHere $ Change {b = BasicTy ty} v
 parse ["clear"]        = pure $ ToHere $ Clear
 parse ["pick", label] with ( isLabel label )
-  | True               = pure $ ToHere $ Pick $ Left label
-  | False              = map (ToHere . Pick . Right) $ Path.parse [label]
-parse ("pick" :: rest) = map (ToHere . Pick . Right) $ Path.parse rest
+  | True               = pure $ ToHere $ PickAt label
+  | False              = map (ToHere . Pick) $ Path.parse [label]
+parse ("pick" :: rest) = map (ToHere . Pick) $ Path.parse rest
 parse ["cont"]         = pure $ ToHere $ Continue Nothing
 parse [ "cont", label] = pure $ ToHere $  Continue $ Just label
 parse ("l" :: rest)    = map ToLeft $ parse rest
