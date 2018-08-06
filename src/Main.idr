@@ -128,7 +128,7 @@ inner' =
 partial
 editShared : Task (BasicTy UnitTy)
 editShared =
-  repeat <?> "Quit" # quit
+  "Edit" # repeat <?> "Quit" # quit
 where
   delete : Nat -> Task (BasicTy UnitTy)
   delete i =

@@ -139,6 +139,11 @@ put = Put
 (#) : Show (typeOf a) => Label -> Task a -> Task a
 (#) = Label
 
+||| Get the current label, if one
+label : Task a -> Maybe Label
+label (Label l _) = Just l
+label _           = Nothing
+
 ||| Remove as much labels as possible from a task.
 |||
 ||| Usefull to deeply match task constructors while ignoring labels.
@@ -160,9 +165,9 @@ labels : Task a -> List Label
 labels (Label _ Fail)   = []
 labels (Label l this)   = l :: labels this
 labels (One left right) = labels left ++ labels right
---NOTE: we also check for labels on the lhs of a step (see also `find`)
-labels (Then this _)    = labels this
-labels (Next this _)    = labels this
+-- --FIXME: we also check for labels on the lhs of a step (see also `find`)
+-- labels (Then this _)    = labels this
+-- labels (Next this _)    = labels this
 labels _                = []
 
 ||| Depth first search for a label on a task tree.
@@ -173,9 +178,9 @@ find k (Label l this) with ( k == l )
   | True                = Just GoHere
   | False               = find k this
 find k (One left right) = map GoLeft (find k left) <|> map GoRight (find k right)
---NOTE: we can send pick-events through to the lhs of a step (see also `labels`)
-find k (Then this _)    = find k this
-find k (Next this _)    = find k this
+-- --FIXME: we can send pick-events through to the lhs of a step (see also `labels`)
+-- find k (Then this _)    = find k this
+-- find k (Next this _)    = find k this
 find k _                = Nothing
 
 ||| Check if a task constructor keeps its label after stepping or loses it.
@@ -203,7 +208,11 @@ ui (Edit Nothing)   _ = "□(_)"
 ui (Watch)          s = "■(" ++ show s ++ ")"
 ui (All left right) s = ui left s ++ "   ⋈   " ++ ui right s
 ui (Any left right) s = ui left s ++ "   ◆   " ++ ui right s
-ui (One left right) s =             "…   ◇   …"
+ui (One left right) s with ( delabel left, delabel right )
+  | ( One _ _, One _ _ ) =                  ui left s ++ " ◇ " ++ ui right s
+  | ( One _ _, _       ) =                  ui left s ++ " ◇ " ++ fromMaybe "…" (label right)
+  | ( _,       One _ _ ) = fromMaybe "…" (label left) ++ " ◇ " ++ ui right s
+  | ( _,       _       ) = fromMaybe "…" (label left) ++ " ◇ " ++ fromMaybe "…" (label right)
 ui (Fail)           _ = "↯"
 ui (Then this cont) s = ui this s ++ " ▶…"
 ui (Next this cont) s = ui this s ++ " ▷…"
