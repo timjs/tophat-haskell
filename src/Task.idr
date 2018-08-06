@@ -83,12 +83,6 @@ unit = pure ()
 -- (<*>) : Show (typeOf a) => Show (typeOf b) => Task (FunTy a b) -> Task a -> Task b
 -- (<*>) t1 t2 = (\f,x => f x) <$> t1 <&> t2
 
-ask : (a : Universe.Basic.Ty) -> Task (BasicTy a)
-ask _ = Edit Nothing
-
-watch : Task StateTy
-watch = Watch
-
 
 -- Alternative --
 
@@ -192,10 +186,19 @@ keeper (Fail)    = True
 keeper _         = False
 
 
+-- Extras --
+
+ask : (b : Universe.Basic.Ty) -> Task (BasicTy b)
+ask _ = Edit Nothing
+
+watch : Task StateTy
+watch = Watch
+
+
 -- Showing ---------------------------------------------------------------------
 
 ui : Show (typeOf a) => Task a -> State -> String
-ui (Edit (Just x))  _ = "□(" ++ show x ++")"
+ui (Edit (Just x))  _ = "□(" ++ show x ++ ")"
 ui (Edit Nothing)   _ = "□(_)"
 ui (Watch)          s = "■(" ++ show s ++ ")"
 ui (All left right) s = ui left s ++ "   ⋈   " ++ ui right s

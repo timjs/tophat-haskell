@@ -205,25 +205,28 @@ pick2' = "First" # edit 1 <?> "Second" # edit 2
 pick3' : Task (BasicTy IntTy)
 pick3' = pick2' <?> "Third" # edit 3
 
+
+-- Guards --
+
 auto : Task (BasicTy StringTy)
 auto = do
   x <- edit 0
   if x >= 10 then pure "large" else fail
 
-events : Task (BasicTy IntTy)
-events =
+actions : Task (BasicTy IntTy)
+actions =
   edit 0 >>? \x =>
   pick3
 
-events' : Task (BasicTy IntTy)
-events' =
+actions' : Task (BasicTy IntTy)
+actions' =
   edit 0 >>? \x =>
   pick3'
 
 guards : Task (BasicTy StringTy)
 guards =
   edit 0 >>? \x =>
-  ((if x >= 10 then pure "large" else fail) <|> (if x >= 100 then pure "very large" else fail))
+  ("Large" # (if x >= 10 then pure "large" else fail) <?> "VeryLarge" # (if x >= 100 then pure "very large" else fail))
 
 partial -- due to `mod` on `0`
 branch : Task (BasicTy StringTy)
@@ -239,8 +242,8 @@ branch =
 
 -- Empty edit --
 
-test : Task (BasicTy IntTy)
-test = do
+empties : Task (BasicTy IntTy)
+empties = do
   ( x, y ) <- ask IntTy <&> ask IntTy
   pure (x + y)
 
@@ -279,4 +282,4 @@ run : Show (typeOf a) => Task a -> IO ()
 run t = uncurry loop $ init t
 
 main : IO ()
-main = run test
+main = run empties
