@@ -54,17 +54,17 @@ data Task : Universe.Ty -> Type where
 
 -- Errors --
 
-data CouldNotHandle
+data NotApplicable
   = CouldNotChange
   | CouldNotFind Label
   | CouldNotContinue
-  | NotApplicable
+  | CouldNotHandle Event
 
-Show CouldNotHandle where
+Show NotApplicable where
   show (CouldNotChange)   = "Could not change value because types do not match"
   show (CouldNotFind l)   = "Could not find label `" ++ l ++ "`"
   show (CouldNotContinue) = "Could not continue"
-  show (NotApplicable)    = "Not applicable event"
+  show (CouldNotHandle e) = "Could not handle event `" ++ show e ++ "`"
 
 
 -- Interfaces ------------------------------------------------------------------
@@ -314,7 +314,7 @@ normalise task state =
   ( task, state )
 
 --FIXME: fix totallity...
-handle : Task a -> Event -> State -> Either CouldNotHandle ( Task a, State )
+handle : Task a -> Event -> State -> Either NotApplicable ( Task a, State )
 -- Edit --
 handle (Edit _) (ToHere Clear) state =
   ok ( Edit Nothing, state )
@@ -353,13 +353,13 @@ handle task@(One _ _) (ToHere (PickAt l)) state =
     Just p  => handle task (ToHere (Pick p)) state
 handle (One left _) (ToHere (Pick (GoLeft p))) state =
   -- Go left
-  handle left (ToHere (Pick p)) state
+  handle (delabel left) (ToHere (Pick p)) state
 handle (One _ right) (ToHere (Pick (GoRight p))) state =
   -- Go right
-  handle right (ToHere (Pick p)) state
-handle (One left right) (ToHere (Pick GoHere)) state =
+  handle (delabel right) (ToHere (Pick p)) state
+handle task (ToHere (Pick GoHere)) state =
   -- Go here
-  ok ( One left right, state )
+  ok ( task, state )
 handle task@(Next this cont) (ToHere (Continue Nothing)) state =
   -- When pressed continue rewrite to an internal step
   ok ( Then this cont, state )
@@ -384,12 +384,12 @@ handle (Label l this) event state with ( keeper this )
       ( this_new, state_new ) <- handle this event state
       ok ( Label l this_new, state_new )
 -- Rest
-handle task _ state =
+handle task event state =
   -- Case `Fail`: Evaluation continues indefinitely
   -- Cases `Get` and `Put`: This case can't happen, it is already evaluated by `normalise`
-  ok ( task, state )
+  throw $ CouldNotHandle event
 
-drive : Task a -> Event -> State -> Either CouldNotHandle ( Task a, State )
+drive : Task a -> Event -> State -> Either NotApplicable ( Task a, State )
 drive task event state =
   uncurry normalise <$> handle task event state
 -- do
