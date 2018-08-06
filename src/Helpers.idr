@@ -5,6 +5,8 @@ import public Control.Catchable
 %default total
 %access export
 
+infixl 3 <*>, <&>
+
 
 -- List extensions -------------------------------------------------------------
 
@@ -17,6 +19,14 @@ delete : Nat -> List a -> List a
 delete Z (_ :: xs) = xs
 delete n (x :: xs) = x :: delete (pred n) xs
 delete _ []        = []
+
+-- Applicative extensions ------------------------------------------------------
+
+unit : Applicative f => f ()
+unit = pure ()
+
+(<&>) : Applicative f => f a -> f b -> f ( a, b )
+(<&>) x y = MkPair <$> x <*> y
 
 
 -- Catchable extensions --------------------------------------------------------
