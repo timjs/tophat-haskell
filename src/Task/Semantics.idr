@@ -1,5 +1,7 @@
 module Task
 
+import Control.Monad.Ref
+
 import Task.Internal
 import Task.Universe
 import Task.Event
@@ -28,42 +30,38 @@ Show NotApplicable where
 
 -- Showing ---------------------------------------------------------------------
 
-ui : Show (typeOf a) => Task a -> State -> String
-ui (Edit (Just x))  _ = "□(" ++ show x ++ ")"
-ui (Edit Nothing)   _ = "□(_)"
-ui (Watch)          s = "■(" ++ show s ++ ")"
-ui (All left right) s = ui left s ++ "   ⋈   " ++ ui right s
-ui (Any left right) s = ui left s ++ "   ◆   " ++ ui right s
-ui (One left right) s with ( delabel left, delabel right )
-  | ( One _ _, One _ _ ) =                  ui left s ++ " ◇ " ++ ui right s
-  | ( One _ _, _       ) =                  ui left s ++ " ◇ " ++ fromMaybe "…" (label right)
-  | ( _,       One _ _ ) = fromMaybe "…" (label left) ++ " ◇ " ++ ui right s
-  | ( _,       _       ) = fromMaybe "…" (label left) ++ " ◇ " ++ fromMaybe "…" (label right)
-ui (Fail)           _ = "↯"
-ui (Then this cont) s = ui this s ++ " ▶…"
-ui (Next this cont) s = ui this s ++ " ▷…"
-ui (Label l this)   s = l ++ " # " ++ ui this s
-ui (Get)            _ = "↓"
-ui (Put x)          _ = "↑(" ++ show x ++ ")"
+ui : MonadRef l m => Show (typeOf a) => Task m a -> m String
+ui (Edit (Just x))       = pure $ "□(" ++ show x ++ ")"
+ui (Edit Nothing)        = pure $ "□(_)"
+ui (Watch loc)           = pure $ "■(" ++ show !(deref loc) ++ ")"
+ui (All left right)      = pure $ !(ui left) ++ "   ⋈   " ++ !(ui right)
+ui (Any left right)      = pure $ !(ui left) ++ "   ◆   " ++ !(ui right)
+ui (One left right) with ( delabel left, delabel right )
+  | ( One _ _, One _ _ ) = pure $                 !(ui left) ++ " ◇ " ++ !(ui right)
+  | ( One _ _, _       ) = pure $                 !(ui left) ++ " ◇ " ++ fromMaybe "…" (label right)
+  | ( _,       One _ _ ) = pure $ fromMaybe "…" (label left) ++ " ◇ " ++ !(ui right)
+  | ( _,       _       ) = pure $ fromMaybe "…" (label left) ++ " ◇ " ++ fromMaybe "…" (label right)
+ui (Fail)                = pure $ "↯"
+ui (Then this cont)      = pure $ !(ui this) ++ " ▶…"
+ui (Next this cont)      = pure $ !(ui this) ++ " ▷…"
+ui (Label l this)        = pure $ l ++ " # " ++ !(ui this)
 
 
--- Semantics -------------------------------------------------------------------
+-- Helpers ---------------------------------------------------------------------
 
-value : Task a -> State -> Maybe (typeOf a)
-value (Edit val)       _ = val
-value (Watch)          s = Just s
-value (All left right) s = MkPair <$> value left s <*> (value right s)
-value (Any left right) s = value left s <|> value right s
-value (Label _ this)   s = value this s
-value (Get)            s = Just s
-value (Put _)          _ = Just ()
+value : MonadRef l m => Task m a -> m (Maybe (typeOf a))
+value (Edit val)       = pure $ val
+value (Watch loc)      = pure $ Just !(deref loc)
+value (All left right) = pure $ !(value left) <&> !(value right)
+value (Any left right) = pure $ !(value left) <|> !(value right)
+value (Label _ this)   = value this
 -- The rest never has a value because:
 --   * `One` and `Next` need to wait for an user choice
 --   * `Fail` runs forever and doesn't produce a value
 --   * `Then` transforms values to another type
-value _                _ = Nothing
+value _                = pure $ Nothing
 
-choices : Task a -> List Path
+choices : Task m a -> List Path
 choices (One left right) =
   --XXX: No with-block possible?
   case ( delabel left, delabel right ) of
@@ -73,31 +71,28 @@ choices (One left right) =
     ( left, right ) => map GoLeft (GoHere :: choices left) ++ map GoRight (GoHere :: choices right)
 choices _           = []
 
-events : Task a -> State -> List Event
-events (Edit {a} val)   _ = [ ToHere (Change (Universe.defaultOf a)), ToHere Clear ]
-events (Watch)          _ = [ ToHere (Change (Universe.defaultOf StateTy)) ]
-events (All left right) s = map ToLeft (events left s) ++ map ToRight (events right s)
-events (Any left right) s = map ToLeft (events left s) ++ map ToRight (events right s)
-events this@(One _ _)   s = map (ToHere . PickAt) (labels this) ++ map (ToHere . Pick) (choices this)
-events (Fail)           _ = []
-events (Then this next) s = events this s
-events (Next this next) s =
-  let
-    here =
-      case value this s of
-        Just v  => go (next v)
-        Nothing => []
-  in
-  map ToHere here ++ events this s
+events : MonadRef l m => Task m a -> m (List Event)
+events (Edit {a} _)     = pure $ [ ToHere (Change (defaultOf a)), ToHere Clear ]
+events (Watch {a} _)    = pure $ [ ToHere (Change (defaultOf a)) ]
+events (All left right) = pure $ map ToLeft !(events left) ++ map ToRight !(events right)
+events (Any left right) = pure $ map ToLeft !(events left) ++ map ToRight !(events right)
+events this@(One _ _)   = pure $ map (ToHere . PickAt) (labels this) ++ map (ToHere . Pick) (choices this)
+events (Fail)           = pure $ []
+events (Then this _)    = events this
+events (Next this next) = do
+    Just v <- value this | Nothing => pure []
+    pure $ map ToHere (go (next v)) ++ !(events this)
   where
-    go : Task a -> List Action
+    go : Task m a -> List Action
     go task with ( delabel task )
       | One _ _ = map (Continue . Just) $ labels task
       | Fail    = []
       | _       = [ Continue Nothing ]
-events (Label _ this)   s = events this s
-events (Get)            _ = []
-events (Put x)          _ = []
+events (Label _ this)   = events this
+
+{-
+
+-- Normalisation ---------------------------------------------------------------
 
 normalise : Task a -> State -> ( Task a, State )
 -- Step --
@@ -151,6 +146,9 @@ normalise (Put x) state =
 -- Values --
 normalise task state =
   ( task, state )
+
+
+-- Event handling --------------------------------------------------------------
 
 --FIXME: fix totallity...
 handle : Task a -> Event -> State -> Either NotApplicable ( Task a, State )
@@ -237,3 +235,5 @@ drive task event state =
 
 init : Task a -> ( Task a, State )
 init = flip normalise []
+
+-}
