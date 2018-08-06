@@ -6,12 +6,11 @@ import public Data.Universe
 import Helpers
 
 %default total
-%access export
+%access public export
 
 
 -- Basic universe --------------------------------------------------------------
 
-public export
 data BasicTy
   = UNIT
   | BOOL
@@ -88,7 +87,6 @@ parse s   with (the (Maybe Int) (parseInteger s))
 
 -- Full universe ---------------------------------------------------------------
 
-public export
 data Ty
   = PAIR Ty Ty
   | LIST Ty
