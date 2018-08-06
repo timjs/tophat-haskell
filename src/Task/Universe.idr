@@ -11,7 +11,6 @@ import Helpers
 
 -- Labels ----------------------------------------------------------------------
 
-public export
 Label : Type
 Label = String
 
@@ -77,11 +76,10 @@ Universe BasicTy where
   typeOf INT    = Int
   typeOf STRING = String
 
-defaultOf : (ty : BasicTy) -> typeOf ty
-defaultOf UNIT   = ()
-defaultOf BOOL   = False
-defaultOf INT    = 0
-defaultOf STRING = ""
+  defaultOf UNIT   = ()
+  defaultOf BOOL   = False
+  defaultOf INT    = 0
+  defaultOf STRING = ""
 
 
 -- Parsing --
@@ -169,6 +167,6 @@ Universe Ty where
   typeOf (LIST x)   = List (typeOf x)
   typeOf (BASIC b)  = typeOf b
 
--- defaultOf (PAIR x y) = ( defaultOf x, defaultOf y )
--- defaultOf (LIST x)   = []
--- defaultOf (BASIC b)  = Basic.defaultOf b
+  defaultOf (PAIR x y) = ( defaultOf x, defaultOf y )
+  defaultOf (LIST x)   = []
+  defaultOf (BASIC b)  = defaultOf b
