@@ -11,9 +11,9 @@ import public Data.IORef
 -- Interface -------------------------------------------------------------------
 
 interface Monad m => MonadRef (l : Type -> Type) (m : Type -> Type) | m where
-    ref    : a -> m (l a)
-    deref  : l a -> m a
-    assign : l a -> a -> m ()
+  ref    : a -> m (l a)
+  deref  : l a -> m a
+  assign : l a -> a -> m ()
 
 infix 4 :=
 (:=) : MonadRef l m => l a -> a -> m ()
@@ -23,30 +23,31 @@ infix 4 :=
 -- Instances -------------------------------------------------------------------
 
 MonadRef IORef IO where
-    ref    = newIORef
-    deref  = readIORef
-    assign = writeIORef
+  ref    = newIORef
+  deref  = readIORef
+  assign = writeIORef
 
 
 -- Helpers ---------------------------------------------------------------------
 
 update : MonadRef l m => l a -> (a -> a) -> m ()
-update loc f = ?update
+update loc f = ?monad_ref_update
+
 
 {- Tests -----------------------------------------------------------------------
 
 test0 : IO Int
 test0 = do
-    r <- newIORef 5
-    writeIORef r 10
-    x <- readIORef r
-    pure x
+  r <- newIORef 5
+  writeIORef r 10
+  x <- readIORef r
+  pure x
 
 test : MonadRef IORef IO => IO Int
 test = do
-    r <- ref (the Int 5)
-    r := (the Int 10)
-    x <- deref r
-    pure x
+  r <- ref (the Int 5)
+  r := (the Int 10)
+  x <- deref r
+  pure x
 
--}
+-------------------------------------------------------------------------------}
