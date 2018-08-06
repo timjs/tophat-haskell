@@ -5,7 +5,7 @@ import Task.Event
 import Helpers
 
 %default total
-%access public export
+%access export
 
 %hide Language.Reflection.Elab.Tactics.normalise
 
@@ -21,9 +21,11 @@ infixl 1 >>=, >>?
 
 -- State --
 
+public export
 StateTy : Universe.Ty
 StateTy = ListTy (BasicTy IntTy)
 
+public export
 State : Type
 State = typeOf StateTy
 
@@ -80,6 +82,12 @@ unit = pure ()
 
 -- (<*>) : Show (typeOf a) => Show (typeOf b) => Task (FunTy a b) -> Task a -> Task b
 -- (<*>) t1 t2 = (\f,x => f x) <$> t1 <&> t2
+
+ask : (a : Universe.Basic.Ty) -> Task (BasicTy a)
+ask _ = Edit Nothing
+
+watch : Task StateTy
+watch = Watch
 
 
 -- Alternative --
@@ -305,6 +313,7 @@ normalise (Put x) state =
 normalise task state =
   ( task, state )
 
+--FIXME: fix totallity...
 handle : Task a -> Event -> State -> Either CouldNotHandle ( Task a, State )
 -- Edit --
 handle (Edit _) (ToHere Clear) state =

@@ -4,25 +4,28 @@ import Data.String
 import Helpers
 
 %default total
-%access public export
+%access export
 
 
 -- Basic universe --------------------------------------------------------------
 
 namespace Basic
 
+  public export
   data Ty
     = UnitTy
     | BoolTy
     | IntTy
     | StringTy
 
+  public export
   typeOf : Ty -> Type
   typeOf UnitTy   = ()
   typeOf BoolTy   = Bool
   typeOf IntTy    = Int
   typeOf StringTy = String
 
+  public export
   defaultOf : (ty : Ty) -> typeOf ty
   defaultOf UnitTy   = ()
   defaultOf BoolTy   = False
@@ -87,17 +90,20 @@ namespace Basic
 
 -- Full universe ---------------------------------------------------------------
 
+public export
 data Ty
   = PairTy Universe.Ty Universe.Ty
   | ListTy Universe.Ty
   | BasicTy Basic.Ty
 
 ||| Conversion of Task types to Idris types.
+public export
 typeOf : Universe.Ty -> Type
 typeOf (PairTy x y) = ( typeOf x, typeOf y )
 typeOf (ListTy x)   = List (typeOf x)
 typeOf (BasicTy b)  = Basic.typeOf b
 
+public export
 defaultOf : (ty : Universe.Ty) -> Universe.typeOf ty
 defaultOf (PairTy x y) = ( defaultOf x, defaultOf y )
 defaultOf (ListTy x)   = []
@@ -115,18 +121,23 @@ Uninhabited (PairTy _ _ = BasicTy _) where
 Uninhabited (ListTy _ = BasicTy _) where
   uninhabited Refl impossible
 
+private
 list_neq : (a = b -> Void) -> (ListTy a = ListTy b) -> Void
 list_neq contra Refl = contra Refl
 
+private
 basic_neq : (a = b -> Void) -> (BasicTy a = BasicTy b) -> Void
 basic_neq contra Refl = contra Refl
 
+private
 snd_neq : (y = y' -> Void) -> (PairTy x y = PairTy x y') -> Void
 snd_neq contra Refl = contra Refl
 
+private
 fst_neq : (x = x' -> Void) -> (PairTy x y = PairTy x' y) -> Void
 fst_neq contra Refl = contra Refl
 
+private
 both_neq : (x = x' -> Void) -> (y = y' -> Void) -> (PairTy x y = PairTy x' y') -> Void
 both_neq contra_x contra_y Refl = contra_x Refl
 

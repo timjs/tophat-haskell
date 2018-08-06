@@ -19,9 +19,6 @@ import Helpers
 edit : Int -> Task (BasicTy IntTy)
 edit = pure
 
-ask : Task (BasicTy IntTy)
-ask = Edit Nothing
-
 modify : (List Int -> List Int) -> Task (BasicTy UnitTy)
 modify f = do
   xs <- get
@@ -31,6 +28,12 @@ gets : (List Int -> (typeOf b)) -> Task b
 gets f = do
   xs <- get
   pure (f xs)
+
+--FIXME: due to some namespacing problem...
+del : Nat -> List a -> List a
+del = Helpers.delete
+rep : Nat -> a -> List a -> List a
+rep = Helpers.replace
 
 
 -- Basic --
@@ -89,7 +92,7 @@ twoSteps' =
 -- Parallel --
 
 parallel : Task (PairTy (BasicTy IntTy) (BasicTy StringTy))
-parallel = Edit Nothing <&> Edit (Just "Hello")
+parallel = ask IntTy <&> hello
 
 parallelStep : Task (BasicTy StringTy)
 parallelStep = do
@@ -122,11 +125,6 @@ inner' =
 
 -- Shared Data --
 
-del : Nat -> List a -> List a
-del = Helpers.delete
-rep : Nat -> a -> List a -> List a
-rep = Helpers.replace
-
 partial
 editShared : Task (BasicTy UnitTy)
 editShared =
@@ -137,20 +135,20 @@ where
     modify (del i)
   replace : Nat -> Task (BasicTy UnitTy)
   replace i =
-    ask >>? \x =>
+    ask IntTy >>? \x =>
     modify (rep i x)
   change : Task (BasicTy UnitTy)
   change =
-    ask >>? \n =>
+    ask IntTy >>? \n =>
     let i = the Nat (cast n) in
     get >>= \xs =>
     if i <= List.length xs then
       "Delete" # delete i <?> "Replace" # replace i
     else
-      Fail
+      fail
   prepend : Task (BasicTy UnitTy)
   prepend =
-    ask >>? \x =>
+    ask IntTy >>? \x =>
     modify ((::) x)
   clear : Task (BasicTy UnitTy)
   clear =
@@ -180,17 +178,17 @@ where
 --   edit (u+2) >>? \v =>
 --   put v
 
-watch : Show (typeOf a) => Task a -> Task (PairTy a StateTy)
-watch t = t <&> Watch
+inspect : Show (typeOf a) => Task a -> Task (PairTy a StateTy)
+inspect t = t <&> watch
 
 parallelWatch : Task (PairTy StateTy StateTy)
-parallelWatch = watch Watch
+parallelWatch = inspect watch
 
 
 -- Choices --
 
 pick1 : Task (BasicTy IntTy)
-pick1 = Fail <|> edit 0
+pick1 = fail <|> edit 0
 
 pick2 : Task (BasicTy IntTy)
 pick2 = edit 1 <|> edit 2
@@ -199,7 +197,7 @@ pick3 : Task (BasicTy IntTy)
 pick3 = pick2 <|> edit 3
 
 pick1' : Task (BasicTy IntTy)
-pick1' = "Fail" # Fail <?> "Cont" # edit 0
+pick1' = "Fail" # fail <?> "Cont" # edit 0
 
 pick2' : Task (BasicTy IntTy)
 pick2' = "First" # edit 1 <?> "Second" # edit 2
@@ -210,7 +208,7 @@ pick3' = pick2' <?> "Third" # edit 3
 auto : Task (BasicTy StringTy)
 auto = do
   x <- edit 0
-  if x >= 10 then pure "large" else Fail
+  if x >= 10 then pure "large" else fail
 
 events : Task (BasicTy IntTy)
 events =
@@ -225,7 +223,7 @@ events' =
 guards : Task (BasicTy StringTy)
 guards =
   edit 0 >>? \x =>
-  ((if x >= 10 then pure "large" else Fail) <|> (if x >= 100 then pure "very large" else Fail))
+  ((if x >= 10 then pure "large" else fail) <|> (if x >= 100 then pure "very large" else fail))
 
 partial -- due to `mod` on `0`
 branch : Task (BasicTy StringTy)
@@ -236,14 +234,14 @@ branch =
   else if x `mod` 5 == 0 then
     pure "multiple of 5"
   else
-    Fail
+    fail
 
 
 -- Empty edit --
 
 test : Task (BasicTy IntTy)
 test = do
-  ( x, y ) <- ask <&> ask
+  ( x, y ) <- ask IntTy <&> ask IntTy
   pure (x + y)
 
 

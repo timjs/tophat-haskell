@@ -4,11 +4,12 @@ import Task.Universe
 import Helpers
 
 %default total
-%access public export
+%access export
 
 
 -- Labels ----------------------------------------------------------------------
 
+public export
 Label : Type
 Label = String
 
@@ -22,6 +23,7 @@ isLabel s               with ( strM s )
 
 namespace Path
 
+  public export
   data Path
     = GoLeft Path
     | GoHere
@@ -41,6 +43,7 @@ namespace Path
 
 -- Events ----------------------------------------------------------------------
 
+public export
 data Action
   = Change (Universe.typeOf b)
   | Clear
@@ -48,6 +51,7 @@ data Action
   | PickAt Label
   | Continue (Maybe Label)
 
+public export
 data Event
   = ToLeft Event
   | ToHere Action
