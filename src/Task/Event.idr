@@ -44,12 +44,12 @@ namespace Path
 -- Events ----------------------------------------------------------------------
 
 public export
-data Action
-  = Change (Universe.typeOf b)
-  | Clear
-  | Pick Path
-  | PickAt Label
-  | Continue (Maybe Label)
+data Action : Type where
+  Change   : {b : BasicTy} -> typeOf b -> Action
+  Clear    : Action
+  Pick     : Path -> Action
+  PickAt   : Label -> Action
+  Continue : Maybe Label -> Action
 
 public export
 data Event
@@ -110,9 +110,9 @@ mutual
   parse []  = throw ":: Please enter a command or label, type `help` for more info"
 
   parse' : List String -> Either String Event
-  parse' ["change", val] with (Universe.Basic.parse val)
+  parse' ["change", val] with (Universe.parse val)
     | Nothing             = throw $ "!! Error parsing value '" ++ val ++ "'"
-    | (Just (ty ** v))    = ok $ ToHere $ Change {b = BasicTy ty} v
+    | (Just (ty ** v))    = ok $ ToHere $ Change {b = ty} v
   parse' ["clear"]        = ok $ ToHere $ Clear
   parse' ("pick" :: rest) = map (ToHere . Pick) $ Path.parse rest
   parse' ["cont"]         = ok $ ToHere $ Continue Nothing

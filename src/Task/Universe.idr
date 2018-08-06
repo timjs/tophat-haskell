@@ -1,7 +1,7 @@
 module Task.Universe
 
 import Data.String
-import Data.Universe
+import public Data.Universe
 
 import Helpers
 
