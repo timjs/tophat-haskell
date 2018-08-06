@@ -1,5 +1,7 @@
 module Task
 
+import public Control.Monad.Ref
+
 import public Task.Universe
 import public Task.Event
 import public Task.Semantics
@@ -21,10 +23,10 @@ infixl 1 >>=, >>?
 pure : (typeOf a) -> Task m a
 pure = Edit . Just
 
-(<&>) : Show (typeOf a) => Show (typeOf b) => Task m a -> Task m b -> Task m (PairTy a b)
+(<&>) : Show (typeOf a) => Show (typeOf b) => Task m a -> Task m b -> Task m (PAIR a b)
 (<&>) = All
 
-unit : Task m (BasicTy UnitTy)
+unit : Task m (BASIC UNIT)
 unit = pure ()
 
 -- (<*>) : Show (typeOf a) => Show (typeOf b) => Task m (FunTy a b) -> Task m a -> Task m b
@@ -80,8 +82,8 @@ fail = Fail
 
 -- Extras --
 
-ask : (b : Universe.Basic.Ty) -> Task m (BasicTy b)
+ask : (b : BasicTy) -> Task m (BASIC b)
 ask _ = Edit Nothing
 
-watch : MonadState (typeOf s) m => Task m s
+watch : MonadRef l m => l (typeOf a) -> Task m a
 watch = Watch
