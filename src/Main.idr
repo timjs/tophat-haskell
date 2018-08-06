@@ -92,7 +92,7 @@ twoSteps' =
 -- Parallel --
 
 parallel : Task (PairTy (BasicTy IntTy) (BasicTy StringTy))
-parallel = ask IntTy <&> hello
+parallel = "Give an integer" # ask IntTy <&> hello
 
 parallelStep : Task (BasicTy StringTy)
 parallelStep = do
@@ -135,12 +135,13 @@ where
     modify (del i)
   replace : Nat -> Task (BasicTy UnitTy)
   replace i =
-    ask IntTy >>? \x =>
+    "Give an index" # ask IntTy >>? \x =>
     modify (rep i x)
   change : Task (BasicTy UnitTy)
   change =
-    ask IntTy >>? \n =>
+    "Give an index" # ask IntTy >>? \n =>
     let i = the Nat (cast n) in
+    --FIXME: get should be evaluated underneath, and not be a primitive in the Task monad
     get >>= \xs =>
     if i <= List.length xs then
       "Delete" # delete i <?> "Replace" # replace i
@@ -148,7 +149,7 @@ where
       fail
   prepend : Task (BasicTy UnitTy)
   prepend =
-    ask IntTy >>? \x =>
+    "Give a new value" # ask IntTy >>? \x =>
     modify ((::) x)
   clear : Task (BasicTy UnitTy)
   clear =

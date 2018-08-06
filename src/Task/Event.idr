@@ -64,9 +64,9 @@ Show Action where
   show (Change _)          = "change <val>"
   show (Clear)             = "clear"
   show (Pick p)            = "pick" ++ show p
-  show (PickAt l)          = "pick " ++ l
+  show (PickAt l)          = l
   show (Continue Nothing)  = "cont"
-  show (Continue (Just l)) = "cont " ++ l
+  show (Continue (Just l)) = l
 
 Show Event where
   show (ToLeft e)  = "l " ++ show e
@@ -82,9 +82,8 @@ usage = unlines
   , "    change <value> : change current editor to <value> "
   , "    clear          : clear current editor"
   , "    pick <path>    : choose amongst the possible options"
-  , "    pick <label>   : choose amongst the possible options"
   , "    cont           : continue with the next task"
-  , "    cont <label>   : continue with one of possible options"
+  , "    <label>        : continue with the labeled task"
   , "    l <event>      : send <event> to the left task"
   , "    r <event>      : send <event> to the right task"
   , "    help           : show this message"
@@ -102,19 +101,23 @@ usage = unlines
   , "and labels always start with a Capital letter"
   ]
 
-parse : List String -> Either String Event
-parse ["change", val] with (Universe.Basic.parse val)
-  | Nothing            = throw $ "!! Error parsing value '" ++ val ++ "'"
-  | (Just (ty ** v))   = ok $ ToHere $ Change {b = BasicTy ty} v
-parse ["clear"]        = ok $ ToHere $ Clear
-parse ["pick", label] with ( isLabel label )
-  | True               = ok $ ToHere $ PickAt label
-  | False              = map (ToHere . Pick) $ Path.parse [label]
-parse ("pick" :: rest) = map (ToHere . Pick) $ Path.parse rest
-parse ["cont"]         = ok $ ToHere $ Continue Nothing
-parse [ "cont", label] = ok $ ToHere $  Continue $ Just label
-parse ("l" :: rest)    = map ToLeft $ parse rest
-parse ("r" :: rest)    = map ToRight $ parse rest
-parse ["help"]         = throw usage
-parse []               = throw ""
-parse other            = throw $ "!! '" ++ unwords other ++ "' is not a valid command, type 'help' for more info"
+mutual
+  --FIXME: fix totality
+  parse : List String -> Either String Event
+  parse (first :: rest) with ( isLabel first )
+    | True  = ok $ ToHere $ PickAt first
+    | False = parse' (first :: rest)
+  parse []  = throw ":: Please enter a command or label, type `help` for more info"
+
+  parse' : List String -> Either String Event
+  parse' ["change", val] with (Universe.Basic.parse val)
+    | Nothing             = throw $ "!! Error parsing value '" ++ val ++ "'"
+    | (Just (ty ** v))    = ok $ ToHere $ Change {b = BasicTy ty} v
+  parse' ["clear"]        = ok $ ToHere $ Clear
+  parse' ("pick" :: rest) = map (ToHere . Pick) $ Path.parse rest
+  parse' ["cont"]         = ok $ ToHere $ Continue Nothing
+  parse' [ "cont", label] = ok $ ToHere $  Continue $ Just label
+  parse' ("l" :: rest)    = map ToLeft $ parse rest
+  parse' ("r" :: rest)    = map ToRight $ parse rest
+  parse' ["help"]         = throw usage
+  parse' other            = throw $ "!! `" ++ unwords other ++ "` is not a valid command, type `help` for more info"
