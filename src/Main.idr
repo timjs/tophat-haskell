@@ -135,7 +135,7 @@ where
     modify (del i)
   replace : Nat -> Task (BasicTy UnitTy)
   replace i =
-    "Give an index" # ask IntTy >>? \x =>
+    "Give a new value" # ask IntTy >>? \x =>
     modify (rep i x)
   change : Task (BasicTy UnitTy)
   change =
