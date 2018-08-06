@@ -9,6 +9,18 @@ import Helpers
 %access public export
 
 
+-- Labels ----------------------------------------------------------------------
+
+public export
+Label : Type
+Label = String
+
+isLabel : String -> Bool
+isLabel s               with ( strM s )
+ isLabel ""             | StrNil      = False
+ isLabel (strCons c cs) | StrCons c _ = isUpper c
+
+
 -- Basic universe --------------------------------------------------------------
 
 data BasicTy

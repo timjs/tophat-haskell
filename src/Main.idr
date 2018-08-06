@@ -3,8 +3,6 @@ module Main
 import System
 
 import Task
-import Task.Universe
-import Task.Event
 import Helpers
 
 %default total
