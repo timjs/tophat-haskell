@@ -1,5 +1,7 @@
 module Task
 
+import Control.Monad.State
+
 import Task.Universe
 import Task.Event
 import Helpers
@@ -19,37 +21,23 @@ infixl 1 >>=, >>?
 
 -- Types -----------------------------------------------------------------------
 
--- State --
-
-public export
-StateTy : Universe.Ty
-StateTy = ListTy (BasicTy IntTy)
-
-public export
-State : Type
-State = typeOf StateTy
-
-
 -- Tasks --
 
-data Task : Universe.Ty -> Type where
+data Task : (Type -> Type) -> Universe.Ty -> Type where
   -- Core
-  Edit  : (val : Maybe (typeOf a)) -> Task a
-  Watch : Task StateTy
+  Edit  : (val : Maybe (typeOf a)) -> Task m a
+  Watch : MonadState (typeOf s) m => Task m s
   -- Parallel
-  All   : Show (typeOf a) => Show (typeOf b) => (left : Task a) -> (right : Task b) -> Task (PairTy a b)
+  All   : Show (typeOf a) => Show (typeOf b) => (left : Task m a) -> (right : Task m b) -> Task m (PairTy a b)
   -- Choice
-  Any   : Show (typeOf a) => (left : Task a) -> (right : Task a) -> Task a
-  One   : Show (typeOf a) => (left : Task a) -> (right : Task a) -> Task a
-  Fail  : Task a
+  Any   : Show (typeOf a) => (left : Task m a) -> (right : Task m a) -> Task m a
+  One   : Show (typeOf a) => (left : Task m a) -> (right : Task m a) -> Task m a
+  Fail  : Task m a
   -- Sequence
-  Then  : Show (typeOf a) => (this : Task a) -> (next : typeOf a -> Task b) -> Task b
-  Next  : Show (typeOf a) => (this : Task a) -> (next : typeOf a -> Task b) -> Task b
+  Then  : Show (typeOf a) => (this : Task m a) -> (next : typeOf a -> Task m b) -> Task m b
+  Next  : Show (typeOf a) => (this : Task m a) -> (next : typeOf a -> Task m b) -> Task m b
   -- Labels
-  Label : Show (typeOf a) => Label -> (this : Task a) -> Task a
-  -- State
-  Get   : Task StateTy
-  Put   : (x : typeOf StateTy) -> Task (BasicTy UnitTy)
+  Label : Show (typeOf a) => Label -> (this : Task m a) -> Task m a
 
 
 -- Errors --
@@ -71,43 +59,43 @@ Show NotApplicable where
 
 -- Monoidal --
 
-pure : (typeOf a) -> Task a
+pure : (typeOf a) -> Task m a
 pure = Edit . Just
 
-(<&>) : Show (typeOf a) => Show (typeOf b) => Task a -> Task b -> Task (PairTy a b)
+(<&>) : Show (typeOf a) => Show (typeOf b) => Task m a -> Task m b -> Task m (PairTy a b)
 (<&>) = All
 
-unit : Task (BasicTy UnitTy)
+unit : Task m (BasicTy UnitTy)
 unit = pure ()
 
--- (<*>) : Show (typeOf a) => Show (typeOf b) => Task (FunTy a b) -> Task a -> Task b
+-- (<*>) : Show (typeOf a) => Show (typeOf b) => Task m (FunTy a b) -> Task m a -> Task m b
 -- (<*>) t1 t2 = (\f,x => f x) <$> t1 <&> t2
 
 
 -- Alternative --
 
-(<|>) : Show (typeOf a) => Task a -> Task a -> Task a
+(<|>) : Show (typeOf a) => Task m a -> Task m a -> Task m a
 (<|>) = Any
 
-(<?>) : Show (typeOf a) => Task a -> Task a -> Task a
+(<?>) : Show (typeOf a) => Task m a -> Task m a -> Task m a
 (<?>) = One
 
-fail : Task a
+fail : Task m a
 fail = Fail
 
 
 -- Monad --
 
-(>>=) : Show (typeOf a) => Task a -> (typeOf a -> Task b) -> Task b
+(>>=) : Show (typeOf a) => Task m a -> (typeOf a -> Task m b) -> Task m b
 (>>=) = Then
 
-(>>?) : Show (typeOf a) => Task a -> (typeOf a -> Task b) -> Task b
+(>>?) : Show (typeOf a) => Task m a -> (typeOf a -> Task m b) -> Task m b
 (>>?) = Next
 
 -- infixl 1 >>*
--- (>>*) : Show (typeOf a) => Task a -> List (typeOf a -> (Bool, Task b)) -> Task b
+-- (>>*) : Show (typeOf a) => Task m a -> List (typeOf a -> (Bool, Task m b)) -> Task m b
 -- (>>*) t fs            = t >>- convert fs where
---   convert : List (Universe.typeOf a -> (Bool, Task b)) -> Universe.typeOf a -> Task b
+--   convert : List (Universe.typeOf a -> (Bool, Task m b)) -> Universe.typeOf a -> Task m b
 --   convert [] x        = fail
 --   convert (f :: fs) x =
 --     let
@@ -118,50 +106,41 @@ fail = Fail
 
 -- Functor --
 
-(<$>) : Show (typeOf a) => (typeOf a -> typeOf b) -> Task a -> Task b
+(<$>) : Show (typeOf a) => (typeOf a -> typeOf b) -> Task m a -> Task m b
 (<$>) f t = do
   x <- t
   pure $ f x
 
 
--- State --
-
-get : Task StateTy
-get = Get
-
-put : typeOf StateTy -> Task (BasicTy UnitTy)
-put = Put
-
-
 -- Labels --
 
 ||| Infix operator to label a task
-(#) : Show (typeOf a) => Label -> Task a -> Task a
+(#) : Show (typeOf a) => Label -> Task m a -> Task m a
 (#) = Label
 
 ||| Get the current label, if one
-label : Task a -> Maybe Label
+label : Task m a -> Maybe Label
 label (Label l _) = Just l
 label _           = Nothing
 
 ||| Remove as much labels as possible from a task.
 |||
 ||| Usefull to deeply match task constructors while ignoring labels.
-delabel : Task a -> Task a
+delabel : Task m a -> Task m a
 delabel (Label _ t) = delabel t
 delabel t           = t
 
 ||| Match a label to a task.
-(=~) : Label -> Task a -> Bool
+(=~) : Label -> Task m a -> Bool
 (=~) k (Label l _) = l == l
 (=~) _ _           = False
 
 ||| Negation of `(=~)`.
-(/~) : Label -> Task a -> Bool
+(/~) : Label -> Task m a -> Bool
 (/~) l t = not (l =~ t)
 
 ||| Collect all labels in an external choice
-labels : Task a -> List Label
+labels : Task m a -> List Label
 labels (Label _ Fail)   = []
 labels (Label l this)   = l :: labels this
 labels (One left right) = labels left ++ labels right
@@ -173,7 +152,7 @@ labels _                = []
 ||| Depth first search for a label on a task tree.
 |||
 ||| Returns the path of the found task.
-find : Label -> Task a -> Maybe Path
+find : Label -> Task m a -> Maybe Path
 find k (Label l this) with ( k == l )
   | True                = Just GoHere
   | False               = find k this
@@ -184,7 +163,7 @@ find k (One left right) = map GoLeft (find k left) <|> map GoRight (find k right
 find k _                = Nothing
 
 ||| Check if a task constructor keeps its label after stepping or loses it.
-keeper : Task a -> Bool
+keeper : Task m a -> Bool
 keeper (Edit _)  = True
 keeper (All _ _) = True
 keeper (Fail)    = True
@@ -193,16 +172,17 @@ keeper _         = False
 
 -- Extras --
 
-ask : (b : Universe.Basic.Ty) -> Task (BasicTy b)
+ask : (b : Universe.Basic.Ty) -> Task m (BasicTy b)
 ask _ = Edit Nothing
 
-watch : Task StateTy
+watch : MonadState (typeOf s) m => Task m s
 watch = Watch
 
 
 -- Showing ---------------------------------------------------------------------
 
-ui : Show (typeOf a) => Task a -> State -> String
+{-
+ui : Show (typeOf a) => Task m a -> State -> String
 ui (Edit (Just x))  _ = "□(" ++ show x ++ ")"
 ui (Edit Nothing)   _ = "□(_)"
 ui (Watch)          s = "■(" ++ show s ++ ")"
@@ -223,7 +203,7 @@ ui (Put x)          _ = "↑(" ++ show x ++ ")"
 
 -- Semantics -------------------------------------------------------------------
 
-value : Task a -> State -> Maybe (typeOf a)
+value : Task m a -> State -> Maybe (typeOf a)
 value (Edit val)       _ = val
 value (Watch)          s = Just s
 value (All left right) s = MkPair <$> value left s <*> (value right s)
@@ -237,7 +217,7 @@ value (Put _)          _ = Just ()
 --   * `Then` transforms values to another type
 value _                _ = Nothing
 
-choices : Task a -> List Path
+choices : Task m a -> List Path
 choices (One left right) =
   --XXX: No with-block possible?
   case ( delabel left, delabel right ) of
@@ -247,7 +227,7 @@ choices (One left right) =
     ( left, right ) => map GoLeft (GoHere :: choices left) ++ map GoRight (GoHere :: choices right)
 choices _           = []
 
-events : Task a -> State -> List Event
+events : Task m a -> State -> List Event
 events (Edit {a} val)   _ = [ ToHere (Change (Universe.defaultOf a)), ToHere Clear ]
 events (Watch)          _ = [ ToHere (Change (Universe.defaultOf StateTy)) ]
 events (All left right) s = map ToLeft (events left s) ++ map ToRight (events right s)
@@ -264,7 +244,7 @@ events (Next this next) s =
   in
   map ToHere here ++ events this s
   where
-    go : Task a -> List Action
+    go : Task m a -> List Action
     go task with ( delabel task )
       | One _ _ = map (Continue . Just) $ labels task
       | Fail    = []
@@ -273,7 +253,7 @@ events (Label _ this)   s = events this s
 events (Get)            _ = []
 events (Put x)          _ = []
 
-normalise : Task a -> State -> ( Task a, State )
+normalise : Task m a -> State -> ( Task m a, State )
 -- Step --
 normalise (Then this cont) state =
   let
@@ -327,7 +307,7 @@ normalise task state =
   ( task, state )
 
 --FIXME: fix totallity...
-handle : Task a -> Event -> State -> Either NotApplicable ( Task a, State )
+handle : Task m a -> Event -> State -> Either NotApplicable ( Task m a, State )
 -- Edit --
 handle (Edit _) (ToHere Clear) state =
   ok ( Edit Nothing, state )
@@ -402,12 +382,14 @@ handle task event state =
   -- Cases `Get` and `Put`: This case can't happen, it is already evaluated by `normalise`
   throw $ CouldNotHandle event
 
-drive : Task a -> Event -> State -> Either NotApplicable ( Task a, State )
+drive : Task m a -> Event -> State -> Either NotApplicable ( Task m a, State )
 drive task event state =
   uncurry normalise <$> handle task event state
 -- do
 --   ( task_new, state_new ) <- handle task event state
 --   ok $ normalise task_new state_new
 
-init : Task a -> ( Task a, State )
+init : Task m a -> ( Task m a, State )
 init = flip normalise []
+
+-}
