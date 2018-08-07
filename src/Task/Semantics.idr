@@ -7,19 +7,23 @@ import Task.Universe
 import Task.Event
 import Helpers
 
+
 %default total
 %access export
 
 %hide Language.Reflection.Elab.Tactics.normalise
 
 
+
 -- Errors ----------------------------------------------------------------------
+
 
 data NotApplicable
   = CouldNotChange
   | CouldNotFind Label
   | CouldNotContinue
   | CouldNotHandle Event
+
 
 Show NotApplicable where
   show (CouldNotChange)   = "Could not change value because types do not match"
@@ -28,32 +32,36 @@ Show NotApplicable where
   show (CouldNotHandle e) = "Could not handle event `" ++ show e ++ "`"
 
 
+
 -- Showing ---------------------------------------------------------------------
+
 
 ui : MonadRef l m => Show (typeOf a) => Task m a -> m String
 ui (Edit (Just x))       = pure $ "□(" ++ show x ++ ")"
 ui (Edit Nothing)        = pure $ "□(_)"
 ui (Watch loc)           = pure $ "■(" ++ show !(deref loc) ++ ")"
-ui (All left right)      = pure $ !(ui left) ++ "   ⋈   " ++ !(ui right)
-ui (Any left right)      = pure $ !(ui left) ++ "   ◆   " ++ !(ui right)
-ui (One left right) with ( delabel left, delabel right )
-  | ( One _ _, One _ _ ) = pure $                 !(ui left) ++ " ◇ " ++ !(ui right)
-  | ( One _ _, _       ) = pure $                 !(ui left) ++ " ◇ " ++ fromMaybe "…" (label right)
-  | ( _,       One _ _ ) = pure $ fromMaybe "…" (label left) ++ " ◇ " ++ !(ui right)
-  | ( _,       _       ) = pure $ fromMaybe "…" (label left) ++ " ◇ " ++ fromMaybe "…" (label right)
+ui (All left rght)      = pure $ !(ui left) ++ "   ⋈   " ++ !(ui rght)
+ui (Any left rght)      = pure $ !(ui left) ++ "   ◆   " ++ !(ui rght)
+ui (One left rght) with ( delabel left, delabel rght )
+  | ( One _ _, One _ _ ) = pure $                 !(ui left) ++ " ◇ " ++ !(ui rght)
+  | ( One _ _, _       ) = pure $                 !(ui left) ++ " ◇ " ++ fromMaybe "…" (label rght)
+  | ( _,       One _ _ ) = pure $ fromMaybe "…" (label left) ++ " ◇ " ++ !(ui rght)
+  | ( _,       _       ) = pure $ fromMaybe "…" (label left) ++ " ◇ " ++ fromMaybe "…" (label rght)
 ui (Fail)                = pure $ "↯"
 ui (Then this cont)      = pure $ !(ui this) ++ " ▶…"
 ui (Next this cont)      = pure $ !(ui this) ++ " ▷…"
 ui (Label l this)        = pure $ l ++ " # " ++ !(ui this)
 
 
+
 -- Helpers ---------------------------------------------------------------------
+
 
 value : MonadRef l m => Task m a -> m (Maybe (typeOf a))
 value (Edit val)       = pure $ val
 value (Watch loc)      = pure $ Just !(deref loc)
-value (All left right) = pure $ !(value left) <&> !(value right)
-value (Any left right) = pure $ !(value left) <|> !(value right)
+value (All left rght) = pure $ !(value left) <&> !(value rght)
+value (Any left rght) = pure $ !(value left) <|> !(value rght)
 value (Label _ this)   = value this
 -- The rest never has a value because:
 --   * `One` and `Next` need to wait for an user choice
@@ -61,21 +69,23 @@ value (Label _ this)   = value this
 --   * `Then` transforms values to another type
 value _                = pure $ Nothing
 
+
 choices : Task m a -> List Path
-choices (One left right) =
+choices (One left rght) =
   --XXX: No with-block possible?
-  case ( delabel left, delabel right ) of
+  case ( delabel left, delabel rght ) of
     ( Fail, Fail  ) => []
     ( left, Fail  ) => map GoLeft (GoHere :: choices left)
-    ( Fail, right ) => map GoRight (GoHere :: choices right)
-    ( left, right ) => map GoLeft (GoHere :: choices left) ++ map GoRight (GoHere :: choices right)
+    ( Fail, rght ) => map GoRight (GoHere :: choices rght)
+    ( left, rght ) => map GoLeft (GoHere :: choices left) ++ map GoRight (GoHere :: choices rght)
 choices _           = []
+
 
 events : MonadRef l m => Task m a -> m (List Event)
 events (Edit {a} _)     = pure $ [ ToHere (Change (defaultOf a)), ToHere Clear ]
 events (Watch {a} _)    = pure $ [ ToHere (Change (defaultOf a)) ]
-events (All left right) = pure $ map ToLeft !(events left) ++ map ToRight !(events right)
-events (Any left right) = pure $ map ToLeft !(events left) ++ map ToRight !(events right)
+events (All left rght) = pure $ map ToLeft !(events left) ++ map ToRight !(events rght)
+events (Any left rght) = pure $ map ToLeft !(events left) ++ map ToRight !(events rght)
 events this@(One _ _)   = pure $ map (ToHere . PickAt) (labels this) ++ map (ToHere . Pick) (choices this)
 events (Fail)           = pure $ []
 events (Then this _)    = events this
@@ -89,6 +99,7 @@ events (Next this next) = do
       | Fail    = []
       | _       = [ Continue Nothing ]
 events (Label _ this)   = events this
+
 
 
 -- Normalisation ---------------------------------------------------------------
@@ -107,20 +118,20 @@ normalise (Then this cont) = do
         next => normalise next
 
 -- Evaluate --
-normalise (All left right) = do
+normalise (All left rght) = do
   left_new <- normalise left
-  right_new <- normalise right
-  pure $ All left_new right_new
+  rght_new <- normalise rght
+  pure $ All left_new rght_new
 
-normalise (Any left right) = do
+normalise (Any left rght) = do
   left_new <- normalise left
-  right_new <- normalise right
+  rght_new <- normalise rght
   case !(value left_new) of
     Just _  => pure $ left_new
     Nothing =>
-      case !(value right_new) of
-        Just _  => pure $ right_new
-        Nothing => pure $ Any left_new right_new
+      case !(value rght_new) of
+        Just _  => pure $ rght_new
+        Nothing => pure $ Any left_new rght_new
 
 normalise (Next this cont) = do
   this_new <- normalise this
@@ -138,7 +149,9 @@ normalise task = do
   pure $ task
 
 
+
 {- Event handling --------------------------------------------------------------
+
 
 --FIXME: fix totallity...
 -- Edit --
@@ -157,23 +170,23 @@ handle (Then this cont) event state = do
   -- Pass the event to this
   ( this_new, state_new ) <- handle this event state
   ok ( Then this_new cont, state_new )
--- Pass to left or right --
-handle (All left right) (ToLeft event) state = do
+-- Pass to left or rght --
+handle (All left rght) (ToLeft event) state = do
   -- Pass the event to left
   ( left_new, state_new ) <- handle left event state
-  ok ( All left_new right, state_new )
-handle (All left right) (ToRight event) state = do
-  -- Pass the event to right
-  ( right_new, state_new ) <- handle right event state
-  ok ( All left right_new, state_new )
-handle (Any left right) (ToLeft event) state = do
+  ok ( All left_new rght, state_new )
+handle (All left rght) (ToRight event) state = do
+  -- Pass the event to rght
+  ( rght_new, state_new ) <- handle rght event state
+  ok ( All left rght_new, state_new )
+handle (Any left rght) (ToLeft event) state = do
   -- Pass the event to left
   ( left_new, state_new ) <- handle left event state
-  ok ( Any left_new right, state_new )
-handle (Any left right) (ToRight event) state = do
-  -- Pass the event to right
-  ( right_new, state_new ) <- handle right event state
-  ok ( Any left right_new, state_new )
+  ok ( Any left_new rght, state_new )
+handle (Any left rght) (ToRight event) state = do
+  -- Pass the event to rght
+  ( rght_new, state_new ) <- handle rght event state
+  ok ( Any left rght_new, state_new )
 -- Interact
 handle task@(One _ _) (ToHere (PickAt l)) state =
   case find l task of
@@ -182,9 +195,9 @@ handle task@(One _ _) (ToHere (PickAt l)) state =
 handle (One left _) (ToHere (Pick (GoLeft p))) state =
   -- Go left
   handle (delabel left) (ToHere (Pick p)) state
-handle (One _ right) (ToHere (Pick (GoRight p))) state =
-  -- Go right
-  handle (delabel right) (ToHere (Pick p)) state
+handle (One _ rght) (ToHere (Pick (GoRight p))) state =
+  -- Go rght
+  handle (delabel rght) (ToHere (Pick p)) state
 handle task (ToHere (Pick GoHere)) state =
   -- Go here
   ok ( task, state )
@@ -217,12 +230,14 @@ handle task event state =
   -- Cases `Get` and `Put`: This case can't happen, it is already evaluated by `normalise`
   throw $ CouldNotHandle event
 
+
 drive : Task a -> Event -> State -> Either NotApplicable ( Task a, State )
 drive task event state =
   uncurry normalise <$> handle task event state
 -- do
 --   ( task_new, state_new ) <- handle task event state
 --   ok $ normalise task_new state_new
+
 
 init : Task a -> ( Task a, State )
 init = flip normalise []
