@@ -90,69 +90,60 @@ events (Next this next) = do
       | _       = [ Continue Nothing ]
 events (Label _ this)   = events this
 
-{-
 
 -- Normalisation ---------------------------------------------------------------
 
-normalise : Task a -> State -> ( Task a, State )
+normalise : MonadRef l m => Task m a -> m (Task m a)
+
 -- Step --
-normalise (Then this cont) state =
-  let
-    ( this_new, state_new ) = normalise this state
-  in
-  case value this_new state_new of
-    Nothing => ( Then this_new cont, state_new )
+normalise (Then this cont) = do
+  this_new <- normalise this
+  case !(value this_new) of
+    Nothing => pure $ Then this_new cont
     Just v  =>
       --FIXME: should we use normalise here instead of just eval?
       case cont v of
-        Fail => ( Then this_new cont, state_new )
-        next => normalise next state_new
+        Fail => pure $ Then this_new cont
+        next => normalise next
+
 -- Evaluate --
-normalise (All left right) state =
-  let
-    ( left_new, state_new )    = normalise left state
-    ( right_new, state_newer ) = normalise right state_new
-  in
-  ( All left_new right_new, state_newer )
-normalise (Any left right) state =
-  let
-    ( left_new, state_new )    = normalise left state
-    ( right_new, state_newer ) = normalise right state_new
-  in
-  case value left_new state_newer of
-    Just _  => ( left_new, state_newer )
+normalise (All left right) = do
+  left_new <- normalise left
+  right_new <- normalise right
+  pure $ All left_new right_new
+
+normalise (Any left right) = do
+  left_new <- normalise left
+  right_new <- normalise right
+  case !(value left_new) of
+    Just _  => pure $ left_new
     Nothing =>
-      case value right_new state_newer of
-        Just _  => ( right_new, state_newer )
-        Nothing => ( Any left_new right_new, state_newer )
-normalise (Next this cont) state =
-  let
-    ( this_new, state_new ) = normalise this state
-  in
-  ( Next this_new cont, state_new )
+      case !(value right_new) of
+        Just _  => pure $ right_new
+        Nothing => pure $ Any left_new right_new
+
+normalise (Next this cont) = do
+  this_new <- normalise this
+  pure $ Next this_new cont
+
 -- Label --
-normalise (Label l this) state with ( keeper this )
-  | False = normalise this state
-  | True  =
-      let
-        ( this_new, state_new ) = normalise this state
-      in
-      ( Label l this_new, state_new )
--- State --
-normalise (Get) state =
-  ( Edit (Just state), state )
-normalise (Put x) state =
-  ( Edit (Just ()), x )
+normalise (Label l this) with ( keeper this )
+  | False = normalise this
+  | True  = do
+      this_new <- normalise this
+      pure $ Label l this_new
+
 -- Values --
-normalise task state =
-  ( task, state )
+normalise task = do
+  pure $ task
 
 
--- Event handling --------------------------------------------------------------
+{- Event handling --------------------------------------------------------------
 
 --FIXME: fix totallity...
-handle : Task a -> Event -> State -> Either NotApplicable ( Task a, State )
 -- Edit --
+handle  : MonadRef l m => Task m a -> Event -> Either NotApplicable (m (Task m a))
+handle' : MonadRef l m => Task m a -> Event -> m (Either NotApplicable (Task m a))
 handle (Edit _) (ToHere Clear) state =
   ok ( Edit Nothing, state )
 handle (Edit {a} val) (ToHere (Change {b} val_new)) state with (decEq b a)
