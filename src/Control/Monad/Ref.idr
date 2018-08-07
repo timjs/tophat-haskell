@@ -30,8 +30,10 @@ MonadRef IORef IO where
 
 -- Helpers ---------------------------------------------------------------------
 
-update : MonadRef l m => l a -> (a -> a) -> m ()
-update loc f = ?monad_ref_update
+modify : MonadRef l m => l a -> (a -> a) -> m ()
+modify l f = do
+  x <- deref l
+  l := f x
 
 
 {- Tests -----------------------------------------------------------------------
