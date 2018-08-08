@@ -58,24 +58,24 @@ data Heap : (ts : Shape k) -> Type where
 
 ||| Location on the heap.
 |||
-||| A value of type `Loc t s` corresponds to a proof that a value of type `typeOf t`
-||| is stored in a heap of shape `s`.
+||| A value of type `Loc ts t` corresponds to a proof that a value of type `typeOf t`
+||| is stored in a heap of shape `ts`.
 ||| `Here` means it is stored at this location.
 ||| `There` means it is stored a bit further on the heap.
 |||
 ||| Note: corresponds to an universe indexed variant of `Data.Vect.Elem`.
-data Loc : (t : Ty u) -> (ts : Shape k) -> Type where
-  Here  : Loc t (t :: ts)
-  There : (later : Loc t ts) -> Loc t (s :: ts)
+data Loc : (ts : Shape k) -> (t : Ty u) -> Type where
+  Here  : Loc (t :: ts) t
+  There : (later : Loc ts t) -> Loc (s :: ts) t
 
 
 data RefT : (ts : Shape k) -> (ts' : Shape k') -> (m : Type -> Type) -> (a : Type) -> Type where
   Pure  : (x : a) -> RefT ts ts m a
   Bind  : (this : RefT ts ts' m a) -> (next : a -> RefT ts' ts'' m b) -> RefT ts ts'' m b
 
-  New   : (x : typeOf u t) -> RefT ts (t :: ts) m (Loc t (t :: ts))
-  Read  : (l : Loc t ts) -> RefT ts ts m (typeOf u t)
-  Write : (l : Loc t ts) -> (x : typeOf u t) -> RefT ts ts m ()
+  New   : (x : typeOf u t) -> RefT ts (t :: ts) m (Loc (t :: ts) t)
+  Read  : (l : Loc ts t) -> RefT ts ts m (typeOf u t)
+  Write : (l : Loc ts t) -> (x : typeOf u t) -> RefT ts ts m ()
 
 
 Ref : (ts : Shape k) -> (ts' : Shape k') -> (a : Type) -> Type
@@ -86,13 +86,13 @@ Ref ts ts' = RefT ts ts' Identity
 -- Semantics --
 
 
-lookup : Loc t ts -> Heap ts -> typeOf u t
+lookup : Loc ts t -> Heap ts -> typeOf u t
 lookup _         []        impossible
 lookup (Here)    (x :: _)  = x
 lookup (There l) (_ :: xs) = lookup l xs
 
 
-update : Loc t ts -> typeOf u t -> Heap ts -> Heap ts
+update : Loc ts t -> typeOf u t -> Heap ts -> Heap ts
 update _         _ []        impossible
 update (Here)    y (_ :: xs) = y :: xs
 update (There l) y (x :: xs) = x :: update l y xs
@@ -121,10 +121,30 @@ exec mut = snd . run mut
 
 
 
-{-------------------------------------------------------------------------------
 -- Instances -------------------------------------------------------------------
 
 
+Functor f => Functor (RefT ts ts' f) where
+  map f fa = ?holeFunctor
+
+
+Applicative f => Applicative (RefT ts ts' f) where
+  pure a = ?holePureApplicative
+
+  f <*> fa = ?holeApplyApplicative
+
+
+Monad m => Monad (RefT ts ts' m) where
+  fa >>= f = ?holeMonadBind
+
+
+-- Monad m => MonadRef (Loc ts) (RefT ts ts' m) where
+--   ref x = ?holeMonadRefRef
+--   deref l = ?holeMonadRefDeref
+--   assign l x = ?holeMonadRefAssign
+
+
+{-------------------------------------------------------------------------------
 MonadRef IORef IO where
   ref    = newIORef
   deref  = readIORef
