@@ -33,12 +33,14 @@ infix 4 :=
 
 -- Implementation --------------------------------------------------------------
 
+-- Types --
+
 
 ||| The shape of a heap.
 |||
 ||| Determines the type of data stored at every memory location.
 ||| Heaps have a length `k` and every location has a certain type `t` from the universe `u`.
-Shape : {u : Universe} -> Nat -> Type
+Shape : {u : Universe} -> (k : Nat) -> Type
 Shape {u} k = Vect k (Ty u)
 
 
@@ -49,7 +51,7 @@ Shape {u} k = Vect k (Ty u)
 ||| to construct a heap of shape `t :: ts`.
 |||
 ||| Note: corresponds to an universe indexed variant of `Data.HVect`.
-data Heap : Shape k -> Type where
+data Heap : (ts : Shape k) -> Type where
   Nil  : Heap []
   (::) : (a : typeOf u t) -> (as : Heap ts) -> Heap (t :: ts)
 
@@ -62,7 +64,7 @@ data Heap : Shape k -> Type where
 ||| `There` means it is stored a bit further on the heap.
 |||
 ||| Note: corresponds to an universe indexed variant of `Data.Vect.Elem`.
-data Loc : Ty u -> Shape k -> Type where
+data Loc : (t : Ty u) -> (ts : Shape k) -> Type where
   Here  : Loc t (t :: ts)
   There : (later : Loc t ts) -> Loc t (s :: ts)
 
@@ -81,6 +83,45 @@ Ref ts ts' = RefT ts ts' Identity
 
 
 
+-- Semantics --
+
+
+lookup : Loc t ts -> Heap ts -> typeOf u t
+lookup _         []        impossible
+lookup (Here)    (x :: _)  = x
+lookup (There l) (_ :: xs) = lookup l xs
+
+
+update : Loc t ts -> typeOf u t -> Heap ts -> Heap ts
+update _         _ []        impossible
+update (Here)    y (_ :: xs) = y :: xs
+update (There l) y (x :: xs) = x :: update l y xs
+
+
+runT : Monad m => RefT ts ts' m a -> Heap ts -> m ( a, Heap ts' )
+runT (Pure x)         xs = pure ( x, xs )
+runT (Bind this next) xs = do
+  ( this, xs' ) <- runT this xs
+  runT (next this) xs'
+runT (New x)          xs = pure ( Here, x :: xs )
+runT (Read l)         xs = pure ( lookup l xs, xs )
+runT (Write l x)      xs = pure ( (), update l x xs )
+
+
+run : Ref ts ts' a -> Heap ts -> ( a, Heap ts' )
+run r = runIdentity . runT r
+
+
+eval : Ref ts ts' a -> Heap ts -> a
+eval mut = fst . run mut
+
+
+exec : Ref ts ts' a -> Heap ts -> Heap ts'
+exec mut = snd . run mut
+
+
+
+{-------------------------------------------------------------------------------
 -- Instances -------------------------------------------------------------------
 
 
@@ -101,7 +142,7 @@ modify l f = do
 
 
 
-{- Tests -----------------------------------------------------------------------
+-- Tests -----------------------------------------------------------------------
 
 
 test0 : IO Int
