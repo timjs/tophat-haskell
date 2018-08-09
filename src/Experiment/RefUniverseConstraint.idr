@@ -2,6 +2,7 @@ module Control.Monad.Ref
 
 import public Control.Monad.Identity
 import public Control.Monad.Trans
+import public Data.IORef
 import public Data.Universe
 
 %default total
@@ -15,13 +16,6 @@ import public Data.Universe
 -- Interface -------------------------------------------------------------------
 
 
-||| ...
-|||
-||| The way to go is to parametrise `MonadRef` over a type `t` which has the
-||| interface constraint of `Universe`.
-||| Now `t` is an currated type containing a way to translate its elements `e`
-||| to real Idris types with the `typeOf` method.
-||| The interface record will get passed along automatically.
 interface ( Monad m, Universe t ) => MonadRef (t : Type) (l : t -> Type) (m : Type -> Type) | m where
   ref    : (typeOf a) -> m (l a)
   deref  : l a -> m (typeOf a)

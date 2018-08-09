@@ -2,7 +2,8 @@ module Control.Monad.Ref
 
 import public Control.Monad.Identity
 import public Control.Monad.Trans
-import public Data.Universe
+import public Data.IORef
+import public Experiment.UniverseRecord
 
 %default total
 %access public export
@@ -15,21 +16,14 @@ import public Data.Universe
 -- Interface -------------------------------------------------------------------
 
 
-||| ...
-|||
-||| The way to go is to parametrise `MonadRef` over a type `t` which has the
-||| interface constraint of `Universe`.
-||| Now `t` is an currated type containing a way to translate its elements `e`
-||| to real Idris types with the `typeOf` method.
-||| The interface record will get passed along automatically.
-interface ( Monad m, Universe t ) => MonadRef (t : Type) (l : t -> Type) (m : Type -> Type) | m where
-  ref    : (typeOf a) -> m (l a)
-  deref  : l a -> m (typeOf a)
-  assign : l a -> (typeOf a) -> m ()
+interface Monad m => MonadRef (u : Universe) (l : Ty u -> Type) (m : Type -> Type) | m where
+  ref    : (typeOf u a) -> m (l a)
+  deref  : l a -> m (typeOf u a)
+  assign : l a -> (typeOf u a) -> m ()
 
 
 infix 4 :=
-(:=) : MonadRef t l m => l a -> (typeOf a) -> m ()
+(:=) : MonadRef u l m => l a -> (typeOf u a) -> m ()
 (:=) = assign
 
 
@@ -37,10 +31,7 @@ infix 4 :=
 -- Instances -------------------------------------------------------------------
 
 
-||| Note:
-||| - We can't make an instance of MonadRef for IO because of the type clash between
-|||   `l : t -> Type` and `IORef : Type -> Type`
--- MonadRef t IORef IO where
+-- MonadRef u IORef IO where
 --   ref    = newIORef
 --   deref  = readIORef
 --   assign = writeIORef
@@ -48,7 +39,7 @@ infix 4 :=
 
 -- Helpers ---------------------------------------------------------------------
 
-modify : MonadRef t l m => l a -> (typeOf a -> typeOf a) -> m ()
+modify : MonadRef u l m => l a -> (typeOf u a -> typeOf u a) -> m ()
 modify l f = do
   x <- deref l
   l := f x

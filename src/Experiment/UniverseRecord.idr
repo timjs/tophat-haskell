@@ -1,4 +1,4 @@
-module Data.UniverseR
+module Data.Universe
 
 %default total
 
