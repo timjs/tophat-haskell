@@ -23,9 +23,9 @@ import public Data.Universe
 ||| to real Idris types with the `typeOf` method.
 ||| The interface record will get passed along automatically.
 interface ( Monad m, Universe t ) => MonadRef (t : Type) (l : t -> Type) (m : Type -> Type) | m where
-  ref    : (typeOf a) -> m (l a)
+  ref    : typeOf a -> m (l a)
   deref  : l a -> m (typeOf a)
-  assign : l a -> (typeOf a) -> m ()
+  assign : l a -> typeOf a -> m ()
 
 
 infix 4 :=
