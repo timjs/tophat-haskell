@@ -3,10 +3,10 @@
 ||| Note:
 ||| - We can't make an instance `MonadRef (Loc es) (RefT es es' m)`
 |||   because `Loc es : Ty u -> Type` instead of `Type -> Type`...
-module Experiment.TypedHeap
+module Data.Store
 
 
-import public Experiment.RefUniverseConstraint
+import public Control.Monad.Ref
 
 
 %default total
@@ -37,9 +37,9 @@ Shape {t} = List t
 ||| to construct a heap of shape `e :: es`.
 |||
 ||| Note: corresponds to an universe indexed variant of `Data.HVect`.
-data Heap : (u : Universe t) => (es : Shape @{u}) -> Type where
-  Nil  : Heap @{u} []
-  (::) : (a : typeOf @{u} e) -> (as : Heap @{u} es) -> Heap @{u} (e :: es)
+data Store : (u : Universe t) => (es : Shape @{u}) -> Type where
+  Nil  : Store @{u} []
+  (::) : (a : typeOf @{u} e) -> (as : Store @{u} es) -> Store @{u} (e :: es)
 
 
 ||| Location on the heap.
@@ -72,19 +72,19 @@ Ref es es' = RefT es es' Identity
 -- Semantics --
 
 
-lookup : Universe t => Loc es e -> Heap es -> typeOf {t} e
+lookup : Universe t => Loc es e -> Store es -> typeOf {t} e
 lookup _         []        impossible
 lookup (Here)    (x :: _)  = x
 lookup (There l) (_ :: xs) = lookup l xs
 
 
-update : Universe t => Loc es e -> typeOf {t} e -> Heap es -> Heap es
+update : Universe t => Loc es e -> typeOf {t} e -> Store es -> Store es
 update _         _ []        impossible
 update (Here)    y (_ :: xs) = y :: xs
 update (There l) y (x :: xs) = x :: update l y xs
 
 
-runT : Universe t => Monad m => RefT {t} es es' m a -> Heap es -> m ( a, Heap es' )
+runT : Universe t => Monad m => RefT {t} es es' m a -> Store es -> m ( a, Store es' )
 runT (Pure x)         xs = pure ( x, xs )
 runT (Bind this next) xs = do
   ( this, xs' ) <- runT this xs
@@ -94,15 +94,15 @@ runT (Read l)         xs = pure ( lookup l xs, xs )
 runT (Write l x)      xs = pure ( (), update l x xs )
 
 
-run : Universe t => Ref {t} es es' a -> Heap es -> ( a, Heap es' )
+run : Universe t => Ref {t} es es' a -> Store es -> ( a, Store es' )
 run r = runIdentity . runT r
 
 
-eval : Universe t => Ref {t} es es' a -> Heap es -> a
+eval : Universe t => Ref {t} es es' a -> Store es -> a
 eval mut = fst . run mut
 
 
-exec : Universe t => Ref {t} es es' a -> Heap es -> Heap es'
+exec : Universe t => Ref {t} es es' a -> Store es -> Store es'
 exec mut = snd . run mut
 
 
