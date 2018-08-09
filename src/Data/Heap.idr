@@ -111,17 +111,26 @@ exec mut = snd . run mut
 
 
 ( Universe t, Functor f ) => Functor (RefT {t} es es' f) where
-  map f fa = ?holeFunctor
+  map g (Pure x)         = ?holeFunctor_1
+  map g (Bind this next) = ?holeFunctor_2
+  map g (New x)          = ?holeFunctor_3
+  map g (Read l)         = ?holeFunctor_4
+  map g (Write l x)      = ?holeFunctor_5
 
 
 ( Universe t, Applicative f ) => Applicative (RefT {t} es es' f) where
-  pure a = ?holePureApplicative
+  --XXX: we can't implement pure because of the type indices :-(
+  pure = ?holeApplicatePure
 
   f <*> fa = ?holeApplyApplicative
 
 
 ( Universe t, Monad m ) => Monad (RefT {t} es es' m) where
-  fa >>= f = ?holeMonadBind
+  (Pure x)         >>= k = ?holeMonadBind_1
+  (Bind this next) >>= k = ?holeMonadBind_2
+  (New x)          >>= k = ?holeMonadBind_3
+  (Read l)         >>= k = ?holeMonadBind_4
+  (Write l x)      >>= k = ?holeMonadBind_5
 
 
 ( Universe t, Monad m ) => MonadRef t (Loc es) (RefT {t} es es' m) where
