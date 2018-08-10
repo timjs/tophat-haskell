@@ -44,16 +44,6 @@ data TaskT : (m : Type -> Type) -> Ty -> Type where
   Label : Show (typeOf a) => Label -> (this : TaskT m a) -> TaskT m a
 
 
-public export
-TaskIO : Ty -> Type
-TaskIO = TaskT IO
-
-
-public export
-Task : Ty -> Type
-Task = TaskT Identity
-
-
 
 -- Labels ----------------------------------------------------------------------
 

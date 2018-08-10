@@ -1,5 +1,6 @@
 module Task
 
+
 import Control.Monad.Ref
 import Control.Monad.Error
 
@@ -151,6 +152,10 @@ normalise task = do
   pure $ task
 
 
+init : MonadRef l m => TaskT m a -> m (TaskT m a)
+init = normalise
+
+
 
 -- Event handling --------------------------------------------------------------
 
@@ -255,5 +260,19 @@ drive task event =
   handle task event >>= normalise
 
 
-init : MonadRef l m => TaskT m a -> m (TaskT m a)
-init = normalise
+
+-- Running ---------------------------------------------------------------------
+
+
+runTaskT : MonadError NotApplicable m => MonadRef l m => TaskT m a -> Event -> m (TaskT m a)
+runTaskT = drive
+
+
+public export
+Task : Ty -> Type
+Task = TaskT (ErrorT NotApplicable IO)
+
+
+runTask : Task a -> Event -> IO (Either NotApplicable (Task a))
+runTask task event =
+  runErrorT (runTaskT task event)
