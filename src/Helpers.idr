@@ -9,6 +9,7 @@ import public Control.Catchable
 
 
 infixl 3 <*>, <&>
+infixr 1 <=<, >=>
 
 
 
@@ -45,6 +46,25 @@ unit = pure ()
 
 (<&>) : Applicative f => f a -> f b -> f ( a, b )
 (<&>) x y = MkPair <$> x <*> y
+
+
+
+-- Monad extensions ------------------------------------------------------------
+
+
+||| Left-to-right Kleisli composition of monads.
+(>=>) : Monad m => (a -> m b) -> (b -> m c) -> (a -> m c)
+f >=> g = \x => f x >>= g
+
+
+||| Right-to-left Kleisli composition of monads. @('>=>')@, with the arguments flipped.
+|||
+||| Note: this operator resembles function composition `.`:
+|||
+|||     (.)   ::            (b ->   c) -> (a ->   b) -> a ->   c
+|||     (<=<) :: Monad m => (b -> m c) -> (a -> m b) -> a -> m c
+(<=<) : Monad m => (b -> m c) -> (a -> m b) -> (a -> m c)
+(<=<) = flip (>=>)
 
 
 
