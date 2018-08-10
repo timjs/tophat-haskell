@@ -38,35 +38,22 @@ infix 4 :=
 -- Instances -------------------------------------------------------------------
 
 
+IORefU : {u : Universe t} -> (e : t) -> Type
+IORefU {u} e = IORef (typeOf @{u} e)
+
+
 ||| Note: this is a restricted usage of `IORef` over a universe `u`!
-MonadRef u (\e => IORef (typeOf @{u} e)) IO where
+MonadRef u (IORefU {u}) IO where
   ref    = newIORef
   deref  = readIORef
   assign = writeIORef
 
 
+
 -- Helpers ---------------------------------------------------------------------
+
 
 modify : (u : Universe t) => MonadRef u l m => l e -> (typeOf e -> typeOf e) -> m ()
 modify l f = do
   x <- deref l
   l := f x
-
-
-{- Tests -----------------------------------------------------------------------
-
-test0 : IO Int
-test0 = do
-  r <- newIORef 5
-  writeIORef r 10
-  x <- readIORef r
-  pure x
-
-test : MonadRef IORef IO => IO Int
-test = do
-  r <- ref (the Int 5)
-  r := (the Int 10)
-  x <- deref r
-  pure x
-
--------------------------------------------------------------------------------}
