@@ -2,10 +2,15 @@ module Main
 
 import System
 
+import Control.Monad.Error
+
 import Task
 import Helpers
 
+
 %default total
+
+
 
 -- Tests -----------------------------------------------------------------------
 --
@@ -14,18 +19,10 @@ import Helpers
 
 -- Helpers --
 
-edit : Int -> Task (BasicTy IntTy)
+
+edit : Int -> Task (BASIC INT)
 edit = pure
 
-modify : (List Int -> List Int) -> Task (BasicTy UnitTy)
-modify f = do
-  xs <- get
-  put (f xs)
-
-gets : (List Int -> (typeOf b)) -> Task b
-gets f = do
-  xs <- get
-  pure (f xs)
 
 --FIXME: due to some namespacing problem...
 del : Nat -> List a -> List a
@@ -34,110 +31,133 @@ rep : Nat -> a -> List a -> List a
 rep = Helpers.replace
 
 
--- Basic --
 
-fourtytwo : Task (BasicTy IntTy)
+-- BASIC --
+
+
+fourtytwo : Task (BASIC INT)
 fourtytwo = pure 42
 
-hello : Task (BasicTy StringTy)
+
+hello : Task (BASIC STRING)
 hello = pure "Hello"
 
-inc : Int -> Task (BasicTy IntTy)
+
+inc : Int -> Task (BASIC INT)
 inc x = pure (x + 1)
 
-add : Int -> Int -> Task (BasicTy IntTy)
+
+add : Int -> Int -> Task (BASIC INT)
 add x y = pure (x + y)
 
-append : String -> String -> Task (BasicTy StringTy)
+
+append : String -> String -> Task (BASIC STRING)
 append x y = pure (x ++ y)
+
 
 
 -- Steps --
 
-pureStep : Task (BasicTy IntTy)
+
+pureStep : Task (BASIC INT)
 pureStep = do
   x <- fourtytwo
   inc x
 
-pureStep' : Task (BasicTy IntTy)
+
+pureStep' : Task (BASIC INT)
 pureStep' =
   fourtytwo >>? \x =>
   inc x
 
-oneStep : Task (BasicTy IntTy)
+
+oneStep : Task (BASIC INT)
 oneStep = do
   x <- edit 0
   inc x
 
-oneStep' : Task (BasicTy IntTy)
+
+oneStep' : Task (BASIC INT)
 oneStep' =
   edit 0 >>? \x =>
   inc x
 
-twoSteps : Task (BasicTy IntTy)
+
+twoSteps : Task (BASIC INT)
 twoSteps = do
   x <- edit 1
   y <- edit 2
   add x y
 
-twoSteps' : Task (BasicTy IntTy)
+
+twoSteps' : Task (BASIC INT)
 twoSteps' =
   edit 1 >>? \x =>
   edit 2 >>? \y =>
   add x y
 
 
+
 -- Parallel --
 
-parallel : Task (PairTy (BasicTy IntTy) (BasicTy StringTy))
-parallel = "Give an integer" # ask IntTy <&> hello
 
-parallelStep : Task (BasicTy StringTy)
+parallel : Task (PAIR (BASIC INT) (BASIC STRING))
+parallel = "Give an integer" # ask INT <&> hello
+
+
+parallelStep : Task (BASIC STRING)
 parallelStep = do
   ( n, m ) <- parallel
   pure (unwords $ replicate (cast n) m)
 
-parallelStep' : Task (BasicTy StringTy)
+
+parallelStep' : Task (BASIC STRING)
 parallelStep' =
   parallel >>? \( n, m ) =>
   pure (unwords $ replicate (cast n) m)
+
 
 
 -- Normalisation --
 --
 -- FIXME: should these automatically simplify?
 
-pair : Task (PairTy (BasicTy IntTy) (BasicTy IntTy))
+
+pair : Task (PAIR (BASIC INT) (BASIC INT))
 pair = pure 3 <&> pure 8
 
-inner : Task (BasicTy IntTy)
+
+inner : Task (BASIC INT)
 inner = do
   ( x, y ) <- pair
   add x y
 
-inner' : Task (BasicTy IntTy)
+
+inner' : Task (BASIC INT)
 inner' =
   pair >>? \( x, y ) =>
   add x y
 
 
--- Shared Data --
+
+{- Shared Data --
+
 
 partial
-editShared : Task (BasicTy UnitTy)
+editShared : Task (BASIC UNIT)
 editShared =
   "Edit" # repeat <?> "Quit" # quit
 where
-  delete : Nat -> Task (BasicTy UnitTy)
+  delete : Nat -> Task (BASIC UNIT)
   delete i =
     modify (del i)
-  replace : Nat -> Task (BasicTy UnitTy)
+  replace : Nat -> Task (BASIC UNIT)
   replace i =
-    "Give a new value" # ask IntTy >>? \x =>
+    "Give a new value" # ask INT >>? \x =>
     modify (rep i x)
-  change : Task (BasicTy UnitTy)
+  change : Task (BASIC UNIT)
   change =
-    "Give an index" # ask IntTy >>? \n =>
+    "Give an index" # ask INT >>? \n =>
     let i = the Nat (cast n) in
     --FIXME: get should be evaluated underneath, and not be a primitive in the Task monad
     get >>= \xs =>
@@ -145,30 +165,33 @@ where
       "Delete" # delete i <?> "Replace" # replace i
     else
       fail
-  prepend : Task (BasicTy UnitTy)
+  prepend : Task (BASIC UNIT)
   prepend =
-    "Give a new value" # ask IntTy >>? \x =>
+    "Give a new value" # ask INT >>? \x =>
     modify ((::) x)
-  clear : Task (BasicTy UnitTy)
+  clear : Task (BASIC UNIT)
   clear =
     modify (const [])
-  quit : Task (BasicTy UnitTy)
+  quit : Task (BASIC UNIT)
   quit = pure ()
 
+
   partial
-  repeat : Task (BasicTy UnitTy)
+  repeat : Task (BASIC UNIT)
   repeat = do
     "Prepend" # prepend <?> "Clear" # clear <?> "Change" # change
     editShared
 
--- update : Task (BasicTy UnitTy)
+
+-- update : Task (BASIC UNIT)
 -- update =
 --   get >>= \x =>
 --   edit x >>? \y =>
 --   put y
 
+
 -- --FIXME: help!!!
--- update2 : Task (BasicTy UnitTy)
+-- update2 : Task (BASIC UNIT)
 -- update2 = do
 --   get >>= \x =>
 --   edit (x+1) >>? \y =>
@@ -177,58 +200,76 @@ where
 --   edit (u+2) >>? \v =>
 --   put v
 
-inspect : Show (typeOf a) => Task a -> Task (PairTy a StateTy)
+
+inspect : Show (typeOf a) => Task a -> Task (PAIR a StateTy)
 inspect t = t <&> watch
 
-parallelWatch : Task (PairTy StateTy StateTy)
+
+parallelWatch : Task (PAIR StateTy StateTy)
 parallelWatch = inspect watch
+
+
+-}
+
 
 
 -- Choices --
 
-pick1 : Task (BasicTy IntTy)
+
+pick1 : Task (BASIC INT)
 pick1 = fail <|> edit 0
 
-pick2 : Task (BasicTy IntTy)
+
+pick2 : Task (BASIC INT)
 pick2 = edit 1 <|> edit 2
 
-pick3 : Task (BasicTy IntTy)
+
+pick3 : Task (BASIC INT)
 pick3 = pick2 <|> edit 3
 
-pick1' : Task (BasicTy IntTy)
+
+pick1' : Task (BASIC INT)
 pick1' = "Fail" # fail <?> "Cont" # edit 0
 
-pick2' : Task (BasicTy IntTy)
+
+pick2' : Task (BASIC INT)
 pick2' = "First" # edit 1 <?> "Second" # edit 2
 
-pick3' : Task (BasicTy IntTy)
+
+pick3' : Task (BASIC INT)
 pick3' = pick2' <?> "Third" # edit 3
+
 
 
 -- Guards --
 
-auto : Task (BasicTy StringTy)
+
+auto : Task (BASIC STRING)
 auto = do
   x <- edit 0
   if x >= 10 then pure "large" else fail
 
-actions : Task (BasicTy IntTy)
+
+actions : Task (BASIC INT)
 actions =
   edit 0 >>? \x =>
   pick3
 
-actions' : Task (BasicTy IntTy)
+
+actions' : Task (BASIC INT)
 actions' =
   edit 0 >>? \x =>
   pick3'
 
-guards : Task (BasicTy StringTy)
+
+guards : Task (BASIC STRING)
 guards =
   edit 0 >>? \x =>
   ("Large" # (if x >= 10 then pure "large" else fail) <?> "VeryLarge" # (if x >= 100 then pure "very large" else fail))
 
+
 partial -- due to `mod` on `0`
-branch : Task (BasicTy StringTy)
+branch : Task (BASIC STRING)
 branch =
   edit 1 >>? \x =>
   if x `mod` 3 == 0 then
@@ -239,17 +280,20 @@ branch =
     fail
 
 
+
 -- Empty edit --
 
-empties : Task (BasicTy IntTy)
+
+empties : Task (BASIC INT)
 empties = do
-  ( x, y ) <- ask IntTy <&> ask IntTy
+  ( x, y ) <- ask INT <&> ask INT
   pure (x + y)
 
 
--- Running ---------------------------------------------------------------------
 
+-- Running ---------------------------------------------------------------------
 %default covering
+
 
 get : IO Event
 get = do
@@ -265,20 +309,38 @@ get = do
           putStrLn msg
           get
 
-loop : Show (typeOf a) => Task a -> State -> IO ()
-loop task state = do
-  putStrLn $ ui task state
-  putStrLn $ "Possibilities: " ++ show (events task state)
+
+loop : Show (typeOf a) => Task a -> IO ()
+loop task = do
+  case !(runErrorT $ ui task) of
+    Left error =>
+      --NOTE: this error is impossible because `ui` can't throw errors because of context restriction
+      putStrLn $ "!! Error during ui generation: " ++ show error
+    Right out =>
+      putStrLn $ out
+  case !(runErrorT $ events task) of
+    Left error =>
+      --NOTE: this error is impossible because `events` can't throw errors because of context restriction
+      putStrLn $ "!! Error during event calculation: " ++ show error
+    Right events =>
+      putStrLn $ "Possibilities: " ++ show events
   event <- get
-  case drive task event state of
+  case !(runTask task event) of
     Left error => do
-      putStrLn $ "!! " ++ (show error)
-      loop task state
-    Right ( task_new, state_new ) =>
-      loop task_new state_new
+      putStrLn $ "!! " ++ show error
+      loop task
+    Right task_new =>
+      loop task_new
+
 
 run : Show (typeOf a) => Task a -> IO ()
-run t = uncurry loop $ init t
+run task = do
+  case !(runErrorT $ init task) of
+    Left error =>
+      putStrLn $ "!! Something went wrong during initialisation: " ++ show error
+    Right task_new =>
+      loop task_new
+
 
 main : IO ()
 main = run empties
