@@ -1,6 +1,7 @@
 module Test
 
-import Data.Heap.Untyped
+import Data.Universe
+import Control.Monad.Ref
 
 
 
@@ -36,9 +37,33 @@ DecEq Basic where
 -- Tests -----------------------------------------------------------------------
 
 
-test : Ref @{Test.basic} Int
-test = do
+test0 : IO Int
+test0 = do
+  r <- newIORef 5
+  writeIORef r 10
+  x <- readIORef r
+  pure x
+
+
+test1 : MonadRef IORef IO => IO Int
+test1 = do
   r <- ref (the Int 5)
   r := (the Int 10)
   x <- deref r
-  pure (x + 2)
+  pure x
+
+
+test2 : MonadRef IORef IO => IO String
+test2 = do
+  r <- ref "Hello"
+  r := !(deref r) ++ " World!"
+  x <- deref r
+  pure x
+
+
+-- testRef : Ref @{Test.basic} Int
+-- testRef = do
+--   r <- ref (the Int 5)
+--   r := (the Int 10)
+--   x <- deref r
+--   pure (x + 2)
