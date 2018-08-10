@@ -37,7 +37,7 @@ Show NotApplicable where
 -- Showing ---------------------------------------------------------------------
 
 
-ui : MonadRef l m => Show (typeOf a) => Task m a -> m String
+ui : MonadRef l m => Show (typeOf a) => TaskT m a -> m String
 ui (Edit (Just x))       = pure $ "□(" ++ show x ++ ")"
 ui (Edit Nothing)        = pure $ "□(_)"
 ui (Watch loc)           = pure $ "■(" ++ show !(deref loc) ++ ")"
@@ -58,7 +58,7 @@ ui (Label l this)        = pure $ l ++ " # " ++ !(ui this)
 -- Helpers ---------------------------------------------------------------------
 
 
-value : MonadRef l m => Task m a -> m (Maybe (typeOf a))
+value : MonadRef l m => TaskT m a -> m (Maybe (typeOf a))
 value (Edit val)      = pure $ val
 value (Watch loc)     = pure $ Just !(deref loc)
 value (All left rght) = pure $ !(value left) <&> !(value rght)
@@ -71,7 +71,7 @@ value (Label _ this)  = value this
 value _               = pure $ Nothing
 
 
-choices : Task m a -> List Path
+choices : TaskT m a -> List Path
 choices (One left rght) =
   --XXX: No with-block possible?
   case ( delabel left, delabel rght ) of
@@ -82,7 +82,7 @@ choices (One left rght) =
 choices _          = []
 
 
-events : MonadRef l m => Task m a -> m (List Event)
+events : MonadRef l m => TaskT m a -> m (List Event)
 events (Edit {a} _)     = pure $ [ ToHere (Change (defaultOf a)), ToHere Clear ]
 events (Watch {a} _)    = pure $ [ ToHere (Change (defaultOf a)) ]
 events (All left rght)  = pure $ map ToLeft !(events left) ++ map ToRight !(events rght)
@@ -94,7 +94,7 @@ events (Next this next) = do
     Just v <- value this | Nothing => pure []
     pure $ map ToHere (go (next v)) ++ !(events this)
   where
-    go : Task m a -> List Action
+    go : TaskT m a -> List Action
     go task with ( delabel task )
       | One _ _ = map (Continue . Just) $ labels task
       | Fail    = []
@@ -105,7 +105,8 @@ events (Label _ this)   = events this
 
 -- Normalisation ---------------------------------------------------------------
 
-normalise : MonadRef l m => Task m a -> m (Task m a)
+
+normalise : MonadRef l m => TaskT m a -> m (TaskT m a)
 
 -- Step --
 normalise (Then this cont) = do
@@ -155,7 +156,7 @@ normalise task = do
 
 
 --FIXME: fix totallity...
-handle : MonadError NotApplicable m => MonadRef l m => Task m a -> Event -> m (Task m a)
+handle : MonadError NotApplicable m => MonadRef l m => TaskT m a -> Event -> m (TaskT m a)
 
 -- Edit --
 handle (Edit _) (ToHere Clear) =
@@ -249,10 +250,10 @@ handle task event =
   throw $ CouldNotHandle event
 
 
-drive : MonadError NotApplicable m => MonadRef l m => Task m a -> Event -> m (Task m a)
+drive : MonadError NotApplicable m => MonadRef l m => TaskT m a -> Event -> m (TaskT m a)
 drive task event =
   handle task event >>= normalise
 
 
-init : MonadRef l m => Task m a -> m (Task m a)
+init : MonadRef l m => TaskT m a -> m (TaskT m a)
 init = normalise

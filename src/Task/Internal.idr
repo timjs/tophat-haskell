@@ -1,63 +1,90 @@
 module Task.Internal
 
+
 import Control.Monad.Ref
 
 import Task.Universe
 import Task.Event
 
+
 %default total
 %access export
+
+%hide Language.Reflection.Ref
+%hide Language.Reflection.Universe
+
 
 infix  6 =~, /~
 
 
--- Types -----------------------------------------------------------------------
 
--- Tasks --
+-- Tasks -----------------------------------------------------------------------
+
 
 public export
-data Task : (Type -> Type) -> Ty -> Type where
+data TaskT : (m : Type -> Type) -> Ty -> Type where
+
   -- Core
-  Edit  : (val : Maybe (typeOf a)) -> Task m a
-  Watch : MonadRef l m => l (typeOf a) -> Task m a
+  Edit  : (val : Maybe (typeOf a)) -> TaskT m a
+  Watch : MonadRef l m => l (typeOf a) -> TaskT m a
+
   -- Parallel
-  All   : Show (typeOf a) => Show (typeOf b) => (left : Task m a) -> (right : Task m b) -> Task m (PAIR a b)
+  All   : Show (typeOf a) => Show (typeOf b) => (left : TaskT m a) -> (right : TaskT m b) -> TaskT m (PAIR a b)
+
   -- Choice
-  Any   : Show (typeOf a) => (left : Task m a) -> (right : Task m a) -> Task m a
-  One   : Show (typeOf a) => (left : Task m a) -> (right : Task m a) -> Task m a
-  Fail  : Task m a
+  Any   : Show (typeOf a) => (left : TaskT m a) -> (right : TaskT m a) -> TaskT m a
+  One   : Show (typeOf a) => (left : TaskT m a) -> (right : TaskT m a) -> TaskT m a
+  Fail  : TaskT m a
+
   -- Sequence
-  Then  : Show (typeOf a) => (this : Task m a) -> (next : typeOf a -> Task m b) -> Task m b
-  Next  : Show (typeOf a) => (this : Task m a) -> (next : typeOf a -> Task m b) -> Task m b
+  Then  : Show (typeOf a) => (this : TaskT m a) -> (next : typeOf a -> TaskT m b) -> TaskT m b
+  Next  : Show (typeOf a) => (this : TaskT m a) -> (next : typeOf a -> TaskT m b) -> TaskT m b
+
   -- Labels
-  Label : Show (typeOf a) => Label -> (this : Task m a) -> Task m a
+  Label : Show (typeOf a) => Label -> (this : TaskT m a) -> TaskT m a
 
 
--- Labels --
+public export
+TaskIO : Ty -> Type
+TaskIO = TaskT IO
+
+
+public export
+Task : Ty -> Type
+Task = TaskT Identity
+
+
+
+-- Labels ----------------------------------------------------------------------
+
 
 ||| Get the current label, if one
-label : Task m a -> Maybe Label
+label : TaskT m a -> Maybe Label
 label (Label l _) = Just l
 label _           = Nothing
+
 
 ||| Remove as much labels as possible from a task.
 |||
 ||| Usefull to deeply match task constructors while ignoring labels.
-delabel : Task m a -> Task m a
+delabel : TaskT m a -> TaskT m a
 delabel (Label _ t) = delabel t
 delabel t           = t
 
+
 ||| Match a label to a task.
-(=~) : Label -> Task m a -> Bool
+(=~) : Label -> TaskT m a -> Bool
 (=~) k (Label l _) = l == l
 (=~) _ _           = False
 
+
 ||| Negation of `(=~)`.
-(/~) : Label -> Task m a -> Bool
+(/~) : Label -> TaskT m a -> Bool
 (/~) l t = not (l =~ t)
 
+
 ||| Collect all labels in an external choice
-labels : Task m a -> List Label
+labels : TaskT m a -> List Label
 labels (Label _ Fail)   = []
 labels (Label l this)   = l :: labels this
 labels (One left right) = labels left ++ labels right
@@ -66,10 +93,11 @@ labels (One left right) = labels left ++ labels right
 -- labels (Next this _)    = labels this
 labels _                = []
 
+
 ||| Depth first search for a label on a task tree.
 |||
 ||| Returns the path of the found task.
-find : Label -> Task m a -> Maybe Path
+find : Label -> TaskT m a -> Maybe Path
 find k (Label l this) with ( k == l )
   | True                = Just GoHere
   | False               = find k this
@@ -79,8 +107,9 @@ find k (One left right) = map GoLeft (find k left) <|> map GoRight (find k right
 -- find k (Next this _)    = find k this
 find k _                = Nothing
 
+
 ||| Check if a task constructor keeps its label after stepping or loses it.
-keeper : Task m a -> Bool
+keeper : TaskT m a -> Bool
 keeper (Edit _)  = True
 keeper (All _ _) = True
 keeper (Fail)    = True
