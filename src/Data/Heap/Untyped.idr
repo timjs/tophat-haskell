@@ -22,6 +22,9 @@ panic = idris_crash
 -- Heap ------------------------------------------------------------------------
 
 
+||| Note we paramentrise over the universe, not the type!
+||| Parametrising over the universe will force us to specify that functions or data
+||| should all work over *the same universe implementation* not only the same universe type!!!
 export
 data Loc : (u : Universe t) -> (e : t) -> Type where
   MkLoc : Nat -> Loc u e
@@ -113,7 +116,7 @@ where
 
 
 -- Interfaces ------------------------------------------------------------------
---NOTE: These are just the free monad implementations...
+--NOTE: These are just the free monad implementations
 
 
 Functor (RefT u m) where
@@ -130,10 +133,11 @@ Monad (RefT u m) where
     (>>=) = Bind
 
 
-MonadRef t (Loc u) (RefT u m) where
+MonadRef u (Loc u) (RefT u m) where
     ref    = New
     deref  = Read
     assign = Write
+
 
 
 {-------------------------------------------------------------------------------
