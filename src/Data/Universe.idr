@@ -5,4 +5,3 @@ module Data.Universe
 public export
 interface DecEq t => Universe t where
   typeOf : t -> Type
-  defaultOf : (a : t) -> typeOf a

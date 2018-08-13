@@ -84,8 +84,8 @@ choices _          = []
 
 
 events : MonadRef l m => TaskT m a -> m (List Event)
-events (Edit {a} _)     = pure $ [ ToHere (Change (defaultOf a)), ToHere Clear ]
-events (Watch {a} _)    = pure $ [ ToHere (Change (defaultOf a)) ]
+events (Edit {a} _)     = pure $ [ ToHere (Change ?undefH1), ToHere Clear ]
+events (Watch {b} _)    = pure $ [ ToHere (Change ?undefH2) ]
 events (All left rght)  = pure $ map ToLeft !(events left) ++ map ToRight !(events rght)
 events (Any left rght)  = pure $ map ToLeft !(events left) ++ map ToRight !(events rght)
 events this@(One _ _)   = pure $ map (ToHere . PickAt) (labels this) ++ map (ToHere . Pick) (choices this)
@@ -172,11 +172,11 @@ handle : MonadTrace NotApplicable m => MonadRef l m => TaskT m a -> Event -> m (
 handle (Edit _) (ToHere Clear) =
   pure $ Edit Nothing
 
-handle (Edit {a} val) (ToHere (Change {b} val_new)) with (decEq b a)
+handle (Edit {a} val) (ToHere (Change {c} val_new)) with (decEq (BASIC c) a)
   handle (Edit _)   (ToHere (Change val_new))       | Yes Refl = pure $ Edit (Just val_new)
   handle (Edit val) (ToHere (Change _))             | No _     = trace CouldNotChange $ Edit val
 
-handle (Watch {a} loc) (ToHere (Change {b} val_new)) with (decEq b a)
+handle (Watch {b} loc) (ToHere (Change {c} val_new)) with (decEq c b)
   handle (Watch loc) (ToHere (Change val_new))       | Yes Refl = do
     loc := val_new
     pure $ Watch loc

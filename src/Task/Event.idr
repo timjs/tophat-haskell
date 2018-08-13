@@ -37,7 +37,7 @@ namespace Path
 
 public export
 data Action : Type where
-  Change   : {b : Ty} -> typeOf b -> Action
+  Change   : {c : BasicTy} -> typeOf c -> Action
   Clear    : Action
   Pick     : Path -> Action
   PickAt   : Label -> Action
@@ -104,7 +104,7 @@ mutual
   parse' : List String -> Either String Event
   parse' ["change", val] with (Universe.parse val)
     | Nothing             = throw $ "!! Error parsing value '" ++ val ++ "'"
-    | (Just (ty ** v))    = ok $ ToHere $ Change {b = BASIC ty} v
+    | (Just (c ** v))     = ok $ ToHere $ Change {c} v
   parse' ["clear"]        = ok $ ToHere $ Clear
   parse' ("pick" :: rest) = map (ToHere . Pick) $ Path.parse rest
   parse' ["cont"]         = ok $ ToHere $ Continue Nothing

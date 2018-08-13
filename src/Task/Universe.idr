@@ -1,18 +1,25 @@
 module Task.Universe
 
+
+import Control.Monad.Ref
 import Data.String
 import public Data.Universe
 
+
 import Helpers
+
 
 %default total
 %access public export
 
 
+
 -- Labels ----------------------------------------------------------------------
+
 
 Label : Type
 Label = String
+
 
 isLabel : String -> Bool
 isLabel s               with ( strM s )
@@ -20,7 +27,9 @@ isLabel s               with ( strM s )
  isLabel (strCons c cs) | StrCons c _ = isUpper c
 
 
+
 -- Basic universe --------------------------------------------------------------
+
 
 data BasicTy
   = UNIT
@@ -29,28 +38,37 @@ data BasicTy
   | STRING
 
 
+
 -- Lemmas --
+
 
 Uninhabited (UNIT = BOOL) where
   uninhabited Refl impossible
 
+
 Uninhabited (UNIT = INT) where
   uninhabited Refl impossible
+
 
 Uninhabited (UNIT = STRING) where
   uninhabited Refl impossible
 
+
 Uninhabited (BOOL = INT) where
   uninhabited Refl impossible
 
+
 Uninhabited (BOOL = STRING) where
   uninhabited Refl impossible
+
 
 Uninhabited (INT = STRING) where
   uninhabited Refl impossible
 
 
+
 -- Universe --
+
 
 DecEq BasicTy where
   decEq UNIT   UNIT   = Yes Refl
@@ -70,19 +88,17 @@ DecEq BasicTy where
   decEq INT    STRING = No absurd
   decEq STRING INT    = No (negEqSym absurd)
 
+
 Universe BasicTy where
   typeOf UNIT   = ()
   typeOf BOOL   = Bool
   typeOf INT    = Int
   typeOf STRING = String
 
-  defaultOf UNIT   = ()
-  defaultOf BOOL   = False
-  defaultOf INT    = 0
-  defaultOf STRING = ""
 
 
 -- Parsing --
+
 
 parse : String -> Maybe (b : BasicTy ** typeOf b)
 parse "()"                                                        = Just $ (UNIT ** ())
@@ -95,53 +111,80 @@ parse s   with (the (Maybe Int) (parseInteger s))
     parse _                      | Nothing | _                    = Nothing
 
 
+
 -- Full universe ---------------------------------------------------------------
+
 
 data Ty
   = PAIR Ty Ty
   | LIST Ty
+  | LOC Ty
   | BASIC BasicTy
+
 
 
 -- Lemmas --
 
+
 Uninhabited (PAIR _ _ = LIST _) where
   uninhabited Refl impossible
+
+
+Uninhabited (PAIR _ _ = LOC _) where
+  uninhabited Refl impossible
+
 
 Uninhabited (PAIR _ _ = BASIC _) where
   uninhabited Refl impossible
 
+
+Uninhabited (LIST _ = LOC _) where
+  uninhabited Refl impossible
+
+
 Uninhabited (LIST _ = BASIC _) where
   uninhabited Refl impossible
+
+
+Uninhabited (LOC _ = BASIC _) where
+  uninhabited Refl impossible
+
 
 private
 list_neq : (a = b -> Void) -> (LIST a = LIST b) -> Void
 list_neq contra Refl = contra Refl
 
+
+private
+loc_neq : (a = b -> Void) -> (LOC a = LOC b) -> Void
+loc_neq contra Refl = contra Refl
+
+
 private
 basic_neq : (a = b -> Void) -> (BASIC a = BASIC b) -> Void
 basic_neq contra Refl = contra Refl
+
 
 private
 snd_neq : (y = y' -> Void) -> (PAIR x y = PAIR x y') -> Void
 snd_neq contra Refl = contra Refl
 
+
 private
 fst_neq : (x = x' -> Void) -> (PAIR x y = PAIR x' y) -> Void
 fst_neq contra Refl = contra Refl
+
 
 private
 both_neq : (x = x' -> Void) -> (y = y' -> Void) -> (PAIR x y = PAIR x' y') -> Void
 both_neq contra_x contra_y Refl = contra_x Refl
 
 
+
 -- Decidablility --
 
-DecEq Ty where
-  decEq (LIST a)  (LIST b)   with (decEq a b)
-    decEq (LIST b)  (LIST b) | (Yes Refl)                       = Yes Refl
-    decEq (LIST a)  (LIST b) | (No contra)                      = No (list_neq contra)
 
+DecEq Ty where
   decEq (PAIR x y) (PAIR x' y')     with (decEq x x')
     decEq (PAIR x y) (PAIR x y')    | (Yes Refl)  with (decEq y y')
       decEq (PAIR x y) (PAIR x y)   | (Yes Refl)  | (Yes Refl)    = Yes Refl
@@ -150,23 +193,36 @@ DecEq Ty where
       decEq (PAIR x y) (PAIR x' y)  | (No contra) | (Yes Refl)    = No (fst_neq contra)
       decEq (PAIR x y) (PAIR x' y') | (No contra) | (No contra')  = No (both_neq contra contra')
 
+  decEq (LIST a)  (LIST b)   with (decEq a b)
+    decEq (LIST b)  (LIST b) | (Yes Refl)                         = Yes Refl
+    decEq (LIST a)  (LIST b) | (No contra)                        = No (list_neq contra)
+
+  decEq (LOC a)  (LOC b)   with (decEq a b)
+    decEq (LOC b)  (LOC b) | (Yes Refl)                           = Yes Refl
+    decEq (LOC a)  (LOC b) | (No contra)                          = No (loc_neq contra)
+
   decEq (BASIC a)  (BASIC b)   with (decEq a b)
-    decEq (BASIC b)  (BASIC b) | (Yes Refl)                     = Yes Refl
-    decEq (BASIC a)  (BASIC b) | (No contra)                    = No (basic_neq contra)
+    decEq (BASIC b)  (BASIC b) | (Yes Refl)                       = Yes Refl
+    decEq (BASIC a)  (BASIC b) | (No contra)                      = No (basic_neq contra)
 
-  decEq (PAIR _ _) (LIST _)                                     = No absurd
-  decEq (LIST _)   (PAIR _ _)                                   = No (negEqSym absurd)
-  decEq (PAIR _ _) (BASIC _)                                    = No absurd
-  decEq (BASIC _)  (PAIR _ _)                                   = No (negEqSym absurd)
+  decEq (PAIR _ _) (LIST _)                                       = No absurd
+  decEq (LIST _)   (PAIR _ _)                                     = No (negEqSym absurd)
+  decEq (PAIR _ _) (LOC _)                                        = No absurd
+  decEq (LOC _)    (PAIR _ _)                                     = No (negEqSym absurd)
+  decEq (PAIR _ _) (BASIC _)                                      = No absurd
+  decEq (BASIC _)  (PAIR _ _)                                     = No (negEqSym absurd)
 
-  decEq (LIST _)   (BASIC _)                                    = No absurd
-  decEq (BASIC _)  (LIST _)                                     = No (negEqSym absurd)
+  decEq (LIST _)   (LOC _)                                        = No absurd
+  decEq (LOC _)    (LIST _)                                       = No (negEqSym absurd)
+  decEq (LIST _)   (BASIC _)                                      = No absurd
+  decEq (BASIC _)  (LIST _)                                       = No (negEqSym absurd)
+
+  decEq (LOC _)    (BASIC _)                                      = No absurd
+  decEq (BASIC _)  (LOC _)                                        = No (negEqSym absurd)
+
 
 Universe Ty where
-  typeOf (PAIR x y) = ( typeOf x, typeOf y )
-  typeOf (LIST x)   = List (typeOf x)
+  typeOf (PAIR a b) = ( typeOf a, typeOf b )
+  typeOf (LIST a)   = List (typeOf a)
+  typeOf (LOC a)    = IORef (typeOf a) --FIXME: is this ok??? Should be parametrised over `MonadRef l m`...
   typeOf (BASIC b)  = typeOf b
-
-  defaultOf (PAIR x y) = ( defaultOf x, defaultOf y )
-  defaultOf (LIST x)   = []
-  defaultOf (BASIC b)  = defaultOf b

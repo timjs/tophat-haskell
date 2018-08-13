@@ -115,5 +115,5 @@ ask : (b : BasicTy) -> TaskT m (BASIC b)
 ask _ = Edit Nothing
 
 
-watch : MonadRef l m => l (typeOf a) -> TaskT m a
+watch : MonadRef l m => l (typeOf b) -> TaskT m (BASIC b)
 watch = Watch
