@@ -23,6 +23,15 @@ infixl 1 >>=, >>?
 
 -- Interfaces ------------------------------------------------------------------
 
+-- Functor --
+
+
+(<$>) : Show (typeOf a) => (typeOf a -> typeOf b) -> TaskT m a -> TaskT m b
+(<$>) f t =
+  Then t (\x => Edit (Just (f x)))
+
+
+
 -- Monoidal --
 
 
@@ -38,7 +47,7 @@ unit : TaskT m (BASIC UNIT)
 unit = pure ()
 
 
--- (<*>) : Show (typeOf a) => Show (typeOf b) => TaskT m (FunTy a b) -> TaskT m a -> TaskT m b
+-- (<*>) : Show (typeOf a) => Show (typeOf b) => TaskT m (FUN a b) -> TaskT m a -> TaskT m b
 -- (<*>) t1 t2 = (\f,x => f x) <$> t1 <&> t2
 
 
@@ -83,13 +92,7 @@ fail = Fail
 
 
 
--- Functor --
 
-
-(<$>) : Show (typeOf a) => (typeOf a -> typeOf b) -> TaskT m a -> TaskT m b
-(<$>) f t = do
-  x <- t
-  pure $ f x
 
 
 
