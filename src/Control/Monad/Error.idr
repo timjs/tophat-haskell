@@ -1,8 +1,9 @@
 module Control.Monad.Error
 
 
-import Control.Catchable
-import Control.Monad.Trans
+import public Control.Catchable
+import public Control.Monad.Trans
+
 import Control.Monad.Ref
 
 
@@ -59,6 +60,7 @@ MonadTrans (ErrorT e) where
 
 
 (Monad m, Catchable m e) => MonadError e m where {}
+
 
 (Monad m, MonadRef l m) => MonadRef l (ErrorT e m) where
   ref x = lift $ ref x

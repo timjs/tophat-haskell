@@ -2,6 +2,7 @@ module Task
 
 
 import public Control.Monad.Ref
+import public Control.Monad.Error
 
 import public Task.Universe
 import public Task.Event
