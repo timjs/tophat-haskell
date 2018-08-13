@@ -217,15 +217,16 @@ handle (Any left rght) (ToRight event) = do
 handle task@(One _ _) (ToHere (PickAt l)) =
   case find l task of
     Nothing => trace (CouldNotFind l) task
-    Just p  => handle task (ToHere (Pick p))
+    --XXX: needs `assert_smaller` for totallity, be aware of long type checks...
+    Just p  => handle task (assert_smaller (ToHere (PickAt l)) (ToHere (Pick p)))
 
-handle (One left _) (ToHere (Pick (GoLeft p))) =
+handle task@(One left _) (ToHere (Pick (GoLeft p))) =
   -- Go left
-  handle (delabel left) (ToHere (Pick p))
+  handle (assert_smaller task (delabel left)) (ToHere (Pick p))
 
-handle (One _ rght) (ToHere (Pick (GoRight p))) =
+handle task@(One _ rght) (ToHere (Pick (GoRight p))) =
   -- Go rght
-  handle (delabel rght) (ToHere (Pick p))
+  handle (assert_smaller task (delabel rght)) (ToHere (Pick p))
 
 handle task (ToHere (Pick GoHere)) =
   -- Go here
