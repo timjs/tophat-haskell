@@ -160,15 +160,15 @@ normalise task = do
   pure $ task
 
 
-init : MonadRef l m => TaskT m a -> m (TaskT m a)
-init = normalise
+initialise : MonadRef l m => TaskT m a -> m (TaskT m a)
+initialise = normalise
 
 
 
 -- Event handling --------------------------------------------------------------
 
 
---FIXME: fix totallity...
+covering
 handle : MonadTrace NotApplicable m => MonadRef l m => TaskT m a -> Event -> m (TaskT m a)
 
 -- Edit --
@@ -218,7 +218,8 @@ handle task@(One _ _) (ToHere (PickAt l)) =
   case find l task of
     Nothing => trace (CouldNotFind l) task
     --XXX: needs `assert_smaller` for totallity, be aware of long type checks...
-    Just p  => handle task (assert_smaller (ToHere (PickAt l)) (ToHere (Pick p)))
+    -- Just p  => handle task (assert_smaller (ToHere (PickAt l)) (ToHere (Pick p)))
+    Just p  => handle task (ToHere (Pick p))
 
 handle task@(One left _) (ToHere (Pick (GoLeft p))) =
   -- Go left
@@ -265,19 +266,7 @@ handle task event =
   trace (CouldNotHandle event) task
 
 
+covering
 drive : MonadTrace NotApplicable m => MonadRef l m => TaskT m a -> Event -> m (TaskT m a)
 drive task event =
   handle task event >>= normalise
-
-
-
--- Running ---------------------------------------------------------------------
-
-
-public export
-Task : Ty -> Type
-Task = TaskT IO
-
-
-run : Task a -> Event -> IO (Task a)
-run = drive

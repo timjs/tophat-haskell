@@ -2,7 +2,7 @@ module Task
 
 
 import public Control.Monad.Ref
-import public Control.Monad.Error
+import        Control.Monad.Trace
 
 import public Task.Universe
 import public Task.Event
@@ -18,6 +18,25 @@ infixr 4 #
 infixl 3 <*>, <&>
 infixr 2 <|>, <?>
 infixl 1 >>=, >>?
+
+
+
+-- Running ---------------------------------------------------------------------
+
+
+public export
+Task : Ty -> Type
+Task = TaskT IO
+
+
+public export
+Loc : (b : BasicTy) -> Type
+Loc b = IORef (typeOf (BASIC b))
+
+
+covering
+run : Task a -> Event -> IO (Task a)
+run = drive
 
 
 
@@ -96,6 +115,30 @@ fail = Fail
 
 lift : Monad m => m (typeOf a) -> TaskT m a
 lift = Lift
+
+
+init : (b : BasicTy) -> Task (LOC (BASIC b))
+init b = lift $ ref (defaultOf b)
+
+
+ref : (b : BasicTy) -> typeOf (BASIC b) -> Task (LOC (BASIC b))
+ref _ x = lift $ ref x
+
+
+deref : (b : BasicTy) -> Loc b -> Task (BASIC b)
+deref _ l = lift $ deref l
+
+
+assign : (b : BasicTy) -> Loc b -> typeOf (BASIC b) -> Task (BASIC UNIT)
+assign _ l x = lift $ assign l x
+
+
+modify : (b : BasicTy) -> Loc b -> (typeOf (BASIC b) -> typeOf (BASIC b)) -> Task (BASIC UNIT)
+modify _ l f = lift $ modify l f
+
+
+Show (IORef a) where
+  show ref = "<ref>"
 
 
 

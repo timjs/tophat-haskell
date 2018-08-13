@@ -138,8 +138,9 @@ inner' =
 
 
 
-{- Shared Data --
+-- Shared Data --
 
+{-
 
 partial
 editShared : Task (BASIC UNIT)
@@ -173,39 +174,46 @@ where
   quit : Task (BASIC UNIT)
   quit = pure ()
 
-
   partial
   repeat : Task (BASIC UNIT)
   repeat = do
     "Prepend" # prepend <?> "Clear" # clear <?> "Change" # change
     editShared
 
-
--- update : Task (BASIC UNIT)
--- update =
---   get >>= \x =>
---   edit x >>? \y =>
---   put y
+-}
 
 
--- --FIXME: help!!!
--- update2 : Task (BASIC UNIT)
--- update2 = do
---   get >>= \x =>
---   edit (x+1) >>? \y =>
---   put y >>= \() =>
---   get >>= \u =>
---   edit (u+2) >>? \v =>
---   put v
+update : Loc INT -> Task (BASIC INT)
+update l = do
+  n <- ask INT
+  assign INT l n
+  m <- ask INT
+  modify INT l ((+) m)
+  edit !(deref INT l)
 
 
-inspect : Show (typeOf a) => Task a -> Task (PAIR a StateTy)
-inspect t = t <&> watch
+inspect : Show (typeOf a) => (Loc INT -> Task a) -> Task (PAIR a (BASIC INT))
+inspect f = do
+  l <- ref INT 0
+  f l <&> watch l
+
+-- inspect : Show (typeOf a) => Show (typeOf b) => (Loc b -> Task a) -> Task (PAIR a (BASIC b))
+-- inspect {b} f = do
+--   l <- init b
+--   f l <&> watch l
 
 
-parallelWatch : Task (PAIR StateTy StateTy)
-parallelWatch = inspect watch
+{-
 
+--FIXME: help!!!
+update2 : Task (BASIC UNIT)
+update2 = do
+  get >>= \x =>
+  edit (x+1) >>? \y =>
+  put y >>= \() =>
+  get >>= \u =>
+  edit (u+2) >>? \v =>
+  put v
 
 -}
 
@@ -317,7 +325,7 @@ loop task = do
 
 
 run : Show (typeOf a) => Task a -> IO ()
-run task = loop !(Task.init task)
+run task = loop !(Task.initialise task)
 
 
 main : IO ()
