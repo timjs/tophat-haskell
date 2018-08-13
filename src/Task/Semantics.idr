@@ -1,8 +1,8 @@
 module Task
 
 
+import Control.Monad.Trace
 import Control.Monad.Ref
-import Control.Monad.Error
 
 import Task.Internal
 import Task.Universe
@@ -166,21 +166,21 @@ init = normalise
 
 
 --FIXME: fix totallity...
-handle : MonadError NotApplicable m => MonadRef l m => TaskT m a -> Event -> m (TaskT m a)
+handle : MonadTrace NotApplicable m => MonadRef l m => TaskT m a -> Event -> m (TaskT m a)
 
 -- Edit --
 handle (Edit _) (ToHere Clear) =
   pure $ Edit Nothing
 
 handle (Edit {a} val) (ToHere (Change {b} val_new)) with (decEq b a)
-  handle (Edit _) (ToHere (Change val_new))         | Yes Refl = pure $ Edit (Just val_new)
-  handle (Edit _) (ToHere (Change _))               | No _     = throw CouldNotChange
+  handle (Edit _)   (ToHere (Change val_new))       | Yes Refl = pure $ Edit (Just val_new)
+  handle (Edit val) (ToHere (Change _))             | No _     = trace CouldNotChange $ Edit val
 
 handle (Watch {a} loc) (ToHere (Change {b} val_new)) with (decEq b a)
   handle (Watch loc) (ToHere (Change val_new))       | Yes Refl = do
     loc := val_new
     pure $ Watch loc
-  handle (Watch _) (ToHere (Change _))               | No _     = throw CouldNotChange
+  handle (Watch loc) (ToHere (Change _))             | No _     = trace CouldNotChange $ Watch loc
 
 -- Pass to this --
 handle (Then this cont) event = do
@@ -212,7 +212,7 @@ handle (Any left rght) (ToRight event) = do
 -- Interact --
 handle task@(One _ _) (ToHere (PickAt l)) =
   case find l task of
-    Nothing => throw $ CouldNotFind l
+    Nothing => trace (CouldNotFind l) task
     Just p  => handle task (ToHere (Pick p))
 
 handle (One left _) (ToHere (Pick (GoLeft p))) =
@@ -233,13 +233,13 @@ handle task@(Next this cont) (ToHere (Continue Nothing)) =
 
 handle task@(Next this cont) (ToHere (Continue (Just l))) =
   case !(value this) of
-    Nothing => throw CouldNotContinue
+    Nothing => trace CouldNotContinue task
     Just v  =>
       let
         next = cont v
       in
       case find l next of
-        Nothing => throw $ CouldNotFind l
+        Nothing => trace (CouldNotFind l) task
         Just p  => handle next (ToHere (Pick p))
 
 handle (Next this cont) event = do
@@ -257,10 +257,10 @@ handle (Label l this) event with ( keeper this )
 -- Rest --
 handle task event =
   -- Case `Fail`: Evaluation continues indefinitely
-  throw $ CouldNotHandle event
+  trace (CouldNotHandle event) task
 
 
-drive : MonadError NotApplicable m => MonadRef l m => TaskT m a -> Event -> m (TaskT m a)
+drive : MonadTrace NotApplicable m => MonadRef l m => TaskT m a -> Event -> m (TaskT m a)
 drive task event =
   handle task event >>= normalise
 
@@ -269,15 +269,10 @@ drive task event =
 -- Running ---------------------------------------------------------------------
 
 
-runTaskT : MonadError NotApplicable m => MonadRef l m => TaskT m a -> Event -> m (TaskT m a)
-runTaskT = drive
-
-
 public export
 Task : Ty -> Type
-Task = TaskT (ErrorT NotApplicable IO)
+Task = TaskT IO
 
 
-runTask : Task a -> Event -> IO (Either NotApplicable (Task a))
-runTask task event =
-  runErrorT (runTaskT task event)
+run : Task a -> Event -> IO (Task a)
+run = drive

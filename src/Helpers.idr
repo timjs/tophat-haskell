@@ -1,7 +1,7 @@
 module Helpers
 
 
-import public Control.Catchable
+import Control.Catchable
 
 
 %default total
@@ -18,8 +18,6 @@ infixr 1 <=<, >=>
 
 panic : String -> a
 panic = idris_crash
-
-
 
 -- List extensions -------------------------------------------------------------
 

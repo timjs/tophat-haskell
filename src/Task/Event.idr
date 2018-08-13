@@ -1,7 +1,11 @@
 module Task.Event
 
+
+import Control.Catchable
+
 import Task.Universe
 import Helpers
+
 
 %default total
 %access export

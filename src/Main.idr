@@ -2,8 +2,6 @@ module Main
 
 import System
 
-import Control.Monad.Error
-
 import Task
 import Helpers
 
@@ -312,34 +310,14 @@ get = do
 
 loop : Show (typeOf a) => Task a -> IO ()
 loop task = do
-  case !(runErrorT $ ui task) of
-    Left error =>
-      --NOTE: this error is impossible because `ui` can't throw errors because of context restriction
-      putStrLn $ "!! Error during ui generation: " ++ show error
-    Right out =>
-      putStrLn $ out
-  case !(runErrorT $ events task) of
-    Left error =>
-      --NOTE: this error is impossible because `events` can't throw errors because of context restriction
-      putStrLn $ "!! Error during event calculation: " ++ show error
-    Right events =>
-      putStrLn $ "Possibilities: " ++ show events
+  putStrLn !(Task.ui task)
+  putStrLn $ "Possibilities: " ++ show !(Task.events task)
   event <- get
-  case !(runTask task event) of
-    Left error => do
-      putStrLn $ "!! " ++ show error
-      loop task
-    Right task_new =>
-      loop task_new
+  loop !(Task.run task event)
 
 
 run : Show (typeOf a) => Task a -> IO ()
-run task = do
-  case !(runErrorT $ init task) of
-    Left error =>
-      putStrLn $ "!! Something went wrong during initialisation: " ++ show error
-    Right task_new =>
-      loop task_new
+run task = loop !(Task.init task)
 
 
 main : IO ()
