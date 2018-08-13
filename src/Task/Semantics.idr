@@ -85,7 +85,7 @@ choices _          = []
 
 
 events : MonadRef l m => TaskT m a -> m (List Event)
-events (Edit {a = BASIC b} _) = pure $ [ ToHere (Change {c = b} Nothing), ToHere Clear ]
+events (Edit {a = PRIM b} _)  = pure $ [ ToHere (Change {c = b} Nothing), ToHere Clear ]
 events (Edit _)               = pure $ [ ToHere Clear ]
 events (Watch {b} _)          = pure $ [ ToHere (Change {c = b} Nothing) ]
 events (All left rght)        = pure $ map ToLeft !(events left) ++ map ToRight !(events rght)
@@ -175,7 +175,7 @@ handle : MonadTrace NotApplicable m => MonadRef l m => TaskT m a -> Event -> m (
 handle (Edit _) (ToHere Clear) =
   pure $ Edit Nothing
 
-handle (Edit {a} val) (ToHere (Change {c} val_new)) with (decEq (BASIC c) a)
+handle (Edit {a} val) (ToHere (Change {c} val_new)) with (decEq (PRIM c) a)
   handle (Edit _)   (ToHere (Change val_new))       | Yes Refl = pure $ Edit val_new
   handle (Edit val) (ToHere (Change _))             | No _     = trace CouldNotChange $ Edit val
 

@@ -30,8 +30,8 @@ Task = TaskT IO
 
 
 public export
-Loc : (b : BasicTy) -> Type
-Loc b = IORef (typeOf (BASIC b))
+Loc : (b : PrimitiveTy) -> Type
+Loc b = IORef (typeOf (PRIM b))
 
 
 covering
@@ -62,7 +62,7 @@ pure = Edit . Just
 (<&>) = All
 
 
-unit : TaskT m (BASIC UNIT)
+unit : TaskT m (PRIM UNIT)
 unit = pure ()
 
 
@@ -117,23 +117,23 @@ lift : Monad m => m (typeOf a) -> TaskT m a
 lift = Lift
 
 
-init : (b : BasicTy) -> Task (LOC (BASIC b))
+init : (b : PrimitiveTy) -> Task (LOC (PRIM b))
 init b = lift $ ref (defaultOf b)
 
 
-ref : (b : BasicTy) -> typeOf (BASIC b) -> Task (LOC (BASIC b))
+ref : (b : PrimitiveTy) -> typeOf (PRIM b) -> Task (LOC (PRIM b))
 ref _ x = lift $ ref x
 
 
-deref : (b : BasicTy) -> Loc b -> Task (BASIC b)
+deref : (b : PrimitiveTy) -> Loc b -> Task (PRIM b)
 deref _ l = lift $ deref l
 
 
-assign : (b : BasicTy) -> Loc b -> typeOf (BASIC b) -> Task (BASIC UNIT)
+assign : (b : PrimitiveTy) -> Loc b -> typeOf (PRIM b) -> Task (PRIM UNIT)
 assign _ l x = lift $ assign l x
 
 
-modify : (b : BasicTy) -> Loc b -> (typeOf (BASIC b) -> typeOf (BASIC b)) -> Task (BASIC UNIT)
+modify : (b : PrimitiveTy) -> Loc b -> (typeOf (PRIM b) -> typeOf (PRIM b)) -> Task (PRIM UNIT)
 modify _ l f = lift $ modify l f
 
 
@@ -154,9 +154,9 @@ Show (IORef a) where
 -- Extras --
 
 
-ask : (b : BasicTy) -> TaskT m (BASIC b)
+ask : (b : PrimitiveTy) -> TaskT m (PRIM b)
 ask _ = Edit Nothing
 
 
-watch : MonadRef l m => l (typeOf b) -> TaskT m (BASIC b)
+watch : MonadRef l m => l (typeOf b) -> TaskT m (PRIM b)
 watch = Watch

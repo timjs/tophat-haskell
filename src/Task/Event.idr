@@ -39,7 +39,7 @@ namespace Path
 ||| - The `Nothing` case for `Change` is used as a dummy when calculation possible events.
 public export
 data Action : Type where
-  Change   : {c : BasicTy} -> Maybe (typeOf c) -> Action
+  Change   : {c : PrimitiveTy} -> Maybe (typeOf c) -> Action
   Clear    : Action
   Pick     : Path -> Action
   PickAt   : Label -> Action

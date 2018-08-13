@@ -18,7 +18,7 @@ import Helpers
 -- Helpers --
 
 
-edit : Int -> Task (BASIC INT)
+edit : Int -> Task (PRIM INT)
 edit = pure
 
 
@@ -30,26 +30,26 @@ rep = Helpers.replace
 
 
 
--- BASIC --
+-- PRIM --
 
 
-fourtytwo : Task (BASIC INT)
+fourtytwo : Task (PRIM INT)
 fourtytwo = pure 42
 
 
-hello : Task (BASIC STRING)
+hello : Task (PRIM STRING)
 hello = pure "Hello"
 
 
-inc : Int -> Task (BASIC INT)
+inc : Int -> Task (PRIM INT)
 inc x = pure (x + 1)
 
 
-add : Int -> Int -> Task (BASIC INT)
+add : Int -> Int -> Task (PRIM INT)
 add x y = pure (x + y)
 
 
-append : String -> String -> Task (BASIC STRING)
+append : String -> String -> Task (PRIM STRING)
 append x y = pure (x ++ y)
 
 
@@ -57,38 +57,38 @@ append x y = pure (x ++ y)
 -- Steps --
 
 
-pureStep : Task (BASIC INT)
+pureStep : Task (PRIM INT)
 pureStep = do
   x <- fourtytwo
   inc x
 
 
-pureStep' : Task (BASIC INT)
+pureStep' : Task (PRIM INT)
 pureStep' =
   fourtytwo >>? \x =>
   inc x
 
 
-oneStep : Task (BASIC INT)
+oneStep : Task (PRIM INT)
 oneStep = do
   x <- edit 0
   inc x
 
 
-oneStep' : Task (BASIC INT)
+oneStep' : Task (PRIM INT)
 oneStep' =
   edit 0 >>? \x =>
   inc x
 
 
-twoSteps : Task (BASIC INT)
+twoSteps : Task (PRIM INT)
 twoSteps = do
   x <- edit 1
   y <- edit 2
   add x y
 
 
-twoSteps' : Task (BASIC INT)
+twoSteps' : Task (PRIM INT)
 twoSteps' =
   edit 1 >>? \x =>
   edit 2 >>? \y =>
@@ -99,17 +99,17 @@ twoSteps' =
 -- Parallel --
 
 
-parallel : Task (PAIR (BASIC INT) (BASIC STRING))
+parallel : Task (PAIR (PRIM INT) (PRIM STRING))
 parallel = "Give an integer" # ask INT <&> hello
 
 
-parallelStep : Task (BASIC STRING)
+parallelStep : Task (PRIM STRING)
 parallelStep = do
   ( n, m ) <- parallel
   pure (unwords $ replicate (cast n) m)
 
 
-parallelStep' : Task (BASIC STRING)
+parallelStep' : Task (PRIM STRING)
 parallelStep' =
   parallel >>? \( n, m ) =>
   pure (unwords $ replicate (cast n) m)
@@ -121,17 +121,17 @@ parallelStep' =
 -- FIXME: should these automatically simplify?
 
 
-pair : Task (PAIR (BASIC INT) (BASIC INT))
+pair : Task (PAIR (PRIM INT) (PRIM INT))
 pair = pure 3 <&> pure 8
 
 
-inner : Task (BASIC INT)
+inner : Task (PRIM INT)
 inner = do
   ( x, y ) <- pair
   add x y
 
 
-inner' : Task (BASIC INT)
+inner' : Task (PRIM INT)
 inner' =
   pair >>? \( x, y ) =>
   add x y
@@ -143,18 +143,18 @@ inner' =
 {-
 
 partial
-editShared : Task (BASIC UNIT)
+editShared : Task (PRIM UNIT)
 editShared =
   "Edit" # repeat <?> "Quit" # quit
 where
-  delete : Nat -> Task (BASIC UNIT)
+  delete : Nat -> Task (PRIM UNIT)
   delete i =
     modify (del i)
-  replace : Nat -> Task (BASIC UNIT)
+  replace : Nat -> Task (PRIM UNIT)
   replace i =
     "Give a new value" # ask INT >>? \x =>
     modify (rep i x)
-  change : Task (BASIC UNIT)
+  change : Task (PRIM UNIT)
   change =
     "Give an index" # ask INT >>? \n =>
     let i = the Nat (cast n) in
@@ -164,18 +164,18 @@ where
       "Delete" # delete i <?> "Replace" # replace i
     else
       fail
-  prepend : Task (BASIC UNIT)
+  prepend : Task (PRIM UNIT)
   prepend =
     "Give a new value" # ask INT >>? \x =>
     modify ((::) x)
-  clear : Task (BASIC UNIT)
+  clear : Task (PRIM UNIT)
   clear =
     modify (const [])
-  quit : Task (BASIC UNIT)
+  quit : Task (PRIM UNIT)
   quit = pure ()
 
   partial
-  repeat : Task (BASIC UNIT)
+  repeat : Task (PRIM UNIT)
   repeat = do
     "Prepend" # prepend <?> "Clear" # clear <?> "Change" # change
     editShared
@@ -183,7 +183,7 @@ where
 -}
 
 
-update1 : Loc INT -> Task (BASIC INT)
+update1 : Loc INT -> Task (PRIM INT)
 update1 l = do
   n <- ask INT
   assign INT l n
@@ -192,7 +192,7 @@ update1 l = do
   edit !(deref INT l)
 
 
-update2 : Loc INT -> Task (BASIC UNIT)
+update2 : Loc INT -> Task (PRIM UNIT)
 update2 l =
   deref INT l >>= \x =>
   edit (x + 1) >>? \y =>
@@ -202,12 +202,12 @@ update2 l =
   assign INT l v
 
 
-inspect : Show (typeOf a) => (Loc INT -> Task a) -> Task (PAIR a (BASIC INT))
+inspect : Show (typeOf a) => (Loc INT -> Task a) -> Task (PAIR a (PRIM INT))
 inspect f = do
   l <- ref INT 0
   f l <&> watch l
 
--- inspect : Show (typeOf a) => Show (typeOf b) => (Loc b -> Task a) -> Task (PAIR a (BASIC b))
+-- inspect : Show (typeOf a) => Show (typeOf b) => (Loc b -> Task a) -> Task (PAIR a (PRIM b))
 -- inspect {b} f = do
 --   l <- init b
 --   f l <&> watch l
@@ -217,27 +217,27 @@ inspect f = do
 -- Choices --
 
 
-pick1 : Task (BASIC INT)
+pick1 : Task (PRIM INT)
 pick1 = fail <|> edit 0
 
 
-pick2 : Task (BASIC INT)
+pick2 : Task (PRIM INT)
 pick2 = edit 1 <|> edit 2
 
 
-pick3 : Task (BASIC INT)
+pick3 : Task (PRIM INT)
 pick3 = pick2 <|> edit 3
 
 
-pick1' : Task (BASIC INT)
+pick1' : Task (PRIM INT)
 pick1' = "Fail" # fail <?> "Cont" # edit 0
 
 
-pick2' : Task (BASIC INT)
+pick2' : Task (PRIM INT)
 pick2' = "First" # edit 1 <?> "Second" # edit 2
 
 
-pick3' : Task (BASIC INT)
+pick3' : Task (PRIM INT)
 pick3' = pick2' <?> "Third" # edit 3
 
 
@@ -245,32 +245,32 @@ pick3' = pick2' <?> "Third" # edit 3
 -- Guards --
 
 
-auto : Task (BASIC STRING)
+auto : Task (PRIM STRING)
 auto = do
   x <- edit 0
   if x >= 10 then pure "large" else fail
 
 
-actions : Task (BASIC INT)
+actions : Task (PRIM INT)
 actions =
   edit 0 >>? \x =>
   pick3
 
 
-actions' : Task (BASIC INT)
+actions' : Task (PRIM INT)
 actions' =
   edit 0 >>? \x =>
   pick3'
 
 
-guards : Task (BASIC STRING)
+guards : Task (PRIM STRING)
 guards =
   edit 0 >>? \x =>
   ("Large" # (if x >= 10 then pure "large" else fail) <?> "VeryLarge" # (if x >= 100 then pure "very large" else fail))
 
 
 partial -- due to `mod` on `0`
-branch : Task (BASIC STRING)
+branch : Task (PRIM STRING)
 branch =
   edit 1 >>? \x =>
   if x `mod` 3 == 0 then
@@ -285,7 +285,7 @@ branch =
 -- Empty edit --
 
 
-empties : Task (BASIC INT)
+empties : Task (PRIM INT)
 empties = do
   ( x, y ) <- ask INT <&> ask INT
   pure (x + y)
