@@ -41,7 +41,7 @@ data TaskT : (m : Type -> Type) -> Ty -> Type where
   Next  : Show (typeOf a) => (this : TaskT m a) -> (next : typeOf a -> TaskT m b) -> TaskT m b
 
   -- Labels
-  Label : Show (typeOf a) => Label -> (this : TaskT m a) -> TaskT m a
+  Label : Label -> (this : TaskT m a) -> TaskT m a
 
 
 
