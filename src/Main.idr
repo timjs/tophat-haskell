@@ -183,13 +183,23 @@ where
 -}
 
 
-update : Loc INT -> Task (BASIC INT)
-update l = do
+update1 : Loc INT -> Task (BASIC INT)
+update1 l = do
   n <- ask INT
   assign INT l n
   m <- ask INT
   modify INT l ((+) m)
   edit !(deref INT l)
+
+
+update2 : Loc INT -> Task (BASIC UNIT)
+update2 l =
+  deref INT l >>= \x =>
+  edit (x + 1) >>? \y =>
+  assign INT l y >>= \() =>
+  deref INT l >>= \u =>
+  edit (u + 2) >>? \v =>
+  assign INT l v
 
 
 inspect : Show (typeOf a) => (Loc INT -> Task a) -> Task (PAIR a (BASIC INT))
@@ -201,21 +211,6 @@ inspect f = do
 -- inspect {b} f = do
 --   l <- init b
 --   f l <&> watch l
-
-
-{-
-
---FIXME: help!!!
-update2 : Task (BASIC UNIT)
-update2 = do
-  get >>= \x =>
-  edit (x+1) >>? \y =>
-  put y >>= \() =>
-  get >>= \u =>
-  edit (u+2) >>? \v =>
-  put v
-
--}
 
 
 
