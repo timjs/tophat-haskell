@@ -85,14 +85,15 @@ choices _          = []
 
 
 events : MonadRef l m => TaskT m a -> m (List Event)
-events (Edit {a} _)     = pure $ [ ToHere (Change ?undefH1), ToHere Clear ]
-events (Watch {b} _)    = pure $ [ ToHere (Change ?undefH2) ]
-events (All left rght)  = pure $ map ToLeft !(events left) ++ map ToRight !(events rght)
-events (Any left rght)  = pure $ map ToLeft !(events left) ++ map ToRight !(events rght)
-events this@(One _ _)   = pure $ map (ToHere . PickAt) (labels this) ++ map (ToHere . Pick) (choices this)
-events (Fail)           = pure $ []
-events (Then this _)    = events this
-events (Next this next) = do
+events (Edit {a = BASIC b} _) = pure $ [ ToHere (Change {c = b} Nothing), ToHere Clear ]
+events (Edit _)               = pure $ [ ToHere Clear ]
+events (Watch {b} _)          = pure $ [ ToHere (Change {c = b} Nothing) ]
+events (All left rght)        = pure $ map ToLeft !(events left) ++ map ToRight !(events rght)
+events (Any left rght)        = pure $ map ToLeft !(events left) ++ map ToRight !(events rght)
+events this@(One _ _)         = pure $ map (ToHere . PickAt) (labels this) ++ map (ToHere . Pick) (choices this)
+events (Fail)                 = pure $ []
+events (Then this _)          = events this
+events (Next this next)       = do
     Just v <- value this | Nothing => pure []
     pure $ map ToHere (go (next v)) ++ !(events this)
   where
@@ -101,8 +102,8 @@ events (Next this next) = do
       | One _ _ = map (Continue . Just) $ labels task
       | Fail    = []
       | _       = [ Continue Nothing ]
-events (Label _ this)   = events this
-events (Lift _)         = pure $ []
+events (Label _ this)         = events this
+events (Lift _)               = pure $ []
 
 
 
@@ -175,13 +176,14 @@ handle (Edit _) (ToHere Clear) =
   pure $ Edit Nothing
 
 handle (Edit {a} val) (ToHere (Change {c} val_new)) with (decEq (BASIC c) a)
-  handle (Edit _)   (ToHere (Change val_new))       | Yes Refl = pure $ Edit (Just val_new)
+  handle (Edit _)   (ToHere (Change val_new))       | Yes Refl = pure $ Edit val_new
   handle (Edit val) (ToHere (Change _))             | No _     = trace CouldNotChange $ Edit val
 
 handle (Watch {b} loc) (ToHere (Change {c} val_new)) with (decEq c b)
-  handle (Watch loc) (ToHere (Change val_new))       | Yes Refl = do
+  handle (Watch loc) (ToHere (Change (Just val_new)))| Yes Refl = do
     loc := val_new
     pure $ Watch loc
+  handle (Watch loc) (ToHere (Change (Nothing)))     | Yes Refl = trace CouldNotChange $ Watch loc
   handle (Watch loc) (ToHere (Change _))             | No _     = trace CouldNotChange $ Watch loc
 
 -- Pass to this --
