@@ -97,32 +97,6 @@ Universe PrimitiveTy where
 
 
 
--- Defaults --
-
-
-defaultOf : (b : PrimitiveTy) -> typeOf b
-defaultOf UNIT   = ()
-defaultOf BOOL   = False
-defaultOf INT    = 0
-defaultOf STRING = ""
-
-
-
--- Parsing --
-
-
-parse : String -> Maybe (b : PrimitiveTy ** typeOf b)
-parse "()"                                                        = Just $ (UNIT ** ())
-parse "True"                                                      = Just $ (BOOL ** True)
-parse "False"                                                     = Just $ (BOOL ** False)
-parse s   with (the (Maybe Int) (parseInteger s))
-  parse s | (Just int)                                            = Just $ (INT ** int)
-  parse s | Nothing                        with (decons s)
-    parse (between '"' '"' rest) | Nothing | (Multi '"' '"' rest) = Just $ (STRING ** rest)
-    parse _                      | Nothing | _                    = Nothing
-
-
-
 -- Full type universe ----------------------------------------------------------
 
 
@@ -288,3 +262,34 @@ isBasic (LIST a) with ( isBasic a )
   | No contra            = No $ list_not_basic contra
 isBasic (LOC _)          = No loc_not_basic
 isBasic (PRIM p)         = Yes BasicPrim
+
+
+
+-- Parsing --
+
+
+parse : String -> Maybe (b : Ty ** ( IsBasic b, typeOf b ))
+parse "()"                                                        = Just $ (PRIM UNIT ** ( BasicPrim, () ))
+parse "True"                                                      = Just $ (PRIM BOOL ** ( BasicPrim, True ))
+parse "False"                                                     = Just $ (PRIM BOOL ** ( BasicPrim, False ))
+parse s   with (the (Maybe Int) (parseInteger s))
+  parse s | (Just int)                                            = Just $ (PRIM INT ** ( BasicPrim, int ))
+  parse s | Nothing                        with (decons s)
+    parse (between '"' '"' rest) | Nothing | (Multi '"' '"' rest) = Just $ (PRIM STRING ** ( BasicPrim, rest ))
+    parse _                      | Nothing | _                    = Nothing
+--FIXME: add pairs and lists
+
+
+-- Defaults --
+
+
+export
+defaultOf : (b : Ty) -> {auto p : IsBasic b} -> typeOf b
+defaultOf (PRIM UNIT)   = ()
+defaultOf (PRIM BOOL)   = False
+defaultOf (PRIM INT)    = 0
+defaultOf (PRIM STRING) = ""
+defaultOf (LIST _)      = []
+defaultOf (PAIR a b) with ( isBasic a, isBasic b )
+  | ( Yes l, Yes r )    = ( defaultOf a, defaultOf b )
+  --FIXME: what to do with No?

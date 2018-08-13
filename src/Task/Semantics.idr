@@ -85,25 +85,26 @@ choices _          = []
 
 
 events : MonadRef l m => TaskT m a -> m (List Event)
-events (Edit {a = PRIM b} _)  = pure $ [ ToHere (Change {c = b} Nothing), ToHere Clear ]
-events (Edit _)               = pure $ [ ToHere Clear ]
-events (Watch {b} _)          = pure $ [ ToHere (Change {c = b} Nothing) ]
-events (All left rght)        = pure $ map ToLeft !(events left) ++ map ToRight !(events rght)
-events (Any left rght)        = pure $ map ToLeft !(events left) ++ map ToRight !(events rght)
-events this@(One _ _)         = pure $ map (ToHere . PickAt) (labels this) ++ map (ToHere . Pick) (choices this)
-events (Fail)                 = pure $ []
-events (Then this _)          = events this
-events (Next this next)       = do
+events (Edit {a} _) with (isBasic a)
+  | Yes p               = pure $ [ ToHere (Change {c = a} Nothing), ToHere Clear ]
+  | No _                = pure $ [ ToHere Clear ]
+events (Watch {b} _)    = pure $ [ ToHere (Change {c = b} Nothing) ]
+events (All left rght)  = pure $ map ToLeft !(events left) ++ map ToRight !(events rght)
+events (Any left rght)  = pure $ map ToLeft !(events left) ++ map ToRight !(events rght)
+events this@(One _ _)   = pure $ map (ToHere . PickAt) (labels this) ++ map (ToHere . Pick) (choices this)
+events (Fail)           = pure $ []
+events (Then this _)    = events this
+events (Next this next) = do
     Just v <- value this | Nothing => pure []
     pure $ map ToHere (go (next v)) ++ !(events this)
   where
     go : TaskT m a -> List Action
-    go task with ( delabel task )
+    go task with (delabel task)
       | One _ _ = map (Continue . Just) $ labels task
       | Fail    = []
       | _       = [ Continue Nothing ]
-events (Label _ this)         = events this
-events (Lift _)               = pure $ []
+events (Label _ this)   = events this
+events (Lift _)         = pure $ []
 
 
 
@@ -144,7 +145,7 @@ normalise (Next this cont) = do
   pure $ Next this_new cont
 
 -- Label --
-normalise (Label l this) with ( keeper this )
+normalise (Label l this) with (keeper this)
   | False = normalise this
   | True  = do
       this_new <- normalise this
@@ -175,7 +176,7 @@ handle : MonadTrace NotApplicable m => MonadRef l m => TaskT m a -> Event -> m (
 handle (Edit _) (ToHere Clear) =
   pure $ Edit Nothing
 
-handle (Edit {a} val) (ToHere (Change {c} val_new)) with (decEq (PRIM c) a)
+handle (Edit {a} val) (ToHere (Change {c} val_new)) with (decEq c a)
   handle (Edit _)   (ToHere (Change val_new))       | Yes Refl = pure $ Edit val_new
   handle (Edit val) (ToHere (Change _))             | No _     = trace CouldNotChange $ Edit val
 
@@ -254,7 +255,7 @@ handle (Next this cont) event = do
   pure $ Next this_new cont
 
 -- Label --
-handle (Label l this) event with ( keeper this )
+handle (Label l this) event with (keeper this)
   | False = handle this event
   | True = do
       this_new <- handle this event

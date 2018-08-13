@@ -100,7 +100,7 @@ twoSteps' =
 
 
 parallel : Task (PAIR (PRIM INT) (PRIM STRING))
-parallel = "Give an integer" # ask INT <&> hello
+parallel = "Give an integer" # ask (PRIM INT) <&> hello
 
 
 parallelStep : Task (PRIM STRING)
@@ -152,11 +152,11 @@ where
     modify (del i)
   replace : Nat -> Task (PRIM UNIT)
   replace i =
-    "Give a new value" # ask INT >>? \x =>
+    "Give a new value" # ask (PRIM INT) >>? \x =>
     modify (rep i x)
   change : Task (PRIM UNIT)
   change =
-    "Give an index" # ask INT >>? \n =>
+    "Give an index" # ask (PRIM INT) >>? \n =>
     let i = the Nat (cast n) in
     --FIXME: get should be evaluated underneath, and not be a primitive in the Task monad
     get >>= \xs =>
@@ -166,7 +166,7 @@ where
       fail
   prepend : Task (PRIM UNIT)
   prepend =
-    "Give a new value" # ask INT >>? \x =>
+    "Give a new value" # ask (PRIM INT) >>? \x =>
     modify ((::) x)
   clear : Task (PRIM UNIT)
   clear =
@@ -183,28 +183,28 @@ where
 -}
 
 
-update1 : Loc INT -> Task (PRIM INT)
+update1 : Loc (PRIM INT) -> Task (PRIM INT)
 update1 l = do
-  n <- ask INT
-  assign INT l n
-  m <- ask INT
-  modify INT l ((+) m)
-  edit !(deref INT l)
+  n <- ask (PRIM INT)
+  assign (PRIM INT) l n
+  m <- ask (PRIM INT)
+  modify (PRIM INT) l ((+) m)
+  edit !(deref (PRIM INT) l)
 
 
-update2 : Loc INT -> Task (PRIM UNIT)
+update2 : Loc (PRIM INT) -> Task (PRIM UNIT)
 update2 l =
-  deref INT l >>= \x =>
+  deref (PRIM INT) l >>= \x =>
   edit (x + 1) >>? \y =>
-  assign INT l y >>= \() =>
-  deref INT l >>= \u =>
+  assign (PRIM INT) l y >>= \() =>
+  deref (PRIM INT) l >>= \u =>
   edit (u + 2) >>? \v =>
-  assign INT l v
+  assign (PRIM INT) l v
 
 
-inspect : Show (typeOf a) => (Loc INT -> Task a) -> Task (PAIR a (PRIM INT))
+inspect : Show (typeOf a) => (Loc (PRIM INT) -> Task a) -> Task (PAIR a (PRIM INT))
 inspect f = do
-  l <- ref INT 0
+  l <- ref (PRIM INT) 0
   f l <&> watch l
 
 -- inspect : Show (typeOf a) => Show (typeOf b) => (Loc b -> Task a) -> Task (PAIR a (PRIM b))
@@ -287,7 +287,7 @@ branch =
 
 empties : Task (PRIM INT)
 empties = do
-  ( x, y ) <- ask INT <&> ask INT
+  ( x, y ) <- ask (PRIM INT) <&> ask (PRIM INT)
   pure (x + y)
 
 

@@ -26,7 +26,7 @@ data TaskT : (m : Type -> Type) -> Ty -> Type where
 
   -- Core
   Edit  : (val : Maybe (typeOf a)) -> TaskT m a
-  Watch : MonadRef l m => l (typeOf b) -> TaskT m (PRIM b)
+  Watch : MonadRef l m => {auto p : IsBasic b} -> l (typeOf b) -> TaskT m b
 
   -- Parallel
   All   : Show (typeOf a) => Show (typeOf b) => (left : TaskT m a) -> (right : TaskT m b) -> TaskT m (PAIR a b)

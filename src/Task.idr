@@ -30,8 +30,8 @@ Task = TaskT IO
 
 
 public export
-Loc : (b : PrimitiveTy) -> Type
-Loc b = IORef (typeOf (PRIM b))
+Loc : (b : Ty) -> {auto p : IsBasic b} -> Type
+Loc b = IORef (typeOf b)
 
 
 covering
@@ -117,23 +117,23 @@ lift : Monad m => m (typeOf a) -> TaskT m a
 lift = Lift
 
 
-init : (b : PrimitiveTy) -> Task (LOC (PRIM b))
+init : (b : Ty) -> {auto p : IsBasic b} -> Task (LOC b)
 init b = lift $ ref (defaultOf b)
 
 
-ref : (b : PrimitiveTy) -> typeOf (PRIM b) -> Task (LOC (PRIM b))
+ref : (b : Ty) -> {auto p : IsBasic b} -> typeOf b -> Task (LOC b)
 ref _ x = lift $ ref x
 
 
-deref : (b : PrimitiveTy) -> Loc b -> Task (PRIM b)
+deref : (b : Ty) -> {auto p : IsBasic b} -> Loc b -> Task b
 deref _ l = lift $ deref l
 
 
-assign : (b : PrimitiveTy) -> Loc b -> typeOf (PRIM b) -> Task (PRIM UNIT)
+assign : (b : Ty) -> {auto p : IsBasic b} -> Loc b -> typeOf b -> Task (PRIM UNIT)
 assign _ l x = lift $ assign l x
 
 
-modify : (b : PrimitiveTy) -> Loc b -> (typeOf (PRIM b) -> typeOf (PRIM b)) -> Task (PRIM UNIT)
+modify : (b : Ty) -> {auto p : IsBasic b} -> Loc b -> (typeOf b -> typeOf b) -> Task (PRIM UNIT)
 modify _ l f = lift $ modify l f
 
 
@@ -154,9 +154,9 @@ Show (IORef a) where
 -- Extras --
 
 
-ask : (b : PrimitiveTy) -> TaskT m (PRIM b)
+ask : (b : Ty) -> {auto p : IsBasic b} -> TaskT m b
 ask _ = Edit Nothing
 
 
-watch : MonadRef l m => l (typeOf b) -> TaskT m (PRIM b)
+watch : MonadRef l m => {auto p : IsBasic b} -> l (typeOf b) -> TaskT m b
 watch = Watch

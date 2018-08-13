@@ -39,7 +39,7 @@ namespace Path
 ||| - The `Nothing` case for `Change` is used as a dummy when calculation possible events.
 public export
 data Action : Type where
-  Change   : {c : PrimitiveTy} -> Maybe (typeOf c) -> Action
+  Change   : {auto p : IsBasic c} -> Maybe (typeOf c) -> Action
   Clear    : Action
   Pick     : Path -> Action
   PickAt   : Label -> Action
@@ -96,7 +96,6 @@ usage = unlines
   ]
 
 mutual
-  --FIXME: fix totality
   parse : List String -> Either String Event
   parse (first :: rest) =
     if isLabel first then
@@ -108,7 +107,7 @@ mutual
   parse' : List String -> Either String Event
   parse' ["change", val] with (Universe.parse val)
     | Nothing             = throw $ "!! Error parsing value '" ++ val ++ "'"
-    | (Just (c ** v))     = ok $ ToHere $ Change {c} (Just v)
+    | Just (c ** ( p, v ))= ok $ ToHere $ Change {c} (Just v)
   parse' ["clear"]        = ok $ ToHere $ Clear
   parse' ("pick" :: rest) = map (ToHere . Pick) $ Path.parse rest
   parse' ["cont"]         = ok $ ToHere $ Continue Nothing
