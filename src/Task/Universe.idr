@@ -237,3 +237,54 @@ Universe Ty where
   typeOf (LIST a)   = List (typeOf a)
   typeOf (LOC a)    = IORef (typeOf a) --FIXME: is this ok??? Should be parametrised over `MonadRef l m`...
   typeOf (PRIM p)   = typeOf p
+
+
+
+-- Basic types -----------------------------------------------------------------
+
+
+data IsBasic : Ty -> Type where
+  BasicPrim : IsBasic (PRIM p)
+  BasicPair : IsBasic a -> IsBasic b -> IsBasic (PAIR a b)
+  BasicList : IsBasic a -> IsBasic (LIST a)
+
+
+private
+loc_not_basic : IsBasic (LOC a) -> Void
+loc_not_basic (BasicPrim)     impossible
+loc_not_basic (BasicPair _ _) impossible
+loc_not_basic (BasicList _)   impossible
+
+
+private
+list_not_basic : (IsBasic a -> Void) -> IsBasic (LIST a) -> Void
+list_not_basic contra (BasicList prf) = contra prf
+
+
+private
+yes_no_pair_not_basic : (IsBasic b -> Void) -> IsBasic (PAIR a b) -> Void
+yes_no_pair_not_basic contra (BasicPair _ prf_r) = contra prf_r
+
+
+private
+no_yes_pair_not_basic : (IsBasic a -> Void) -> IsBasic (PAIR a b) -> Void
+no_yes_pair_not_basic contra (BasicPair prf_l _) = contra prf_l
+
+
+private
+no_no_pair_not_basic : (IsBasic a -> Void) -> (IsBasic b -> Void) -> IsBasic (PAIR a b) -> Void
+no_no_pair_not_basic contra_l _ (BasicPair prf_l _) = contra_l prf_l
+
+
+export
+isBasic : (t : Ty) -> Dec (IsBasic t)
+isBasic (PAIR a b) with ( isBasic a, isBasic b )
+  | ( Yes l, Yes r ) = Yes $ BasicPair l r
+  | ( Yes _, No ct ) = No $ yes_no_pair_not_basic ct
+  | ( No ct, Yes _ ) = No $ no_yes_pair_not_basic ct
+  | ( No c,  No d  ) = No $ no_no_pair_not_basic c d
+isBasic (LIST a) with ( isBasic a )
+  | Yes prf              = Yes $ BasicList prf
+  | No contra            = No $ list_not_basic contra
+isBasic (LOC _)          = No loc_not_basic
+isBasic (PRIM p)         = Yes BasicPrim
