@@ -96,9 +96,11 @@ usage = unlines
 mutual
   --FIXME: fix totality
   parse : List String -> Either String Event
-  parse (first :: rest) with ( isLabel first )
-    | True  = ok $ ToHere $ PickAt first
-    | False = parse' (first :: rest)
+  parse (first :: rest) =
+    if isLabel first then
+      ok $ ToHere $ PickAt first
+    else
+      parse' (first :: rest)
   parse []  = throw ":: Please enter a command or label, type `help` for more info"
 
   parse' : List String -> Either String Event

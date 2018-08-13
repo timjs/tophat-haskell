@@ -53,6 +53,7 @@ ui (Fail)                = pure $ "↯"
 ui (Then this cont)      = pure $ !(ui this) ++ " ▶…"
 ui (Next this cont)      = pure $ !(ui this) ++ " ▷…"
 ui (Label l this)        = pure $ l ++ " # " ++ !(ui this)
+ui (Lift _)              = pure $ "<lift>"
 
 
 
@@ -101,6 +102,7 @@ events (Next this next) = do
       | Fail    = []
       | _       = [ Continue Nothing ]
 events (Label _ this)   = events this
+events (Lift _)         = pure $ []
 
 
 
