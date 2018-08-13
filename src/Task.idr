@@ -91,8 +91,11 @@ fail = Fail
 --     (if guard then next else fail) <|> convert fs x
 
 
+-- Transformer --
 
 
+lift : Monad m => m (typeOf a) -> TaskT m a
+lift = Lift
 
 
 

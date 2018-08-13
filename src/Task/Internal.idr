@@ -43,6 +43,9 @@ data TaskT : (m : Type -> Type) -> Ty -> Type where
   -- Labels
   Label : Label -> (this : TaskT m a) -> TaskT m a
 
+  -- Lift
+  Lift : Monad m => m (typeOf a) -> TaskT m a
+
 
 
 -- Labels ----------------------------------------------------------------------

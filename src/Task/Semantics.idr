@@ -147,6 +147,11 @@ normalise (Label l this) with ( keeper this )
       this_new <- normalise this
       pure $ Label l this_new
 
+-- Lift --
+normalise (Lift a) = do
+  x <- a
+  pure $ Edit (Just x)
+
 -- Values --
 normalise task = do
   pure $ task
