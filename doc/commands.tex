@@ -20,6 +20,7 @@
 
 \newvalue{True}
 \newvalue{False}
+\newvalue[Not]{not}
 
 \newmacro{str}[1]
   {\text{``#1''}}
@@ -77,6 +78,8 @@
   {\downarrow}
 \newmacro{handle}[1]
   {\mathrel{\;\xrightarrow{\;#1\;}\;}}
+\newmacro{drive}[1]
+  {\mathrel{\;\xRightarrow{\;#1\;}\;}}
 
 \newmathcommand{Observe}[cal]
   {O}

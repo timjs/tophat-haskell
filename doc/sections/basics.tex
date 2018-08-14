@@ -4,14 +4,15 @@
 
 Let us start by defining our host language.
 It is a simple $\lambda$-calculus.
-In addition to abstraction, application and variables,
+Next to abstraction, application and variables,
 it contains constants for booleans, integers and strings
 and some basic operations on them.
 We will embed our task language in this basic language.
 This means we can use all the power of the host language,
-such as arithmetic operations and (higher order) functions in our task language.
+such as arithmetic operations and (higher order) functions,
+in our task language.
 Because all the constructs in our host language are standard,
-we will not define typing rules and semantic rules for them explicitly.
+we will not give typing rules and semantic rules here.
 For this we refer to standard work like \textcite{books/Pierce02TAPL} and \textcite{books/Harper16PFPL}.
 
 
@@ -19,8 +20,8 @@ For this we refer to standard work like \textcite{books/Pierce02TAPL} and \textc
 
 \begin{grammar}
   Expressions
-    & e &::= & e_1\ e_2           & – application \\
-    &   &\mid& \lambda x.\ e      & – abstractions \\
+    & e &::= & \lambda x.\ e      & – abstractions \\
+    &   &\mid& e_1\ e_2           & – application \\
     &   &\mid& x                  & – variable \\
     &   &\mid& c                  & – constants \\
     &   &\mid& e_1 \star e_2      & – operator \\
@@ -33,7 +34,7 @@ For this we refer to standard work like \textcite{books/Pierce02TAPL} and \textc
   Pretasks
     & p &::= & \ldots             & (to be defined) \\
 \end{grammar}
-Expressions are just applications, abstractions, variables or constants.
+Expressions are just abstractions, applications, variables or constants.
 Constants can be booleans, integers or strings.
 The $\star$ represents a general notion of operators.
 With $\If{}{}{}$ one can do basic branching.
@@ -45,24 +46,12 @@ We will use double quotation marks ($\str{}$) to denote strings.
 Integers are denoted by their decimal representation,
 and booleans are written $\True$ and $\False$.
 In the remaining of this text,
-we will make freely use of the logic operators $\land$, $\lor$,
+we will make freely use of the logic operators $\Not$, $\land$, and $\lor$,
 arithmetic operators like $+$, $-$, $\times$,
-and appending strings with $\pp$.
+and the string append operator $\pp$.
 Also, we will use the standard comparison operations $<$, $\le$, $\equiv$, $\nequiv$, $\ge$, and $>$
 as builtins.
 Only when referring to operators in general we will use $\star$.
-
-
-% \paragraph{Values}
-
-\begin{grammar}
-  Values
-    & v &::= & \lambda x.\ e  & – abstractions \\
-    &   &\mid& c              & – constants \\
-    &   &\mid& t              & – tasks \\
-\end{grammar}
-Regarding our base language, lambda abstractions are values, as are all constants.
-Most important, \emph{tasks are values}.
 
 
 \subsection{Typing}
@@ -91,4 +80,13 @@ To express evaluation,
 we use the big step semantics of our host language.
 Turning an expression $e$ into a value $v$ is denoted by $\boxed{e \evaluate v}$.
 The rules to evaluate expressions $e$ do not defer from standard work.
-Also, as tasks are values, they will not be evaluated further by the $\evaluate$ operation.
+
+\begin{grammar}
+  Values
+    & v &::= & \lambda x.\ e  & – abstractions \\
+    &   &\mid& c              & – constants \\
+    &   &\mid& p              & – pretasks \\
+\end{grammar}
+Regarding our base language, lambda abstractions are values, as are all constants.
+Most important, \emph{pretasks are values}.
+As pretasks are values, they will not be evaluated further by the $\evaluate$ operation.
