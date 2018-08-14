@@ -30,6 +30,10 @@
 \newenvironment{emphasize}
   {\begin{quote}\itshape}
   {\end{quote}}
+\newenvironment{margintext}[1]
+  {\begin{marginfigure}
+     \subsection*{#1}}
+  {\end{marginfigure}}
 
 
 %% Lists %%
@@ -93,11 +97,14 @@
 \let\Textcite\Citet
 
 
-%% Blocks %%
+%% Blocks and Boxes %%
 
 \newenvironment{block}
   {\begin{center}}
   {\end{center}}
+% \newenvironment{box}
+%   {\begin{mdframed}}
+%   {\end{mdframed}}
 
 
 %% Logos %%
