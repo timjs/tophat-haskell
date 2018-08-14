@@ -23,43 +23,6 @@ This is depicted as a state diagram in \autoref{fig:editor-state} below.
   \label{fig:editor-state}
 \end{figure}
 
-\marginnote{
-A short side note to the iTasks guru:
-Maybe you think: \enquote{I know this! This is stability!}
-Yes and no.
-I already mentioned in the introduction we won't use stability in this system.
-Although the state diagram in \autoref{fig:editor-state} looks like the state diagram for stability,
-it is not.
-
-First, stability has \emph{three} states:
-\begin{enumerate}
-  \item stable,
-  \item unstable, and
-  \item no value.
-\end{enumerate}
-\includegraphics[width=\marginwidth,page=2]{figures/editor-state-crop.pdf}
-Editors have only two:
-\begin{enumerate}
-  \item valued, and
-  \item unvalued.
-\end{enumerate}
-It is always possible to go from a valued editor to an unvalued one and back again.
-It is a bit like only using the unstable part of the stability diagram.
-
-Second,
-there is no way to mark a value as stable.
-A value is always there,
-but an editor can have a value or not.
-
-Third,
-because values are just values,
-as we are custom from lambda calculus and other functional programming languages,
-stability does not propagate through our whole system.
-Only editors,
-which are the core interaction part of the system,
-have the property that they are valued, or unvalued.
-}
-
 For this purpose, we extend our task language with two constructs:
 a valued editor $\Edit e$ and an unvalued editor $\Fill \beta$.
 %, which contains the expression $e$, which expects a value of type $\tau$.
@@ -110,6 +73,43 @@ The typing rule becomes:
 \begin{equation*}
   \userule{T-Fill}
 \end{equation*}
+
+\begin{margintext}{Aside: About stability}
+A short side note to the iTasks guru.
+Maybe you think: \enquote{I know this! This is stability!}
+Yes and no.
+I already mentioned in the introduction we won't use stability in this system.
+Although the state diagram in \autoref{fig:editor-state} looks like the state diagram for stability,
+it is not.
+
+First, stability has \emph{three} states:
+\begin{enumerate}
+  \item stable,
+  \item unstable, and
+  \item no value.
+\end{enumerate}
+\includegraphics[width=\marginwidth,page=2]{figures/editor-state-crop.pdf}
+Editors have only two:
+\begin{enumerate}
+  \item valued, and
+  \item unvalued.
+\end{enumerate}
+It is always possible to go from a valued editor to an unvalued one and back again.
+It is a bit like only using the unstable part of the stability diagram.
+
+Second,
+there is no way to mark a value as stable.
+A value is always there,
+but an editor can have a value or not.
+
+Third,
+because values are just values,
+as we are custom from lambda calculus and other functional programming languages,
+stability does not propagate through our whole system.
+Only editors,
+which are the core interaction part of the system,
+have the property that they are valued, or unvalued.
+\end{margintext}
 
 
 \subsection{Events}
