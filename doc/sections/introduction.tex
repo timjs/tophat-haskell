@@ -1,50 +1,54 @@
 % !TEX root=../main.tex
 
-In this we investigate a simple system to model interactive workflows using \emph{tasks}.
-It is an (informal) introduction to the developed language,
-explaining design choices and giving examples on the way.
+\section{Introduction}
+
+In this document we investigate a language to model interactive workflows using \emph{tasks}.
+It is an (informal) introduction explaining design choices and giving examples on the way.
 By using five basic constructs,
 each with its own characteristics,
 we will show how to express task based systems.
-The author claims this language is capable of expressing the majority of programs that can be written in the \ITASKS \cite{plasmeijer2011itasks} system.
+The author claims this language is capable of expressing the majority of programs that can be written using the \ITASKS framework \cite{conf/pepm/PlasmeijerAKLNG11}.
 
-In the next sections we will gradually develop a language, dubbed \Lang, for interactive workflow modelling.
+In the next sections we will gradually develop a language for interactive workflow modelling.
 Each section will introduce one of the following basic constructs,
 making our language more powerful after every addition:
 \begin{itemize}
-  \item interactive \emph{editors} with a value ($\Edit v$) and without a value ($\Fill$);
+  \item interactive \emph{editors} with a value ($\Edit v$) and without a value ($\Fill \tau$);
   \item parallel composition or \emph{pairing} of tasks ($t_1 \And t_2$);
-  \item sequential composition or \emph{stepping} of tasks ($t \Then e$);
+  \item sequential composition or \emph{stepping} of tasks ($t_1 \Then e_2$);
   \item making a \emph{choice} between tasks ($t_1 \Or t_2$) and the \emph{failure} task ($\Fail$);
 \end{itemize}
 Additionally, we will discuss two convenience combinators and one extension using shared data:
 \begin{itemize}
   \item giving the user an explicit choice ($t_1 \ExOr t_2$);
-  \item continuing to the next task on a user's request ($t_1 \ExThen t_2$);
+  \item continuing to the next task on a user's request ($t_1 \ExThen e_2$);
   \item watching and changing shared data ($\Change l$).
 \end{itemize}
 
-Compared to previous attempts,
-this system distinguishes itself by the following points:
+Compared to previous attempts \cite{conf/ifl/KoopmanPA08,conf/ppdp/PlasmeijerLMAK12,thesis/radboud/VinterHviid18},
+our approach distinguishes itself by the following points:
 \begin{itemize}
   \item
     There is a clear distinction between the underlaying \emph{host language}
     and the task layer (\emph{object language}) on top of it.
+    % For example, \textcite{conf/ppdp/PlasmeijerLMAK12} present a reference implementation of task oriented programming
+    % as an embedded domain specific language in Clean \cite{manuals/PlasmeijerE98} which blurs the lines between the host and object language.
   \item
     There is no notion of values which can be stable or unstable.
-    Our language only has pure values lifted into the task world ($\Edit e$).
+    Our language has editors which can be valued ($\Edit v$) or unvalued ($\Fill \tau$),
+    but values itself do not have special distinguishing features.
   \item
     Tasks do not need to be identified by a task identifier.
     Events are based on the \emph{structure} of the task at hand.
   \item
-    Events are not handled by the user, but are build into the semantics.
+    Events are not accessible by the user, they are build into the semantics.
   \item
-    Entering some information into the system is not a one-shot action.
+    Entering some information into a system is not a one-shot action.
     Editors keep asking for input continually.
     Thus repeatedly asking for information does not need to be modelled with recursion.
     The next task is only executed under preprogrammed internal conditions or external action by the user.
   \item
-    We make use of multiple semantic functions that describe different aspects of the system.
+    We make use of multiple semantic functions that describe different aspects of the language.
     At the core, we assume a big step semantics for the host language.\footnote{
       We use a $\lambda$-calculus with some simple extensions like $\If{}{}{}$, pairs, and references.}
     On top of this there are \emph{normalisation} semantics of tasks,
@@ -62,8 +66,8 @@ the $\lambda$-calculus extended with basic arithmetic.
 Thereafter, in the next seven sections, we will gradually define our object language,
 extending the properties of our host language when needed.
 After some sections we make a small intermezzo,
-showing the current properties and laws of our system.
+showing the current properties and laws of our language.
 We strive to keep the host language as small as possible.
 At the end of the report,
-we will see an overview of our our system,
+we will see an overview of our our language,
 including all static and dynamic rules defined.
