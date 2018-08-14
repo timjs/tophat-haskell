@@ -2,13 +2,6 @@
 
 \section{Introduction}
 
-In this document we investigate a language to model interactive workflows using \emph{tasks}.
-It is an (informal) introduction explaining design choices and giving examples on the way.
-By using five basic constructs,
-each with its own characteristics,
-we will show how to express task based systems.
-The author claims this language is capable of expressing the majority of programs that can be written using the \ITASKS framework \cite{conf/pepm/PlasmeijerAKLNG11}.
-
 In the next sections we will gradually develop a language for interactive workflow modelling.
 Each section will introduce one of the following basic constructs,
 making our language more powerful after every addition:
@@ -20,12 +13,12 @@ making our language more powerful after every addition:
 \end{itemize}
 Additionally, we will discuss two convenience combinators and one extension using shared data:
 \begin{itemize}
-  \item giving the user an explicit choice ($t_1 \ExOr t_2$);
-  \item continuing to the next task on a user's request ($t_1 \ExThen e_2$);
+  \item giving users an explicit choice ($t_1 \ExOr t_2$);
+  \item continuing to the next task on users' requests ($t_1 \ExThen e_2$);
   \item watching and changing shared data ($\Change l$).
 \end{itemize}
 
-Compared to previous attempts \cite{conf/ifl/KoopmanPA08,conf/ppdp/PlasmeijerLMAK12,thesis/radboud/VinterHviid18},
+Compared to previous attempts \cite{conf/ifl/KoopmanPA08,conf/ppdp/PlasmeijerLMAK12,theses/radboud/VinterHviid18},
 our approach distinguishes itself by the following points:
 \begin{itemize}
   \item
@@ -36,33 +29,56 @@ our approach distinguishes itself by the following points:
   \item
     There is no notion of values which can be stable or unstable.
     Our language has editors which can be valued ($\Edit v$) or unvalued ($\Fill \tau$),
-    but values itself do not have special distinguishing features.
+    but values themselves do not have special distinguishing features and are just that, \emph{values}.
   \item
-    Tasks do not need to be identified by a task identifier.
-    Events are based on the \emph{structure} of the task at hand.
+    Tasks are never done!
+    A value lifted into the task world can always interactively be changed by end users.
   \item
-    Events are not accessible by the user, they are build into the semantics.
+    All tasks are, in the end, about interaction with end users.
+    This does not mean that every construct introduced in our language has a way to interact with the user.
+    On the contrary!
+    But the leaves are.
+    There are two leaves in our language: editors ($\Edit v$ and $\Fill \tau$) and fail ($\Fail$).
+    Editors are the main focus of user interaction.
+    Users can enter and change information using an editor.
+    Fail is a special case.
+    It acts like a black hole regarding interaction and will swallow every event users will throw at it.
+    All other language constructs are combinators.
   \item
     Entering some information into a system is not a one-shot action.
     Editors keep asking for input continually.
     Thus repeatedly asking for information does not need to be modelled with recursion.
-    The next task is only executed under preprogrammed internal conditions or external action by the user.
+    The next task is only executed under preprogrammed internal conditions or external action by users.
+  \item
+    Tasks do not need to be identified by a task identifier.
+    Events are based on the \emph{structure} of the task at hand.
+  \item
+    Events are not accessible by users, they are build into the semantics.
+  \item
+    Semantically, tasks do not return a value \emph{and} a continuation
+    but \emph{only} a continuation.
+    Obtaining the current value of a task is an \emph{observation},
+    implemented by an additional semantic function.
+    Looking at tasks in this way mitigates the problem of a stream-like type which can not be made into a monad
+    (as described in \textcite{theses/radboud/VinterHviid18})
+    and make sure some tasks, such as a step, do not have a value.
   \item
     We make use of multiple semantic functions that describe different aspects of the language.
-    At the core, we assume a big step semantics for the host language.\footnote{
-      We use a $\lambda$-calculus with some simple extensions like $\If{}{}{}$, pairs, and references.}
-    On top of this there are \emph{normalisation} semantics of tasks,
-    performed after each event handle step,
-    and the \emph{handling} of events itself.
+    At the core, we assume a big step \emph{evaluation} semantics for the host language.\footnote{
+      We use a $\lambda$-calculus with some primitive types and simple extensions like $\If{}{}{}$, pairs, and references.}
+    On top of this there is \emph{normalisation} of tasks
+    and \emph{handling} of events.
+    Normalisation is done before starting the main event loop
+    and after handling an event.
     Next to these three core semantics,
-    there are also semantic functions querying the current value of a task,
-    giving enabled options,
-    or producing a rudimentary user interface.
+    there are also semantic functions querying the current \emph{value} of a task,
+    giving enabled \emph{actions},
+    or producing a (rudimentary) \emph{user interface}.
 \end{itemize}
 
 The remaining of this report is structured as follows.
 In the first section we set up our our host language,
-the $\lambda$-calculus extended with basic arithmetic.
+the $\lambda$-calculus extended with basic arithmetic and comparison.
 Thereafter, in the next seven sections, we will gradually define our object language,
 extending the properties of our host language when needed.
 After some sections we make a small intermezzo,
