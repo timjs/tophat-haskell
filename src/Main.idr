@@ -247,26 +247,36 @@ pick3' = pick2' <?> "Third" # edit 3
 
 auto : Task (PRIM STRING)
 auto = do
-  x <- edit 0
+  x <- ask (PRIM INT)
   if x >= 10 then pure "large" else fail
 
 
 actions : Task (PRIM INT)
 actions =
-  edit 0 >>? \x =>
+  ask (PRIM INT) >>? \x =>
   pick3
 
 
 actions' : Task (PRIM INT)
 actions' =
-  edit 0 >>? \x =>
+  ask (PRIM INT) >>? \x =>
   pick3'
 
 
 guards : Task (PRIM STRING)
-guards =
-  edit 0 >>? \x =>
-  ("Large" # (if x >= 10 then pure "large" else fail) <?> "VeryLarge" # (if x >= 100 then pure "very large" else fail))
+guards = do
+  x <- ask (PRIM INT)
+  "Large" # (if x >= 10 then pure "large" else fail)
+    <?>
+    "VeryLarge" # (if x >= 100 then pure "very large" else fail)
+
+
+guards' : Task (PRIM STRING)
+guards' = do
+  ask (PRIM INT) >>? \x =>
+  ("Large" # (if x >= 10 then pure "large" else fail)
+    <?>
+    "VeryLarge" # (if x >= 100 then pure "very large" else fail))
 
 
 partial -- due to `mod` on `0`
