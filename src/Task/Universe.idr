@@ -285,11 +285,9 @@ parse s   with (the (Maybe Int) (parseInteger s))
 
 export
 defaultOf : (b : Ty) -> {auto p : IsBasic b} -> typeOf b
-defaultOf (PRIM UNIT)   = ()
-defaultOf (PRIM BOOL)   = False
-defaultOf (PRIM INT)    = 0
-defaultOf (PRIM STRING) = ""
-defaultOf (LIST _)      = []
-defaultOf (PAIR a b) with ( isBasic a, isBasic b )
-  | ( Yes l, Yes r )    = ( defaultOf a, defaultOf b )
-  --FIXME: what to do with No?
+defaultOf (PRIM UNIT)                    = ()
+defaultOf (PRIM BOOL)                    = False
+defaultOf (PRIM INT)                     = 0
+defaultOf (PRIM STRING)                  = ""
+defaultOf (LIST _)                       = []
+defaultOf (PAIR x y) {p = BasicPair l r} = ( defaultOf x, defaultOf y )
