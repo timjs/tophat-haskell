@@ -19,5 +19,5 @@ interface ( Show l, Monad m ) => MonadTrace l (m : Type -> Type) | m where
 
 Show l => MonadTrace l IO where
   trace l x = do
-    putStrLn $ "!! " ++ show l
+    putStrLn $ "** " ++ show l
     pure x

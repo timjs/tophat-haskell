@@ -30,7 +30,7 @@ rep = Helpers.replace
 
 
 
--- PRIM --
+-- Basics --
 
 
 fourtytwo : Task (PRIM INT)
