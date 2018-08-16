@@ -91,7 +91,7 @@ events (Edit {a} _) with (isBasic a)
 events (Watch {b} _)    = pure $ [ ToHere (Change {c = b} Nothing) ]
 events (All left rght)  = pure $ map ToLeft !(events left) ++ map ToRight !(events rght)
 events (Any left rght)  = pure $ map ToLeft !(events left) ++ map ToRight !(events rght)
-events this@(One _ _)   = pure $ map (ToHere . PickAt) (labels this) ++ map (ToHere . Pick) (choices this)
+events this@(One _ _)   = pure $ map (ToHere . PickWith) (labels this) ++ map (ToHere . Pick) (choices this)
 events (Fail)           = pure $ []
 events (Then this _)    = events this
 events (Next this next) = do
@@ -101,9 +101,9 @@ events (Next this next) = do
   where
     go : TaskT m a -> List Action
     go task with (delabel task)
-      | One _ _ = map (Continue . Just) $ labels task
+      | One _ _ = map ContinueWith $ labels task
       | Fail    = []
-      | _       = [ Continue Nothing ]
+      | _       = [ Continue ]
 events (Label _ this)   = events this
 events (Lift _)         = pure $ []
 
@@ -216,11 +216,11 @@ handle (Any left rght) (ToRight event) = do
   pure $ Any left rght_new
 
 -- Interact --
-handle task@(One _ _) (ToHere (PickAt l)) =
+handle task@(One _ _) (ToHere (PickWith l)) =
   case find l task of
     Nothing => trace (CouldNotFind l) task
     --XXX: needs `assert_smaller` for totallity, be aware of long type checks...
-    -- Just p  => handle task (assert_smaller (ToHere (PickAt l)) (ToHere (Pick p)))
+    -- Just p  => handle task (assert_smaller (ToHere (PickWith l)) (ToHere (Pick p)))
     Just p  => handle task (ToHere (Pick p))
 
 handle task@(One left _) (ToHere (Pick (GoLeft p))) =
@@ -235,11 +235,11 @@ handle task (ToHere (Pick GoHere)) =
   -- Go here
   pure $ task
 
-handle task@(Next this cont) (ToHere (Continue Nothing)) =
+handle task@(Next this cont) (ToHere Continue) =
   -- When pressed continue rewrite to an internal step
   pure $ Then this cont
 
-handle task@(Next this cont) (ToHere (Continue (Just l))) =
+handle task@(Next this cont) (ToHere (ContinueWith l)) =
   case !(value this) of
     Nothing => trace CouldNotContinue task
     Just v  =>
