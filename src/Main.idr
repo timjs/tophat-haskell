@@ -140,47 +140,60 @@ inner' =
 
 -- Shared Data --
 
-{-
-
 partial
-editShared : Task (PRIM UNIT)
-editShared =
-  "Edit" # repeat <?> "Quit" # quit
+editList : Task (PAIR (PRIM UNIT) (LIST (PRIM INT)))
+editList = do
+  l <- ref (LIST (PRIM INT)) []
+  start l <&> watch l
+
 where
-  delete : Nat -> Task (PRIM UNIT)
-  delete i =
-    modify (del i)
-  replace : Nat -> Task (PRIM UNIT)
-  replace i =
+
+  delete : Loc (LIST (PRIM INT)) -> Nat -> Task (PRIM UNIT)
+  delete l i =
+    modify (LIST (PRIM INT)) l (del i)
+
+  replace : Loc (LIST (PRIM INT)) -> Nat -> Task (PRIM UNIT)
+  replace l i =
     "Give a new value" # ask (PRIM INT) >>? \x =>
-    modify (rep i x)
-  change : Task (PRIM UNIT)
-  change =
+    modify (LIST (PRIM INT)) l (rep i x)
+
+  change : Loc (LIST (PRIM INT)) -> Task (PRIM UNIT)
+  change l =
+    --NOTE: `deref` should be before the external step,
+    --      otherwise we'll end up an a state where we show an editor with the list when the user entered an improper index.
+    --      Compare this with iTasks though:
+    --      `deref` should be before the external step because you cannot specify the `deref` inside the step list!
+    deref (LIST (PRIM INT)) l >>= \xs =>
     "Give an index" # ask (PRIM INT) >>? \n =>
     let i = the Nat (cast n) in
-    --FIXME: get should be evaluated underneath, and not be a primitive in the Task monad
-    get >>= \xs =>
-    if i <= List.length xs then
-      "Delete" # delete i <?> "Replace" # replace i
+    if i < List.length xs then
+      "Delete" # delete l i <?> "Replace" # replace l i
     else
       fail
-  prepend : Task (PRIM UNIT)
-  prepend =
-    "Give a new value" # ask (PRIM INT) >>? \x =>
-    modify ((::) x)
-  clear : Task (PRIM UNIT)
-  clear =
-    modify (const [])
+
+  prepend : Loc (LIST (PRIM INT)) -> Task (PRIM UNIT)
+  prepend l =
+    "Give a new value to prepend" # ask (PRIM INT) >>? \x =>
+    modify (LIST (PRIM INT)) l ((::) x)
+
+  clear : Loc (LIST (PRIM INT)) -> Task (PRIM UNIT)
+  clear l =
+    modify (LIST (PRIM INT)) l (const [])
+
   quit : Task (PRIM UNIT)
   quit = pure ()
 
-  partial
-  repeat : Task (PRIM UNIT)
-  repeat = do
-    "Prepend" # prepend <?> "Clear" # clear <?> "Change" # change
-    editShared
+  mutual
+    partial
+    repeat : Loc (LIST (PRIM INT)) -> Task (PRIM UNIT)
+    repeat l = do
+      "Prepend" # prepend l <?> "Clear" # clear l <?> "Change" # change l
+      start l
 
--}
+    partial
+    start : Loc (LIST (PRIM INT)) -> Task (PRIM UNIT)
+    start l =
+      "Edit" # repeat l <?> "Quit" # quit
 
 
 update1 : Loc (PRIM INT) -> Task (PRIM INT)
