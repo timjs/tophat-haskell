@@ -3,11 +3,12 @@ module Main
 import System
 
 import Task
-import Task.Universe
-import Task.Event
 import Helpers
 
+
 %default total
+
+
 
 -- Tests -----------------------------------------------------------------------
 --
@@ -16,18 +17,10 @@ import Helpers
 
 -- Helpers --
 
-edit : Int -> Task (BasicTy IntTy)
+
+edit : Int -> Task (PRIM INT)
 edit = pure
 
-modify : (List Int -> List Int) -> Task (BasicTy UnitTy)
-modify f = do
-  xs <- get
-  put (f xs)
-
-gets : (List Int -> (typeOf b)) -> Task b
-gets f = do
-  xs <- get
-  pure (f xs)
 
 --FIXME: due to some namespacing problem...
 del : Nat -> List a -> List a
@@ -36,201 +29,271 @@ rep : Nat -> a -> List a -> List a
 rep = Helpers.replace
 
 
--- Basic --
 
-fourtytwo : Task (BasicTy IntTy)
+-- Basics --
+
+
+fourtytwo : Task (PRIM INT)
 fourtytwo = pure 42
 
-hello : Task (BasicTy StringTy)
+
+hello : Task (PRIM STRING)
 hello = pure "Hello"
 
-inc : Int -> Task (BasicTy IntTy)
+
+inc : Int -> Task (PRIM INT)
 inc x = pure (x + 1)
 
-add : Int -> Int -> Task (BasicTy IntTy)
+
+add : Int -> Int -> Task (PRIM INT)
 add x y = pure (x + y)
 
-append : String -> String -> Task (BasicTy StringTy)
+
+append : String -> String -> Task (PRIM STRING)
 append x y = pure (x ++ y)
+
 
 
 -- Steps --
 
-pureStep : Task (BasicTy IntTy)
+
+pureStep : Task (PRIM INT)
 pureStep = do
   x <- fourtytwo
   inc x
 
-pureStep' : Task (BasicTy IntTy)
+
+pureStep' : Task (PRIM INT)
 pureStep' =
   fourtytwo >>? \x =>
   inc x
 
-oneStep : Task (BasicTy IntTy)
+
+oneStep : Task (PRIM INT)
 oneStep = do
   x <- edit 0
   inc x
 
-oneStep' : Task (BasicTy IntTy)
+
+oneStep' : Task (PRIM INT)
 oneStep' =
   edit 0 >>? \x =>
   inc x
 
-twoSteps : Task (BasicTy IntTy)
+
+twoSteps : Task (PRIM INT)
 twoSteps = do
   x <- edit 1
   y <- edit 2
   add x y
 
-twoSteps' : Task (BasicTy IntTy)
+
+twoSteps' : Task (PRIM INT)
 twoSteps' =
   edit 1 >>? \x =>
   edit 2 >>? \y =>
   add x y
 
 
+
 -- Parallel --
 
-parallel : Task (PairTy (BasicTy IntTy) (BasicTy StringTy))
-parallel = "Give an integer" # ask IntTy <&> hello
 
-parallelStep : Task (BasicTy StringTy)
+parallel : Task (PAIR (PRIM INT) (PRIM STRING))
+parallel = "Give an integer" # ask (PRIM INT) <&> hello
+
+
+parallelStep : Task (PRIM STRING)
 parallelStep = do
   ( n, m ) <- parallel
   pure (unwords $ replicate (cast n) m)
 
-parallelStep' : Task (BasicTy StringTy)
+
+parallelStep' : Task (PRIM STRING)
 parallelStep' =
   parallel >>? \( n, m ) =>
   pure (unwords $ replicate (cast n) m)
+
 
 
 -- Normalisation --
 --
 -- FIXME: should these automatically simplify?
 
-pair : Task (PairTy (BasicTy IntTy) (BasicTy IntTy))
+
+pair : Task (PAIR (PRIM INT) (PRIM INT))
 pair = pure 3 <&> pure 8
 
-inner : Task (BasicTy IntTy)
+
+inner : Task (PRIM INT)
 inner = do
   ( x, y ) <- pair
   add x y
 
-inner' : Task (BasicTy IntTy)
+
+inner' : Task (PRIM INT)
 inner' =
   pair >>? \( x, y ) =>
   add x y
 
 
+
 -- Shared Data --
 
 partial
-editShared : Task (BasicTy UnitTy)
-editShared =
-  "Edit" # repeat <?> "Quit" # quit
+editList : Task (PAIR (PRIM UNIT) (LIST (PRIM INT)))
+editList = do
+  l <- ref (LIST (PRIM INT)) []
+  start l <&> watch l
+
 where
-  delete : Nat -> Task (BasicTy UnitTy)
-  delete i =
-    modify (del i)
-  replace : Nat -> Task (BasicTy UnitTy)
-  replace i =
-    "Give a new value" # ask IntTy >>? \x =>
-    modify (rep i x)
-  change : Task (BasicTy UnitTy)
-  change =
-    "Give an index" # ask IntTy >>? \n =>
+
+  delete : Loc (LIST (PRIM INT)) -> Nat -> Task (PRIM UNIT)
+  delete l i =
+    modify (LIST (PRIM INT)) l (del i)
+
+  replace : Loc (LIST (PRIM INT)) -> Nat -> Task (PRIM UNIT)
+  replace l i =
+    "Give a new value" # ask (PRIM INT) >>? \x =>
+    modify (LIST (PRIM INT)) l (rep i x)
+
+  change : Loc (LIST (PRIM INT)) -> Task (PRIM UNIT)
+  change l =
+    --NOTE: `deref` should be before the external step,
+    --      otherwise we'll end up an a state where we show an editor with the list when the user entered an improper index.
+    --      Compare this with iTasks though:
+    --      `deref` should be before the external step because you cannot specify the `deref` inside the step list!
+    deref (LIST (PRIM INT)) l >>= \xs =>
+    "Give an index" # ask (PRIM INT) >>? \n =>
     let i = the Nat (cast n) in
-    --FIXME: get should be evaluated underneath, and not be a primitive in the Task monad
-    get >>= \xs =>
-    if i <= List.length xs then
-      "Delete" # delete i <?> "Replace" # replace i
+    if i < List.length xs then
+      "Delete" # delete l i <?> "Replace" # replace l i
     else
       fail
-  prepend : Task (BasicTy UnitTy)
-  prepend =
-    "Give a new value" # ask IntTy >>? \x =>
-    modify ((::) x)
-  clear : Task (BasicTy UnitTy)
-  clear =
-    modify (const [])
-  quit : Task (BasicTy UnitTy)
+
+  prepend : Loc (LIST (PRIM INT)) -> Task (PRIM UNIT)
+  prepend l =
+    "Give a new value to prepend" # ask (PRIM INT) >>? \x =>
+    modify (LIST (PRIM INT)) l ((::) x)
+
+  clear : Loc (LIST (PRIM INT)) -> Task (PRIM UNIT)
+  clear l =
+    modify (LIST (PRIM INT)) l (const [])
+
+  quit : Task (PRIM UNIT)
   quit = pure ()
 
-  partial
-  repeat : Task (BasicTy UnitTy)
-  repeat = do
-    "Prepend" # prepend <?> "Clear" # clear <?> "Change" # change
-    editShared
+  mutual
+    partial
+    repeat : Loc (LIST (PRIM INT)) -> Task (PRIM UNIT)
+    repeat l = do
+      "Prepend" # prepend l <?> "Clear" # clear l <?> "Change" # change l
+      start l
 
--- update : Task (BasicTy UnitTy)
--- update =
---   get >>= \x =>
---   edit x >>? \y =>
---   put y
+    partial
+    start : Loc (LIST (PRIM INT)) -> Task (PRIM UNIT)
+    start l =
+      "Edit" # repeat l <?> "Quit" # quit
 
--- --FIXME: help!!!
--- update2 : Task (BasicTy UnitTy)
--- update2 = do
---   get >>= \x =>
---   edit (x+1) >>? \y =>
---   put y >>= \() =>
---   get >>= \u =>
---   edit (u+2) >>? \v =>
---   put v
 
-inspect : Show (typeOf a) => Task a -> Task (PairTy a StateTy)
-inspect t = t <&> watch
+update1 : Loc (PRIM INT) -> Task (PRIM INT)
+update1 l = do
+  n <- ask (PRIM INT)
+  assign (PRIM INT) l n
+  m <- ask (PRIM INT)
+  modify (PRIM INT) l ((+) m)
+  edit !(deref (PRIM INT) l)
 
-parallelWatch : Task (PairTy StateTy StateTy)
-parallelWatch = inspect watch
+
+update2 : Loc (PRIM INT) -> Task (PRIM UNIT)
+update2 l =
+  deref (PRIM INT) l >>= \x =>
+  edit (x + 1) >>? \y =>
+  assign (PRIM INT) l y >>= \() =>
+  deref (PRIM INT) l >>= \u =>
+  edit (u + 2) >>? \v =>
+  assign (PRIM INT) l v
+
+
+inspect : Show (typeOf a) => (Loc (PRIM INT) -> Task a) -> Task (PAIR a (PRIM INT))
+inspect f = do
+  l <- ref (PRIM INT) 0
+  f l <&> watch l
+
+-- inspect : Show (typeOf a) => Show (typeOf b) => (Loc b -> Task a) -> Task (PAIR a (PRIM b))
+-- inspect {b} f = do
+--   l <- init b
+--   f l <&> watch l
+
 
 
 -- Choices --
 
-pick1 : Task (BasicTy IntTy)
+
+pick1 : Task (PRIM INT)
 pick1 = fail <|> edit 0
 
-pick2 : Task (BasicTy IntTy)
+
+pick2 : Task (PRIM INT)
 pick2 = edit 1 <|> edit 2
 
-pick3 : Task (BasicTy IntTy)
+
+pick3 : Task (PRIM INT)
 pick3 = pick2 <|> edit 3
 
-pick1' : Task (BasicTy IntTy)
+
+pick1' : Task (PRIM INT)
 pick1' = "Fail" # fail <?> "Cont" # edit 0
 
-pick2' : Task (BasicTy IntTy)
+
+pick2' : Task (PRIM INT)
 pick2' = "First" # edit 1 <?> "Second" # edit 2
 
-pick3' : Task (BasicTy IntTy)
+
+pick3' : Task (PRIM INT)
 pick3' = pick2' <?> "Third" # edit 3
+
 
 
 -- Guards --
 
-auto : Task (BasicTy StringTy)
+
+auto : Task (PRIM STRING)
 auto = do
-  x <- edit 0
+  x <- ask (PRIM INT)
   if x >= 10 then pure "large" else fail
 
-actions : Task (BasicTy IntTy)
+
+actions : Task (PRIM INT)
 actions =
-  edit 0 >>? \x =>
+  ask (PRIM INT) >>? \x =>
   pick3
 
-actions' : Task (BasicTy IntTy)
+
+actions' : Task (PRIM INT)
 actions' =
-  edit 0 >>? \x =>
+  ask (PRIM INT) >>? \x =>
   pick3'
 
-guards : Task (BasicTy StringTy)
-guards =
-  edit 0 >>? \x =>
-  ("Large" # (if x >= 10 then pure "large" else fail) <?> "VeryLarge" # (if x >= 100 then pure "very large" else fail))
+
+guards : Task (PRIM STRING)
+guards = do
+  x <- ask (PRIM INT)
+  "Large" # (if x >= 10 then pure "large" else fail)
+    <?>
+    "VeryLarge" # (if x >= 100 then pure "very large" else fail)
+
+
+guards' : Task (PRIM STRING)
+guards' = do
+  ask (PRIM INT) >>? \x =>
+  ("Large" # (if x >= 10 then pure "large" else fail)
+    <?>
+    "VeryLarge" # (if x >= 100 then pure "very large" else fail))
+
 
 partial -- due to `mod` on `0`
-branch : Task (BasicTy StringTy)
+branch : Task (PRIM STRING)
 branch =
   edit 1 >>? \x =>
   if x `mod` 3 == 0 then
@@ -241,17 +304,20 @@ branch =
     fail
 
 
+
 -- Empty edit --
 
-empties : Task (BasicTy IntTy)
+
+empties : Task (PRIM INT)
 empties = do
-  ( x, y ) <- ask IntTy <&> ask IntTy
+  ( x, y ) <- ask (PRIM INT) <&> ask (PRIM INT)
   pure (x + y)
 
 
--- Running ---------------------------------------------------------------------
 
+-- Running ---------------------------------------------------------------------
 %default covering
+
 
 get : IO Event
 get = do
@@ -267,20 +333,18 @@ get = do
           putStrLn msg
           get
 
-loop : Show (typeOf a) => Task a -> State -> IO ()
-loop task state = do
-  putStrLn $ ui task state
-  putStrLn $ "Possibilities: " ++ show (events task state)
+
+loop : Show (typeOf a) => Task a -> IO ()
+loop task = do
+  putStrLn !(Task.ui task)
+  putStrLn $ "Possibilities: " ++ show !(Task.events task)
   event <- get
-  case drive task event state of
-    Left error => do
-      putStrLn $ "!! " ++ (show error)
-      loop task state
-    Right ( task_new, state_new ) =>
-      loop task_new state_new
+  loop !(Task.run task event)
+
 
 run : Show (typeOf a) => Task a -> IO ()
-run t = uncurry loop $ init t
+run task = loop !(Task.initialise task)
+
 
 main : IO ()
 main = run empties

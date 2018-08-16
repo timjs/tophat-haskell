@@ -1,27 +1,22 @@
 module Task.Event
 
+
+import Control.Catchable
+
 import Task.Universe
 import Helpers
+
 
 %default total
 %access export
 
 
--- Labels ----------------------------------------------------------------------
-
-public export
-Label : Type
-Label = String
-
-isLabel : String -> Bool
-isLabel s               with ( strM s )
- isLabel ""             | StrNil      = False
- isLabel (strCons c cs) | StrCons c _ = isUpper c
-
 
 -- Paths -----------------------------------------------------------------------
 
+
 namespace Path
+
 
   public export
   data Path
@@ -29,27 +24,35 @@ namespace Path
     | GoHere
     | GoRight Path
 
+
   Show Path where
     show (GoLeft p)  = " l" ++ show p
     show GoHere      = ""
     show (GoRight p) = " r" ++ show p
 
+
   parse : List String -> Either String Path
   parse ("l" :: rest) = map GoLeft $ parse rest
   parse []            = ok GoHere
   parse ("r" :: rest) = map GoRight $ parse rest
-  parse other         = throw $ "!! '" ++ unwords other ++ "' is not a valid path, type 'help' for more info"
+  parse other         = throw $ "!! `" ++ unwords other ++ "` is not a valid path, type `help` for more info"
+
 
 
 -- Events ----------------------------------------------------------------------
 
+
+||| Note:
+||| - The `Nothing` case for `Change` is used as a dummy when calculation possible events.
 public export
-data Action
-  = Change (Universe.typeOf b)
-  | Clear
-  | Pick Path
-  | PickAt Label
-  | Continue (Maybe Label)
+data Action : Type where
+  Change       : {auto p : IsBasic c} -> Maybe (typeOf c) -> Action
+  Clear        : Action
+  Pick         : Path -> Action
+  PickWith     : Label -> Action
+  Continue     : Action
+  ContinueWith : Label -> Action
+
 
 public export
 data Event
@@ -58,15 +61,18 @@ data Event
   | ToRight Event
 
 
+
 -- Showing ---------------------------------------------------------------------
 
+
 Show Action where
-  show (Change _)          = "change <val>"
-  show (Clear)             = "clear"
-  show (Pick p)            = "pick" ++ show p
-  show (PickAt l)          = l
-  show (Continue Nothing)  = "cont"
-  show (Continue (Just l)) = l
+  show (Change _)       = "change <val>"
+  show (Clear)          = "clear"
+  show (Pick p)         = "pick" ++ show p
+  show (PickWith l)       = "pick " ++ l
+  show (Continue)       = "cont"
+  show (ContinueWith l) = "cont " ++ l
+
 
 Show Event where
   show (ToLeft e)  = "l " ++ show e
@@ -74,16 +80,19 @@ Show Event where
   show (ToRight e) = "r " ++ show e
 
 
+
 -- Parsing ---------------------------------------------------------------------
+
 
 usage : String
 usage = unlines
   [ ":: Possible events are:"
   , "    change <value> : change current editor to <value> "
   , "    clear          : clear current editor"
-  , "    pick <path>    : choose amongst the possible options"
+  , "    pick <path>    : pick amongst the possible options"
+  , "    pick <label>   : pick the option labeld with <label>"
   , "    cont           : continue with the next task"
-  , "    <label>        : continue with the labeled task"
+  , "    cont <label>   : continue with the task labeld <label>"
   , "    l <event>      : send <event> to the left task"
   , "    r <event>      : send <event> to the right task"
   , "    help           : show this message"
@@ -101,23 +110,25 @@ usage = unlines
   , "and labels always start with a Capital letter"
   ]
 
-mutual
-  --FIXME: fix totality
-  parse : List String -> Either String Event
-  parse (first :: rest) with ( isLabel first )
-    | True  = ok $ ToHere $ PickAt first
-    | False = parse' (first :: rest)
-  parse []  = throw ":: Please enter a command or label, type `help` for more info"
 
-  parse' : List String -> Either String Event
-  parse' ["change", val] with (Universe.Basic.parse val)
-    | Nothing             = throw $ "!! Error parsing value '" ++ val ++ "'"
-    | (Just (ty ** v))    = ok $ ToHere $ Change {b = BasicTy ty} v
-  parse' ["clear"]        = ok $ ToHere $ Clear
-  parse' ("pick" :: rest) = map (ToHere . Pick) $ Path.parse rest
-  parse' ["cont"]         = ok $ ToHere $ Continue Nothing
-  parse' [ "cont", label] = ok $ ToHere $  Continue $ Just label
-  parse' ("l" :: rest)    = map ToLeft $ parse rest
-  parse' ("r" :: rest)    = map ToRight $ parse rest
-  parse' ["help"]         = throw usage
-  parse' other            = throw $ "!! `" ++ unwords other ++ "` is not a valid command, type `help` for more info"
+parse : List String -> Either String Event
+parse [ "change", val ] with (Universe.parse val)
+  | Nothing              = throw $ "!! Error parsing value `" ++ val ++ "`"
+  | Just (c ** ( p, v )) = ok $ ToHere $ Change {c} (Just v)
+parse [ "clear" ]        = ok $ ToHere $ Clear
+parse [ "pick", next ]   =
+  if isLabel next then
+    ok $ ToHere $ PickWith next
+  else
+    map (ToHere . Pick) $ Path.parse [ next ]
+parse ("pick" :: rest)   = map (ToHere . Pick) $ Path.parse rest
+parse [ "cont" ]         = ok $ ToHere $ Continue
+parse [ "cont", next ]  =
+  if isLabel next then
+    ok $ ToHere $ ContinueWith next
+  else
+    throw $ "!! Could not parse `" ++ next ++ "` as a label, type `help` for more info"
+parse ("l" :: rest)      = map ToLeft $ parse rest
+parse ("r" :: rest)      = map ToRight $ parse rest
+parse [ "help" ]         = throw usage
+parse other              = throw $ "!! `" ++ unwords other ++ "` is not a valid command, type `help` for more info"
