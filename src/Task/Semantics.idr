@@ -60,30 +60,30 @@ ui (Lift _)              = pure $ "<lift>"
 -- Helpers ---------------------------------------------------------------------
 
 
-value : MonadRef l m => TaskT m a -> m (Maybe (typeOf a))
+value : MonadRef l m  => TaskT m a -> m (Maybe (typeOf a))
 value (Edit val)      = pure $ val
 value (Watch loc)     = pure $ Just !(deref loc)
 value (All left rght) = pure $ !(value left) <&> !(value rght)
 value (Any left rght) = pure $ !(value left) <|> !(value rght)
+value (One _ _)       = pure $ Nothing
+value (Fail)          = pure $ Nothing
+value (Then _ _)      = pure $ Nothing
+value (Next _ _)      = pure $ Nothing
 value (Label _ this)  = value this
--- The rest never has a value because:
---   * `One` and `Next` need to wait for an user choice
---   * `Fail` runs forever and doesn't produce a value
---   * `Then` transforms values to another type
-value _               = pure $ Nothing
+value (Lift _)        = pure $ Nothing
 
 
 failing : TaskT m a -> Bool
-failing (Edit _)         = False
-failing (Watch _)        = False
-failing (All left right) = failing left && failing right
-failing (Any left right) = failing left && failing right
-failing (One left right) = failing left && failing right
-failing (Fail)           = True
-failing (Then this _)    = failing this
-failing (Next this _)    = failing this
-failing (Label _ this)   = failing this
-failing (Lift _)         = False
+failing (Edit _)        = False
+failing (Watch _)       = False
+failing (All left rght) = failing left && failing rght
+failing (Any left rght) = failing left && failing rght
+failing (One left rght) = failing left && failing rght
+failing (Fail)          = True
+failing (Then this _)   = failing this
+failing (Next this _)   = failing this
+failing (Label _ this)  = failing this
+failing (Lift _)        = False
 
 
 choices : TaskT m a -> List Path
