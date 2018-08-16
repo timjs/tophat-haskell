@@ -35,7 +35,7 @@ namespace Path
   parse ("l" :: rest) = map GoLeft $ parse rest
   parse []            = ok GoHere
   parse ("r" :: rest) = map GoRight $ parse rest
-  parse other         = throw $ "!! '" ++ unwords other ++ "' is not a valid path, type 'help' for more info"
+  parse other         = throw $ "!! `" ++ unwords other ++ "` is not a valid path, type `help` for more info"
 
 
 
@@ -113,7 +113,7 @@ usage = unlines
 
 parse : List String -> Either String Event
 parse [ "change", val ] with (Universe.parse val)
-  | Nothing              = throw $ "!! Error parsing value '" ++ val ++ "'"
+  | Nothing              = throw $ "!! Error parsing value `" ++ val ++ "`"
   | Just (c ** ( p, v )) = ok $ ToHere $ Change {c} (Just v)
 parse [ "clear" ]        = ok $ ToHere $ Clear
 parse [ "pick", next ]   =
