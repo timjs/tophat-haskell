@@ -1,16 +1,13 @@
 % !TEX root=../main.tex
 
-\section{Editors: interaction with the end user}
+\section{Editors: interaction with end users}
 
-We claim to create a language to model \emph{interactive} workflows.
-We define interaction as
-\begin{quote}
-  communication with the end user of the system.
-\end{quote}
-The way to communicate with the user in our language is an \emph{editor}.
-Using an editor,
-a user can enter information into the system,
-clear it, reenter it et cetera.
+In the introduction we claimed to create a language to model \emph{interactive} workflows.
+By interaction we mean communication with people using the developed system.
+These \emph{end users} should be able to enter information into the system,
+change it, clear it, reenter it, etc.
+To do this, we introduce the concept of an \emph{editor}.
+
 Editors may or may not contain a current value.
 When an editor has a value, it can be \emph{changed} or it can be \emph{cleared}.
 When it is empty, a value can be \emph{filled}.
@@ -19,60 +16,42 @@ This is depicted as a state diagram in \autoref{fig:editor-state} below.
 \begin{figure}
   \centering
   \includegraphics[width=0.5\textwidth]{figures/editor-state-crop.pdf}
-  \caption{State of an editor and its possible transitions}
+  \caption{Possible states of an editor and its transitions.}
   \label{fig:editor-state}
 \end{figure}
 
-For this purpose, we extend our task language with two constructs:
-a valued editor $\Edit e$ and an unvalued editor $\Fill \beta$.
-%, which contains the expression $e$, which expects a value of type $\tau$.
-\begin{grammar}
-  Pretasks
-    & p & ::=& \ldots      & \\
-    &   &\mid& \Edit e     & – valued editor \\
-    &   &\mid& \Fill \tau  & – unvalued editor \\
-\end{grammar}
-Some examples:
-\begin{itemize}
-  \item $\Edit 2$ is a valued editor with value $2$.
-  \item $\Fill \String$ is an unvalued editor,
-    asking the user to enter some string.
-  \item $\Edit ((\lambda x . x)\ 5)$ is a valued editor which,
-    after normalisation, will contain the value $5$.
-    (We will discuss normalisation in \autoref{sec:normalisation}.)
-\end{itemize}
+One can consider editors as an abstraction over widgets in a \GUI or form fields on a webpage.
+Take for example an entry for text.
+Users can enter a string, change it, remove it, enter another string, and so on.
+With editors we try to capture this \emph{constantly changing} nature of user input.
+Also, because editors are \emph{typed},
+they are only allowed to contain information of the right format.
 
-Valued editors contain an expression $e$.
-Therefore they inherit the type of $e$,
-but embedded in the container type $\Task$.
-For now, we only accept expressions of a basic type $\beta$ as a value of an editor.
-This is expressed by the following typing rule for a valued editor.
-\begin{equation*}
-  \userule{T-Edit}
-\end{equation*}
+\begin{marginfigure}
+  \centering
+  \includegraphics[width=0.7\marginwidth]{figures/text-entry}
+  \includegraphics[width=0.7\marginwidth]{figures/switch-button}
+  \includegraphics[width=0.7\marginwidth]{figures/spin-button}
+  \includegraphics[width=0.7\marginwidth]{figures/map}
+  \caption{
+    Some examples of editors.
+    From top to bottom:
+    a text field for strings,
+    a switch for booleans,
+    a spin box for angles,
+    and a map for locations.
+  }
+  \label{fig:editor-examples}
+\end{marginfigure}
 
-Empty editors do not have a value,
-but, because we strive to a fully typed system,
-we like to assign a type to them.
-We have two options to solve this:
-\begin{enumerate*}
-  \item let the empty editor have a polymorphic type;
-  \item annotate empty editors with a type and use that.
-\end{enumerate*}
-The first option sounds appealing, however, consider the following use case.
-We start with an editor containing the value two: $\Edit 2$.
-The user can change this value, as long as it is an integer,
-for example to five: $\Edit 5$.
-Clearing the value results in an empty editor: $\Fill$.
-Now, is the user allowed to enter a value of some other type?
-That is, can we now enter a string?
-This would change the type of the editor!
-We need to keep track of the type of values that can be entered into an empty editor
-and therefore we choose to annotate them with a type.
-The typing rule becomes:
-\begin{equation*}
-  \userule{T-Fill}
-\end{equation*}
+How exactly information is entered is not of great importance.
+This could be an input field for a string,
+a switch for a boolean,
+a spin box for an angle,
+or even a map with a pin for a location.
+\Autoref{fig:editor-examples} depicts these examples.
+In it's most banal form,
+an editor is a line of text entered at a terminal and parsed to match a string, boolean, angle or location value.
 
 \begin{margintext}{Aside: About stability}
 A short side note to the iTasks guru.
@@ -83,17 +62,17 @@ Although the state diagram in \autoref{fig:editor-state} looks like the state di
 it is not.
 
 First, stability has \emph{three} states:
-\begin{enumerate}
+\begin{enumerate*}
   \item stable,
   \item unstable, and
   \item no value.
-\end{enumerate}
+\end{enumerate*}
 \includegraphics[width=\marginwidth,page=2]{figures/editor-state-crop.pdf}
 Editors have only two:
-\begin{enumerate}
+\begin{enumerate*}
   \item valued, and
   \item unvalued.
-\end{enumerate}
+\end{enumerate*}
 It is always possible to go from a valued editor to an unvalued one and back again.
 It is a bit like only using the unstable part of the stability diagram.
 
@@ -110,6 +89,63 @@ Only editors,
 which are the core interaction part of the system,
 have the property that they are valued, or unvalued.
 \end{margintext}
+
+Thus, at the core,
+an editor is a container holding a value
+or holding nothing.
+For this purpose, we extend our task language with two constructs:
+a valued editor $\Edit e$ and an unvalued editor $\Fill \beta$.
+\begin{grammar}
+  Pretasks
+    & p & ::=& \ldots      & \\
+    &   &\mid& \Edit e     & – valued editor \\
+    &   &\mid& \Fill \beta & – unvalued editor \\
+\end{grammar}
+
+Valued editors contain an expression $e$.
+Therefore they inherit the type of $e$,
+but embedded in the container type $\Task$.
+For now, we only accept expressions of a basic type $\beta$ as a value of an editor.
+This is expressed by the following typing rule for valued editors.
+\begin{equation*}
+  \userule{T-Edit}
+\end{equation*}
+
+Unvalued editors do not have a value,
+and therefore do not wrap an expression.
+Because we strive to a fully typed system,
+we have two options to type unvalued editors.
+\begin{enumerate*}
+  \item let the unvalued editor have a polymorphic type;
+  \item annotate unvalued editors with a type and use that. \label{itm:annotate}
+\end{enumerate*}
+
+The first option sounds appealing, however, consider the following use case:
+We start with an editor containing the value two: $\Edit 2$.
+The user can change this value, as long as it is an integer,
+for example to five: $\Edit 5$.
+Clearing the value results in an unvalued editor: $\Fill$.
+Now, are we allowed to enter a value of some other type?
+That is, can we now enter a string?
+This would change the type of the editor!
+
+Therefore,
+we need to keep track of the type of values that can be entered into an unvalued editor
+and we choose option (\ref{itm:annotate}).
+The typing rule becomes:
+\begin{equation*}
+  \userule{T-Fill}
+\end{equation*}
+
+Some examples of editors expressible in our language:
+\begin{itemize}
+  \item $\Edit 2$ is a valued editor which contains the integer value $2$.
+  \item $\Fill \String$ is an unvalued editor,
+    waiting for users to enter some string.
+  \item $\Edit ((\lambda x . x)\ 5)$ is a valued editor which,
+    after normalisation, will contain the value $5$.
+    (We will discuss normalisation in \autoref{sec:normalisation}.)
+\end{itemize}
 
 
 \subsection{Events}
