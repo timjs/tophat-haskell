@@ -19,6 +19,8 @@ infixr 1 <=<, >=>
 panic : String -> a
 panic = idris_crash
 
+
+
 -- List extensions -------------------------------------------------------------
 
 
@@ -103,7 +105,7 @@ mutual
     Multi  : (first : Char) -> (last : Char) -> (rest : String) -> Decons (between first last rest)
 
   -- NOTE: we need `believe_me` because the operations are primitives in the end
-  -- NOTE: e need `assert_total` because we know the string will not be empty by the match on `length`
+  -- NOTE: we need `assert_total` because we know the string will not be empty by the match on `length`
   decons : (str : String) -> Decons str
   decons str with (length str)
     decons ""  | Z   = Empty
