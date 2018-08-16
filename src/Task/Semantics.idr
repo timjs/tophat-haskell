@@ -73,6 +73,19 @@ value (Label _ this)  = value this
 value _               = pure $ Nothing
 
 
+failing : TaskT m a -> Bool
+failing (Edit _)         = False
+failing (Watch _)        = False
+failing (All left right) = failing left && failing right
+failing (Any left right) = failing left && failing right
+failing (One left right) = failing left && failing right
+failing (Fail)           = True
+failing (Then this _)    = failing this
+failing (Next this _)    = failing this
+failing (Label _ this)   = failing this
+failing (Lift _)         = False
+
+
 choices : TaskT m a -> List Path
 choices (One left rght) =
   --XXX: No with-block possible?
@@ -121,9 +134,11 @@ normalise (Then this cont) = do
     Nothing => pure $ Then this_new cont
     Just v  =>
       --FIXME: should we use normalise here instead of just eval?
-      case cont v of
-        Fail => pure $ Then this_new cont
-        next => normalise next
+      let next = cont v in
+      if failing next then
+        pure $ Then this_new cont
+      else
+         normalise next
 
 -- Evaluate --
 normalise (All left rght) = do
