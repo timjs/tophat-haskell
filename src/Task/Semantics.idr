@@ -95,8 +95,9 @@ events this@(One _ _)   = pure $ map (ToHere . PickAt) (labels this) ++ map (ToH
 events (Fail)           = pure $ []
 events (Then this _)    = events this
 events (Next this next) = do
-    Just v <- value this | Nothing => pure []
-    pure $ map ToHere (go (next v)) ++ !(events this)
+    always <- events this
+    Just v <- value this | Nothing => pure always
+    pure $ map ToHere (go (next v)) ++ always
   where
     go : TaskT m a -> List Action
     go task with (delabel task)
