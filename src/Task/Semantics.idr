@@ -30,7 +30,7 @@ data NotApplicable
 Show NotApplicable where
   show (CouldNotChange)   = "Could not change value because types do not match"
   show (CouldNotFind l)   = "Could not find label `" ++ l ++ "`"
-  show (CouldNotContinue) = "Could not continue"
+  show (CouldNotContinue) = "Could not continue because there is no value to continue with"
   show (CouldNotHandle e) = "Could not handle event `" ++ show e ++ "`"
 
 
