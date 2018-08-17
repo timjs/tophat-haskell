@@ -21,7 +21,7 @@ This is depicted as a state diagram in \autoref{fig:editor-state} below.
 \end{figure}
 
 One can consider editors as an abstraction over widgets in a \GUI or form fields on a webpage.
-Take for example an entry for text.
+Take for example an entry for text:
 Users can enter a string, change it, remove it, enter another string, and so on.
 With editors we try to capture this \emph{constantly changing} nature of user input.
 Also, because editors are \emph{typed},
@@ -77,7 +77,7 @@ Second,
 it is possible for an editor to go from a valued to an unvalued state and back again,
 but there is no way to mark an editor as stable.
 It is a bit like using only the unstable part of below state diagram.
-That is about the only resemblance.
+This is about the only resemblance.
 
 \includegraphics[width=\marginwidth,page=2]{figures/editor-state-crop.pdf}
 
@@ -128,7 +128,8 @@ we have two options to type unvalued editors.
   \item annotate unvalued editors with a type and use that. \label{itm:annotate}
 \end{enumerate*}
 
-The first option sounds appealing, however, consider the following use case:
+The first option sounds appealing.
+However, consider the following use case.
 We start with an editor containing the value two: $\Edit 2$.
 The user can change this value, as long as it is an integer,
 for example to five: $\Edit 5$.
@@ -159,7 +160,7 @@ Some examples of editors expressible in our language:
 \subsection{Events}
 
 To change values in an editor,
-we should interact with the user with some kind of interface.
+we should interact with the user by some kind of interface.
 In a graphical setting,
 we can present the user an input box.
 The user can than change and clear values continuously.
@@ -177,6 +178,20 @@ committing some text on a command line,
 sending it over a web socket,
 etc.
 
+\begin{margintext}{Aside: Accessing events}
+In a previous attempt to build a semantics for \TOP,
+\textcite{theses/radboud/VinterHviid18} also used the notion of events.
+However, \citeauthor{theses/radboud/VinterHviid18} made events part of the task layer.
+This means the programmer has access to events using a \texttt{getEvent} function call.
+
+In this work,
+we deviate from above idea.
+We use labeled transitions in the same way as \textcite{school/maktoberdorf/PeytonJones01},
+who gives denotational semantics to the Haskell \IO monad.
+Therefore events live on the \emph{semantic level} only
+and they are \emph{not} accessible from within our language.
+\end{margintext}
+
 We define a new syntactic category of events $\eta$.
 For now, they only contain \emph{actions} $\alpha$.
 We will introduce new events in a later section.
@@ -187,7 +202,7 @@ there are three actions that can be handled by editors:
   \item changing the value; or
   \item clearing the value.
 \end{enumerate*}
-Hereof, the first two can be merged into one action.
+We choose to merge the first two into one action.
 \begin{grammar}
   Events
     & \eta   & ::=& \alpha & – action \\
@@ -196,10 +211,10 @@ Hereof, the first two can be merged into one action.
     &        &\mid& \Clear & – clear an editor \\
 \end{grammar}
 The value of an editor, empty or not, can be changed to a value $v$ by just sending the value as an action.
-To clear a valued editor, we send the $\Clear$ action.
+To clear a valued editor, we send the $\Clear$(lear) action.
 
 Handling events is done by a new semantic relation.
-This relation takes a task $t$ and an event $\eta$ which results in a new task $t'$.
+This relation takes a task $t$ and an event $\eta$ which results in a new pretask $p'$.
 \todo{Add task vs pretask somewhere here...}
 We write
 \begin{equation*}
@@ -211,15 +226,16 @@ we need three rules to describe the transitions of editors.
   \userule{H-Change} \qquad \userule{H-Clear} \qquad \userule{H-Fill}
 \end{equation*}
 Note that the conditions to the right of the rules take care of typing.
-They make sure the type of the entered value and the type of the editor are the same.
+Only when the entered value $v'$ has the same type $\beta$ as the original value $v$ we can change a valued editor.
+They make sure the type of the entered value and the type of the editor are always the same.
 
 
 \subsection{Example: an interactive session}
 
-Now, we can make a dull but interactive example of a workflow.
-How could an interactive session with the user look like when we start with a simple workflow with one editor,
+Now that we have introduced our first type of task,
+we can make a dull but interactive example of a workflow.
+How could an interactive session with the user look like when we start with a simple workflow of one editor,
 containing the value two?
-\todo{We should probably add a rule that doesn't change a task when the event doesn't match\ldots}
 \begin{align*}
     & \Edit 2 \\
   \handle{5} & \hint{change value to five} \\
@@ -233,3 +249,5 @@ containing the value two?
   \handle{10} & \hint{change value to ten} \\
     & \Edit 10
 \end{align*}
+
+In the next section we introduce sequential composition of tasks to spice up or workflows a bit.
