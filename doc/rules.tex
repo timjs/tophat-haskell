@@ -1,6 +1,7 @@
 % !TEX root=../main.tex
 
-%% Helpers %%
+
+%% Helpers %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \newmacro{newrule}[4][2]
   {\newmacro{#1}{\inferrule*[lab={#1},right={$#2$}]
@@ -13,47 +14,58 @@
     {\GenericError{}{Rule `#1` is not defined}{}{}}
     {\textsc{#1}}}
 
+
 \newif\ifstateful
 \statefulfalse
 \newmacro{st}[1]
   {\ifstateful{, #1}\else{}\fi}
 
 
-%% Typing %%
+
+%% Typing %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 \newmacro{RelationT}
   {\Gamma\st{\Sigma} \infers e : \tau}
+
 
 \newrule{T-Fail}
   {\ }
   {\Gamma\st{\Sigma} \infers \Fail : \Task \tau}
 
+
 \newrule{T-Edit}
   {\Gamma\st{\Sigma} \infers e : \beta}
   {\Gamma\st{\Sigma} \infers \Edit e : \Task \beta}
+
 
 \newrule{T-Fill}
   {\ }
   {\Gamma\st{\Sigma} \infers \Fill \beta : \Task \beta}
 
+
 \newrule{T-Change}
   {\Gamma, \Sigma \infers e : \beta}
   {\Gamma, \Sigma \infers \Change e : \Task \beta}
+
 
 \newrule{T-Next}
   {\Gamma\st{\Sigma} \infers e_1 : \Task \tau_1 \\
    \Gamma\st{\Sigma} \infers e_2 : \tau_1 \to \Task \tau_2}
   {\Gamma\st{\Sigma} \infers e_1 \ExThen e_2 : \Task \tau_2}
 
+
 \newrule{T-Then}
   {\Gamma\st{\Sigma} \infers e_1 : \Task \tau_1 \\
    \Gamma\st{\Sigma} \infers e_2 : \tau_1 \to \Task \tau_2}
   {\Gamma\st{\Sigma} \infers e_1 \Then e_2 : \Task \tau_2}
 
+
 \newrule{T-All}
   {\Gamma\st{\Sigma} \infers e_1 : \Task \tau_1 \\
    \Gamma\st{\Sigma} \infers e_2 : \Task \tau_2}
   {\Gamma\st{\Sigma} \infers e_1 \And e_2 : \Task\,(\tau_1 \times \tau_2)}
+
 
 \newrule{T-One}
   {\Gamma\st{\Sigma} \infers e_1 : \Task \tau \\
@@ -61,16 +73,33 @@
   {\Gamma\st{\Sigma} \infers e_1 \ExOr e_2 : \Task \tau}
 
 
+
 %% Evaluation %%
+
 
 \newmacro{RelationV}
   {e \evaluate v}
 
 
-%% Normalisation %%
+
+%% Normalisation %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 \newmacro{RelationN}
-  {t\st{s} \normalise t'\st{s'}}
+  {p\st{s} \normalise t'\st{s'}}
+
+
+\newrule{N-Edit}
+  {e \evaluate v}
+  {\Edit e\st{s} \normalise \Edit v\st{s}}
+
+
+\newrule{N-Fill}
+  {\ }
+  {\Fill \beta\st{s} \normalise \Fill \beta\st{s}}
+
+
+%%%%
 
 \newrule{N-Interact}
   { }
@@ -79,14 +108,6 @@
 % \newrule{N-Fail}
 %   { }
 %   {\Fail\st{s} \normalise \Fail\st{s}}
-
-% \newrule{N-Edit}
-%   { }
-%   {\Edit c\st{s} \normalise \Edit c\st{s}}
-
-% \newrule{N-Fill}
-%   { }
-%   {\Fill \beta\st{s} \normalise \Fill \beta\st{s}}
 
 % \newrule{N-Change}
 %   { }
@@ -134,7 +155,7 @@
 %% Handling %%
 
 \newmacro{RelationH}
-  {t\st{s} \handle{\eta} t'\st{s'}}
+  {t\st{s} \handle{\eta} p'\st{s'}}
 
 \newrule{H-Change}[v, v' : \beta]
   { }

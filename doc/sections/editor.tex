@@ -157,6 +157,47 @@ Some examples of editors expressible in our language:
 \end{itemize}
 
 
+\subsection{Tasks and Pretasks}
+
+Till now, syntactically we only talking about \emph{pretasks}.
+Now the time has come to talk about real \emph{tasks}!
+Well, about \emph{syntactically} real tasks.
+\begin{grammar}
+  Tasks
+    & t & ::=& \ldots      & \\
+    &   &\mid& \Edit v     & – valued editor \\
+    &   &\mid& \Fill \beta & – unvalued editor \\
+\end{grammar}
+
+So what is the difference with pretasks?
+The subtile change from $\Edit e$ to $\Edit v$ in the valued editor.
+That is, an editor with an arbitrary (although well typed) expression $e$,
+versus an editor with an (evaluated) value $v$.
+Coming from one to the other is done by \emph{normalisation}.
+
+Normalisation is a big step semantic relation $\boxed{\userule{RelationN}}$ which takes a pretask $p$
+and yields a normalised task $t'$.
+There are two rules we introduce now for this new semantic arrow,
+one for valued and one for unvalued editors.
+\begin{equation*}
+  \userule{N-Edit} \qquad \userule{N-Fill}
+\end{equation*}
+Rule \refrule{N-Edit} uses the big step semantics from our base language ($\evaluate$)
+to evaluate the wrapped expression $e$ to a value $v$.
+Rule \refrule{N-Fill} has nothing to evaluate and just keeps the unvalued editor as is.
+Note that the double down arrow $\normalise$ \emph{uses} the single down arrow $\evaluate$,
+a convention we will use again later on.
+
+Summarising, pretask $p$ allow us to syntactically write down arbitrary expressions inside a valued editor,
+or any other pretask we will define in the future.
+Tasks $t$ are pretasks \emph{after normalisation} using the relation $\normalise$.
+With other words:
+\begin{itemize}
+  \item pretasks $p$ are values with respect to evaluation of our base language, using the relation $\evaluate$;
+  \item tasks $t$ are values with respect to normalisation, using the relation $\normalise$.
+\end{itemize}
+
+
 \subsection{Events}
 
 To change values in an editor,
@@ -214,8 +255,7 @@ The value of an editor, empty or not, can be changed to a value $v$ by just send
 To clear a valued editor, we send the $\Clear$(lear) action.
 
 Handling events is done by a new semantic relation.
-This relation takes a task $t$ and an event $\eta$ which results in a new pretask $p'$.
-\todo{Add task vs pretask somewhere here...}
+This small step relation takes a task $t$ and an event $\eta$ which results in a new pretask $p'$.
 We write
 \begin{equation*}
   \boxed{\RelationH}
