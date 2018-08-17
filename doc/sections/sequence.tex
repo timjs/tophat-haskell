@@ -2,13 +2,13 @@
 
 \section{Performing tasks one after the other}
 
-In the previous section we have set up our interaction model of actions,
+In the previous section we have set up our interaction model of events and actions,
 and we defined our first interactive component, the editor.
-Now we can continue with the composition of tasks.
-By composing tasks we
+Now that we have the core part of an interactive workflow,
+we can continue with the composition of tasks.
 Composing tasks can be done in two ways:
 \begin{enumerate*}
-  \item sequential; or
+  \item sequential or
   \item parallel.
 \end{enumerate*}
 For parallel composition we distinguish two kinds:
@@ -22,18 +22,32 @@ The next two sections are about pairing and choosing.
 One might think that the best way to sequence two tasks is by using a combinator taking two tasks:
 the current one and the continuation.
 However, we like the continuation to be parametrised.
-Therefore, we take the continuation to be a \emph{function} from our host language which,
-when evaluated, results in a task.
+The \emph{step} from one task to another is \emph{a calculation which provides the next task to proceed with}.
+Therefore, we take the continuation to be a \emph{function}.
+Don't worry, it is just a normal function from our host language which,
+when evaluated, results in something of type $\Task$.
 Syntactically this leads to
 \begin{grammar}
+  Pretasks
+    & p & ::=& \ldots        & \\
+    &   &\mid& e_1 \Then e_2 & – sequence \\
   Tasks
-    & t & ::=& \ldots   & \\
-    &   &\mid& t \ExThen e & – sequence \\
+    & t & ::=& \ldots        & \\
+    &   &\mid& t_1 \Then e_2 & – sequence \\
 \end{grammar}
 And the accompanied typing rule looks like
 \begin{equation*}
   \userule{T-Then}
 \end{equation*}
+
+\begin{margintext}{Aside: Steps and the step combinator}
+Again a side note for the iTasks guru.
+In this section we introduced a way to step from one task to another.
+How does this compare to the step combinators found in the iTasks framework?
+Which combinator does $\Then$ correspond to?
+We have multiple options: \type{(>>*)}, \type{(>>=)}, \type{(>>-)}, \type{(>>\~)}, \type{(>>|)}.
+\end{margintext}
+
 
 \subsection{Normalisation}
 
