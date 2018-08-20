@@ -21,17 +21,17 @@ For this we refer to standard work like \textcite{books/Pierce02TAPL} and \textc
 
 \begin{grammar}
   Expressions
-    & e &::= & \lambda x.\ e      & – abstractions \\
+    & e &::= & \lambda x.\ e      & – abstraction \\
     &   &\mid& e_1\ e_2           & – application \\
     &   &\mid& x                  & – variable \\
-    &   &\mid& c                  & – constants \\
+    &   &\mid& c                  & – constant \\
     &   &\mid& e_1 \star e_2      & – operator \\
     &   &\mid& \If{e_1}{e_2}{e_3} & – test \\
-    &   &\mid& p                  & – pretasks \\
+    &   &\mid& p                  & – pretask \\
   Constants
-    & c &::= & B                  & – booleans \\
-    &   &\mid& I                  & – integers \\
-    &   &\mid& S                  & – strings \\
+    & c &::= & B                  & – boolean \\
+    &   &\mid& I                  & – integer \\
+    &   &\mid& S                  & – string \\
   Pretasks
     & p &::= & \ldots             & (to be defined) \\
 \end{grammar}
@@ -41,14 +41,14 @@ The $\star$ represents a general notion of operators.
 With $\If{}{}{}$ one can do basic branching.
 The syntactic category of pretasks will be defined in the upcoming sections.
 Pretasks $p$ are tasks \emph{in making}.
-The difference with a \emph{task} will be discussed in \autoref{sec:tasks-vs-pretasks}.
+The difference with a \emph{task} $t$ will be discussed in \autoref{sec:tasks-vs-pretasks}.
 
 We will use double quotation marks ($\str{}$) to denote strings.
 Integers are denoted by their decimal representation,
 and booleans are written $\True$ and $\False$.
 In the remaining of this text,
-we will make freely use of the logic operators $\Not$, $\land$, and $\lor$,
-arithmetic operators like $+$, $-$, $\times$,
+we will freely make use of the logic operators $\Not$, $\land$, and $\lor$,
+arithmetic operators $+$, $-$, $\times$,
 and the string append operator $\pp$.
 Also, we will use the standard comparison operations $<$, $\le$, $\equiv$, $\nequiv$, $\ge$, and $>$
 as builtins.
@@ -59,7 +59,7 @@ Only when referring to operators in general we will use $\star$.
 
 \begin{grammar}
   Types
-    & \tau &::= & \tau_1 \to \tau_2 & – abstractions \\
+    & \tau &::= & \tau_1 \to \tau_2 & – functions \\
     &      &\mid& \beta             & – basics \\
     &      &\mid& \Task \tau        & – tasks \\
   Basics
@@ -88,6 +88,7 @@ The rules to evaluate expressions $e$ do not defer from standard work.
     &   &\mid& c              & – constants \\
     &   &\mid& p              & – pretasks \\
 \end{grammar}
+
 Regarding our base language, lambda abstractions are values, as are all constants.
-Most important, \emph{pretasks are values}.
-As pretasks are values, they will not be evaluated further by the $\evaluate$ operation.
+Most important, \emph{pretasks are values},
+and will not be evaluated further by the $\evaluate$ operation.

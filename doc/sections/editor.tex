@@ -1,6 +1,6 @@
 % !TEX root=../main.tex
 
-\section{Editors: interaction with end users}
+\section{Interaction with end users using editors}
 
 In the introduction we claimed to create a language to model \emph{interactive} workflows.
 By interaction we mean communication with people using the developed system.
@@ -21,11 +21,20 @@ This is depicted as a state diagram in \autoref{fig:editor-state} below.
 \end{figure}
 
 One can consider editors as an abstraction over widgets in a \GUI or form fields on a webpage.
-Take for example an entry for text:
+Take for example an entry for text.
 Users can enter a string, change it, remove it, enter another string, and so on.
 With editors we try to capture this \emph{constantly changing} nature of user input.
 Also, because editors are \emph{typed},
 they are only allowed to contain information of the right format.
+
+How exactly information is entered is not of great importance.
+This could be an input field for a string,
+a switch for a boolean,
+a spin box for an angle,
+or even a map with a pin for a location.
+\Autoref{fig:editor-examples} depicts these examples.
+In it's most banal form,
+an editor is a line of text entered at a terminal and parsed to match a string, boolean, angle or location value.
 
 \begin{marginfigure}
   \centering
@@ -44,18 +53,9 @@ they are only allowed to contain information of the right format.
   \label{fig:editor-examples}
 \end{marginfigure}
 
-How exactly information is entered is not of great importance.
-This could be an input field for a string,
-a switch for a boolean,
-a spin box for an angle,
-or even a map with a pin for a location.
-\Autoref{fig:editor-examples} depicts these examples.
-In it's most banal form,
-an editor is a line of text entered at a terminal and parsed to match a string, boolean, angle or location value.
-
 \begin{margintext}{Aside: About stability}
 A short side note to the iTasks guru.
-Maybe you think: \enquote{I know this different states! This is stability!}
+Maybe you think: \enquote{I know these different states! This is stability!}
 Yes and no.
 I already mentioned in the introduction we won't use the notion of stability in our system.
 Although the state diagram in \autoref{fig:editor-state} looks like the state diagram for stability,
@@ -67,23 +67,24 @@ First, stability has \emph{three} states:
   \item unstable, and
   \item no value.
 \end{enumerate*}
+These are depicted below.
 Editors have only \emph{two}:
 \begin{enumerate*}
   \item valued, and
   \item unvalued.
 \end{enumerate*}
 
+\includegraphics[width=\marginwidth,page=2]{figures/editor-state-crop.pdf}
+
 Second,
 it is possible for an editor to go from a valued to an unvalued state and back again,
 but there is no way to mark an editor as stable.
-It is a bit like using only the unstable part of below state diagram.
+It is a bit like using only the unstable part of above state diagram.
 This is about the only resemblance.
-
-\includegraphics[width=\marginwidth,page=2]{figures/editor-state-crop.pdf}
 
 Third,
 the state diagram in \autoref{fig:editor-state} is about \emph{editors only}.
-A value in our system is always there.
+A value in our system is \emph{always there}.
 Because values are just values,
 as we are custom from lambda calculus and other functional programming languages,
 stability does not propagate through our whole language.
@@ -92,13 +93,16 @@ This doesn't change anything to values in our underlaying expression language.
 
 I can't stress it enough, so here it is again:
 \begin{quote}
-Editors live on the task level of our language,
-values live on the expression level.
+Editors live on the \emph{task level} of our language,
+values live on the \emph{expression level}.
 We do not change \emph{anything at all} on the expression level when introducing tasks.
 \end{quote}
 \end{margintext}
 
-Thus, at the core,
+
+\subsection{Definition}
+
+At the core,
 an editor is a container holding a value
 or holding nothing.
 For this purpose, we extend our task language with two constructs:
@@ -122,7 +126,7 @@ This is expressed by the following typing rule for valued editors.
 Unvalued editors do not have a value,
 and therefore do not wrap an expression.
 Because we strive to a fully typed system,
-we have two options to type unvalued editors.
+we have two options to type unvalued editors:
 \begin{enumerate*}
   \item let the unvalued editor have a polymorphic type;
   \item annotate unvalued editors with a type and use that. \label{itm:annotate}
@@ -153,19 +157,19 @@ Some examples of editors expressible in our language:
     waiting for users to enter some string.
   \item $\Edit ((\lambda x . x)\ 5)$ is a valued editor which,
     after normalisation, will contain the value $5$.
-    (We will discuss normalisation in \autoref{sec:normalisation}.)
+    (We will discuss normalisation in the next section.)
 \end{itemize}
 
 
-\subsection{Tasks and Pretasks}
+\subsection{Tasks and pretasks}
+\label{sec:tasks-vs-pretasks}
 
 Till now, syntactically we only talking about \emph{pretasks}.
-Now the time has come to talk about real \emph{tasks}!
-Well, about \emph{syntactically} real tasks.
+Now the time has come to talk about \emph{real} tasks!
+Well, about \emph{syntactically real} tasks.
 \begin{grammar}
   Tasks
-    & t & ::=& \ldots      & \\
-    &   &\mid& \Edit v     & – valued editor \\
+    & t & ::=& \Edit v     & – valued editor \\
     &   &\mid& \Fill \beta & – unvalued editor \\
 \end{grammar}
 
@@ -183,10 +187,10 @@ one for valued and one for unvalued editors.
   \userule{N-Edit} \qquad \userule{N-Fill}
 \end{equation*}
 Rule \refrule{N-Edit} uses the big step semantics from our base language ($\evaluate$)
-to evaluate the wrapped expression $e$ to a value $v$.
+to evaluate the wrapped expression $e$ to a value $v$ and rewraps it in an editor.
 Rule \refrule{N-Fill} has nothing to evaluate and just keeps the unvalued editor as is.
 Note that the double down arrow $\normalise$ \emph{uses} the single down arrow $\evaluate$,
-a convention we will use again later on.
+a convention we will use again later in this text.
 
 Summarising, pretask $p$ allow us to syntactically write down arbitrary expressions inside a valued editor,
 or any other pretask we will define in the future.
@@ -195,10 +199,10 @@ With other words:
 \begin{itemize}
   \item
     Pretasks $p$ are task expressions.
-    They are values with respect to evaluation of our base language, using the relation $\evaluate$.
+    They are values with respect to evaluation of our base language, i.e. the relation $\evaluate$.
   \item
     Tasks $t$ are a syntactical subset of pretasks $p$.
-    They are values with respect to normalisation, using the relation $\normalise$.
+    They are values with respect to normalisation, i.e. the relation $\normalise$.
 \end{itemize}
 
 
@@ -239,15 +243,7 @@ and they are \emph{not} accessible from within our language.
 
 We define a new syntactic category of events $\eta$.
 For now, they only contain \emph{actions} $\alpha$.
-We will introduce new events in a later section.
-As we already discussed before,
-there are three actions that can be handled by editors:
-\begin{enumerate*}
-  \item filling in an unvalued editor;
-  \item changing the value; or
-  \item clearing the value.
-\end{enumerate*}
-We choose to merge the first two into one action.
+We will introduce events and actions in later sections.
 \begin{grammar}
   Events
     & \eta   & ::=& \alpha & – action \\
@@ -255,6 +251,15 @@ We choose to merge the first two into one action.
     & \alpha & ::=& v      & – change editor to value \\
     &        &\mid& \Clear & – clear an editor \\
 \end{grammar}
+
+As we already discussed before,
+there are three actions that can be handled by editors:
+\begin{enumerate*}
+  \item filling in an unvalued editor;
+  \item changing the value; or
+  \item clearing the value.
+\end{enumerate*}
+We choose to merge the first two, filling and changing, into one action.
 The value of an editor, empty or not, can be changed to a value $v$ by just sending the value as an action.
 To clear a valued editor, we send the $\Clear$(lear) action.
 
@@ -264,19 +269,21 @@ We write
 \begin{equation*}
   \boxed{\RelationH}
 \end{equation*}
-Formalising our intuition from previous paragraphs,
-we need three rules to describe the transitions of editors.
+Formalising the states and transitions shown in \autoref{fig:editor-state},
+we need three rules to describe editors.
 \begin{equation*}
   \userule{H-Change} \qquad \userule{H-Clear} \qquad \userule{H-Fill}
 \end{equation*}
 Note that the conditions to the right of the rules take care of typing.
 Only when the entered value $v'$ has the same type $\beta$ as the original value $v$ we can change a valued editor.
-They make sure the type of the entered value and the type of the editor are always the same.
+In case of an unvalued editor,
+the entered value $v'$ needs to have the same type as the type annotation $\beta$.
+These conditions make sure the type of the entered value and the type of the editor are always the same.
 
 
 \subsection{Example: an interactive session}
 
-Now that we have introduced our first type of task,
+Now that we have introduced our first kind of task,
 we can make a dull but interactive example of a workflow.
 How could an interactive session with the user look like when we start with a simple workflow of one editor,
 containing the value two?
@@ -288,7 +295,7 @@ containing the value two?
     & \Fill \Int \\
   \handle{50} & \hint{enter the value fifty} \\
     & \Edit 50 \\
-  \handle{\str{Bye}} & \hint{changing the value to a string won't work\ldots} \\
+  \handle{\str{Bye}} & \hint{sending a string won't work, the types don't match} \\
     & \Edit 50 \\
   \handle{10} & \hint{change value to ten} \\
     & \Edit 10

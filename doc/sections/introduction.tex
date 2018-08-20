@@ -2,19 +2,20 @@
 
 \section{Introduction}
 
-In the next sections we will gradually develop a language for interactive workflow modelling.
+In the next sections we will gradually develop a language to model interactive workflow.
 Each section will introduce one of the following basic constructs,
 making our language more powerful after every addition:
 \begin{itemize}
   \item interactive \emph{editors} with a value ($\Edit v$) and without a value ($\Fill \tau$);
   \item parallel composition or \emph{pairing} of tasks ($t_1 \And t_2$);
   \item sequential composition or \emph{stepping} of tasks ($t_1 \Then e_2$);
-  \item making a \emph{choice} between tasks ($t_1 \Or t_2$) and the \emph{failure} task ($\Fail$);
+  \item making a \emph{choice} between tasks ($t_1 \Or t_2$);
+  \item the \emph{failure} task ($\Fail$);
 \end{itemize}
 Additionally, we will discuss two convenience combinators and one extension using shared data:
 \begin{itemize}
   \item giving users an explicit choice ($t_1 \ExOr t_2$);
-  \item continuing to the next task on users' requests ($t_1 \ExThen e_2$);
+  \item continuing to the next task upon users' requests ($t_1 \ExThen e_2$);
   \item watching and changing shared data ($\Change l$).
 \end{itemize}
 
@@ -29,29 +30,30 @@ our approach distinguishes itself by the following points:
   \item
     There is no notion of values which can be stable or unstable.
     Our language has editors which can be valued ($\Edit v$) or unvalued ($\Fill \tau$),
-    but values themselves do not have special distinguishing features and are just that, \emph{values}.
+    but values themselves do not have special distinguishing features and are just values,
+    as in every other lambda calculus or functional programming language.
   \item
     Tasks are never done!
     A value lifted into the task world can always interactively be changed by end users.
   \item
     All tasks are, in the end, about interaction with end users.
-    This does not mean that every construct introduced in our language has a way to interact with the user.
-    On the contrary!
-    But the leaves are.
-    There are two leaves in our language: editors ($\Edit v$ and $\Fill \tau$) and fail ($\Fail$).
-    Editors are the main focus of user interaction.
-    Users can enter and change information using an editor.
-    Fail is a special case.
-    It acts like a black hole regarding interaction and will swallow every event users will throw at it.
-    All other language constructs are combinators.
+    Not because construct introduced in our language has a way to interact with the user,
+    but the leaves are.\footnote{
+      There are two leaves in our language: editors ($\Edit v$ and $\Fill \tau$) and fail ($\Fail$).
+      Editors are the main focus of user interaction.
+      Users can enter and change information using an editor.
+      Fail is a special case.
+      It acts like a black hole regarding interaction and will swallow every event users will throw at it.
+      All other language constructs are combinators.
+    }
   \item
     Entering some information into a system is not a one-shot action.
     Editors keep asking for input continually.
     Thus repeatedly asking for information does not need to be modelled with recursion.
-    The next task is only executed under preprogrammed internal conditions or external action by users.
+    The next task is only executed under preprogrammed internal conditions or external actions by users.
   \item
     Tasks do not need to be identified by a task identifier.
-    Events are based on the \emph{structure} of the task at hand.
+    Sending events is based on the \emph{structure} of the task at hand.
   \item
     Events are not accessible by users, they are build into the semantics.
   \item
@@ -78,12 +80,13 @@ our approach distinguishes itself by the following points:
 
 The remaining of this report is structured as follows.
 In the first section we set up our our host language,
-the $\lambda$-calculus extended with basic arithmetic and comparison.
-Thereafter, in the next seven sections, we will gradually define our object language,
+the $\lambda$-calculus extended with primitive types and operations.
+Thereafter, in the next \fixme{seven} sections, we will gradually define our object language,
 extending the properties of our host language when needed.
-After some sections we make a small intermezzo,
+After some of them,
+we will make a small intermezzo,
 showing the current properties and laws of our language.
 We strive to keep the host language as small as possible.
 At the end of the report,
 we will see an overview of our our language,
-including all static and dynamic rules defined.
+summarising all static and dynamic rules defined along the way.
