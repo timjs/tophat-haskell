@@ -90,7 +90,7 @@
     &        &\mid& e_1 \ExOr e_2                 & – choose \\
     &        &\mid& \Fail                       & – fail \\
 \end{grammar}
-\footnotetext{$\where \Observe(t_1) \neq \nothing$}
+\footnotetext{$\where \Value(t_1) \neq \nothing$}
 
 Notes:
 \begin{itemize}
@@ -102,7 +102,7 @@ Notes:
   \item $\ExOr$ is lazy in both arguments.
     Evaluating one or both options of $e_1 \ExOr e_2$ before the user makes a choice will result in untimely reference updates.
   \item Althoug internal steps should be evaluated without user interaction,
-    $t \Then e$ \emph{is} a task value, iff $\Observe(t) = \nothing$.
+    $t \Then e$ \emph{is} a task value, iff $\Value(t) = \nothing$.
     Take for example $t = \Fill \Int$.
 \end{itemize}
 
@@ -138,11 +138,11 @@ Notes:
 
 \begin{equation*}
   \begin{array}{@{}lcl}
-    \multicolumn{3}{c}{\boxed{\Observe : t \times s \to v^?}} \\
-    \Observe(\Edit v\st{s})      &=& v \\
-    \Observe(\Change l\st{s})     &=& s(l) \\
-    \Observe(t_1 \And t_2\st{s}) &=& \{\Observe(t_1\st{s}), \Observe(t_2\st{s})\} \\
-    \Observe(\_)                 &=& \nothing
+    \multicolumn{3}{c}{\boxed{\Value : t \times s \to v^?}} \\
+    \Value(\Edit v\st{s})      &=& v \\
+    \Value(\Change l\st{s})     &=& s(l) \\
+    \Value(t_1 \And t_2\st{s}) &=& \{\Value(t_1\st{s}), \Value(t_2\st{s})\} \\
+    \Value(\_)                 &=& \nothing
   \end{array}
 \end{equation*}
 
@@ -160,7 +160,7 @@ Notes:
 
 
 \paragraph{Simplifying}
-\todo{Is \refrule{N-And} needed or can we just use $\Observe(t)$ to check if we have a pair?}
+\todo{Is \refrule{N-And} needed or can we just use $\Value(t)$ to check if we have a pair?}
 
 \begin{mathpar}
   \divert{\userule{N-Then}} \\

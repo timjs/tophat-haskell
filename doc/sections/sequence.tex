@@ -57,9 +57,11 @@ We can think of normalisation as a \enquote{medium step} semantics,
 evaluation tasks $t$ as much as possible,
 till the moment we need an event to continue.
 
-\begin{equation*}
-  \userule{N-Then} \qquad \userule{N-ThenEval}
-\end{equation*}
+\begin{gather*}
+  \userule{N-ThenStay} \\
+  \userule{N-ThenFail} \\
+  \userule{N-ThenCont}
+\end{gather*}
 
 \begin{margintext}{Aside: Steps and the step combinator}
 Again a side note for the iTasks guru.
@@ -69,21 +71,17 @@ Which combinator does $\Then$ correspond to?
 
 From the multiple options that we have,
 only \type{(>>=)}, \type{(>>-)} and \type{(>>\texttilde)} have the right type.
-Normalisation rules \fixme{ref} ensure stepping without any user interaction,
+Normalisation rules \refrule{N-ThenStay}, \refrule{N-ThenFail} and \refrule{N-ThenCont} ensure stepping without any user interaction,
 i.e. users are not presented with a continue button.
 Therefore our $\Then$ constructor corresponds mostly to the iTasks \type{(>>-)} combinator.
 \end{margintext}
 
+\begin{margintext}{Aside: Failure and stepping}
+\end{margintext}
+
+
 
 \subsection{Handling}
-
-\begin{equation*}
-  \begin{array}{lcl}
-    \multicolumn{3}{l}{\Observe : t \to v^?} \\
-    \Observe(\Edit v) &=& v \\
-    \Observe(\_)      &=& \nothing
-  \end{array}
-\end{equation*}
 
 \begin{grammar}
   Actions

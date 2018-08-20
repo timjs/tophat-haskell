@@ -1,4 +1,4 @@
-% !TEX root=../main.tex
+% !TEX root=main.tex
 
 
 %% Helpers %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -29,11 +29,6 @@
   {\Gamma\st{\Sigma} \infers e : \tau}
 
 
-\newrule{T-Fail}
-  {\ }
-  {\Gamma\st{\Sigma} \infers \Fail : \Task \tau}
-
-
 \newrule{T-Edit}
   {\Gamma\st{\Sigma} \infers e : \beta}
   {\Gamma\st{\Sigma} \infers \Edit e : \Task \beta}
@@ -47,6 +42,11 @@
 \newrule{T-Change}
   {\Gamma, \Sigma \infers e : \beta}
   {\Gamma, \Sigma \infers \Change e : \Task \beta}
+
+
+\newrule{T-Fail}
+  { }
+  {\Gamma\st{\Sigma} \infers \Fail : \Task \tau}
 
 
 \newrule{T-Next}
@@ -99,15 +99,34 @@
   {\Fill \beta\st{s} \normalise \Fill \beta\st{s}}
 
 
+\newrule{N-Fail}
+  { }
+  {\Fail\st{s} \normalise \Fail\st{s}}
+
+
+\newrule{N-ThenStay}[\Value(t_1) = \nothing]
+  {e_1 \evaluate t_1}
+  {e_1 \Then e_2\st{s} \normalise t_1 \Then e_2\st{s}}
+
+
+\newrule{N-ThenFail}[\Value(t_1) = v_1 \land \Failing(p_2)]
+  {e_1 \evaluate t_1  \\
+   e_2\ v_1 \evaluate p_2}
+  {e_1 \Then e_2\st{s} \normalise t_1 \Then e_2\st{s}}
+
+
+\newrule{N-ThenCont}[\Value(t_1) = v_1 \land \lnot\Failing(p_2)]
+  {e_1 \evaluate t_1  \\
+   e_2\ v_1 \evaluate p_2'  \\
+   p_2'\st{s} \normalise t_2'\st{s'} }
+  {t_1 \Then e\st{s} \normalise t_2'\st{s'}}
+
+
 %%%%
 
 \newrule{N-Interact}
   { }
   {u\st{s} \normalise u\st{s}}
-
-% \newrule{N-Fail}
-%   { }
-%   {\Fail\st{s} \normalise \Fail\st{s}}
 
 % \newrule{N-Change}
 %   { }
@@ -118,19 +137,6 @@
 %    e\ v \evaluate t_2       \\
 %    t_2\st{s'} \normalise t_2'\st{s''} }
 %   {t_1 \ExThen e\st{s} \normalise t_2'\st{s''}}
-
-\newrule{N-ThenStay}[\Observe(t_1) = \nothing]
-  {\ }
-  {t_1 \Then e\st{s} \normalise t_1 \Then e\st{s}}
-
-\newrule{N-ThenFail}[\Observe(t_1) = v \land t_2 = \Fail]
-  {e\ v \evaluate t_2}
-  {t_1 \Then e\st{s} \normalise t_1 \Then e\st{s}}
-
-\newrule{N-ThenCont}[\Observe(t_1) = v \land t_2 \neq \Fail]
-  {e\ v \evaluate t_2 \\
-   t_2\st{s} \normalise t_2'\st{s'} }
-  {t_1 \Then e\st{s} \normalise t_2' \Then e\st{s'}}
 
 \newrule{N-All}[t_1' = \Edit v_1 \land t_2' = \Edit v_2]
   {t_1\st{s}  \normalise t_1'\st{s'}  \\
@@ -152,46 +158,60 @@
 %   {t_1 \ExOr t_2\st{s} \normalise t_1' \ExOr t_2'\st{s}}
 
 
+
 %% Handling %%
+
 
 \newmacro{RelationH}
   {t\st{s} \handle{\eta} p'\st{s'}}
+
 
 \newrule{H-Change}[v, v' : \beta]
   { }
   {\Edit v\st{s} \handle{v'} \Edit v'\st{s}}
 
+
 \newrule{H-Clear}[v : \beta]
   { }
   {\Edit v\st{s} \handle{\Clear} \Fill \beta\st{s}}
+
 
 \newrule{H-Fill}[v' : \beta]
   { }
   {\Fill \beta\st{s} \handle{v'} \Edit v'\st{s}}
 
+
+\newrule{H-Fail}
+  { }
+  {\Fail\st{s} \handle{\eta} \Fail\st{s}}
+
+
+%%%%
+
+
 \newrule{H-Store}[\Sigma(l), v' : \tau]
   { }
 {\Change l, s \handle{v'} \Change l, [l \mapsto v']s}
 
-\newrule{H-Stay'}[\Observe(t_1) = \nothing]
+\newrule{H-Stay'}[\Value(t_1) = \nothing]
   {\ }
   {t_1 \ExThen e\st{s} \handle{\Next} t_1 \ExThen e\st{s}}
 
-\newrule{H-Next'}[\Observe(t_1) = v]
+\newrule{H-Next'}[\Value(t_1) = v]
   {e\ v \evaluate t_2    \\
    t_2\st{s} \normalise t_2'\st{s'} }
   {t_1 \ExThen e\st{s} \handle{\Next} t_2'\st{s'}}
 
-\newrule{H-Stay}[\Observe(t_1) = \nothing]
+\newrule{H-Stay}[\Value(t_1) = \nothing]
   {\ }
   {t_1 \Then e\st{s} \handle{\Execute \pi} t_1 \Then e\st{s}}
 
-\newrule{H-Fail}[\Observe(t_1) = v \land t_2 = \Fail]
+\newrule{H-Fail'}[\Value(t_1) = v \land t_2 = \Fail]
   {e\ v \evaluate t_2    \\
    t_2\st{s} \handle{\Pick \pi} t_2'\st{s'} }
   {t_1 \Then e\st{s} \handle{\Execute \pi} t_1 \Then e\st{s}}
 
-\newrule{H-Next}[\Observe(t_1) = v \land t_2 \neq \Fail]
+\newrule{H-Next}[\Value(t_1) = v \land t_2 \neq \Fail]
   {e\ v \evaluate t_2    \\
    t_2\st{s} \handle{\Pick \pi} t_2'\st{s'} }
   {t_1 \Then e\st{s} \handle{\Execute \pi} t_2'\st{s'}}
