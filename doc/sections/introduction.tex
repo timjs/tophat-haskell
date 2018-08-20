@@ -12,7 +12,7 @@ making our language more powerful after every addition:
   \item making a \emph{choice} between tasks ($t_1 \Or t_2$);
   \item the \emph{failure} task ($\Fail$);
 \end{itemize}
-Additionally, we will discuss two convenience combinators and one extension using shared data:
+Additionally, we will discuss two convenience constructs and one extension using shared data:
 \begin{itemize}
   \item giving users an explicit choice ($t_1 \ExOr t_2$);
   \item continuing to the next task upon users' requests ($t_1 \ExThen e_2$);
@@ -44,7 +44,7 @@ our approach distinguishes itself by the following points:
       Users can enter and change information using an editor.
       Fail is a special case.
       It acts like a black hole regarding interaction and will swallow every event users will throw at it.
-      All other language constructs are combinators.
+      All other language constructs are nodes.
     }
   \item
     Entering some information into a system is not a one-shot action.
