@@ -138,7 +138,7 @@ normalise (Then this cont) = do
       if failing next then
         pure $ Then this_new cont
       else
-         normalise next
+        normalise next
 
 -- Evaluate --
 normalise (All left rght) = do
