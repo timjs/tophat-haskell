@@ -1,10 +1,9 @@
 % !TEX root=../main.tex
 
 
-\newlogo{Lang}
-
 
 %% Host language %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 \newkeyword[IF]  {if}
 \newkeyword[THEN]{then}
@@ -12,21 +11,27 @@
 
 \newkeyword[Ref] {ref}
 
+
 \newmacro{If}[3]
   {\IF #1 \THEN #2 \ELSE #3}
 
 
+
 %% Values %%
+
 
 \newvalue{True}
 \newvalue{False}
 \newvalue[Not]{not}
 
+
 \newmacro{str}[1]
   {\text{``#1''}}
 
 
+
 %% Types %%
+
 
 \newtype{Unit}
 \newtype{Bool}
@@ -39,7 +44,9 @@
 \newtype{Euro}
 
 
+
 %% Object language %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 \let\And\relax
 \newoperator{Then}  {\blacktriangleright}
@@ -55,21 +62,27 @@
 \newoperator{AndOr} {\DEPRECATED}
 
 
+
 %% Events %%
+
 
 \newvalue[Left]   {L}
 \newvalue[Right]  {R}
 
+
 \newvalue[Clear]  {C}
 \newvalue[Next]   {N}
 \newvalue[Pick]   {P}
+
 
 \newvalue[First]  {F}
 \newvalue[Second] {S}
 \newvalue[Other]  {S}
 
 
+
 %% Semantic functions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 \newmathcommand{evaluate}[rel]
   {\downarrow}
@@ -81,8 +94,16 @@
 \newmacro{drive}[1]
   {\mathrel{\;\xRightarrow{\;#1\;}\;}}
 
-\newmathcommand{Observe}[cal]
-  {O}
+
+\newmathcommand{Value}[cal]
+  {V}
+\newmathcommand{Actions}[cal]
+  {A}
+\newmathcommand{Interface}[cal]
+  {U}
+\newmathcommand{Failing}[cal]
+  {F}
+
 
 
 %% Depricated %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
