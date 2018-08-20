@@ -5,8 +5,8 @@
 In the previous section we have set up our interaction model of events and actions,
 and we defined our first interactive component, the editor.
 Now that we have the core part of an interactive workflow,
-we can continue with the composition of tasks.
-Composing tasks can be done in two ways:
+we can continue with ways to compose multiple tasks.
+Combining tasks can be done in two ways:
 \begin{enumerate*}
   \item sequential or
   \item parallel.
@@ -19,37 +19,39 @@ For parallel composition we distinguish two kinds:
 In this section we start with sequential composition.
 The next two sections are about pairing and choosing.
 
-One might think that the best way to sequence two tasks is by using a combinator taking two tasks:
+One might think that the best way to sequence two tasks is by just following one task with another:
 the current one and the continuation.
-However, we like the continuation to be parametrised.
-The \emph{step} from one task to another is \emph{a calculation which provides the next task to proceed with}.
-Therefore, we take the continuation to be a \emph{function}.
-Don't worry, it is just a normal function from our host language which,
-when evaluated, results in something of type $\Task$.
-Syntactically this leads to
+However, we like the continuation to be parametrised by the value produced by the first task.
+We define a \emph{step} from one task to another as \emph{a calculation which provides the next task to proceed with}.
+
+To accomplish this,
+we take continuations to be \emph{functions}.
+These are just a normal functions from our host language which,
+when evaluated, result in something of type $\Task$.
+Therefore,
+we extend our pretasks $p$ with a sequence construct $\Then$,
+saving arbitrary expressions.
 \begin{grammar}
   Pretasks
     & p & ::=& \ldots        & \\
     &   &\mid& e_1 \Then e_2 & – sequence \\
+\end{grammar}
+The accompanied typing rule looks like
+\begin{equation*}
+  \userule{T-Then}
+\end{equation*}
+Note that typing ensures us that the left hand side $e_1$ will be a task delivering a value of type $\tau_1$.
+The right hand side $e_2$ then, will use this value of type $\tau_1$,
+and calculate a \emph{new} task holding a value of possibly another type $\tau_2$.
+
+
+\subsection{Proceeding with the next task}
+
+\begin{grammar}
   Tasks
     & t & ::=& \ldots        & \\
     &   &\mid& t_1 \Then e_2 & – sequence \\
 \end{grammar}
-And the accompanied typing rule looks like
-\begin{equation*}
-  \userule{T-Then}
-\end{equation*}
-
-\begin{margintext}{Aside: Steps and the step combinator}
-Again a side note for the iTasks guru.
-In this section we introduced a way to step from one task to another.
-How does this compare to the step combinators found in the iTasks framework?
-Which combinator does $\Then$ correspond to?
-We have multiple options: \type{(>>*)}, \type{(>>=)}, \type{(>>-)}, \type{(>>\~)}, \type{(>>|)}.
-\end{margintext}
-
-
-\subsection{Normalisation}
 
 We can think of normalisation as a \enquote{medium step} semantics,
 evaluation tasks $t$ as much as possible,
@@ -58,6 +60,20 @@ till the moment we need an event to continue.
 \begin{equation*}
   \userule{N-Then} \qquad \userule{N-ThenEval}
 \end{equation*}
+
+\begin{margintext}{Aside: Steps and the step combinator}
+Again a side note for the iTasks guru.
+In this section we introduced a way to step from one task to another.
+How does this compare to the step combinators found in the iTasks framework?
+Which combinator does $\Then$ correspond to?
+
+From the multiple options that we have,
+only \type{(>>=)}, \type{(>>-)} and \type{(>>\texttilde)} have the right type.
+Normalisation rules \fixme{ref} ensure stepping without any user interaction,
+i.e. users are not presented with a continue button.
+Therefore our $\Then$ constructor corresponds mostly to the iTasks \type{(>>-)} combinator.
+\end{margintext}
+
 
 \subsection{Handling}
 
