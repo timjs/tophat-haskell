@@ -104,22 +104,25 @@
   {\Fail\st{s} \normalise \Fail\st{s}}
 
 
-\newrule{N-ThenStay}[\Value(t_1) = \nothing]
-  {e_1 \evaluate t_1}
-  {e_1 \Then e_2\st{s} \normalise t_1 \Then e_2\st{s}}
+\newrule{N-ThenStay}[\Value(t_1) = \bot]
+  {e_1 \evaluate p_1 \\
+   p_1\st{s} \normalise t_1\st{s'}}
+  {e_1 \Then e_2\st{s} \normalise t_1 \Then e_2\st{s'}}
 
 
 \newrule{N-ThenFail}[\Value(t_1) = v_1 \land \Failing(p_2)]
-  {e_1 \evaluate t_1  \\
+  {e_1 \evaluate p_1  \\
+   p_1\st{s} \normalise t_1\st{s'} \\
    e_2\ v_1 \evaluate p_2}
-  {e_1 \Then e_2\st{s} \normalise t_1 \Then e_2\st{s}}
+  {e_1 \Then e_2\st{s} \normalise t_1 \Then e_2\st{s'}}
 
 
 \newrule{N-ThenCont}[\Value(t_1) = v_1 \land \lnot\Failing(p_2)]
-  {e_1 \evaluate t_1  \\
-   e_2\ v_1 \evaluate p_2'  \\
-   p_2'\st{s} \normalise t_2'\st{s'} }
-  {t_1 \Then e\st{s} \normalise t_2'\st{s'}}
+  {e_1 \evaluate p_1  \\
+   p_1\st{s} \normalise t_1\st{s'} \\
+   e_2\ v_1 \evaluate p_2  \\
+   p_2\st{s'} \normalise t_2\st{s''}}
+  {e_1 \Then e_2\st{s} \normalise t_2\st{s''}}
 
 
 %%%%
@@ -193,7 +196,7 @@
   { }
 {\Change l, s \handle{v'} \Change l, [l \mapsto v']s}
 
-\newrule{H-Stay'}[\Value(t_1) = \nothing]
+\newrule{H-Stay'}[\Value(t_1) = \bot]
   {\ }
   {t_1 \ExThen e\st{s} \handle{\Next} t_1 \ExThen e\st{s}}
 
@@ -202,7 +205,7 @@
    t_2\st{s} \normalise t_2'\st{s'} }
   {t_1 \ExThen e\st{s} \handle{\Next} t_2'\st{s'}}
 
-\newrule{H-Stay}[\Value(t_1) = \nothing]
+\newrule{H-Stay}[\Value(t_1) = \bot]
   {\ }
   {t_1 \Then e\st{s} \handle{\Execute \pi} t_1 \Then e\st{s}}
 
