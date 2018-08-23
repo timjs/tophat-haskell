@@ -2,20 +2,20 @@
 
 \section{Introduction}
 
-In the next sections we will gradually develop a language to model interactive workflow.
+In the next sections we will gradually develop a language to model interactive processes.
 Each section will introduce one of the following basic constructs,
 making our language more powerful after every addition:
 \begin{itemize}
   \item interactive \emph{editors} with a value ($\Edit v$) and without a value ($\Fill \tau$);
-  \item parallel composition or \emph{pairing} of tasks ($t_1 \And t_2$);
-  \item sequential composition or \emph{stepping} of tasks ($t_1 \Then e_2$);
-  \item making a \emph{choice} between tasks ($t_1 \Or t_2$);
   \item the \emph{failure} task ($\Fail$);
+  \item sequential composition or \emph{stepping} of tasks ($t_1 \Then e_2$);
+  \item parallel composition or \emph{pairing} of tasks ($t_1 \And t_2$);
+  \item making a \emph{choice} between tasks ($t_1 \Or t_2$);
 \end{itemize}
 Additionally, we will discuss two convenience constructs and one extension using shared data:
 \begin{itemize}
-  \item giving users an explicit choice ($t_1 \ExOr t_2$);
   \item continuing to the next task upon users' requests ($t_1 \ExThen e_2$);
+  \item giving users an explicit choice ($t_1 \ExOr t_2$);
   \item watching and changing shared data ($\Change l$).
 \end{itemize}
 
@@ -37,7 +37,7 @@ our approach distinguishes itself by the following points:
     A value lifted into the task world can always interactively be changed by end users.
   \item
     All tasks are, in the end, about interaction with end users.
-    Not because construct introduced in our language has a way to interact with the user,
+    Not because every construct introduced in our language has a way to interact with the user,
     but the leaves are.\footnote{
       There are two leaves in our language: editors ($\Edit v$ and $\Fill \tau$) and fail ($\Fail$).
       Editors are the main focus of user interaction.
