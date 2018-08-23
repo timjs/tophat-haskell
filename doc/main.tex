@@ -17,17 +17,19 @@
 \input commands
 \input rules
 
-% \setcounter{secnumdepth}{2}
+\setcounter{secnumdepth}{2}
 % \setcounter{tocdepth}{1}
-
-
-\begin{document}
 
 
 \title{Semantics of interactive processes}
 \author{Tim Steenvoorden}
 
+
+\begin{document}
+
+
 \maketitle
+
 
 In this document we investigate a language to model interactive processes,
 which we will call \emph{tasks}.
@@ -37,8 +39,10 @@ each with its own characteristics,
 we will show how to express interactive, workflow like systems.
 The author claims this language is capable of expressing the majority of programs that can be written using the \ITASKS framework \cite{conf/pepm/PlasmeijerAKLNG11}.
 
+
 \tableofcontents
 \newpage
+
 
 \input sections/introduction
 \input sections/basics
@@ -47,7 +51,7 @@ The author claims this language is capable of expressing the majority of program
 \input sections/sequence
 \input sections/pair
 \input sections/choice
-\input sections/overview
+% \input sections/overview
 
 
 \bibliography{bibliography}
