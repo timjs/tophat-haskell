@@ -52,7 +52,7 @@ ui (One left rght) with ( delabel left, delabel rght )
 ui (Fail)                = pure $ "↯"
 ui (Then this cont)      = pure $ !(ui this) ++ " ▶…"
 ui (Next this cont)      = pure $ !(ui this) ++ " ▷…"
-ui (Label l this)        = pure $ l ++ ": " ++ !(ui this)
+ui (Label l this)        = pure $ l ++ ":\n\t" ++ !(ui this)
 ui (Lift _)              = pure $ "<lift>"
 
 
