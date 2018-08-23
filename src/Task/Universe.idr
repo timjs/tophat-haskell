@@ -269,13 +269,13 @@ isBasic (PRIM p)         = Yes BasicPrim
 
 
 parse : String -> Maybe (b : Ty ** ( IsBasic b, typeOf b ))
-parse "()"                                                        = Just $ (PRIM UNIT ** ( BasicPrim, () ))
-parse "True"                                                      = Just $ (PRIM BOOL ** ( BasicPrim, True ))
-parse "False"                                                     = Just $ (PRIM BOOL ** ( BasicPrim, False ))
+parse "()"                                                        = Just (PRIM UNIT ** ( BasicPrim, () ))
+parse "True"                                                      = Just (PRIM BOOL ** ( BasicPrim, True ))
+parse "False"                                                     = Just (PRIM BOOL ** ( BasicPrim, False ))
 parse s   with (the (Maybe Int) (parseInteger s))
-  parse s | (Just int)                                            = Just $ (PRIM INT ** ( BasicPrim, int ))
+  parse s | (Just int)                                            = Just (PRIM INT ** ( BasicPrim, int ))
   parse s | Nothing                        with (decons s)
-    parse (between '"' '"' rest) | Nothing | (Multi '"' '"' rest) = Just $ (PRIM STRING ** ( BasicPrim, rest ))
+    parse (between '"' '"' rest) | Nothing | (Multi '"' '"' rest) = Just (PRIM STRING ** ( BasicPrim, rest ))
     parse _                      | Nothing | _                    = Nothing
 --FIXME: add pairs and lists
 
