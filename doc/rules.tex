@@ -81,48 +81,50 @@
   {e \evaluate v}
 
 
+\newrule{E-Edit}
+  {e \evaluate v}
+  {\Edit e \evaluate \Edit v}
+
+
+\newrule{E-Fill}
+  {\ }
+  {\Fill \beta \evaluate \Fill \beta}
+
+
+\newrule{E-Fail}
+  { }
+  {\Fail \evaluate \Fail}
+
+
+\newrule{E-Then}
+  {e_1 \evaluate t_1}
+  {e_1 \Then e_2 \normalise t_1 \Then e_2}
+
+
 
 %% Normalisation %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 \newmacro{RelationN}
-  {p\st{s} \normalise t'\st{s'}}
+  {t\st{s} \normalise t'\st{s'}}
 
 
-\newrule{N-Edit}
-  {e \evaluate v}
-  {\Edit e\st{s} \normalise \Edit v\st{s}}
+\newrule{N-ThenStay}[\Value(t_1') = \bot]
+  {t_1\st{s} \normalise t_1'\st{s'}}
+  {t_1 \Then e_2\st{s} \normalise t_1' \Then e_2\st{s'}}
 
 
-\newrule{N-Fill}
-  {\ }
-  {\Fill \beta\st{s} \normalise \Fill \beta\st{s}}
+\newrule{N-ThenFail}[\Value(t_1') = v_1 \land \Failing(t_2)]
+  {t_1\st{s} \normalise t_1'\st{s'} \\
+   e_2\ v_1 \evaluate t_2}
+  {t_1 \Then e_2\st{s} \normalise t_1' \Then e_2\st{s'}}
 
 
-\newrule{N-Fail}
-  { }
-  {\Fail\st{s} \normalise \Fail\st{s}}
-
-
-\newrule{N-ThenStay}[\Value(t_1) = \bot]
-  {e_1 \evaluate p_1 \\
-   p_1\st{s} \normalise t_1\st{s'}}
-  {e_1 \Then e_2\st{s} \normalise t_1 \Then e_2\st{s'}}
-
-
-\newrule{N-ThenFail}[\Value(t_1) = v_1 \land \Failing(p_2)]
-  {e_1 \evaluate p_1  \\
-   p_1\st{s} \normalise t_1\st{s'} \\
-   e_2\ v_1 \evaluate p_2}
-  {e_1 \Then e_2\st{s} \normalise t_1 \Then e_2\st{s'}}
-
-
-\newrule{N-ThenCont}[\Value(t_1) = v_1 \land \lnot\Failing(p_2)]
-  {e_1 \evaluate p_1  \\
-   p_1\st{s} \normalise t_1\st{s'} \\
-   e_2\ v_1 \evaluate p_2  \\
-   p_2\st{s'} \normalise t_2\st{s''}}
-  {e_1 \Then e_2\st{s} \normalise t_2\st{s''}}
+\newrule{N-ThenCont}[\Value(t_1') = v_1 \land \lnot\Failing(t_2)]
+  {t_1\st{s} \normalise t_1'\st{s'} \\
+   e_2\ v_1 \evaluate t_2  \\
+   t_2\st{s'} \normalise t_2'\st{s''}}
+  {t_1 \Then e_2\st{s} \normalise t_2'\st{s''}}
 
 
 %%%%

@@ -20,12 +20,12 @@ Its type is therefore polymorphic.
   \userule{T-Fail}
 \end{equation*}
 
-The failure task normalises to itself.
+The failure task evaluates to itself.
 \begin{equation*}
-  \userule{N-Fail}
+  \userule{E-Fail}
 \end{equation*}
 Therefore,
-it is a value with respect to normalisation and thus a syntactic task.
+it is a value with respect to evaluation and thus a syntactic task.
 \begin{grammar}
   Tasks
     & t & ::=& \ldots & \\
@@ -45,8 +45,8 @@ but nothing will ever come out!
 \subsection{Usefulness of fail}
 
 So, what is the usage of this simple and dull addition to our task language?
-Think of $\Fail$ as \type{Nothing} from the Haskell \type{Maybe} data type
-or \type{None} from the \ML \type{option} data type lifted into the task world.
+Think of $\Fail$ as \type{Nothing} from Haskell's \type{Maybe} data type
+or \type{None} from ML's \type{option} lifted into the task world.
 
 \todo{Introduce $\Failing$}
 \begin{equation*}

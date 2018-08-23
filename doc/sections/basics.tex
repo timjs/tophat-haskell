@@ -7,7 +7,7 @@ It is a simple $\lambda$-calculus.
 Next to abstraction, application and variables,
 it contains constants for booleans, integers and strings
 and some basic operations on them.
-We will embed our task language in this basic language.
+We will embed our task language \emph{into} this basic language.
 This means we can use all the power of the host language,
 such as arithmetic operations and (higher order) functions,
 in our task language.
@@ -41,7 +41,7 @@ The $\star$ represents a general notion of operators.
 With $\If{}{}{}$ one can do basic branching.
 The syntactic category of pretasks will be defined in the upcoming sections.
 Pretasks $p$ are tasks \emph{in making}.
-The difference with a \emph{task} $t$ will be discussed in \autoref{sec:tasks-vs-pretasks}.
+A \emph{task} will be introduced in \autoref{sec:evaluation}.
 
 We will use double quotation marks ($\str{}$) to denote strings.
 Integers are denoted by their decimal representation,
@@ -76,6 +76,7 @@ which we read as \enquote{in environment $\Gamma$, expression $e$ has type $\tau
 
 
 \subsection{Evaluation}
+\label{sec:evaluation}
 
 To express evaluation,
 we use the big step semantics of our host language.
@@ -86,9 +87,15 @@ The rules to evaluate expressions $e$ do not defer from standard work.
   Values
     & v &::= & \lambda x.\ e  & – abstractions \\
     &   &\mid& c              & – constants \\
-    &   &\mid& p              & – pretasks \\
+    &   &\mid& t              & – tasks \\
+  Tasks
+    & t &::= & \ldots         & – (to be defined for each $p$) \\
 \end{grammar}
 
 Regarding our base language, lambda abstractions are values, as are all constants.
-Most important, \emph{pretasks are values},
-and will not be evaluated further by the $\evaluate$ operation.
+Each \emph{pretasks} $p$ we will encounter in the upcoming sections,
+will be accompanied by a corresponding \emph{task} $t$.
+A task is a \emph{value with respect to the evaluation relation $\evaluate$}.
+\todo{Add more info}
+This means pretasks will be eagerly evaluated to tasks,
+as \textcite[p. 323]{books/Harper16PFPL} suggests is the best way to do.

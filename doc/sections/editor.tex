@@ -156,8 +156,8 @@ Some examples of editors expressible in our language:
   \item $\Fill \String$ is an unvalued editor,
     waiting for users to enter some string.
   \item $\Edit ((\lambda x . x)\ 5)$ is a valued editor which,
-    after normalisation, will contain the value $5$.
-    (We will discuss normalisation in the next section.)
+    after evaluation, will contain the value $5$.
+    (We will discuss evaluation of editors in the next section.)
 \end{itemize}
 
 
@@ -177,32 +177,27 @@ So what is the difference with pretasks?
 The subtile change from $\Edit e$ to $\Edit v$ in the valued editor.
 That is, an editor with an arbitrary (although well typed) expression $e$,
 versus an editor with an (evaluated) value $v$.
-Coming from one to the other is done by \emph{normalisation}.
+Coming from one to the other is done by the evaluation relation we introduced in \autoref{sec:evaluation}.
 
-Normalisation is a big step semantic relation $\boxed{\userule{RelationN}}$ which takes a pretask $p$
-and yields a normalised task $t'$.
-There are two rules we introduce now for this new semantic arrow,
+There are two rules we need to add for this semantic arrow,
 one for valued and one for unvalued editors.
 \begin{equation*}
-  \userule{N-Edit} \qquad \userule{N-Fill}
+  \userule{E-Edit} \qquad \userule{E-Fill}
 \end{equation*}
-Rule \refrule{N-Edit} uses the big step semantics from our base language ($\evaluate$)
+Rule \refrule{E-Edit} uses the big step semantics from our base language ($\evaluate$)
 to evaluate the wrapped expression $e$ to a value $v$ and rewraps it in an editor.
-Rule \refrule{N-Fill} has nothing to evaluate and just keeps the unvalued editor as is.
-Note that the double down arrow $\normalise$ \emph{uses} the single down arrow $\evaluate$,
-a convention we will use again later in this text.
+Rule \refrule{E-Fill} has nothing to evaluate and just keeps the unvalued editor as is.
 
 Summarising, pretask $p$ allow us to syntactically write down arbitrary expressions inside a valued editor,
 or any other pretask we will define in the future.
-Tasks $t$ are pretasks \emph{after normalisation} using the relation $\normalise$.
+Tasks $t$ are pretasks \emph{after valuation} using the relation $\evaluate$.
 With other words:
 \begin{itemize}
   \item
     Pretasks $p$ are task expressions.
-    They are values with respect to evaluation of our base language, i.e. the relation $\evaluate$.
   \item
     Tasks $t$ are a syntactical subset of pretasks $p$.
-    They are values with respect to normalisation, i.e. the relation $\normalise$.
+    They are values with respect to evaluation, i.e. the relation $\evaluate$.
 \end{itemize}
 
 
