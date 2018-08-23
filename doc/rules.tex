@@ -114,13 +114,13 @@
   {t_1 \Then e_2\st{s} \normalise t_1' \Then e_2\st{s'}}
 
 
-\newrule{N-ThenFail}[\Value(t_1') = v_1 \land \Failing(t_2)]
+\newrule{N-ThenFail}[\Value(t_1') = v_1 \land \lnot\Succeeding(t_2)]
   {t_1\st{s} \normalise t_1'\st{s'} \\
    e_2\ v_1 \evaluate t_2}
   {t_1 \Then e_2\st{s} \normalise t_1' \Then e_2\st{s'}}
 
 
-\newrule{N-ThenCont}[\Value(t_1') = v_1 \land \lnot\Failing(t_2)]
+\newrule{N-ThenCont}[\Value(t_1') = v_1 \land \Succeeding(t_2)]
   {t_1\st{s} \normalise t_1'\st{s'} \\
    e_2\ v_1 \evaluate t_2  \\
    t_2\st{s'} \normalise t_2'\st{s''}}
@@ -168,7 +168,7 @@
 
 
 \newmacro{RelationH}
-  {t\st{s} \handle{\eta} p'\st{s'}}
+  {t\st{s} \handle{\eta} t'\st{s'}}
 
 
 \newrule{H-Change}[v, v' : \beta]

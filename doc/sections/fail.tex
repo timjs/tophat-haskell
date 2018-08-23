@@ -48,17 +48,17 @@ So, what is the usage of this simple and dull addition to our task language?
 Think of $\Fail$ as \type{Nothing} from Haskell's \type{Maybe} data type
 or \type{None} from ML's \type{option} lifted into the task world.
 
-\todo{Introduce $\Failing$}
+\todo{Introduce $\Succeeding$}
 \begin{equation*}
   \begin{array}{lcl}
-    \multicolumn{3}{l}{\Failing : \mathrm{Tasks} \to \mathrm{Booleans}} \\
-    \Failing(\Edit v)    &=& \False \\
-    \Failing(\Fill \tau) &=& \False \\
-    \Failing(\Fail)      &=& \True
+    \multicolumn{3}{l}{\Succeeding : \mathrm{Tasks} \to \mathrm{Booleans}} \\
+    \Succeeding(\Edit v)    &=& \True \\
+    \Succeeding(\Fill \tau) &=& \True \\
+    \Succeeding(\Fail)      &=& \False
   \end{array}
 \end{equation*}
 For now,
-only $\Failing(\Fail) = \True$.
+only $\Succeeding(\Fail) = \False$.
 We will step-by-step extend this definition in future sections.
 
 
