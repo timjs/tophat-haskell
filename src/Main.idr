@@ -64,8 +64,15 @@ pureStep = do
 
 
 pureStep' : Task (PRIM INT)
-pureStep' =
-  fourtytwo >>? \x =>
+pureStep' = "Hello" # (
+    fourtytwo >>? \x =>
+    inc x
+  )
+
+
+pureStep'' : Task (PRIM INT)
+pureStep'' =
+  ("Hello" # fourtytwo) >>? \x =>
   inc x
 
 
@@ -247,11 +254,11 @@ pick1' = "Fail" # fail <?> "Cont" # edit 0
 
 
 pick2' : Task (PRIM INT)
-pick2' = "First" # edit 1 <?> "Second" # edit 2
+pick2' = "Pick one of two" # ("First" # edit 1 <?> "Second" # edit 2)
 
 
 pick3' : Task (PRIM INT)
-pick3' = pick2' <?> "Third" # edit 3
+pick3' = "Pick one of three" # (pick2' <?> "Third" # edit 3)
 
 
 

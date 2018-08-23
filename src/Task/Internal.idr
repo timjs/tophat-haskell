@@ -26,6 +26,7 @@ data TaskT : (m : Type -> Type) -> Ty -> Type where
 
   -- Core
   Edit  : (val : Maybe (typeOf a)) -> TaskT m a
+  -- Edit  : (l : Label) -> (val : Maybe (typeOf a)) -> TaskT m a
   Watch : MonadRef l m => {auto p : IsBasic b} -> l (typeOf b) -> TaskT m b
 
   -- Parallel
@@ -34,6 +35,7 @@ data TaskT : (m : Type -> Type) -> Ty -> Type where
   -- Choice
   Any   : Show (typeOf a) => (left : TaskT m a) -> (right : TaskT m a) -> TaskT m a
   One   : Show (typeOf a) => (left : TaskT m a) -> (right : TaskT m a) -> TaskT m a
+  -- One   : Show (typeOf a) => (l : Label) -> ( Label, TaskT m a ) -> ( Label, TaskT m a ) -> TaskT m a
   Fail  : TaskT m a
 
   -- Sequence
@@ -44,7 +46,7 @@ data TaskT : (m : Type -> Type) -> Ty -> Type where
   Label : Label -> (this : TaskT m a) -> TaskT m a
 
   -- Lift
-  Lift : Monad m => m (typeOf a) -> TaskT m a
+  Lift  : Monad m => m (typeOf a) -> TaskT m a
 
 
 
