@@ -34,7 +34,7 @@ saving arbitrary expressions.
 \begin{grammar}
   Pretasks
     & p & ::=& \ldots        & \\
-    &   &\mid& e_1 \Then e_2 & – sequence \\
+    &   &\mid& e_1 \Then e_2 & – step \\
 \end{grammar}
 The accompanied typing rule looks like
 \begin{equation*}
@@ -60,48 +60,276 @@ Consequentially, we extend our tasks $t$ with an evaluated sequence construct.
 
 
 \subsection{Proceeding with the next task}
+\label{sec:normalisation}
 
+Now that we have extended our syntax with a sequencing construct,
+and defined its evaluation,
+the question to answer is:
+\enquote{How do we determine the next task
+and when is the time we should proceed proceed with it?}
+
+Stepping from one task to another using the sequence construct $\Then$ is done by the system itself,
+not by the user.
+We will call this an \emph{internal step}.\footnote{
+  This implies there will also be an \emph{external step}
+  performed on users' request.
+  This is indeed the case and we will discuss it in \autoref{sec:external-step}.
+}
+As there is no explicit user input needed to perform an internal step,
+we cannot use our event handling semantics $\handle{h}$,
+described in \autoref{sec:handling},
+to specify stepping from one task to the next (caculated) one.
+Also,
+using
+
+Therefore we introduce another semantic relation which we will call \emph{normalisation}.
+When considering our semantic relations as an hierarchy,
+normalisation conceptually lies \emph{between} evaluation and handling.
+Normalisation will make use of evaluation of our underlying host language and,
+as we will see later on,
+handling will make use of normalisation.
+The functions $\Value(t)$ and $\Succeeding(t)$ from sections \autoref{sec:value} and \autoref{sec:succeeding}.
+
+As evaluation,
+normalisation is a \emph{big step} semantics.
+We write $\boxed{\userule{RelationN}}$ to describe that
+task $t$ normalises to task $t'$.
+Note that, as handling,
+normalisation \emph{only acts upon tasks}.
+It is a semantic relation that lives \emph{on the task level}.
 We can think of normalisation as a \enquote{medium step} semantics,
 evaluation tasks $t$ as much as possible,
 till the moment we need an event to continue.
 
-\begin{gather*}
-  \userule{N-ThenStay} \\
-  \userule{N-ThenFail} \\
-  \userule{N-ThenCont}
-\end{gather*}
+Graphically,
+we now have the following semantic functions \autoref{fig:semantic-functions}.
+\begin{figure}
+  \centering
+  \includegraphics[width=0.6\textwidth,page=4]{figures/drawings-crop.pdf}
+  \caption{Semantic functions defined in this report and their relation.}
+  \label{fig:semantics-functions}
+\end{figure}
+Note that the double down arrow $\normalise$ \emph{uses} the single down arrow $\evaluate$,
+a convention we will use again later in this text.
 
-\begin{margintext}{Aside: Steps and the step combinator}
-Again a side note for the iTasks guru.
-In this section we introduced a way to step from one task to another.
-How does this compare to the step combinators found in the iTasks framework?
-Which combinator does $\Then$ correspond to?
+\begin{equation*}
+  \userule{N-Edit} \qquad \userule{N-Fill} \qquad \userule{N-Fail}
+\end{equation*}
+In the next subsection we will introduce rules to normalise a task sequence.
 
-From the multiple options that we have,
-only \type{(>>=)}, \type{(>>-)} and \type{(>>\texttilde)} have the right type.
-Normalisation rules \refrule{N-ThenStay}, \refrule{N-ThenFail} and \refrule{N-ThenCont} ensure stepping without any user interaction,
-i.e. users are not presented with a continue button.
-Therefore our $\Then$ constructor corresponds mostly to the iTasks \type{(>>-)} combinator.
-\end{margintext}
+
+\subsection{Two principles of stepping}
+\label{sec:normalise-sequence}
+
+There are two main principles when stepping from task $t_1$ to task $t_2$:
+\begin{enumerate}[S1]
+  \item We can only step from a task if it has a value, i.e. $\Value(t_1) = v_1$.
+  \item It is not allowed to step to a failing task, i.e. $\Succeeding(t_2)$ holds.
+\end{enumerate}
 
 \begin{margintext}{Aside: Failure and stepping}
+  In a previous attempt,
+  \textcite{theses/radboud/VinterHviid18} used \type{Just} and \type{Nothing}
+  to distinguish succeeding and failing tasks.
+  This has an unfortunate consequence.
+  The type of our sequence combinator changes from
+  \begin{equation*}
+    \Task \tau_1 \to (\tau_1 \to \Task \tau_2) \to \Task \tau_2
+  \end{equation*}
+  to
+  \begin{equation*}
+    \begin{split}
+      \Task \tau_1 &\to (\tau_1 \to \Maybe\ (\Task \tau_2))\\
+                   &\to \Task \tau_2.
+    \end{split}
+  \end{equation*}
+  This makes it impossible to use the sequencing combinator as a candidate for a monadic bind.
+  Lifting an error value directly into the task layer gives us the ability to internally signal failure
+  without compromising typing.
 \end{margintext}
 
+Above rules imply that we have three cases when normalising a sequence.
+First,
+it could be the case that the left hand side does not have a value after normalisation.
+This means we cannot pass a value to the right hand side
+and thus we cannot make the step.
+\begin{equation*}
+  \userule{N-ThenStay}
+\end{equation*}
+
+\begin{margintext}{Aside: Sequencing and the iTask step combinator}
+  Again a side note for the iTasks guru.
+  In this section we introduced a way to step from one task to another.
+  How does this compare to the step combinators found in the iTasks framework?
+  Which combinator does $\Then$ correspond to?
+
+  From the multiple options that we have,
+  only \type{(>>=)}, \type{(>>-)} and \type{(>>\texttilde)} have the right type.
+  Normalisation rules \refrule{N-ThenStay}, \refrule{N-ThenFail} and \refrule{N-ThenCont} ensure stepping without any user interaction,
+  i.e. users are not presented with a continue button.
+  Therefore our $\Then$ constructor corresponds mostly to the iTasks \type{(>>-)} combinator.
+\end{margintext}
+
+Second,
+the normalised left hand side has a value,
+but when evaluating the right hand side,
+it leads to a failing task.
+We do not allow stepping to a failing task
+and thus we cannot make the step.
+\begin{equation*}
+  \userule{N-ThenFail}
+\end{equation*}
+Note we use the evaluation semantics of our host language
+to evaluate the function application $e_2 v_1$ to a new task $t_2$.
+
+Third,
+the normalised left hand side has a value,
+and the evaluated right hand side is a succeeding task.
+Now we can make a step!
+\begin{equation*}
+  \userule{N-ThenCont}
+\end{equation*}
+Note we normalise $t_2$ first before yielding our result.
+
+Almost there!
+We did not extend the functions $\Succeeding(t)$ and $\Value(t)$ with our new sequencing construct $\Then$.
+Intuitively,
+when we have a task $\Fail \Then e_2$ we are stuck.
+As in the case of just the task $\Fail$,
+users can send any event,
+but nothing will ever happen.
+$\Fail$ will never have a value
+and therefore $\Then$ will never make a step to $e_2$.\footnote{
+  This is a property called \emph{left absorption},
+  which tells us something about the interaction between $\Fail$ and $\Then$.
+}
+If the left hand side of $\Then$ is any other task,
+all will be well.
+Thus,
+a sequence $t_1 \Then e_2$ is succeeding iff its left hand side $t_1$ is succeeding.
+\begin{equation*}
+  \begin{array}{lcl}
+    \Succeeding(t_1 \Then e_2) &=& \Succeeding(t_1)
+  \end{array}
+\end{equation*}
+
+The question remains what value we have to associate to a task sequence.
+The answer is: none!
+Imagine the task $t := \Edit \str{Hello} \Then \lambda s.\allowbreak\Edit (\Length s)$,
+where a user entered a string and our task gives the length of the string as the result.
+Recall the definition of $\Value(t)$ from \autoref{sec:value}.
+The value of the left hand side of $t$ is the string $\str{Hello}$.
+After the step to the right hand side,
+the value of $t$ should be $\Value(\Edit (\Length\str{Hello})) = \Value(\Edit 5) = 5$.
+This means the type of the value \emph{changed} after taking the step.
+Therefore we define that a sequence of tasks \emph{does not} have a value.\footnote{
+  We could choose that the value of a sequence equals the value of the left hand side.
+  This will have fatal consequences for our stepping semantics however.
+}
+\begin{equation*}
+  \begin{array}{lcl}
+    \Value(t_1 \Then e_2) &=& \bot
+  \end{array}
+\end{equation*}
 
 
-\subsection{Handling}
+\subsection{Intermezzo: monad and its laws}
+
+To be able to investigate properties about tasks,
+we need some notion of equality.
+Off course there is syntactic equality,
+denoted $t_1 \equiv t_2$,
+which is obviously too strong.
+We define a new relation $t_1 \approxeq t_2$,
+which we read as \enquote{$t_1$ is \emph{normalised equal} to $t_2$} as follows.
+\begin{equation*}
+  \begin{array}{crc}
+    t_1 \approxeq t_2 &\text{if and only if}& t_1 \normalise t_1' \\
+                      &\text{and}           & t_2 \normalise t_2' \\
+                      &\text{and}           & \Value(t_1') \simeq \Value(t_2') \\
+  \end{array}
+\end{equation*}
+We demand that \emph{the values of both tasks after normalisation should be equal}.
+Note that, again, the double waved relation $\approxeq$ uses the single waved relation $\simeq$.
+For now,
+think of $v_1 \simeq v_2$ as syntactic equality on values.
+We will make this more specify this later on.
+
+Sequencing together with editors form a monad.
+Here, $\Then$ poses as the well know bind operation,
+and $\Edit$ poses as pure.
+We have the following laws.
+\begin{equation*}
+  \begin{array}{rclr}
+    \Edit x \Then g
+      &\approxeq& g\ x
+      & \text{(left identity)} \\
+    t \Then\ (\lambda y. \Edit y)
+      &\approxeq& t
+      & \text{(right identity)} \\
+    (t \Then g) \Then h
+      &\approxeq& t \Then\ (\lambda y. g\ y \Then h)
+      & \text{(associativity)}
+  \end{array}
+\end{equation*}
+
+Left identity follows quite naturally from the rules in \autoref{sec:normalise-sequence}.
+As $\Edit x$ has a value,
+\refrule{N-ThenCont} will step to the right hand side and evaluate $g\ x$.
+
+Right identity is a bit harder to see at once.
+We have two cases.
+\begin{enumerate*}
+  \item
+    When $\Value(t) = \bot$ we cannot make a step, by \refrule{N-ThenStay},
+    and $\Value(t \Then \lambda x. \Edit x)$ is also $\bot$.
+  \item
+    When $\Value(t) = v$ we can make a step.
+    Now, we need to show that $\Edit v \approxeq t$.
+    Checking the definition of $\Value(t)$,
+    we could only make a step when $t = \Edit v$.\footnote{
+      A similar argument will hold for $t_1 \And t_2$ and $t_1 \Or t_2$,
+      when we add this to our task layer later in this report.
+    }
+    Thus we have $\Edit v \approxeq \Edit v$ which clearly holds.
+\end{enumerate*}
+
+Associativity holds with a similar argument.
+\todo{Elaborate more.}
+
+
+
+\subsection{Proceeding on users' request}
+
+\begin{grammar}
+  Pretasks
+    & p & ::=& \ldots        & \\
+    &   &\mid& e_1 \Next e_2 & – external step \\
+  Tasks
+    & t & ::=& \ldots        & \\
+    &   &\mid& t_1 \Next e_2 & – external step \\
+\end{grammar}
+
+\begin{equation*}
+  \userule{E-Next}
+\end{equation*}
+
+\begin{equation*}
+  \userule{N-Next}
+\end{equation*}
 
 \begin{grammar}
   Actions
     & \alpha & ::=& \ldots & \\
-    &        &\mid& \Next  & – continue with next task \\
+    &        &\mid& \Continue  & – continue with next task \\
 \end{grammar}
 
 \begin{equation*}
-  \userule{H-Next} \qquad \userule{H-Stay}
+  \userule{H-Pass}
 \end{equation*}
+
 \begin{equation*}
-  \userule{H-PassS}
+  \userule{H-Next}
 \end{equation*}
 
 \subsection{Example}

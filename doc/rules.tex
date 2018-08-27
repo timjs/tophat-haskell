@@ -101,6 +101,11 @@
   {e_1 \Then e_2 \evaluate t_1 \Then e_2}
 
 
+\newrule{E-Next}
+  {e_1 \evaluate t_1}
+  {e_1 \Next e_2 \evaluate t_1 \Next e_2}
+
+
 
 %% Normalisation %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -140,6 +145,12 @@
    e_2\ v_1 \evaluate t_2  \\
    t_2\st{s'} \normalise t_2'\st{s''}}
   {t_1 \Then e_2\st{s} \normalise t_2'\st{s''}}
+
+
+\newrule{N-Next}
+  {t_1\st{s} \normalise t_1'\st{s'}}
+  {t_1 \Next e_2\st{s} \normalise t_1' \Next e_2\st{s'}}
+
 
 
 %%%%
@@ -206,6 +217,22 @@
   {\Fail\st{s} \handle{h} \Fail\st{s}}
 
 
+\newrule{H-Then}
+  {t_1\st{s} \handle{h} t_1'\st{s'}}
+  {t_1 \Then e\st{s} \handle{h} t_1' \Then e\st{s'}}
+
+
+\newrule{H-Pass}[h \neq \Continue]
+  {t_1\st{s} \handle{h} t_1'\st{s'}}
+  {t_1 \Next e_2\st{s} \handle{h} t_1' \Next e_2\st{s'}}
+
+
+\newrule{H-Next}
+  { }
+  {t_1 \Next e_2\st{s} \handle{\Continue} t_1 \Then e_2\st{s}}
+
+
+
 %%%%
 
 
@@ -213,37 +240,37 @@
   { }
 {\Change l, s \handle{v'} \Change l, [l \mapsto v']s}
 
-\newrule{H-Stay'}[\Value(t_1) = \bot]
-  {\ }
-  {t_1 \Next e\st{s} \handle{\Next} t_1 \Next e\st{s}}
+% \newrule{H-Stay'}[\Value(t_1) = \bot]
+%   {\ }
+%   {t_1 \Next e\st{s} \handle{\Next} t_1 \Next e\st{s}}
 
-\newrule{H-Next'}[\Value(t_1) = v]
-  {e\ v \evaluate t_2    \\
-   t_2\st{s} \normalise t_2'\st{s'} }
-  {t_1 \Next e\st{s} \handle{\Next} t_2'\st{s'}}
+% \newrule{H-Next'}[\Value(t_1) = v]
+%   {e\ v \evaluate t_2    \\
+%    t_2\st{s} \normalise t_2'\st{s'} }
+%   {t_1 \Next e\st{s} \handle{\Next} t_2'\st{s'}}
 
-\newrule{H-Stay}[\Value(t_1) = \bot]
-  {\ }
-  {t_1 \Then e\st{s} \handle{\Execute \pi} t_1 \Then e\st{s}}
+% \newrule{H-Stay}[\Value(t_1) = \bot]
+%   {\ }
+%   {t_1 \Then e\st{s} \handle{\Execute \pi} t_1 \Then e\st{s}}
 
-\newrule{H-Fail'}[\Value(t_1) = v \land t_2 = \Fail]
-  {e\ v \evaluate t_2    \\
-   t_2\st{s} \handle{\Pick \pi} t_2'\st{s'} }
-  {t_1 \Then e\st{s} \handle{\Execute \pi} t_1 \Then e\st{s}}
+% \newrule{H-Fail'}[\Value(t_1) = v \land t_2 = \Fail]
+%   {e\ v \evaluate t_2    \\
+%    t_2\st{s} \handle{\Pick \pi} t_2'\st{s'} }
+%   {t_1 \Then e\st{s} \handle{\Execute \pi} t_1 \Then e\st{s}}
 
-\newrule{H-Next}[\Value(t_1) = v \land t_2 \neq \Fail]
-  {e\ v \evaluate t_2    \\
-   t_2\st{s} \handle{\Pick \pi} t_2'\st{s'} }
-  {t_1 \Then e\st{s} \handle{\Execute \pi} t_2'\st{s'}}
+% \newrule{H-Next}[\Value(t_1) = v \land t_2 \neq \Fail]
+%   {e\ v \evaluate t_2    \\
+%    t_2\st{s} \handle{\Pick \pi} t_2'\st{s'} }
+%   {t_1 \Then e\st{s} \handle{\Execute \pi} t_2'\st{s'}}
 
-\newrule{H-PassS}
-  {t_1\st{s} \handle{h} t_1'\st{s'}}
-  {t_1 \Next e\st{s} \handle{h} t_1' \Next e\st{s'}}
+% \newrule{H-PassS}
+%   {t_1\st{s} \handle{h} t_1'\st{s'}}
+%   {t_1 \Next e\st{s} \handle{h} t_1' \Next e\st{s'}}
 
-\newrule{H-Pass}[h \neq \Execute \pi]
-  {t_1\st{s} \handle{h} t_1'\st{s'}       \\
-   t_1' \Then e\st{s'} \normalise t_2\st{s''} }
-  {t_1 \Then e\st{s} \handle{h} t_2\st{s''}}
+% \newrule{H-Pass}[h \neq \Execute \pi]
+%   {t_1\st{s} \handle{h} t_1'\st{s'}       \\
+%    t_1' \Then e\st{s'} \normalise t_2\st{s''} }
+%   {t_1 \Then e\st{s} \handle{h} t_2\st{s''}}
 
 \newrule{H-First}[t_1 \neq \Fail]
   {\ }
