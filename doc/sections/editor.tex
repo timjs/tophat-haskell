@@ -56,49 +56,49 @@ an editor is a line of text entered at a terminal and parsed to match a string, 
 \end{marginfigure}
 
 \begin{margintext}{Aside: About stability}
-A short side note to the iTasks guru.
-Maybe you think: \enquote{I know these different states! This is stability!}
-Yes and no.
-I already mentioned in the introduction we won't use the notion of stability in our system.
-Although the state diagram in \autoref{fig:editor-state} looks like the state diagram for stability,
-it has absolutely nothing to do with it.
+  A short side note to the iTasks guru.
+  Maybe you think: \enquote{I know these different states! This is stability!}
+  Yes and no.
+  I already mentioned in the introduction we won't use the notion of stability in our system.
+  Although the state diagram in \autoref{fig:editor-state} looks like the state diagram for stability,
+  it has absolutely nothing to do with it.
 
-First, stability has \emph{three} states:
-\begin{enumerate*}
-  \item stable,
-  \item unstable, and
-  \item no value.
-\end{enumerate*}
-These are depicted below.
-Editors have only \emph{two}:
-\begin{enumerate*}
-  \item valued, and
-  \item unvalued.
-\end{enumerate*}
+  First, stability has \emph{three} states:
+  \begin{enumerate*}
+    \item stable,
+    \item unstable, and
+    \item no value.
+  \end{enumerate*}
+  These are depicted below.
+  Editors have only \emph{two}:
+  \begin{enumerate*}
+    \item valued, and
+    \item unvalued.
+  \end{enumerate*}
 
-\includegraphics[width=\marginwidth,page=2]{figures/drawings-crop.pdf}
+  \includegraphics[width=\marginwidth,page=2]{figures/drawings-crop.pdf}
 
-Second,
-it is possible for an editor to go from a valued to an unvalued state and back again,
-but there is no way to mark an editor as stable.
-It is a bit like using only the unstable part of above state diagram.
-This is about the only resemblance.
+  Second,
+  it is possible for an editor to go from a valued to an unvalued state and back again,
+  but there is no way to mark an editor as stable.
+  It is a bit like using only the unstable part of above state diagram.
+  This is about the only resemblance.
 
-Third,
-the state diagram in \autoref{fig:editor-state} is about \emph{editors only}.
-A value in our system is \emph{always there}.
-Because values are just values,
-as we are custom from lambda calculus and other functional programming languages,
-stability does not propagate through our whole language.
-Editors are the \emph{only} entities in our language that are allowed to contain a value or not.
-This doesn't change anything to values in our underlaying expression language.
+  Third,
+  the state diagram in \autoref{fig:editor-state} is about \emph{editors only}.
+  A value in our system is \emph{always there}.
+  Because values are just values,
+  as we are custom from lambda calculus and other functional programming languages,
+  stability does not propagate through our whole language.
+  Editors are the \emph{only} entities in our language that are allowed to contain a value or not.
+  This doesn't change anything to values in our underlaying expression language.
 
-I can't stress it enough, so here it is again:
-\begin{quote}
-Editors live on the \emph{task level} of our language,
-values live on the \emph{expression level}.
-We do not change \emph{anything at all} on the expression level when introducing tasks.
-\end{quote}
+  I can't stress it enough, so here it is again:
+  \begin{quote}
+  Editors live on the \emph{task level} of our language,
+  values live on the \emph{expression level}.
+  We do not change \emph{anything at all} on the expression level when introducing tasks.
+  \end{quote}
 \end{margintext}
 
 

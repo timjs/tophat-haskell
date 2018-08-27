@@ -28,6 +28,7 @@
 \newmacro{str}[1]
   {\text{``#1''}}
 
+\newoperator{Length}{\mathrm{length}}
 
 
 %% Types %%
@@ -40,6 +41,7 @@
 \newtype{String}
 \newtype[Reference]{Ref}
 \newtype{Task}
+\newtype{Maybe}
 
 \newtype{Euro}
 
@@ -50,10 +52,10 @@
 
 \let\And\relax
 \newoperator{Then}  {\blacktriangleright}
-\newoperator{ExThen}{\vartriangleright}
+\newoperator{Next}  {\vartriangleright}
 \newoperator{And}   {\Join}
 \newoperator{Or}    {\blacklozenge}
-\newoperator{ExOr}  {\;\lozenge\;}
+\newoperator{Xor}   {\;\lozenge\;}
 \newoperator{Edit}  {\square}
 \newoperator{Fill}  {\boxtimes}
 \newoperator{Change}{\blacksquare}
@@ -70,9 +72,9 @@
 \newvalue[Right]  {R}
 
 
-\newvalue[Clear]  {C}
-\newvalue[Next]   {N}
-\newvalue[Pick]   {P}
+\newvalue[Clear]   {C}
+\newvalue[Continue]{N}
+\newvalue[Pick]    {P}
 
 
 \newvalue[First]  {F}

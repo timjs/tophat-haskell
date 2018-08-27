@@ -52,7 +52,7 @@
 \newrule{T-Next}
   {\Gamma\st{\Sigma} \infers e_1 : \Task \tau_1 \\
    \Gamma\st{\Sigma} \infers e_2 : \tau_1 \to \Task \tau_2}
-  {\Gamma\st{\Sigma} \infers e_1 \ExThen e_2 : \Task \tau_2}
+  {\Gamma\st{\Sigma} \infers e_1 \Next e_2 : \Task \tau_2}
 
 
 \newrule{T-Then}
@@ -70,7 +70,7 @@
 \newrule{T-One}
   {\Gamma\st{\Sigma} \infers e_1 : \Task \tau \\
    \Gamma\st{\Sigma} \infers e_2 : \Task \tau }
-  {\Gamma\st{\Sigma} \infers e_1 \ExOr e_2 : \Task \tau}
+  {\Gamma\st{\Sigma} \infers e_1 \Xor e_2 : \Task \tau}
 
 
 
@@ -98,7 +98,7 @@
 
 \newrule{E-Then}
   {e_1 \evaluate t_1}
-  {e_1 \Then e_2 \normalise t_1 \Then e_2}
+  {e_1 \Then e_2 \evaluate t_1 \Then e_2}
 
 
 
@@ -107,6 +107,21 @@
 
 \newmacro{RelationN}
   {t\st{s} \normalise t'\st{s'}}
+
+
+\newrule{N-Edit}
+  { }
+  {\Edit v \normalise \Edit v}
+
+
+\newrule{N-Fill}
+  { }
+  {\Fill \beta \normalise \Fill \beta}
+
+
+\newrule{N-Fail}
+  { }
+  {\Fail \normalise \Fail}
 
 
 \newrule{N-ThenStay}[\Value(t_1') = \bot]
@@ -141,7 +156,7 @@
 %   {t_1\st{s} \normalise t_1'\st{s'}   \\
 %    e\ v \evaluate t_2       \\
 %    t_2\st{s'} \normalise t_2'\st{s''} }
-%   {t_1 \ExThen e\st{s} \normalise t_2'\st{s''}}
+%   {t_1 \Next e\st{s} \normalise t_2'\st{s''}}
 
 \newrule{N-All}[t_1' = \Edit v_1 \land t_2' = \Edit v_2]
   {t_1\st{s}  \normalise t_1'\st{s'}  \\
@@ -150,7 +165,7 @@
 
 \newrule{N-NextEval}
   {e_1\st{s} \normalise u_1\st{s'}}
-  {e_1 \ExThen e_2\st{s} \normalise u_1 \ExThen e_2\st{s'}}
+  {e_1 \Next e_2\st{s} \normalise u_1 \Next e_2\st{s'}}
 
 \newrule{N-AndEval}
   {e_1\st{s}  \normalise u_1\st{s'}  \\
@@ -160,7 +175,7 @@
 % \newrule{N-OrEval}[t_1' \neq \Edit v_1 \land t_2' \neq \Edit v_2]
 %   {t_1\st{s}  \normalise t_1'\st{s'}  \\
 %    t_2\st{s'} \normalise t_2'\st{s''} }
-%   {t_1 \ExOr t_2\st{s} \normalise t_1' \ExOr t_2'\st{s}}
+%   {t_1 \Xor t_2\st{s} \normalise t_1' \Xor t_2'\st{s}}
 
 
 
@@ -200,12 +215,12 @@
 
 \newrule{H-Stay'}[\Value(t_1) = \bot]
   {\ }
-  {t_1 \ExThen e\st{s} \handle{\Next} t_1 \ExThen e\st{s}}
+  {t_1 \Next e\st{s} \handle{\Next} t_1 \Next e\st{s}}
 
 \newrule{H-Next'}[\Value(t_1) = v]
   {e\ v \evaluate t_2    \\
    t_2\st{s} \normalise t_2'\st{s'} }
-  {t_1 \ExThen e\st{s} \handle{\Next} t_2'\st{s'}}
+  {t_1 \Next e\st{s} \handle{\Next} t_2'\st{s'}}
 
 \newrule{H-Stay}[\Value(t_1) = \bot]
   {\ }
@@ -223,7 +238,7 @@
 
 \newrule{H-PassS}
   {t_1\st{s} \handle{h} t_1'\st{s'}}
-  {t_1 \ExThen e\st{s} \handle{h} t_1' \ExThen e\st{s'}}
+  {t_1 \Next e\st{s} \handle{h} t_1' \Next e\st{s'}}
 
 \newrule{H-Pass}[h \neq \Execute \pi]
   {t_1\st{s} \handle{h} t_1'\st{s'}       \\
@@ -232,15 +247,15 @@
 
 \newrule{H-First}[t_1 \neq \Fail]
   {\ }
-  {t_1 \ExOr t_2\st{s} \handle{\Pick \First} t_1\st{s}}
+  {t_1 \Xor t_2\st{s} \handle{\Pick \First} t_1\st{s}}
 
 \newrule{H-Second}[t_2 \neq \Fail]
   {\ }
-  {t_1 \ExOr t_2\st{s} \handle{\Pick \Second} t_2\st{s}}
+  {t_1 \Xor t_2\st{s} \handle{\Pick \Second} t_2\st{s}}
 
 \newrule{H-Other}[t_2 \neq \Fail]
   {t_2\st{s} \handle{\Pick \pi} t_2'\st{s'}}
-  {t_1 \ExOr t_2\st{s} \handle{\Pick \Other \pi} t_2'\st{s'}}
+  {t_1 \Xor t_2\st{s} \handle{\Pick \Other \pi} t_2'\st{s'}}
 
 \newrule{H-Left}
   {t_1\st{s} \handle{h} t_1'\st{s'} }
