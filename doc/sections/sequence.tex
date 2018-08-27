@@ -44,14 +44,22 @@ Note that typing ensures us that the left hand side $e_1$ will be a task deliver
 The right hand side $e_2$ then, will use this value of type $\tau_1$,
 and calculate a \emph{new} task holding a value of possibly another type $\tau_2$.
 
-
-\subsection{Proceeding with the next task}
-
+Evaluation of a sequence is done by only evaluating the left hand side, $e_1$,
+as this expression is be something of type $\Task \tau_1$.
+As the right hand side, $e_2$, is a function,
+it does not matter if we evaluate $e_2$ right away or store it lazily.
+\begin{equation*}
+  \userule{E-Then}
+\end{equation*}
+Consequentially, we extend our tasks $t$ with an evaluated sequence construct.
 \begin{grammar}
   Tasks
     & t & ::=& \ldots        & \\
     &   &\mid& t_1 \Then e_2 & – sequence \\
 \end{grammar}
+
+
+\subsection{Proceeding with the next task}
 
 We can think of normalisation as a \enquote{medium step} semantics,
 evaluation tasks $t$ as much as possible,
