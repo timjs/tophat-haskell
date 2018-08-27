@@ -2,7 +2,6 @@
 
 \section{Side-by-side composition}
 
-
 \begin{grammar}
   Expressions
     & e    & ::=& \ldots               & \\
@@ -10,16 +9,19 @@
   Values
     & v    & ::=& \ldots               & \\
     &      &\mid& \{v_1, v_2\}         & – pair value \\
-  Types
-    & \tau & ::=& \ldots               & \\
-    &      &\mid& \tau_1 \times \tau_2 & – product type \\
+  Pretasks
+    & p    & ::=& \ldots               & \\
+    &      &\mid& e_1 \And e_2         & – task pairing \\
   Tasks
     & t    & ::=& \ldots               & \\
     &      &\mid& t_1 \And t_2         & – task pairing \\
+  Types
+    & \tau & ::=& \ldots               & \\
+    &      &\mid& \tau_1 \times \tau_2 & – product type \\
   Events
-    & \eta & ::=& \alpha               & – action \\
-    &      &\mid& \Left \eta           & – pass to left \\
-    &      &\mid& \Right \eta          & – pass to right \\
+    & h    & ::=& a                    & – action \\
+    &      &\mid& \First h             & – pass to first \\
+    &      &\mid& \Second h            & – pass to second \\
 \end{grammar}
 
 \begin{equation*}
@@ -27,14 +29,59 @@
 \end{equation*}
 
 \begin{equation*}
-  \userule{N-And} \qquad \userule{N-AndEval}
+  \userule{E-And}
 \end{equation*}
 
-The rule \refrule{N-AndEval} covers the other three cases and makes sure both $t_1$ and $t_2$ will be normalised towards a value as much as possible.
-
-\renewcommand*{\AndOr}{\And}
-
-\todo{No normalise here?}
 \begin{equation*}
-  \userule{H-Left} \qquad \userule{H-Right}
+  \userule{N-And}
 \end{equation*}
+
+\begin{equation*}
+  \begin{array}{lcl}
+    \Value(t_1 \And t_2) &=& \left\{
+      \begin{array}{ll}
+        \{v_1, v_2\} & \when\ \Value(t_1) = v_1 \land \Value(t_2) = v_2 \\
+        \bot         & \otherwise
+      \end{array}
+    \right.
+  \end{array}
+\end{equation*}
+
+\begin{equation*}
+  \begin{array}{lcl}
+    \Succeeding(t_1 \And t_2) &=& \Succeeding(t_1) \land \Succeeding(t_2)
+  \end{array}
+\end{equation*}
+
+\begin{margintext}{Aside: Pairing in iTasks}
+  $\And$ is equivalent to \type{-\&\&-}.
+\end{margintext}
+
+\begin{equation*}
+  \userule{H-FirstAnd} \qquad \userule{H-SecondAnd}
+\end{equation*}
+
+% The rule \refrule{N-AndEval} covers the other three cases and makes sure both $t_1$ and $t_2$ will be normalised towards a value as much as possible.
+
+
+\subsection{Intermezzo: monoidal functor and its laws}
+
+\begin{equation*}
+  \begin{array}{rclr}
+    \Edit \{\} \And t
+      &\approxeq& t
+      & \text{(left identity)} \\
+    t \And \Edit \{\}
+      &\approxeq& t
+      & \text{(right identity)} \\
+    r \And\ (s \And t)
+      &\approxeq& (r \And s) \And t
+      & \text{(associativity)} \\
+    \Map\ (\lambda \{x, y\}. \{g\ x, h\ y\})\ (s \And t)
+      &\approxeq& \Map\ g\ s \And \Map\ h\ t
+      & \text{(naturality)} \\
+  \end{array}
+\end{equation*}
+
+
+\subsection{Example: ...}

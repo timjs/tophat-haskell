@@ -59,7 +59,7 @@ Consequentially, we extend our tasks $t$ with an evaluated sequence construct.
 \end{grammar}
 
 
-\subsection{Proceeding with the next task}
+\subsection{Layered semantics}
 \label{sec:normalisation}
 
 Now that we have extended our syntax with a sequencing construct,
@@ -157,7 +157,7 @@ and thus we cannot make the step.
   \userule{N-ThenStay}
 \end{equation*}
 
-\begin{margintext}{Aside: Sequencing and the iTask step combinator}
+\begin{margintext}{Aside: Sequencing in iTask}
   Again a side note for the iTasks guru.
   In this section we introduced a way to step from one task to another.
   How does this compare to the step combinators found in the iTasks framework?
@@ -298,30 +298,65 @@ Associativity holds with a similar argument.
 \todo{Elaborate more.}
 
 
+\subsection{Example: conditional stepping}
+
+% \begin{equation*}
+%   \Fill \Int \Then \lambda n. \If{n \ge 10}{\Edit \str{large}}{\Fail}
+% \end{equation*}
+
+\begin{align*}
+    & \Fill \Int \Then \lambda n. \If{n \ge 10}{\Edit \str{large}}{\Fail} \\
+  \handle{8} & \hint{change value to eight, lhs evaluates to $\Fail$} \\
+    & \Edit 8 \Then \lambda n. \If{n \ge 10}{\Edit \str{large}}{\Fail} \\
+  \handle{3} & \hint{change value to three, lhs still failing} \\
+    & \Edit 3 \Then \lambda n. \If{n \ge 10}{\Edit \str{large}}{\Fail} \\
+  \handle{12} & \hint{change value to twelve, lhs succeeds now!} \\
+    & \Edit \str{large}
+\end{align*}
 
 \subsection{Proceeding on users' request}
 
 \begin{grammar}
   Pretasks
     & p & ::=& \ldots        & \\
-    &   &\mid& e_1 \Next e_2 & – external step \\
+    &   &\mid& e_1 \Next e_2 & – user step \\
   Tasks
     & t & ::=& \ldots        & \\
-    &   &\mid& t_1 \Next e_2 & – external step \\
+    &   &\mid& t_1 \Next e_2 & – user step \\
 \end{grammar}
+
+\begin{equation*}
+  \userule{T-Next}
+\end{equation*}
 
 \begin{equation*}
   \userule{E-Next}
 \end{equation*}
 
+\begin{margintext}{Aside: User steps and iTasks}
+  $\Next$ is equivalent to \type{>>=}.
+\end{margintext}
+
 \begin{equation*}
   \userule{N-Next}
 \end{equation*}
 
+\begin{equation*}
+  \begin{array}{lcl}
+    \Value(t_1 \Next e_2) &=& \bot
+  \end{array}
+\end{equation*}
+
+\begin{equation*}
+  \begin{array}{lcl}
+    \Succeeding(t_1 \Next e_2) &=& \Succeeding(t_1)
+  \end{array}
+\end{equation*}
+
 \begin{grammar}
   Actions
-    & \alpha & ::=& \ldots & \\
-    &        &\mid& \Continue  & – continue with next task \\
+    & a & ::=& \ldots & \\
+    &   &\mid& \Continue  & – continue with next task \\
 \end{grammar}
 
 \begin{equation*}
@@ -332,4 +367,17 @@ Associativity holds with a similar argument.
   \userule{H-Next}
 \end{equation*}
 
-\subsection{Example}
+
+\subsection{Example: waiting for users to continue}
+
+\begin{align*}
+    & \Fill \Int \Next \lambda x. \Edit 2 \Next \lambda y. \Edit (x + y) \\
+  \handle{4} & \hint{change value to four, we do not step automatically} \\
+    & \Edit 4 \Next \lambda x. \Edit 2 \Next \lambda y. \Edit (x + y) \\
+  \handle{\Continue} & \hint{hit continue, now step, but just once} \\
+    & \Edit 2 \Next \lambda y. \Edit (4 + y) \\
+  \handle{7} & \hint{change default value to seven} \\
+    & \Edit 7 \Next \lambda y. \Edit (4 + y) \\
+  \handle{\Continue} & \hint{hit continue, now step} \\
+    & \Edit 11 \\
+\end{align*}

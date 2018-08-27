@@ -2,8 +2,94 @@
 
 \section{Giving more choice}
 
+\begin{grammar}
+  Pretasks
+    & p & ::=& \ldots       & \\
+    &   &\mid& e_1 \Or e_2  & – task choosing \\
+    &   &\mid& e_1 \Xor e_2 & – user choosing \\
+  Tasks
+    & t & ::=& \ldots       & \\
+    &   &\mid& t_1 \Or t_2  & – task choosing \\
+    &   &\mid& t_1 \Xor t_2 & – user choosing \\
+  Actions
+    & a & ::=& \ldots       & \\
+    &   &\mid& \Pick r      & – pick route \\
+  Routes
+    & r & ::=& \Left r      & – go left \\
+    &   &\mid& \Right r     & – go right \\
+    &   &\mid& \Here        & – stay here \\
+\end{grammar}
+
+\begin{equation*}
+  \userule{T-Or} \qquad \userule{T-Xor}
+\end{equation*}
+
+\begin{equation*}
+  \userule{E-Or} \qquad \userule{E-Xor}
+\end{equation*}
+
+\begin{equation*}
+  \userule{N-OrLeft} \qquad \userule{N-OrRight} \qquad \userule{N-OrNone}
+\end{equation*}
+
+\begin{equation*}
+  \begin{array}{lcl}
+    \Value(t_1 \Or t_2) &=& \left\{
+      \begin{array}{ll}
+        v_1  & \when\ \Value(t_1) = v_1 \\
+        v_2  & \when\ \Value(t_1) = \bot \land \Value(t_2) = v_2 \\
+        \bot & \otherwise
+      \end{array}
+    \right.
+  \end{array}
+\end{equation*}
+
+\begin{equation*}
+  \begin{array}{lcl}
+    \Succeeding(t_1 \Or t_2) &=& \Succeeding(t_1) \land \Succeeding(t_2)
+  \end{array}
+\end{equation*}
+
+\begin{margintext}{Aside: Pairing in iTasks}
+  $\Or$ is equivalent to \type{-||-}
+  and $\Xor$ does not exist in iTasks.
+\end{margintext}
+
+\begin{equation*}
+  \userule{H-FirstOr} \qquad \userule{H-SecondOr}
+\end{equation*}
+
+\begin{equation*}
+  \userule{H-PickLeft} \qquad \userule{H-PickRight} \qquad \userule{H-PickHere}
+\end{equation*}
+
 
 \subsection{Three principles of choosing}
+
+
+\subsection{Intermezzo: alternative functor and its laws}
+
+\begin{equation*}
+  \begin{array}{rclr}
+    \Fail \Or t
+      &\approxeq& t
+      & \text{(left identity)} \\
+    t \Or \Fail
+      &\approxeq& t
+      & \text{(right identity)} \\
+    r \Or\ (s \Or t)
+      &\approxeq& (r \Or s) \Or t
+      & \text{(associativity)} \\
+    & & & \\
+    \Fail \Then g
+      &\approxeq& \Fail
+      & \text{(left absorption)} \\
+    \Edit x \Or t
+      &\approxeq& \Edit x
+      & \text{(left catch)}
+  \end{array}
+\end{equation*}
+
 
 
 \subsection{Example: a vending machine}
@@ -11,29 +97,31 @@
 Let us model a vending machine.
 In a simple process algebra we can write
 \begin{equation*}
-  ?\text{2e}; (!\text{tea}\ \oplus\ ?\text{1e}; !\text{coffee}).
+  ?\text{2euro}; (!\text{tea}\ \oplus\ ?\text{1euro}; !\text{coffee}).
 \end{equation*}
 Which reads:
 users should insert 2 Euros,
 after which they need to make a choice between tea,
 or entering another Euro which results in coffee.
-So $?\text{2e}$ and $?\text{1e}$ mean an input of respectively 2 and 1 Euro,
+So $?\text{2euro}$ and $?\text{1euro}$ mean an input of respectively 2 and 1 Euro,
 and $!\text{tea}$ and $!\text{coffee}$ are the outputs.
 We use $\oplus$ as an external choice operation.
 
 We can model this vending machine using tasks as follows.
-\begin{align*}
-  & \Fill \Euro \Then \lambda n.
-  \IF n \equiv 2.00 \THEN \\
-  &   \quad \Edit \str{tea}
-    \Xor
-      \Fill \Euro \Then \lambda m.
-      \IF m \equiv 1.00 \THEN
-        \Edit \str{coffee}
-      \ELSE
-        \Fail \\
-  & \ELSE \Fail
-\end{align*}
+\begin{equation*}
+  \begin{array}{l}
+    \Fill \Euro \Then \lambda n.
+    \IF n \equiv 2.00 \THEN \\
+     \quad \Edit \str{tea}
+      \Xor
+        \Fill \Euro \Then \lambda m.
+        \IF m \equiv 1.00 \THEN
+          \Edit \str{coffee}
+        \ELSE
+          \Fail \\
+    \ELSE \Fail
+  \end{array}
+\end{equation*}
 Where we use a new type $\Euro$ to represent amounts of money.
 
 We see that in the task world we reason with concrete \emph{values} of a specified \emph{type}.

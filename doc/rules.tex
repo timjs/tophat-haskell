@@ -33,26 +33,18 @@
   {\Gamma\st{\Sigma} \infers e : \beta}
   {\Gamma\st{\Sigma} \infers \Edit e : \Task \beta}
 
-
 \newrule{T-Fill}
   {\ }
   {\Gamma\st{\Sigma} \infers \Fill \beta : \Task \beta}
 
-
-\newrule{T-Change}
+\newrule{T-Store}
   {\Gamma, \Sigma \infers e : \beta}
-  {\Gamma, \Sigma \infers \Change e : \Task \beta}
+  {\Gamma, \Sigma \infers \Store e : \Task \beta}
 
 
 \newrule{T-Fail}
   { }
   {\Gamma\st{\Sigma} \infers \Fail : \forall\alpha. \Task \alpha}
-
-
-\newrule{T-Next}
-  {\Gamma\st{\Sigma} \infers e_1 : \Task \tau_1 \\
-   \Gamma\st{\Sigma} \infers e_2 : \tau_1 \to \Task \tau_2}
-  {\Gamma\st{\Sigma} \infers e_1 \Next e_2 : \Task \tau_2}
 
 
 \newrule{T-Then}
@@ -61,13 +53,25 @@
   {\Gamma\st{\Sigma} \infers e_1 \Then e_2 : \Task \tau_2}
 
 
-\newrule{T-All}
+\newrule{T-Next}
+  {\Gamma\st{\Sigma} \infers e_1 : \Task \tau_1 \\
+   \Gamma\st{\Sigma} \infers e_2 : \tau_1 \to \Task \tau_2}
+  {\Gamma\st{\Sigma} \infers e_1 \Next e_2 : \Task \tau_2}
+
+
+\newrule{T-And}
   {\Gamma\st{\Sigma} \infers e_1 : \Task \tau_1 \\
    \Gamma\st{\Sigma} \infers e_2 : \Task \tau_2}
   {\Gamma\st{\Sigma} \infers e_1 \And e_2 : \Task\,(\tau_1 \times \tau_2)}
 
 
-\newrule{T-One}
+\newrule{T-Or}
+  {\Gamma\st{\Sigma} \infers e_1 : \Task \tau \\
+   \Gamma\st{\Sigma} \infers e_2 : \Task \tau }
+  {\Gamma\st{\Sigma} \infers e_1 \Or e_2 : \Task \tau}
+
+
+\newrule{T-Xor}
   {\Gamma\st{\Sigma} \infers e_1 : \Task \tau \\
    \Gamma\st{\Sigma} \infers e_2 : \Task \tau }
   {\Gamma\st{\Sigma} \infers e_1 \Xor e_2 : \Task \tau}
@@ -85,10 +89,13 @@
   {e \evaluate v}
   {\Edit e \evaluate \Edit v}
 
-
 \newrule{E-Fill}
   {\ }
   {\Fill \beta \evaluate \Fill \beta}
+
+\newrule{E-Store}
+  {e \evaluate l}
+  {\Store e \evaluate \Store l}
 
 
 \newrule{E-Fail}
@@ -100,10 +107,21 @@
   {e_1 \evaluate t_1}
   {e_1 \Then e_2 \evaluate t_1 \Then e_2}
 
-
 \newrule{E-Next}
   {e_1 \evaluate t_1}
   {e_1 \Next e_2 \evaluate t_1 \Next e_2}
+
+
+\newrule{E-And}
+  {e_1 \evaluate t_1 \\
+   e_2 \evaluate t_2}
+  {e_1 \And e_2 \evaluate t_1 \And t_2}
+
+
+\newrule{E-Or}
+  {e_1 \evaluate t_1 \\
+   e_2 \evaluate t_2}
+  {e_1 \Or e_2 \evaluate t_1 \Or t_2}
 
 
 
@@ -117,7 +135,6 @@
 \newrule{N-Edit}
   { }
   {\Edit v \normalise \Edit v}
-
 
 \newrule{N-Fill}
   { }
@@ -133,12 +150,10 @@
   {t_1\st{s} \normalise t_1'\st{s'}}
   {t_1 \Then e_2\st{s} \normalise t_1' \Then e_2\st{s'}}
 
-
 \newrule{N-ThenFail}[\Value(t_1') = v_1 \land \lnot\Succeeding(t_2)]
   {t_1\st{s} \normalise t_1'\st{s'} \\
    e_2\ v_1 \evaluate t_2}
   {t_1 \Then e_2\st{s} \normalise t_1' \Then e_2\st{s'}}
-
 
 \newrule{N-ThenCont}[\Value(t_1') = v_1 \land \Succeeding(t_2)]
   {t_1\st{s} \normalise t_1'\st{s'} \\
@@ -146,22 +161,39 @@
    t_2\st{s'} \normalise t_2'\st{s''}}
   {t_1 \Then e_2\st{s} \normalise t_2'\st{s''}}
 
-
 \newrule{N-Next}
   {t_1\st{s} \normalise t_1'\st{s'}}
   {t_1 \Next e_2\st{s} \normalise t_1' \Next e_2\st{s'}}
 
 
+\newrule{N-And}
+  {t_1\st{s}  \normalise t_1'\st{s'} \\
+   t_2\st{s'} \normalise t_2'\st{s''}}
+  {t_1 \And t_2\st{s} \normalise t_1' \And t_2'\st{s''}}
 
-%%%%
 
-\newrule{N-Interact}
-  { }
-  {u\st{s} \normalise u\st{s}}
+\newrule{N-OrLeft}[\Value(t_1') = v_1]
+  {t_1\st{s}  \normalise t_1'\st{s'}}
+  {t_1 \Or t_2\st{s} \normalise t_1'\st{s'}}
 
-% \newrule{N-Change}
+\newrule{N-OrRight}[\Value(t_1') = \bot \land \Value(t_2') = v_2]
+  {t_1\st{s}  \normalise t_1'\st{s'} \\
+   t_2\st{s'} \normalise t_2'\st{s''}}
+  {t_1 \Or t_2\st{s} \normalise t_2'\st{s''}}
+
+\newrule{N-OrNone}[\Value(t_1') = \bot \land \Value(t_2') = \bot]
+  {t_1\st{s}  \normalise t_1'\st{s'} \\
+   t_2\st{s'} \normalise t_2'\st{s''}}
+  {t_1 \Or t_2\st{s} \normalise t_1' \Or t_2'\st{s''}}
+
+
+% \newrule{N-Interact}
 %   { }
-%   {\Change l\st{s} \normalise \Change l\st{s}}
+%   {u\st{s} \normalise u\st{s}}
+
+% \newrule{N-Store}
+%   { }
+%   {\Store l\st{s} \normalise \Store l\st{s}}
 
 % \newrule{N-Next}[t_1' = \Edit v]
 %   {t_1\st{s} \normalise t_1'\st{s'}   \\
@@ -169,19 +201,14 @@
 %    t_2\st{s'} \normalise t_2'\st{s''} }
 %   {t_1 \Next e\st{s} \normalise t_2'\st{s''}}
 
-\newrule{N-All}[t_1' = \Edit v_1 \land t_2' = \Edit v_2]
-  {t_1\st{s}  \normalise t_1'\st{s'}  \\
-   t_2\st{s'} \normalise t_2'\st{s''} }
-  {t_1 \And t_2\st{s} \normalise \Edit \{v_1, v_2\}\st{s}}
+% \newrule{N-All}[t_1' = \Edit v_1 \land t_2' = \Edit v_2]
+%   {t_1\st{s}  \normalise t_1'\st{s'}  \\
+%    t_2\st{s'} \normalise t_2'\st{s''} }
+%   {t_1 \And t_2\st{s} \normalise \Edit \{v_1, v_2\}\st{s}}
 
-\newrule{N-NextEval}
-  {e_1\st{s} \normalise u_1\st{s'}}
-  {e_1 \Next e_2\st{s} \normalise u_1 \Next e_2\st{s'}}
-
-\newrule{N-AndEval}
-  {e_1\st{s}  \normalise u_1\st{s'}  \\
-   e_2\st{s'} \normalise u_2\st{s''} }
-  {e_1 \And e_2\st{s} \normalise u_1 \And u_2\st{s}}
+% \newrule{N-NextEval}
+%   {e_1\st{s} \normalise u_1\st{s'}}
+%   {e_1 \Next e_2\st{s} \normalise u_1 \Next e_2\st{s'}}
 
 % \newrule{N-OrEval}[t_1' \neq \Edit v_1 \land t_2' \neq \Edit v_2]
 %   {t_1\st{s}  \normalise t_1'\st{s'}  \\
@@ -201,15 +228,17 @@
   { }
   {\Edit v\st{s} \handle{v'} \Edit v'\st{s}}
 
-
 \newrule{H-Clear}[v : \beta]
   { }
   {\Edit v\st{s} \handle{\Clear} \Fill \beta\st{s}}
 
-
 \newrule{H-Fill}[v' : \beta]
   { }
   {\Fill \beta\st{s} \handle{v'} \Edit v'\st{s}}
+
+\newrule{H-Store}[\Sigma(l), v' : \beta]
+  { }
+  {\Store l, s \handle{v'} \Store l, [l \mapsto v']s}
 
 
 \newrule{H-Fail}
@@ -221,24 +250,49 @@
   {t_1\st{s} \handle{h} t_1'\st{s'}}
   {t_1 \Then e\st{s} \handle{h} t_1' \Then e\st{s'}}
 
-
 \newrule{H-Pass}[h \neq \Continue]
   {t_1\st{s} \handle{h} t_1'\st{s'}}
   {t_1 \Next e_2\st{s} \handle{h} t_1' \Next e_2\st{s'}}
-
 
 \newrule{H-Next}
   { }
   {t_1 \Next e_2\st{s} \handle{\Continue} t_1 \Then e_2\st{s}}
 
 
+\newrule{H-FirstAnd}
+  {t_1\st{s} \handle{h} t_1'\st{s'} }
+  {t_1 \And t_2\st{s} \handle{\First h} t_1' \And t_2\st{s'}}
+
+\newrule{H-SecondAnd}
+  {t_2\st{s} \handle{h} t_2'\st{s'} }
+  {t_1\st{s} \And t_2 \handle{\Second h} t_1 \And t_2'\st{s'}}
+
+
+\newrule{H-FirstOr}
+  {t_1\st{s} \handle{h} t_1'\st{s'} }
+  {t_1 \Or t_2\st{s} \handle{\First h} t_1' \Or t_2\st{s'}}
+
+\newrule{H-SecondOr}
+  {t_2\st{s} \handle{h} t_2'\st{s'} }
+  {t_1\st{s} \Or t_2 \handle{\Second h} t_1 \Or t_2'\st{s'}}
+
+
+\newrule{H-PickLeft}[\Succeeding(t_1)]
+  {t_1\st{s} \handle{\Pick r} t_1'\st{s'}}
+  {t_1 \Xor t_2\st{s} \handle{\Pick \Left r} t_1'\st{s'}}
+
+\newrule{H-PickRight}[\Succeeding(t_2)]
+  {t_2\st{s} \handle{\Pick r} t_2'\st{s'}}
+  {t_1 \Xor t_2\st{s} \handle{\Pick \Right r} t_2'\st{s'}}
+
+\newrule{H-PickHere}
+  {\ }
+  {t\st{s} \handle{\Pick \Here} t\st{s}}
+
+
 
 %%%%
 
-
-\newrule{H-Store}[\Sigma(l), v' : \tau]
-  { }
-{\Change l, s \handle{v'} \Change l, [l \mapsto v']s}
 
 % \newrule{H-Stay'}[\Value(t_1) = \bot]
 %   {\ }
@@ -271,26 +325,6 @@
 %   {t_1\st{s} \handle{h} t_1'\st{s'}       \\
 %    t_1' \Then e\st{s'} \normalise t_2\st{s''} }
 %   {t_1 \Then e\st{s} \handle{h} t_2\st{s''}}
-
-\newrule{H-First}[t_1 \neq \Fail]
-  {\ }
-  {t_1 \Xor t_2\st{s} \handle{\Pick \First} t_1\st{s}}
-
-\newrule{H-Second}[t_2 \neq \Fail]
-  {\ }
-  {t_1 \Xor t_2\st{s} \handle{\Pick \Second} t_2\st{s}}
-
-\newrule{H-Other}[t_2 \neq \Fail]
-  {t_2\st{s} \handle{\Pick \pi} t_2'\st{s'}}
-  {t_1 \Xor t_2\st{s} \handle{\Pick \Other \pi} t_2'\st{s'}}
-
-\newrule{H-Left}
-  {t_1\st{s} \handle{h} t_1'\st{s'} }
-  {t_1 \AndOr t_2\st{s} \handle{\Left h} t_1' \AndOr t_2\st{s'}}
-
-\newrule{H-Right}
-  {t_2\st{s} \handle{h} t_2'\st{s'} }
-  {t_1\st{s} \AndOr t_2 \handle{\Right h} t_1 \AndOr t_2'\st{s'}}
 
 \newrule{H-Fallback}
   { }

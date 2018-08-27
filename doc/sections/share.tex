@@ -1,0 +1,62 @@
+% !TEX root=../main.tex
+
+\section{Sharing data}
+
+\statefultrue
+
+\begin{grammar}
+  Expressions
+    & e    &::= & \ldots          & \\
+    &      &\mid& \Ref e          & – reference \\
+    &      &\mid& !e              & – dereference \\
+    &      &\mid& e_1 := e_2      & – assign \\
+    &      &\mid& l               & – location \\
+  Values
+    & v    & ::=& \ldots          & \\
+    &      &\mid& l               & – location \\
+  Pretasks
+    & p    & ::=& \ldots          & \\
+    &      &\mid& \Store e        & – store task \\
+  Tasks
+    & t    & ::=& \ldots          & \\
+    &      &\mid& \Store l        & – store task \\
+  Types
+    & \tau & ::=& \ldots          & \\
+    &      &\mid& \Reference \tau & – references \\
+\end{grammar}
+
+\begin{equation*}
+  \boxed{\RelationT}
+\end{equation*}
+
+\begin{equation*}
+  \userule{T-Store}
+\end{equation*}
+
+\begin{equation*}
+  \userule{E-Store}
+\end{equation*}
+
+\begin{equation*}
+  \boxed{\RelationN}
+\end{equation*}
+
+\begin{equation*}
+  \boxed{\RelationH}
+\end{equation*}
+
+\begin{equation*}
+  \begin{array}{lcl}
+    \Value(\Store l, s) &=& s(l)
+  \end{array}
+\end{equation*}
+
+\begin{equation*}
+  \begin{array}{lcl}
+    \Succeeding(\Store l) &=& \True
+  \end{array}
+\end{equation*}
+
+\begin{equation*}
+  \userule{H-Store}
+\end{equation*}

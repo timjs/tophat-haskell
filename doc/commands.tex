@@ -31,6 +31,9 @@
 \newoperator{Length}{\mathrm{length}}
 
 
+\newvalue[Map]{map}
+
+
 %% Types %%
 
 
@@ -55,10 +58,10 @@
 \newoperator{Next}  {\vartriangleright}
 \newoperator{And}   {\Join}
 \newoperator{Or}    {\blacklozenge}
-\newoperator{Xor}   {\;\lozenge\;}
+\newoperator{Xor}   {\lozenge}
 \newoperator{Edit}  {\square}
 \newoperator{Fill}  {\boxtimes}
-\newoperator{Change}{\blacksquare}
+\newoperator{Store} {\blacksquare}
 \newoperator{Fail}  {\lightning}
 
 \newoperator{AndOr} {\DEPRECATED}
@@ -79,7 +82,7 @@
 
 \newvalue[First]  {F}
 \newvalue[Second] {S}
-\newvalue[Other]  {S}
+\newvalue[Here]   {H}
 
 
 
@@ -87,10 +90,10 @@
 
 
 \newmathcommand{evaluate}[rel]
-  {\downarrow}
+  {\;\downarrow\;}
 \newmathcommand{normalise}[rel]
   % {\;\rightarrow\!\shortmid\;}
-  {\Downarrow}
+  {\;\Downarrow\;}
 \newmacro{handle}[1]
   {\mathrel{\;\xrightarrow{\;#1\;}\;}}
 \newmacro{drive}[1]
