@@ -3,7 +3,7 @@
 \section{Interaction with end users using editors}
 
 In the introduction we claimed to create a language to model \emph{interactive} workflows.
-By interaction we mean communication with people using the developed system.
+By interaction we mean \emph{communication with people using the developed system}.
 These \emph{end users} should be able to enter information into the system,
 change it, clear it, reenter it, etc.
 To do this, we introduce the concept of an \emph{editor}.
@@ -15,12 +15,14 @@ This is depicted as a state diagram in \autoref{fig:editor-state} below.
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.5\textwidth]{figures/editor-state-crop.pdf}
+  \includegraphics[width=0.5\textwidth]{figures/drawings-crop.pdf}
   \caption{Possible states of an editor and its transitions.}
   \label{fig:editor-state}
 \end{figure}
 
-One can consider editors as an abstraction over widgets in a \GUI or form fields on a webpage.
+One can consider editors as an abstraction over widgets in a \GUI,
+form fields on a webpage,
+or even sensors plugged into the system.
 Take for example an entry for text.
 Users can enter a string, change it, remove it, enter another string, and so on.
 With editors we try to capture this \emph{constantly changing} nature of user input.
@@ -74,7 +76,7 @@ Editors have only \emph{two}:
   \item unvalued.
 \end{enumerate*}
 
-\includegraphics[width=\marginwidth,page=2]{figures/editor-state-crop.pdf}
+\includegraphics[width=\marginwidth,page=2]{figures/drawings-crop.pdf}
 
 Second,
 it is possible for an editor to go from a valued to an unvalued state and back again,
@@ -100,7 +102,7 @@ We do not change \emph{anything at all} on the expression level when introducing
 \end{margintext}
 
 
-\subsection{Definition}
+\subsection{Syntax and typing}
 
 At the core,
 an editor is a container holding a value
@@ -161,7 +163,7 @@ Some examples of editors expressible in our language:
 \end{itemize}
 
 
-\subsection{Tasks and pretasks}
+\subsection{Evaluating pretasks to tasks}
 \label{sec:tasks-vs-pretasks}
 
 Till now, syntactically we only talking about \emph{pretasks}.
@@ -169,7 +171,8 @@ Now the time has come to talk about \emph{real} tasks!
 Well, about \emph{syntactically real} tasks.
 \begin{grammar}
   Tasks
-    & t & ::=& \Edit v     & – valued editor \\
+    & t & ::=& \ldots      & \\
+    &   &\mid& \Edit v     & – valued editor \\
     &   &\mid& \Fill \beta & – unvalued editor \\
 \end{grammar}
 
@@ -179,7 +182,7 @@ That is, an editor with an arbitrary (although well typed) expression $e$,
 versus an editor with an (evaluated) value $v$.
 Coming from one to the other is done by the evaluation relation we introduced in \autoref{sec:evaluation}.
 
-There are two rules we need to add for this semantic arrow,
+There are two rules we need to add for this semantic arrow to accomplish this:
 one for valued and one for unvalued editors.
 \begin{equation*}
   \userule{E-Edit} \qquad \userule{E-Fill}
@@ -190,7 +193,7 @@ Rule \refrule{E-Fill} has nothing to evaluate and just keeps the unvalued editor
 
 Summarising, pretask $p$ allow us to syntactically write down arbitrary expressions inside a valued editor,
 or any other pretask we will define in the future.
-Tasks $t$ are pretasks \emph{after valuation} using the relation $\evaluate$.
+Tasks $t$ are pretasks \emph{after evaluation} using the relation $\evaluate$.
 With other words:
 \begin{itemize}
   \item
@@ -201,7 +204,8 @@ With other words:
 \end{itemize}
 
 
-\subsection{Events}
+\subsection{Handling events}
+\label{sec:handling}
 
 To change values in an editor,
 we should interact with the user by some kind of interface.
@@ -238,7 +242,7 @@ and they are \emph{not} accessible from within our language.
 
 We define a new syntactic category of events $\eta$.
 For now, they only contain \emph{actions} $\alpha$.
-We will introduce events and actions in later sections.
+We will introduce more events and actions in later sections.
 \begin{grammar}
   Events
     & \eta   & ::=& \alpha & – action \\
@@ -259,7 +263,7 @@ The value of an editor, empty or not, can be changed to a value $v$ by just send
 To clear a valued editor, we send the $\Clear$(lear) action.
 
 Handling events is done by a new semantic relation.
-This small step relation takes a task $t$ and an event $\eta$ which results in a new pretask $p'$.
+This small step relation takes a task $t$ and an event $\eta$ which results in a new task $t'$.
 We write
 \begin{equation*}
   \boxed{\RelationH}

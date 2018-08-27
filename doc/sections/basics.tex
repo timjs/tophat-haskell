@@ -40,7 +40,8 @@ Constants can be booleans, integers or strings.
 The $\star$ represents a general notion of operators.
 With $\If{}{}{}$ one can do basic branching.
 The syntactic category of pretasks will be defined in the upcoming sections.
-Pretasks $p$ are tasks \emph{in making}.
+Pretasks $p$ are tasks \emph{in making},
+just as expressions are values in making.
 A \emph{task} will be introduced in \autoref{sec:evaluation}.
 
 We will use double quotation marks ($\str{}$) to denote strings.
@@ -91,11 +92,13 @@ The rules to evaluate expressions $e$ do not defer from standard work.
   Tasks
     & t &::= & \ldots         & – (to be defined for each $p$) \\
 \end{grammar}
-
 Regarding our base language, lambda abstractions are values, as are all constants.
 Each \emph{pretasks} $p$ we will encounter in the upcoming sections,
 will be accompanied by a corresponding \emph{task} $t$.
-A task is a \emph{value with respect to the evaluation relation $\evaluate$}.
-\todo{Add more info}
-This means pretasks will be eagerly evaluated to tasks,
-as \textcite[p. 323]{books/Harper16PFPL} suggests is the best way to do.
+Tasks are also values with respect to evaluation.
+This means pretasks will be eagerly evaluated to tasks by the relation $\evaluate$.\footnote{
+  The same applies to pairs,
+  which we will add to our host language in \autoref{sec:pairing}.
+}
+This suggestion by \textcite[p. 323]{books/Harper16PFPL}
+makes it easier to reason about data constructors.

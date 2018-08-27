@@ -12,7 +12,7 @@ making our language more powerful after every addition:
   \item parallel composition or \emph{pairing} of tasks ($t_1 \And t_2$);
   \item making a \emph{choice} between tasks ($t_1 \Or t_2$);
 \end{itemize}
-Additionally, we will discuss two convenience constructs and one extension using shared data:
+Additionally, we will discuss two convenience constructs and one extension for shared data:
 \begin{itemize}
   \item continuing to the next task upon users' requests ($t_1 \ExThen e_2$);
   \item giving users an explicit choice ($t_1 \ExOr t_2$);
@@ -48,7 +48,7 @@ our approach distinguishes itself by the following points:
     }
   \item
     Entering some information into a system is not a one-shot action.
-    Editors keep asking for input continually.
+    Editors keep asking for input continuously.
     Thus repeatedly asking for information does not need to be modelled with recursion.
     The next task is only executed under preprogrammed internal conditions or external actions by users.
   \item
@@ -60,10 +60,11 @@ our approach distinguishes itself by the following points:
     Semantically, tasks do not return a value \emph{and} a continuation
     but \emph{only} a continuation.
     Obtaining the current value of a task is an \emph{observation},
-    implemented by an additional semantic function.
-    Looking at tasks in this way mitigates the problem of a stream-like type which can not be made into a monad
-    (as described in \textcite{theses/radboud/VinterHviid18})
-    and make sure some tasks, such as a step, do not have a value.
+    implemented by an additional semantic function.\footnote{
+      Looking at tasks in this way mitigates the problem of a stream-like type which can not be made into a monad
+      (as described in \textcite{theses/radboud/VinterHviid18})
+      and make sure some tasks, such as a step, do not have a value.
+    }
   \item
     We make use of multiple semantic functions that describe different aspects of the language.
     At the core, we assume a big step \emph{evaluation} semantics for the host language.\footnote{
@@ -83,7 +84,7 @@ In the first section we set up our our host language,
 the $\lambda$-calculus extended with primitive types and operations.
 Thereafter, in the next \fixme{seven} sections, we will gradually define our object language,
 extending the properties of our host language when needed.
-After some of them,
+After some sections,
 we will make a small intermezzo,
 showing the current properties and laws of our language.
 We strive to keep the host language as small as possible.
