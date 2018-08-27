@@ -50,16 +50,21 @@ You can throw anything in it,
 but nothing will ever come out!
 
 
-\subsection{Usefulness of failing}
+\subsection{Failing and succeeding}
 \label{sec:succeeding}
 
 So, what is the usage of this simple and dull addition to our task language?
-Think of $\Fail$ as \type{Nothing} from Haskell's \type{Maybe} data type
+Think of $\Fail$ as the error value \type{Nothing} from Haskell's \type{Maybe} data type
 or \type{None} from ML's \type{option} lifted into the task world.
+Note the difference between $\Fail$ and $\Fill\beta$.
+The first is the failing task,
+the second an unvalued editor waiting for users to fill in a value.
+Editors are tasks that clearly have a future and thus are \emph{succeeding}.
 
-the function $\boxed{\Succeeding(t)}$
-
-\todo{Introduce $\Succeeding$}
+We will need to distinguish tasks which succeed and tasks which fail in the remaining of this report.
+To do this,
+we introduce the predicate $\boxed{\Succeeding(t)}$,
+which tells us if a task is succeeding or not.
 \begin{equation*}
   \begin{array}{lcl}
     \multicolumn{3}{l}{\Succeeding : \mathrm{Tasks} \to \mathrm{Booleans}} \\
@@ -69,7 +74,7 @@ the function $\boxed{\Succeeding(t)}$
   \end{array}
 \end{equation*}
 For now,
-only $\Succeeding(\Fail) = \False$.
+only $\Succeeding(\Fail)$ does not hold.
 We will step-by-step extend this definition in future sections.
 
 
@@ -77,17 +82,17 @@ We will step-by-step extend this definition in future sections.
 \label{sec:value}
 
 Above, we stated that the failure task \emph{will never have a value}.
-But we never defined what it means for a task to have a value\ldots
+But we never defined what it means for a task to have a value\ldots\
 Intuitively,
 a valued editor obviously has a value,
 namely the one contained in it.
 Along the same line,
-an unvalued editor does not have a value.
-The same hold for the failure task.
+an unvalued editor does not have a value
+and the same holds for the failure task.
 
 To make this intuition more formal,
 we define the semantic function $\boxed{\Value(t)}$.
-Given a task $t$, $\Value$ will answer the question:
+Given a task $t$, this function will answer the question:
 \enquote{Does task $t$ have a value?}.
 \begin{equation*}
   \begin{array}{lcl}
