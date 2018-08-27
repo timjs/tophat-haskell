@@ -46,7 +46,7 @@
 
 \newrule{T-Fail}
   { }
-  {\Gamma\st{\Sigma} \infers \Fail : \Task \tau}
+  {\Gamma\st{\Sigma} \infers \Fail : \forall\alpha. \Task \alpha}
 
 
 \newrule{T-Next}
@@ -168,7 +168,7 @@
 
 
 \newmacro{RelationH}
-  {t\st{s} \handle{\eta} t'\st{s'}}
+  {t\st{s} \handle{h} t'\st{s'}}
 
 
 \newrule{H-Change}[v, v' : \beta]
@@ -188,7 +188,7 @@
 
 \newrule{H-Fail}
   { }
-  {\Fail\st{s} \handle{\eta} \Fail\st{s}}
+  {\Fail\st{s} \handle{h} \Fail\st{s}}
 
 
 %%%%
@@ -222,13 +222,13 @@
   {t_1 \Then e\st{s} \handle{\Execute \pi} t_2'\st{s'}}
 
 \newrule{H-PassS}
-  {t_1\st{s} \handle{\eta} t_1'\st{s'}}
-  {t_1 \ExThen e\st{s} \handle{\eta} t_1' \ExThen e\st{s'}}
+  {t_1\st{s} \handle{h} t_1'\st{s'}}
+  {t_1 \ExThen e\st{s} \handle{h} t_1' \ExThen e\st{s'}}
 
-\newrule{H-Pass}[\eta \neq \Execute \pi]
-  {t_1\st{s} \handle{\eta} t_1'\st{s'}       \\
+\newrule{H-Pass}[h \neq \Execute \pi]
+  {t_1\st{s} \handle{h} t_1'\st{s'}       \\
    t_1' \Then e\st{s'} \normalise t_2\st{s''} }
-  {t_1 \Then e\st{s} \handle{\eta} t_2\st{s''}}
+  {t_1 \Then e\st{s} \handle{h} t_2\st{s''}}
 
 \newrule{H-First}[t_1 \neq \Fail]
   {\ }
@@ -243,13 +243,13 @@
   {t_1 \ExOr t_2\st{s} \handle{\Pick \Other \pi} t_2'\st{s'}}
 
 \newrule{H-Left}
-  {t_1\st{s} \handle{\eta} t_1'\st{s'} }
-  {t_1 \AndOr t_2\st{s} \handle{\Left \eta} t_1' \AndOr t_2\st{s'}}
+  {t_1\st{s} \handle{h} t_1'\st{s'} }
+  {t_1 \AndOr t_2\st{s} \handle{\Left h} t_1' \AndOr t_2\st{s'}}
 
 \newrule{H-Right}
-  {t_2\st{s} \handle{\eta} t_2'\st{s'} }
-  {t_1\st{s} \AndOr t_2 \handle{\Right \eta} t_1 \AndOr t_2'\st{s'}}
+  {t_2\st{s} \handle{h} t_2'\st{s'} }
+  {t_1\st{s} \AndOr t_2 \handle{\Right h} t_1 \AndOr t_2'\st{s'}}
 
 \newrule{H-Fallback}
   { }
-  {t\st{s} \handle{\eta} t\st{s}}
+  {t\st{s} \handle{h} t\st{s}}

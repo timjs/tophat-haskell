@@ -240,15 +240,15 @@ Therefore events live on the \emph{semantic level} only
 and they are \emph{not} accessible from within our language.
 \end{margintext}
 
-We define a new syntactic category of events $\eta$.
-For now, they only contain \emph{actions} $\alpha$.
+We define a new syntactic category of \emph{events} $h$.
+For now, they only contain \emph{actions} $a$.
 We will introduce more events and actions in later sections.
 \begin{grammar}
   Events
-    & \eta   & ::=& \alpha & – action \\
+    & h & ::=& a      & – action \\
   Actions
-    & \alpha & ::=& v      & – change editor to value \\
-    &        &\mid& \Clear & – clear an editor \\
+    & a & ::=& v      & – change editor to value \\
+    &   &\mid& \Clear & – clear an editor \\
 \end{grammar}
 
 As we already discussed before,
@@ -263,7 +263,7 @@ The value of an editor, empty or not, can be changed to a value $v$ by just send
 To clear a valued editor, we send the $\Clear$(lear) action.
 
 Handling events is done by a new semantic relation.
-This small step relation takes a task $t$ and an event $\eta$ which results in a new task $t'$.
+This small step relation takes a task $t$ and an event $h$ which results in a new task $t'$.
 We write
 \begin{equation*}
   \boxed{\RelationH}

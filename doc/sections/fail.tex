@@ -1,6 +1,6 @@
 % !TEX root=../main.tex
 
-\section{The black hole task}
+\section{Black holes and values}
 
 We have seen editors,
 which are key to user interaction.
@@ -19,6 +19,14 @@ Its type is therefore polymorphic.
 \begin{equation*}
   \userule{T-Fail}
 \end{equation*}
+For this,
+we need to extend our type syntax with polymorphic types.
+\begin{grammar}
+  Types
+    & \tau &::= & \ldots             & \\
+    &      &\mid& \alpha             & – type variable \\
+    &      &\mid& \forall\alpha.\tau & – universal type \\
+\end{grammar}
 
 The failure task evaluates to itself.
 \begin{equation*}
@@ -42,11 +50,14 @@ You can throw anything in it,
 but nothing will ever come out!
 
 
-\subsection{Usefulness of fail}
+\subsection{Usefulness of failing}
+\label{sec:succeeding}
 
 So, what is the usage of this simple and dull addition to our task language?
 Think of $\Fail$ as \type{Nothing} from Haskell's \type{Maybe} data type
 or \type{None} from ML's \type{option} lifted into the task world.
+
+the function $\boxed{\Succeeding(t)}$
 
 \todo{Introduce $\Succeeding$}
 \begin{equation*}
@@ -63,6 +74,7 @@ We will step-by-step extend this definition in future sections.
 
 
 \subsection{The value of a task}
+\label{sec:value}
 
 Above, we stated that the failure task \emph{will never have a value}.
 But we never defined what it means for a task to have a value\ldots
@@ -74,7 +86,7 @@ an unvalued editor does not have a value.
 The same hold for the failure task.
 
 To make this intuition more formal,
-we define the semantic function $\Value$.
+we define the semantic function $\boxed{\Value(t)}$.
 Given a task $t$, $\Value$ will answer the question:
 \enquote{Does task $t$ have a value?}.
 \begin{equation*}
