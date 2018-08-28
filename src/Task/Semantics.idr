@@ -148,10 +148,10 @@ normalise (All left rght) = do
 
 normalise (Any left rght) = do
   left_new <- normalise left
-  rght_new <- normalise rght
   case !(value left_new) of
     Just _  => pure $ left_new
-    Nothing =>
+    Nothing => do
+      rght_new <- normalise rght
       case !(value rght_new) of
         Just _  => pure $ rght_new
         Nothing => pure $ Any left_new rght_new
@@ -203,12 +203,6 @@ handle (Watch {b} loc) (ToHere (Change {c} val_new)) with (decEq c b)
   handle (Watch loc) (ToHere (Change (Nothing)))     | Yes Refl = trace CouldNotChange $ Watch loc
   handle (Watch loc) (ToHere (Change _))             | No _     = trace CouldNotChange $ Watch loc
 
--- Pass to this --
-handle (Then this cont) event = do
-  -- Pass the event to this
-  this_new <- handle this event
-  pure $ Then this_new cont
-
 -- Pass to left or rght --
 handle (All left rght) (ToLeft event) = do
   -- Pass the event to left
@@ -231,24 +225,26 @@ handle (Any left rght) (ToRight event) = do
   pure $ Any left rght_new
 
 -- Interact --
+handle task@(One left _) (ToHere (Pick (GoLeft p))) =
+  -- Go left
+  --FIXME: add failing for left?
+  handle (assert_smaller task (delabel left)) (ToHere (Pick p))
+
+handle task@(One _ rght) (ToHere (Pick (GoRight p))) =
+  -- Go rght
+  --FIXME: add failing for rght?
+  handle (assert_smaller task (delabel rght)) (ToHere (Pick p))
+
+handle task (ToHere (Pick GoHere)) =
+  -- Go here
+  pure $ task
+
 handle task@(One _ _) (ToHere (PickWith l)) =
   case find l task of
     Nothing => trace (CouldNotFind l) task
     --XXX: needs `assert_smaller` for totallity, be aware of long type checks...
     -- Just p  => handle task (assert_smaller (ToHere (PickWith l)) (ToHere (Pick p)))
     Just p  => handle task (ToHere (Pick p))
-
-handle task@(One left _) (ToHere (Pick (GoLeft p))) =
-  -- Go left
-  handle (assert_smaller task (delabel left)) (ToHere (Pick p))
-
-handle task@(One _ rght) (ToHere (Pick (GoRight p))) =
-  -- Go rght
-  handle (assert_smaller task (delabel rght)) (ToHere (Pick p))
-
-handle task (ToHere (Pick GoHere)) =
-  -- Go here
-  pure $ task
 
 handle task@(Next this cont) (ToHere Continue) =
   -- When pressed continue rewrite to an internal step
@@ -264,6 +260,12 @@ handle task@(Next this cont) (ToHere (ContinueWith l)) =
       case find l next of
         Nothing => trace (CouldNotFind l) task
         Just p  => handle next (ToHere (Pick p))
+
+-- Pass to this --
+handle (Then this cont) event = do
+  -- Pass the event to this
+  this_new <- handle this event
+  pure $ Then this_new cont
 
 handle (Next this cont) event = do
   -- Pass the event to this
