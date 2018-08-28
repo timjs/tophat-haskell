@@ -246,11 +246,11 @@
   {\Fail\st{s} \handle{h} \Fail\st{s}}
 
 
-\newrule{H-Then}
+\newrule{H-PassThen}[h \neq \Continue]
   {t_1\st{s} \handle{h} t_1'\st{s'}}
-  {t_1 \Then e\st{s} \handle{h} t_1' \Then e\st{s'}}
+  {t_1 \Then e_2\st{s} \handle{h} t_1' \Then e_2\st{s'}}
 
-\newrule{H-Pass}[h \neq \Continue]
+\newrule{H-PassNext}[h \neq \Continue]
   {t_1\st{s} \handle{h} t_1'\st{s'}}
   {t_1 \Next e_2\st{s} \handle{h} t_1' \Next e_2\st{s'}}
 

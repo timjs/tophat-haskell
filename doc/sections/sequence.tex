@@ -141,12 +141,17 @@ and defined its evaluation,
 the question to answer is:
 \enquote{How do we determine the next task
 and when is the time we should proceed proceed with it?}
-
 There are two main principles when stepping from task $t_1$ to task $t_2$:
 \begin{enumerate}[S1]
-  \item We can only step from a task if it has a value, i.e. $\Value(t_1) = v_1$.
-  \item It is not allowed to step to a failing task, i.e. $\Succeeding(t_2)$ holds.
+  \item We can only step from a task if it has a value, i.e. $\Value(t_1) = v_1$. \label{itm:step1}
+  \item It is not allowed to step to a failing task, i.e. $\Succeeding(t_2)$ holds. \label{itm:step2}
 \end{enumerate}
+
+The intuition behind principle \autoref{itm:step1} is simply that we are not able to calculate the next task from a function
+when we do not have a value to pass it.
+Principle \autoref{itm:step2} protects us from stepping to a failing task,
+which comes in hand when specifying guards.
+We will show an example of this in \autoref{sec:guards}.
 
 \begin{margintext}{Aside: Failure and stepping}
   In a previous attempt,
@@ -196,12 +201,12 @@ the normalised left hand side has a value,
 but when evaluating the right hand side,
 it leads to a failing task.
 We do not allow stepping to a failing task
-and thus we cannot make the step.
+and thus we also cannot make a step.
 \begin{equation*}
   \userule{N-ThenFail}
 \end{equation*}
 Note we use the evaluation semantics of our host language
-to evaluate the function application $e_2 v_1$ to a new task $t_2$.
+to evaluate the function application $e_2\ v_1$ to a new task $t_2$.
 
 Third,
 the normalised left hand side has a value,
@@ -212,8 +217,17 @@ Now we can make a step!
 \end{equation*}
 Note we normalise $t_2$ first before yielding our result.
 
+The sequence construct itself does not handle any user input.
+The left hand side however,
+can be an interactive task, such as an editor.
+To reach this encapsulated interactive task,
+$\Then$ needs to pass events to the left.
+\begin{equation*}
+  \userule{H-PassThen}
+\end{equation*}
+
 Almost there!
-We did not extend the functions $\Succeeding(t)$ and $\Value(t)$ with our new sequencing construct $\Then$.
+We did not extend the functions $\Succeeding(t)$ and $\Value(t)$ for our new sequencing construct $\Then$.
 Intuitively,
 when we have a task $\Fail \Then e_2$ we are stuck.
 As in the case of just the task $\Fail$,
@@ -223,6 +237,7 @@ $\Fail$ will never have a value
 and therefore $\Then$ will never make a step to $e_2$.\footnote{
   This is a property called \emph{left absorption},
   which tells us something about the interaction between $\Fail$ and $\Then$.
+  See also \autoref{sec:monad-laws}.
 }
 If the left hand side of $\Then$ is any other task,
 all will be well.
@@ -240,7 +255,7 @@ Imagine the task $t := \Edit \str{Hello} \Then \lambda s.\allowbreak\Edit (\Leng
 where a user entered a string and our task gives the length of the string as the result.
 Recall the definition of $\Value(t)$ from \autoref{sec:value}.
 The value of the left hand side of $t$ is the string $\str{Hello}$.
-After the step to the right hand side,
+After stepping to the right hand side,
 the value of $t$ should be $\Value(\Edit (\Length\str{Hello})) = \Value(\Edit 5) = 5$.
 This means the type of the value \emph{changed} after taking the step.
 Therefore we define that a sequence of tasks \emph{does not} have a value.\footnote{
@@ -254,7 +269,37 @@ Therefore we define that a sequence of tasks \emph{does not} have a value.\footn
 \end{equation*}
 
 
+\subsection{Example: conditional stepping}
+
+% \begin{equation*}
+%   \Fill \Int \Then \lambda n. \If{n \ge 10}{\Edit \str{large}}{\Fail}
+% \end{equation*}
+
+\begin{margintext}{Aside: Conditional stepping in iTasks}
+  In iTasks we would write the example on the left using the step combinator
+  and a list with an \type{OnValue} specifying the predicate:
+  \begin{verbatim}
+    enterInformation "" [] >>* [
+      OnValue
+        (ifValue $ \n -> n >= 10)
+        (const $ return "large"))
+    ]
+  \end{verbatim}
+\end{margintext}
+
+\begin{align*}
+    & \Fill \Int \Then \lambda n. \If{n \ge 10}{\Edit \str{large}}{\Fail} \\
+  \drive{8} & \hint{change value to eight, lhs evaluates to $\Fail$} \\
+    & \Edit 8 \Then \lambda n. \If{n \ge 10}{\Edit \str{large}}{\Fail} \\
+  \drive{3} & \hint{change value to three, lhs still failing} \\
+    & \Edit 3 \Then \lambda n. \If{n \ge 10}{\Edit \str{large}}{\Fail} \\
+  \drive{12} & \hint{change value to twelve, lhs succeeds now!} \\
+    & \Edit \str{large}
+\end{align*}
+
+
 \subsection{Intermezzo: monad and its laws}
+\label{sec:monad-laws}
 
 To be able to investigate properties about tasks,
 we need some notion of equality.
@@ -267,14 +312,14 @@ which we read as \enquote{$t_1$ is \emph{normalised equal} to $t_2$} as follows.
   \begin{array}{crc}
     t_1 \approxeq t_2 &\text{if and only if}& t_1 \normalise t_1' \\
                       &\text{and}           & t_2 \normalise t_2' \\
-                      &\text{and}           & \Value(t_1') \simeq \Value(t_2') \\
+                      &\text{and}           & \Value(t_1') = \Value(t_2') \\
   \end{array}
 \end{equation*}
 We demand that \emph{the values of both tasks after normalisation should be equal}.
-Note that, again, the double waved relation $\approxeq$ uses the single waved relation $\simeq$.
-For now,
-think of $v_1 \simeq v_2$ as syntactic equality on values.
-We will make this more specify this later on.
+% Note that, again, the double waved relation $\approxeq$ uses the single waved relation $\simeq$.
+% For now,
+% think of $v_1 \simeq v_2$ as syntactic equality on values.
+% We will make this more specify this later on.
 
 Sequencing together with editors form a monad.
 Here, $\Then$ poses as the well know bind operation,
@@ -319,22 +364,6 @@ Associativity holds with a similar argument.
 \todo{Elaborate more.}
 
 
-\subsection{Example: conditional stepping}
-
-% \begin{equation*}
-%   \Fill \Int \Then \lambda n. \If{n \ge 10}{\Edit \str{large}}{\Fail}
-% \end{equation*}
-
-\begin{align*}
-    & \Fill \Int \Then \lambda n. \If{n \ge 10}{\Edit \str{large}}{\Fail} \\
-  \handle{8} & \hint{change value to eight, lhs evaluates to $\Fail$} \\
-    & \Edit 8 \Then \lambda n. \If{n \ge 10}{\Edit \str{large}}{\Fail} \\
-  \handle{3} & \hint{change value to three, lhs still failing} \\
-    & \Edit 3 \Then \lambda n. \If{n \ge 10}{\Edit \str{large}}{\Fail} \\
-  \handle{12} & \hint{change value to twelve, lhs succeeds now!} \\
-    & \Edit \str{large}
-\end{align*}
-
 \subsection{Proceeding on users' request}
 
 \begin{grammar}
@@ -346,6 +375,9 @@ Associativity holds with a similar argument.
     &   &\mid& t_1 \Next e_2 & – user step \\
 \end{grammar}
 
+Rules are similar to those for $\Then$,
+only \refrule{H-Next} is new and specific for external stepping.
+
 \begin{equation*}
   \userule{T-Next}
 \end{equation*}
@@ -355,7 +387,7 @@ Associativity holds with a similar argument.
 \end{equation*}
 
 \begin{margintext}{Aside: User steps and iTasks}
-  $\Next$ is equivalent to \type{>>=}.
+  $\Next$ is similar to \type{>>=}.
 \end{margintext}
 
 \begin{equation*}
@@ -381,7 +413,7 @@ Associativity holds with a similar argument.
 \end{grammar}
 
 \begin{equation*}
-  \userule{H-Pass}
+  \userule{H-PassNext}
 \end{equation*}
 
 \begin{equation*}
@@ -391,14 +423,23 @@ Associativity holds with a similar argument.
 
 \subsection{Example: waiting for users to continue}
 
+\begin{margintext}{Aside: External step in iTasks}
+  In iTasks we would write the example on the left using the \type{>>=} combinator:
+  \begin{verbatim}
+    enterInformation  "" []   >>= \x ->
+    updateInformation "" [] 2 >>= \y ->
+    return (x + y)
+  \end{verbatim}
+\end{margintext}
+
 \begin{align*}
     & \Fill \Int \Next \lambda x. \Edit 2 \Next \lambda y. \Edit (x + y) \\
-  \handle{4} & \hint{change value to four, we do not step automatically} \\
+  \drive{4} & \hint{change value to four, we do not step automatically} \\
     & \Edit 4 \Next \lambda x. \Edit 2 \Next \lambda y. \Edit (x + y) \\
-  \handle{\Continue} & \hint{hit continue, now step, but just once} \\
+  \drive{\Continue} & \hint{hit continue, now step, but just once} \\
     & \Edit 2 \Next \lambda y. \Edit (4 + y) \\
-  \handle{7} & \hint{change default value to seven} \\
+  \drive{7} & \hint{change default value to seven} \\
     & \Edit 7 \Next \lambda y. \Edit (4 + y) \\
-  \handle{\Continue} & \hint{hit continue, now step} \\
+  \drive{\Continue} & \hint{hit continue, now step} \\
     & \Edit 11 \\
 \end{align*}

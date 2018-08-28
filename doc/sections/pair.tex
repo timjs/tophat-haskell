@@ -54,7 +54,7 @@
 \end{equation*}
 
 \begin{margintext}{Aside: Pairing in iTasks}
-  $\And$ is equivalent to \type{-\&\&-}.
+  $\And$ is similar to \type{-\&\&-}.
 \end{margintext}
 
 \begin{equation*}
@@ -68,13 +68,13 @@
 
 \begin{equation*}
   \begin{array}{rclr}
-    \Edit \{\} \And t
+    \Map \Snd\ (\Edit \{\} \And t)
       &\approxeq& t
       & \text{(left identity)} \\
-    t \And \Edit \{\}
+    \Map \Fst\ (t \And \Edit \{\})
       &\approxeq& t
       & \text{(right identity)} \\
-    r \And\ (s \And t)
+    \Map \Assoc\ (r \And\ (s \And t))
       &\approxeq& (r \And s) \And t
       & \text{(associativity)} \\
     \Map\ (\lambda \{x, y\}. \{g\ x, h\ y\})\ (s \And t)
