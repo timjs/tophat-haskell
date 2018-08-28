@@ -3,7 +3,8 @@
 \section{Performing tasks one after the other}
 
 In the previous section we have set up our interaction model of events and actions,
-and we defined our first interactive component, the editor.
+we defined our interactive component, the editor,
+and introduced the infinitely failing task.
 Now that we have the core part of an interactive workflow,
 we can continue with ways to compose multiple tasks.
 Combining tasks can be done in two ways:
@@ -19,30 +20,35 @@ For parallel composition we distinguish two kinds:
 In this section we start with sequential composition.
 The next two sections are about pairing and choosing.
 
-One might think that the best way to sequence two tasks is by just following one task with another:
-the current one and the continuation.
-However, we like the continuation to be parametrised by the value produced by the first task.
-We define a \emph{step} from one task to another as \emph{a calculation which provides the next task to proceed with}.
+One might think that the best way to sequence tasks is by just following one task with another:
+do this, then do that, then that, etc.
+However, we like the continuation to depend on the value produced by the preceding task.
+This is done by a \emph{step}.
+We define a step from one task to another as
+\begin{quote}
+  a calculation which provides the next task to proceed with.
+\end{quote}
 
 To accomplish this,
 we take continuations to be \emph{functions}.
-These are just a normal functions from our host language which,
+These are just normal functions from our host language which,
 when evaluated, result in something of type $\Task$.
 Therefore,
 we extend our pretasks $p$ with a sequence construct $\Then$,
-saving arbitrary expressions.
+saving two expressions.
 \begin{grammar}
   Pretasks
     & p & ::=& \ldots        & \\
     &   &\mid& e_1 \Then e_2 & – step \\
 \end{grammar}
+
 The accompanied typing rule looks like
 \begin{equation*}
   \userule{T-Then}
 \end{equation*}
 Note that typing ensures us that the left hand side $e_1$ will be a task delivering a value of type $\tau_1$.
 The right hand side $e_2$ then, will use this value of type $\tau_1$,
-and calculate a \emph{new} task holding a value of possibly another type $\tau_2$.
+and calculate a \emph{new} task holding a value of (possibly another) type $\tau_2$.
 
 Evaluation of a sequence is done by only evaluating the left hand side, $e_1$,
 as this expression is be something of type $\Task \tau_1$.
@@ -60,35 +66,42 @@ Consequentially, we extend our tasks $t$ with an evaluated sequence construct.
 
 
 \subsection{Layered semantics}
-\label{sec:normalisation}
-
-Now that we have extended our syntax with a sequencing construct,
-and defined its evaluation,
-the question to answer is:
-\enquote{How do we determine the next task
-and when is the time we should proceed proceed with it?}
+\label{sec:normalise}
+\label{sec:drive}
 
 Stepping from one task to another using the sequence construct $\Then$ is done by the system itself,
 not by the user.
-We will call this an \emph{internal step}.\footnote{
-  This implies there will also be an \emph{external step}
-  performed on users' request.
+We will call this an \emph{internal step} or \emph{system step}.\footnote{
+  This implies there will also be an \emph{external step} or \emph{user step} performed on users' request.
   This is indeed the case and we will discuss it in \autoref{sec:external-step}.
 }
 As there is no explicit user input needed to perform an internal step,
 we cannot use our event handling semantics $\handle{h}$,
 described in \autoref{sec:handling},
-to specify stepping from one task to the next (caculated) one.
+to specify stepping from one task to the next (calculated) one.
 Also,
-using
+using our evaluation semantics to do so,
+would pollute the semantics our our host language with rules specific for the task layer.
 
 Therefore we introduce another semantic relation which we will call \emph{normalisation}.
 When considering our semantic relations as an hierarchy,
 normalisation conceptually lies \emph{between} evaluation and handling.
 Normalisation will make use of evaluation of our underlying host language and,
 as we will see later on,
-handling will make use of normalisation.
-The functions $\Value(t)$ and $\Succeeding(t)$ from sections \autoref{sec:value} and \autoref{sec:succeeding}.
+handling will make use of normalisation
+and the functions $\Value(t)$ and $\Succeeding(t)$ from sections \autoref{sec:value} and \autoref{sec:succeeding}.
+
+Graphically,
+we now have the following semantic functions shown in \autoref{fig:semantic-functions}.
+Note that the double down arrow $\normalise$ \emph{uses} the single down arrow $\evaluate$,
+a convention we will use again later in this text.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.6\textwidth,page=4]{figures/drawings-crop.pdf}
+  \caption{Semantic functions defined in this report and their relation.}
+  \label{fig:semantic-functions}
+\end{figure}
 
 As evaluation,
 normalisation is a \emph{big step} semantics.
@@ -98,28 +111,36 @@ Note that, as handling,
 normalisation \emph{only acts upon tasks}.
 It is a semantic relation that lives \emph{on the task level}.
 We can think of normalisation as a \enquote{medium step} semantics,
-evaluation tasks $t$ as much as possible,
-till the moment we need an event to continue.
-
-Graphically,
-we now have the following semantic functions \autoref{fig:semantic-functions}.
-\begin{figure}
-  \centering
-  \includegraphics[width=0.6\textwidth,page=4]{figures/drawings-crop.pdf}
-  \caption{Semantic functions defined in this report and their relation.}
-  \label{fig:semantics-functions}
-\end{figure}
-Note that the double down arrow $\normalise$ \emph{uses} the single down arrow $\evaluate$,
-a convention we will use again later in this text.
-
+normalising tasks $t$ as much as possible,
+till the moment it needs an event to continue.
+For editors and the failing task normalisation is simple.
 \begin{equation*}
   \userule{N-Edit} \qquad \userule{N-Fill} \qquad \userule{N-Fail}
 \end{equation*}
 In the next subsection we will introduce rules to normalise a task sequence.
 
+To ensure tasks are ready to process the next event,
+we need to normalise after each use of the handling semantics.
+Instead of adding normalisation to every handling rule,
+we introduce a fourth semantic relation to deal with this.
+The drive relation $\boxed{\RelationD}$ simply passes the event $h$ to the handle semantics
+and normalises the task afterwards.
+\begin{equation*}
+  \userule{D-Drive}
+\end{equation*}
+Note that again,
+the double arrow $\drive{h}$ uses the single arrow $\handle{h}$.
+
+
 
 \subsection{Two principles of stepping}
 \label{sec:normalise-sequence}
+
+Now that we have extended our syntax with a sequencing construct,
+and defined its evaluation,
+the question to answer is:
+\enquote{How do we determine the next task
+and when is the time we should proceed proceed with it?}
 
 There are two main principles when stepping from task $t_1$ to task $t_2$:
 \begin{enumerate}[S1]

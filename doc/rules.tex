@@ -329,3 +329,17 @@
 \newrule{H-Fallback}
   { }
   {t\st{s} \handle{h} t\st{s}}
+
+
+
+%% Driving %%
+
+
+\newmacro{RelationD}
+  {t\st{s} \drive{h} t'\st{s'}}
+
+
+\newrule{D-Drive}
+  {t\st{s}   \handle{h} t'\st{s'} \\
+   t'\st{s'} \normalise t''\st{s''}}
+  {t\st{s} \drive{h} t''\st{s''}}
