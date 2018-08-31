@@ -21,7 +21,7 @@ For this we refer to standard work like \textcite{books/Pierce02TAPL} and \textc
 
 \begin{grammar}
   Expressions
-    & e &::= & \lambda x.\ e      & – abstraction \\
+    & e &::= & \lambda x:\tau.\ e & – abstraction \\
     &   &\mid& e_1\ e_2           & – application \\
     &   &\mid& x                  & – variable \\
     &   &\mid& c                  & – constant \\
@@ -35,7 +35,7 @@ For this we refer to standard work like \textcite{books/Pierce02TAPL} and \textc
   Pretasks
     & p &::= & \ldots             & (to be defined) \\
 \end{grammar}
-Expressions are just abstractions, applications, variables or constants.
+Expressions are typed abstractions, applications, variables or constants.
 Constants can be booleans, integers or strings.
 The $\star$ represents a general notion of operators.
 With $\If{}{}{}$ one can do basic branching.
@@ -93,7 +93,7 @@ The rules to evaluate expressions $e$ do not defer from standard work.
     & t &::= & \ldots         & – (to be defined for each $p$) \\
 \end{grammar}
 Regarding our base language, lambda abstractions are values, as are all constants.
-Each \emph{pretasks} $p$ we will encounter in the upcoming sections,
+Each \emph{pretask} $p$ we will encounter in the upcoming sections,
 will be accompanied by a corresponding \emph{task} $t$.
 Tasks are also values with respect to evaluation.
 This means pretasks will be eagerly evaluated to tasks by the relation $\evaluate$.\footnote{

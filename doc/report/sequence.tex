@@ -23,10 +23,11 @@ The next two sections are about pairing and choosing.
 One might think that the best way to sequence tasks is by just following one task with another:
 do this, then do that, then that, etc.
 However, we like the continuation to depend on the value produced by the preceding task.
+\todo{Elaborate more about the reasons for this.}
 This is done by a \emph{step}.
 We define a step from one task to another as
 \begin{quote}
-  a calculation which provides the next task to proceed with.
+  a calculation which returns the next task to proceed with.
 \end{quote}
 
 To accomplish this,
@@ -34,8 +35,7 @@ we take continuations to be \emph{functions}.
 These are just normal functions from our host language which,
 when evaluated, result in something of type $\Task$.
 Therefore,
-we extend our pretasks $p$ with a sequence construct $\Then$,
-saving two expressions.
+we extend our pretasks $p$ with a sequence construct $\Then$.
 \begin{grammar}
   Pretasks
     & p & ::=& \ldots        & \\
@@ -84,7 +84,7 @@ using our evaluation semantics to do so,
 would pollute the semantics our our host language with rules specific for the task layer.
 
 Therefore we introduce another semantic relation which we will call \emph{normalisation}.
-When considering our semantic relations as an hierarchy,
+When considering our semantic relations as a hierarchy,
 normalisation conceptually lies \emph{between} evaluation and handling.
 Normalisation will make use of evaluation of our underlying host language and,
 as we will see later on,
@@ -258,6 +258,7 @@ The value of the left hand side of $t$ is the string $\str{Hello}$.
 After stepping to the right hand side,
 the value of $t$ should be $\Value(\Edit (\Length\str{Hello})) = \Value(\Edit 5) = 5$.
 This means the type of the value \emph{changed} after taking the step.
+\todo{Elaborate more about why this is not desirable.}
 Therefore we define that a sequence of tasks \emph{does not} have a value.\footnote{
   We could choose that the value of a sequence equals the value of the left hand side.
   This will have fatal consequences for our stepping semantics however.
@@ -289,11 +290,11 @@ Therefore we define that a sequence of tasks \emph{does not} have a value.\footn
 
 \begin{align*}
     & \Fill \Int \Then \lambda n. \If{n \ge 10}{\Edit \str{large}}{\Fail} \\
-  \drive{8} & \hint{change value to eight, lhs evaluates to $\Fail$} \\
+  \drive{8} & \hint{change value to eight, rhs evaluates to $\Fail$} \\
     & \Edit 8 \Then \lambda n. \If{n \ge 10}{\Edit \str{large}}{\Fail} \\
-  \drive{3} & \hint{change value to three, lhs still failing} \\
+  \drive{3} & \hint{change value to three, rhs still failing} \\
     & \Edit 3 \Then \lambda n. \If{n \ge 10}{\Edit \str{large}}{\Fail} \\
-  \drive{12} & \hint{change value to twelve, lhs succeeds now!} \\
+  \drive{12} & \hint{change value to twelve, rhs succeeds now!} \\
     & \Edit \str{large}
 \end{align*}
 
@@ -303,11 +304,12 @@ Therefore we define that a sequence of tasks \emph{does not} have a value.\footn
 
 To be able to investigate properties about tasks,
 we need some notion of equality.
-Off course there is syntactic equality,
+Of course there is syntactic equality,
 denoted $t_1 \equiv t_2$,
 which is obviously too strong.
 We define a new relation $t_1 \approxeq t_2$,
 which we read as \enquote{$t_1$ is \emph{normalised equal} to $t_2$} as follows.
+\todo{This is wrong! It makes $\Fill \beta$ and $\Fail$ equivallent.}
 \begin{equation*}
   \begin{array}{crc}
     t_1 \approxeq t_2 &\text{if and only if}& t_1 \normalise t_1' \\
@@ -324,7 +326,7 @@ We demand that \emph{the values of both tasks after normalisation should be equa
 Sequencing together with editors form a monad.
 Here, $\Then$ poses as the well know bind operation,
 and $\Edit$ poses as pure.
-We have the following laws.
+We have the following laws for \emph{type correct expressions}.
 \begin{equation*}
   \begin{array}{rclr}
     \Edit x \Then g
