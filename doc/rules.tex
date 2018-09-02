@@ -146,6 +146,10 @@
   { }
   {\Fill \beta \normalise \Fill \beta}
 
+\newrule{N-Store}
+  { }
+  {\Store l\st{s} \normalise \Store l\st{s}}
+
 
 \newrule{N-Fail}
   { }
@@ -193,13 +197,11 @@
   {t_1 \Or t_2\st{s} \normalise t_1' \Or t_2'\st{s''}}
 
 
-% \newrule{N-Interact}
-%   { }
-%   {u\st{s} \normalise u\st{s}}
+\newrule{N-Xor}
+  { }
+  {e_1 \Xor e_2\st{s} \normalise e_1 \Xor e_2\st{s}}
 
-% \newrule{N-Store}
-%   { }
-%   {\Store l\st{s} \normalise \Store l\st{s}}
+
 
 % \newrule{N-Next}[t_1' = \Edit v]
 %   {t_1\st{s} \normalise t_1'\st{s'}   \\
@@ -207,19 +209,9 @@
 %    t_2\st{s'} \normalise t_2'\st{s''} }
 %   {t_1 \Next e\st{s} \normalise t_2'\st{s''}}
 
-% \newrule{N-All}[t_1' = \Edit v_1 \land t_2' = \Edit v_2]
-%   {t_1\st{s}  \normalise t_1'\st{s'}  \\
-%    t_2\st{s'} \normalise t_2'\st{s''} }
-%   {t_1 \And t_2\st{s} \normalise \Edit \{v_1, v_2\}\st{s}}
-
 % \newrule{N-NextEval}
 %   {e_1\st{s} \normalise u_1\st{s'}}
 %   {e_1 \Next e_2\st{s} \normalise u_1 \Next e_2\st{s'}}
-
-% \newrule{N-OrEval}[t_1' \neq \Edit v_1 \land t_2' \neq \Edit v_2]
-%   {t_1\st{s}  \normalise t_1'\st{s'}  \\
-%    t_2\st{s'} \normalise t_2'\st{s''} }
-%   {t_1 \Xor t_2\st{s} \normalise t_1' \Xor t_2'\st{s}}
 
 
 
@@ -256,9 +248,9 @@
   {t_1\st{s} \handle{h} t_1'\st{s'}}
   {t_1 \Then e_2\st{s} \handle{h} t_1' \Then e_2\st{s'}}
 
-\newrule{H-PassNext}[h \neq \Continue]
+\newrule{H-PassNext}
   {t_1\st{s} \handle{h} t_1'\st{s'}}
-  {t_1 \Next e_2\st{s} \handle{h} t_1' \Next e_2\st{s'}}
+  {t_1 \Next e_2\st{s} \handle{h \neq \Continue} t_1' \Next e_2\st{s'}}
 
 \newrule{H-Next}
   { }
@@ -345,7 +337,7 @@
   {t\st{s} \drive{h} t'\st{s'}}
 
 
-\newrule{D-Drive}
+\newrule{D-Main}
   {t\st{s}   \handle{h} t'\st{s'} \\
    t'\st{s'} \normalise t''\st{s''}}
   {t\st{s} \drive{h} t''\st{s''}}
