@@ -1,11 +1,11 @@
 % !TEX root=../report.tex
 
-\section{An overview}
+\section{Overview}
 
 \statefultrue
 
 
-\subsection{Expressions}
+\subsection{Language}
 
 \begin{grammar}
   Expressions
@@ -13,55 +13,45 @@
     &      &\mid& e_1\ e_2             & – application \\
     &      &\mid& x                    & – variable \\
     &      &\mid& c                    & – constant \\
-    &      &\mid& e_1 \star e_2        & – operator \\
-    &      &\mid& \If{e_1}{e_2}{e_3}   & – branching \\
+    &      &\mid& l                    & – location \\
+  \addlinespace
+    &      &\mid& e_1 \star e_2        & – operate \\
+    &      &\mid& \If{e_1}{e_2}{e_3}   & – branch \\
     &      &\mid& \{e_1, e_2\}         & – pair \\
     &      &\mid& \{\}                 & – unit \\
-    &      &\mid& e_1; e_2             & – sequence \\
+  \addlinespace
     &      &\mid& \Ref e               & – reference \\
     &      &\mid& !e                   & – dereference \\
     &      &\mid& e_1 := e_2           & – assign \\
-    &      &\mid& l                    & – location \\
+    &      &\mid& e_1; e_2             & – sequence \\
+  \addlinespace
     &      &\mid& p                    & – pretask \\
+  \addlinespace
   Constants
     & c    &::= & B                    & – boolean \\
     &      &\mid& I                    & – integer \\
     &      &\mid& S                    & – string \\
+  \addlinespace
   Pretasks
     & p    &::= & \Edit e              & – valued editor \\
     &      &\mid& \Fill \beta          & – unvalued editor \\
     &      &\mid& \Store e             & – stored editor \\
+  \addlinespace
     &      &\mid& \Fail                & – fail task \\
+  \addlinespace
     &      &\mid& e_1 \Then e_2        & – step \\
     &      &\mid& e_1 \Next e_2        & – user step \\
+  \addlinespace
     &      &\mid& e_1 \And e_2         & – composition \\
+  \addlinespace
     &      &\mid& e_1 \Or e_2          & – choice \\
     &      &\mid& e_1 \Xor e_2         & – user choice \\
 \end{grammar}
 
 
 
-\subsection{Events and actions}
-
-\begin{grammar}
-  Events
-    & h    & ::=& a                    & – action \\
-    &      &\mid& \First h             & – pass to first \\
-    &      &\mid& \Second h            & – pass to second \\
-  Actions
-    & a    & ::=& v                    & – change editor to value \\
-    &      &\mid& \Clear               & – clear an editor \\
-    &      &\mid& \Continue            & – continue with next task \\
-    &      &\mid& \Pick r              & – pick route \\
-  Routes
-    & r    & ::=& \Left r              & – go left \\
-    &      &\mid& \Right r             & – go right \\
-    &      &\mid& \Here                & – stay here \\
-\end{grammar}
-
-
-
-\subsection{Types}
+\newpage
+\subsection{Typing}
 
 \begin{grammar}
   Types
@@ -71,7 +61,7 @@
     &      &\mid& \Reference \tau      & – reference type \\
     &      &\mid& \Task \tau           & – task type \\
     &      &\mid& \beta                & – basic type \\
-    &      &\mid& \alpha               & – type variable \\
+    &      &\mid& \alpha               & – universal type \\
   Basic types
     &\beta &::= & \Bool                & – boolean type \\
     &      &\mid& \Int                 & – integer type \\
@@ -92,7 +82,7 @@
 
 
 
-\subsection{Evaluation}
+\subsection{Evaluating}
 
 \begin{grammar}
   Values
@@ -141,134 +131,141 @@ Notes:
 (Standard constructs as defined by \textcite{books/Pierce02TAPL})
 
 
-\endinput
 
-
-
-
-
-
-
-\subsection{Task observations}
+\subsection{Observating}
 
 \begin{equation*}
-  \begin{array}{@{}lcl}
-    \multicolumn{3}{c}{\boxed{\Value : t \times s \to v^?}} \\
-    \Value(\Edit v\st{s})      &=& v \\
-    \Value(\Change l\st{s})     &=& s(l) \\
-    \Value(t_1 \And t_2\st{s}) &=& \{\Value(t_1\st{s}), \Value(t_2\st{s})\} \\
-    \Value(\_)                 &=& \nothing
+  \begin{array}{lcl}
+    \multicolumn{3}{l}{\Value : \mathrm{Tasks} \rightharpoonup \mathrm{Values}} \\
+    \Value(\Edit v)       &=& v \\
+    \Value(\Fill \tau)    &=& \bot \\
+    \Value(\Store l, s)   &=& s(l) \\
+    \Value(\Fail)         &=& \bot \\
+    \Value(t_1 \Then e_2) &=& \bot \\
+    \Value(t_1 \Next e_2) &=& \bot \\
+    \Value(t_1 \And t_2)  &=& \left\{
+      \begin{array}{ll}
+        \{v_1, v_2\}      & \when\ \Value(t_1) = v_1 \land \Value(t_2) = v_2 \\
+        \bot              & \otherwise
+      \end{array}
+    \right. \\
+    \Value(t_1 \Or t_2)   &=& \left\{
+      \begin{array}{ll}
+        v_1               & \when\ \Value(t_1) = v_1 \\
+        v_2               & \when\ \Value(t_1) = \bot \lor \Value(t_2) = v_2 \\
+        \bot              & \otherwise
+      \end{array}
+    \right. \\
+    \Value(t_1 \Xor t_2)  &=& \bot
   \end{array}
 \end{equation*}
 
+\begin{equation*}
+  \begin{array}{lcl}
+    \multicolumn{3}{l}{\Succeeding : \mathrm{Tasks} \to \mathrm{Booleans}} \\
+    \Succeeding(\Edit v)       &=& \True \\
+    \Succeeding(\Fill \tau)    &=& \True \\
+    \Succeeding(\Store l)      &=& \True \\
+    \Succeeding(\Fail)         &=& \False \\
+    \Succeeding(t_1 \Then e_2) &=& \Succeeding(t_1) \\
+    \Succeeding(t_1 \Next e_2) &=& \Succeeding(t_1) \\
+    \Succeeding(t_1 \And t_2)  &=& \Succeeding(t_1) \lor \Succeeding(t_2) \\
+    \Succeeding(t_1 \Or t_2)   &=& \Succeeding(t_1) \lor \Succeeding(t_2) \\
+    \Succeeding(t_1 \Xor t_2)  &=& \Succeeding(t_1) \lor \Succeeding(t_2)
+  \end{array}
+\end{equation*}
 
 \todo{Is $\Succeeding$ preserved by $\normalise$?}
 
+
+
 \newpage
-\begin{fullwidth}
-\renewcommand*{\arraystretch}{4}
-
-
-\subsection{Task normalisation}
+\subsection{Normalising}
 
 \begin{equation*}
   \boxed{\RelationN}
 \end{equation*}
 
-
-\paragraph{Simplifying}
-\todo{Is \refrule{N-And} needed or can we just use $\Value(t)$ to check if we have a pair?}
-
+\paragraph{Step}
 \begin{mathpar}
-  \divert{\userule{N-Then}} \\
+  \userule{N-ThenStay} \\
+  \userule{N-ThenFail} \\
+  \userule{N-ThenCont}
+\end{mathpar}
+
+\paragraph{Choose}
+\begin{mathpar}
+  \userule{N-OrLeft} \\
+  \userule{N-OrRight} \\
+  \userule{N-OrNone}
+\end{mathpar}
+
+\paragraph{Congruence}
+\begin{mathpar}
+  \userule{N-Next} \\
   \userule{N-And}
 \end{mathpar}
 
-
-\paragraph{Stepping}
-
+\paragraph{Ready}
 \begin{mathpar}
-  \begin{array}{@{}ll}
-    \userule{N-WhenStay} & \userule{N-WhenFail} \\
-                         & \userule{N-WhenNext}
-  \end{array}
+  \userule{N-Edit} \qquad \userule{N-Fill} \qquad \userule{N-Store} \\
+  \userule{N-Fail} \qquad \userule{N-Xor}
 \end{mathpar}
 
-
-\paragraph{Evaluation}
-
-(Complementing above conditional rules)
-
-\begin{mathpar}
-  \divert{\userule{N-ThenEval}} \\
-  \userule{N-AndEval} \qquad \userule{N-OrEval}
-\end{mathpar}
+\todo{Do we need to normalise \refrule{N-And} further to a pair for nice equality properties or can we just use $\Value(t)$ to check if we have a pair?}
 
 
-\paragraph{Values}
 
-\begin{mathpar}
-  \userule{N-Pure} \qquad \userule{N-Fail} \\
-  \userule{N-Edit} \qquad \userule{N-Fill} \qquad \userule{N-Watch}
-\end{mathpar}
+\subsection{Handling}
 
-
-\newpage
-\subsection{Event handling}
+\begin{grammar}
+  Events
+    & h    & ::=& a                    & – action \\
+    &      &\mid& \First h             & – pass to first \\
+    &      &\mid& \Second h            & – pass to second \\
+  Actions
+    & a    & ::=& v                    & – change editor to value \\
+    &      &\mid& \Clear               & – clear an editor \\
+    &      &\mid& \Continue            & – continue with next task \\
+    &      &\mid& \Pick r              & – pick route \\
+  Routes
+    & r    & ::=& \Left r              & – go left \\
+    &      &\mid& \Right r             & – go right \\
+    &      &\mid& \Here                & – stay here \\
+\end{grammar}
 
 \begin{equation*}
   \boxed{\RelationH}
 \end{equation*}
 
-
-\paragraph{Editors and watches}
-
+\paragraph{Editing}
 \begin{mathpar}
-  \userule{H-Change} \qquad \userule{H-Enter} \qquad \userule{H-Clear} \\
-  \userule{H-Store}
+  \userule{H-Change} \qquad \userule{H-Clear} \qquad \userule{H-Fill} \\
+  \userule{H-Store} \qquad \userule{H-Fail}
 \end{mathpar}
+\todo{Should $\Fail$ be a black hole or just go stuck?}
 
-
-\paragraph{Stepping}
-
-(This is the ugly part\ldots)
-
+\paragraph{Continuing}
 \begin{mathpar}
-  \begin{array}{@{}ll}
-    \divert{\userule{H-Stay'}} & \divert{\userule{H-Next'}} \\
-    \userule{H-Stay}           & \userule{H-Next} \\
-                               & \userule{H-Fail}
-  \end{array}
+  \userule{H-PickLeft} \qquad \userule{H-PickRight} \\
+  \userule{H-PickHere} \qquad \userule{H-Next}
 \end{mathpar}
-
-
-\paragraph{Choosing}
-
-\begin{mathpar}
-  \userule{H-First} \qquad \userule{H-Second} \qquad \userule{H-Other}
-\end{mathpar}
-
 
 \paragraph{Passing}
-
-(We use $\AndOr \in \{\And, \ExOr\}$.
-Note that \refrule{H-Pass} is the place where we reuse $\normalise$.)
-
 \begin{mathpar}
-  \divert{\userule{H-PassS}} \qquad \userule{H-Pass} \\
-  \userule{H-Left} \qquad \userule{H-Right}
+  \userule{H-PassThen} \qquad \userule{H-PassNext} \\
+  \userule{H-FirstAnd} \qquad \userule{H-SecondAnd} \\
+  \userule{H-FirstOr}  \qquad \userule{H-SecondOr}
 \end{mathpar}
 
 
-\paragraph{Fallback}
 
-(Only applicable when no other rules apply!)
+\subsection{Driving}
+
+\begin{equation*}
+  \boxed{\RelationD}
+\end{equation*}
 
 \begin{mathpar}
-  \userule{H-Fallback}
+  \userule{D-Main}
 \end{mathpar}
-
-\end{fullwidth}
-
-
-\newpage
