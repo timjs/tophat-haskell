@@ -108,12 +108,12 @@ At the core,
 an editor is a container holding a value
 or holding nothing.
 For this purpose, we extend our task language with two constructs:
-a valued editor $\Edit e$ and an unvalued editor $\Fill \beta$.
+a valued editor $\Edit e$ and an unvalued editor $\Enter \beta$.
 \begin{grammar}
   Pretasks
-    & p & ::=& \ldots      & \\
-    &   &\mid& \Edit e     & – valued editor \\
-    &   &\mid& \Fill \beta & – unvalued editor \\
+    & p & ::=& \ldots       & \\
+    &   &\mid& \Edit e      & – valued editor \\
+    &   &\mid& \Enter \beta & – unvalued editor \\
 \end{grammar}
 
 Valued editors contain an expression $e$.
@@ -139,7 +139,7 @@ However, consider the following use case.
 We start with an editor containing the value two: $\Edit 2$.
 The user can change this value, as long as it is an integer,
 for example to five: $\Edit 5$.
-Clearing the value results in an unvalued editor: $\Fill$.
+Clearing the value results in an unvalued editor: $\Enter$.
 Now, are we allowed to enter a value of some other type?
 That is, can we now enter a string?
 This would change the type of the editor!
@@ -155,7 +155,7 @@ The typing rule becomes:
 Some examples of editors expressible in our language:
 \begin{itemize}
   \item $\Edit 2$ is a valued editor which contains the integer value $2$.
-  \item $\Fill \String$ is an unvalued editor,
+  \item $\Enter \String$ is an unvalued editor,
     waiting for users to enter some string.
   \item $\Edit ((\lambda x . x)\ 5)$ is a valued editor which,
     after evaluation, will contain the value $5$.
@@ -171,9 +171,9 @@ Now the time has come to talk about \emph{real} tasks!
 Well, about \emph{syntactically real} tasks.
 \begin{grammar}
   Tasks
-    & t & ::=& \ldots      & \\
-    &   &\mid& \Edit v     & – valued editor \\
-    &   &\mid& \Fill \beta & – unvalued editor \\
+    & t & ::=& \ldots       & \\
+    &   &\mid& \Edit v      & – valued editor \\
+    &   &\mid& \Enter \beta & – unvalued editor \\
 \end{grammar}
 
 So what is the difference with pretasks?
@@ -291,7 +291,7 @@ containing the value two?
   \handle{5} & \hint{change value to five} \\
     & \Edit 5 \\
   \handle{\Clear} & \hint{clear the current value} \\
-    & \Fill \Int \\
+    & \Enter \Int \\
   \handle{50} & \hint{enter the value fifty} \\
     & \Edit 50 \\
   \handle{\str{Bye}} & \hint{sending a string won't work, the types don't match} \\

@@ -35,7 +35,7 @@
 
 \newrule{T-Fill}
   {\ }
-  {\Gamma\st{\Sigma} \infers \Fill \beta : \Task \beta}
+  {\Gamma\st{\Sigma} \infers \Enter \beta : \Task \beta}
 
 \newrule{T-Store}
   {\Gamma, \Sigma \infers e : \Reference \beta}
@@ -91,7 +91,7 @@
 
 \newrule{E-Fill}
   {\ }
-  {\Fill \beta \evaluate \Fill \beta}
+  {\Enter \beta \evaluate \Enter \beta}
 
 \newrule{E-Store}
   {e \evaluate l}
@@ -144,7 +144,7 @@
 
 \newrule{N-Fill}
   { }
-  {\Fill \beta \normalise \Fill \beta}
+  {\Enter \beta \normalise \Enter \beta}
 
 \newrule{N-Store}
   { }
@@ -228,11 +228,11 @@
 
 \newrule{H-Clear}[v : \beta]
   { }
-  {\Edit v\st{s} \handle{\Clear} \Fill \beta\st{s}}
+  {\Edit v\st{s} \handle{\Clear} \Enter \beta\st{s}}
 
 \newrule{H-Fill}[v' : \beta]
   { }
-  {\Fill \beta\st{s} \handle{v'} \Edit v'\st{s}}
+  {\Enter \beta\st{s} \handle{v'} \Edit v'\st{s}}
 
 \newrule{H-Store}[\Sigma(l), v' : \beta]
   { }

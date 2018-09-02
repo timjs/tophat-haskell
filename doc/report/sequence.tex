@@ -273,7 +273,7 @@ Therefore we define that a sequence of tasks \emph{does not} have a value.\footn
 \subsection{Example: conditional stepping}
 
 % \begin{equation*}
-%   \Fill \Int \Then \lambda n. \If{n \ge 10}{\Edit \str{large}}{\Fail}
+%   \Enter \Int \Then \lambda n. \If{n \ge 10}{\Edit \str{large}}{\Fail}
 % \end{equation*}
 
 \begin{margintext}{Aside: Conditional stepping in iTasks}
@@ -289,7 +289,7 @@ Therefore we define that a sequence of tasks \emph{does not} have a value.\footn
 \end{margintext}
 
 \begin{align*}
-    & \Fill \Int \Then \lambda n. \If{n \ge 10}{\Edit \str{large}}{\Fail} \\
+    & \Enter \Int \Then \lambda n. \If{n \ge 10}{\Edit \str{large}}{\Fail} \\
   \drive{8} & \hint{change value to eight, rhs evaluates to $\Fail$} \\
     & \Edit 8 \Then \lambda n. \If{n \ge 10}{\Edit \str{large}}{\Fail} \\
   \drive{3} & \hint{change value to three, rhs still failing} \\
@@ -309,7 +309,7 @@ denoted $t_1 \equiv t_2$,
 which is obviously too strong.
 We define a new relation $t_1 \approxeq t_2$,
 which we read as \enquote{$t_1$ is \emph{normalised equal} to $t_2$} as follows.
-\todo{This is wrong! It makes $\Fill \beta$ and $\Fail$ equivallent.}
+\todo{This is wrong! It makes $\Enter \beta$ and $\Fail$ equivallent.}
 \begin{equation*}
   \begin{array}{crc}
     t_1 \approxeq t_2 &\text{if and only if}& t_1 \normalise t_1' \\
@@ -435,7 +435,7 @@ only \refrule{H-Next} is new and specific for external stepping.
 \end{margintext}
 
 \begin{align*}
-    & \Fill \Int \Next \lambda x. \Edit 2 \Next \lambda y. \Edit (x + y) \\
+    & \Enter \Int \Next \lambda x. \Edit 2 \Next \lambda y. \Edit (x + y) \\
   \drive{4} & \hint{change value to four, we do not step automatically} \\
     & \Edit 4 \Next \lambda x. \Edit 2 \Next \lambda y. \Edit (x + y) \\
   \drive{\Continue} & \hint{hit continue, now step, but just once} \\

@@ -34,7 +34,7 @@
   \addlinespace
   Pretasks
     & p    &::= & \Edit e              & – valued editor \\
-    &      &\mid& \Fill \beta          & – unvalued editor \\
+    &      &\mid& \Enter \beta         & – unvalued editor \\
     &      &\mid& \Store e             & – stored editor \\
   \addlinespace
     &      &\mid& \Fail                & – fail task \\
@@ -94,7 +94,7 @@
     &      &\mid& t                    & – task \\
   Tasks
     & t    &::= & \Edit v              & – valued editor \\
-    &      &\mid& \Fill \beta          & – unvalued editor \\
+    &      &\mid& \Enter \beta         & – unvalued editor \\
     &      &\mid& \Store l             & – stored editor \\
     &      &\mid& \Fail                & – fail task \\
     &      &\mid& t_1 \Then e_2        & – step \\
@@ -114,7 +114,7 @@ Notes:
     Evaluating one or both options of $e_1 \Xor e_2$ before the user makes a choice will result in untimely reference updates.
   % \item Although internal steps should be evaluated without user interaction,
   %   $t \Then e$ \emph{is} a task value, iff $\Value(t) = \nothing$.
-  %   Take for example $t = \Fill \Int$.
+  %   Take for example $t = \Enter \Int$.
 \end{itemize}
 
 \begin{equation*}
@@ -138,7 +138,7 @@ Notes:
   \begin{array}{lcl}
     \multicolumn{3}{l}{\Value : \mathrm{Tasks} \rightharpoonup \mathrm{Values}} \\
     \Value(\Edit v)       &=& v \\
-    \Value(\Fill \tau)    &=& \bot \\
+    \Value(\Enter \tau)   &=& \bot \\
     \Value(\Store l, s)   &=& s(l) \\
     \Value(\Fail)         &=& \bot \\
     \Value(t_1 \Then e_2) &=& \bot \\
@@ -164,7 +164,7 @@ Notes:
   \begin{array}{lcl}
     \multicolumn{3}{l}{\Succeeding : \mathrm{Tasks} \to \mathrm{Booleans}} \\
     \Succeeding(\Edit v)       &=& \True \\
-    \Succeeding(\Fill \tau)    &=& \True \\
+    \Succeeding(\Enter \tau)   &=& \True \\
     \Succeeding(\Store l)      &=& \True \\
     \Succeeding(\Fail)         &=& \False \\
     \Succeeding(t_1 \Then e_2) &=& \Succeeding(t_1) \\

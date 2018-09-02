@@ -114,11 +114,11 @@ We use $\oplus$ as an external choice operation.
 We can model this vending machine using tasks as follows.
 \begin{equation*}
   \begin{array}{l}
-    \Fill \Euro \Then \lambda n.
+    \Enter \Euro \Then \lambda n.
     \IF n \equiv 2.00 \THEN \\
      \quad \Edit \str{tea}
       \Xor
-        \Fill \Euro \Then \lambda m.
+        \Enter \Euro \Then \lambda m.
         \IF m \equiv 1.00 \THEN
           \Edit \str{coffee}
         \ELSE

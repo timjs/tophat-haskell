@@ -55,7 +55,7 @@ but nothing will ever come out!
 So, what is the usage of this simple and dull addition to our task language?
 Think of $\Fail$ as the error value \type{Nothing} from Haskell's \type{Maybe} data type
 or \type{None} from ML's \type{option} lifted into the task world.
-Note the difference between $\Fail$ and $\Fill\beta$.
+Note the difference between $\Fail$ and $\Enter\beta$.
 The first is the failing task,
 the second an unvalued editor waiting for users to fill in a value.
 Editors are tasks that clearly have a future and thus are \emph{succeeding}.
@@ -67,9 +67,9 @@ which tells us if a task is succeeding or not.
 \begin{equation*}
   \begin{array}{lcl}
     \multicolumn{3}{l}{\Succeeding : \mathrm{Tasks} \to \mathrm{Booleans}} \\
-    \Succeeding(\Edit v)    &=& \True \\
-    \Succeeding(\Fill \tau) &=& \True \\
-    \Succeeding(\Fail)      &=& \False
+    \Succeeding(\Edit v)     &=& \True \\
+    \Succeeding(\Enter \tau) &=& \True \\
+    \Succeeding(\Fail)       &=& \False
   \end{array}
 \end{equation*}
 For now,
@@ -96,9 +96,9 @@ Given a task $t$, this function will answer the question:
 \begin{equation*}
   \begin{array}{lcl}
     \multicolumn{3}{l}{\Value : \mathrm{Tasks} \rightharpoonup \mathrm{Values}} \\
-    \Value(\Edit v)    &=& v \\
-    \Value(\Fill \tau) &=& \bot \\
-    \Value(\Fail)      &=& \bot
+    \Value(\Edit v)     &=& v \\
+    \Value(\Enter \tau) &=& \bot \\
+    \Value(\Fail)       &=& \bot
   \end{array}
 \end{equation*}
 The harpoon in the type definition denotes that $\Value$ is a \emph{partial function}.

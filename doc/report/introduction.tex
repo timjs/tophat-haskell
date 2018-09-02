@@ -6,7 +6,7 @@ In the next sections we will gradually develop a language to model interactive p
 Each section will introduce one of the following basic constructs,
 making our language more powerful after every addition:
 \begin{itemize}
-  \item interactive \emph{editors} with a value ($\Edit v$) and without a value ($\Fill \tau$);
+  \item interactive \emph{editors} with a value ($\Edit v$) and without a value ($\Enter \tau$);
   \item the \emph{failure} task ($\Fail$);
   \item sequential composition or \emph{stepping} of tasks ($t_1 \Then e_2$);
   \item parallel composition or \emph{pairing} of tasks ($t_1 \And t_2$);
@@ -29,7 +29,7 @@ our approach distinguishes itself by the following points:
     % as an embedded domain specific language in Clean \cite{manuals/PlasmeijerE98} which blurs the lines between the host and object language.
   \item
     There is no notion of values which can be stable or unstable.
-    Our language has editors which can be valued ($\Edit v$) or unvalued ($\Fill \tau$),
+    Our language has editors which can be valued ($\Edit v$) or unvalued ($\Enter \tau$),
     but values themselves do not have special distinguishing features and are just values,
     as in every other lambda calculus or functional programming language.
   \item
@@ -39,7 +39,7 @@ our approach distinguishes itself by the following points:
     All tasks are, in the end, about interaction with end users.
     Not because every construct introduced in our language has a way to interact with the user,
     but the leafs are.\footnote{
-      There are two leafs in our language: editors ($\Edit v$ and $\Fill \tau$) and fail ($\Fail$).
+      There are two leafs in our language: editors ($\Edit v$ and $\Enter \tau$) and fail ($\Fail$).
       Editors are the main focus of user interaction.
       Users can enter and change information using an editor.
       Fail is a special case.
