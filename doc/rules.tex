@@ -38,13 +38,13 @@
   {\Gamma\st{\Sigma} \infers \Fill \beta : \Task \beta}
 
 \newrule{T-Store}
-  {\Gamma, \Sigma \infers e : \beta}
+  {\Gamma, \Sigma \infers e : \Reference \beta}
   {\Gamma, \Sigma \infers \Store e : \Task \beta}
 
 
 \newrule{T-Fail}
   { }
-  {\Gamma\st{\Sigma} \infers \Fail : \forall\alpha. \Task \alpha}
+  {\Gamma\st{\Sigma} \infers \Fail : \Task \alpha}
 
 
 \newrule{T-Then}
@@ -122,6 +122,12 @@
   {e_1 \evaluate t_1 \\
    e_2 \evaluate t_2}
   {e_1 \Or e_2 \evaluate t_1 \Or t_2}
+
+\newrule{E-Xor}
+  {\ }
+  {e_1 \Xor e_2 \evaluate e_1 \Xor e_2}
+
+
 
 
 

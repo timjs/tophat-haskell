@@ -1,4 +1,4 @@
-% !TEX root=../main.tex
+% !TEX root=../report.tex
 
 \section{Sharing data}
 
@@ -7,12 +7,15 @@
 \begin{grammar}
   Expressions
     & e    &::= & \ldots          & \\
+    &      &\mid& \{\}            & – unit \\
+    &      &\mid& e_1; e_2        & – sequence \\
     &      &\mid& \Ref e          & – reference \\
     &      &\mid& !e              & – dereference \\
     &      &\mid& e_1 := e_2      & – assign \\
     &      &\mid& l               & – location \\
   Values
     & v    & ::=& \ldots          & \\
+    &      &\mid& \{\}            & – unit \\
     &      &\mid& l               & – location \\
   Pretasks
     & p    & ::=& \ldots          & \\
@@ -22,7 +25,8 @@
     &      &\mid& \Store l        & – store task \\
   Types
     & \tau & ::=& \ldots          & \\
-    &      &\mid& \Reference \tau & – references \\
+    &      &\mid& \Unit           & – unit \\
+    &      &\mid& \Reference \tau & – reference type \\
 \end{grammar}
 
 \begin{equation*}

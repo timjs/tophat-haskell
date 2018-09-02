@@ -1,140 +1,155 @@
-% !TEX root=../main.tex
+% !TEX root=../report.tex
 
-\newpage
 \section{An overview}
-
-
-\subsection{Language}
-
-\begin{grammar}
-  Expressions
-    & e      &::= & \lambda x.\ e               & – abstraction \\
-    &        &\mid& e_1\ e_2                    & – application \\
-    &        &\mid& \If{e_1}{e_2}{e_3}          & – branching \\
-    &        &\mid& \{\}                        & – unit \\
-    &        &\mid& \{e_1, e_2\}                & – pair \\
-    &        &\mid& e_1 \star e_2               & – operator \\
-    &        &\mid& x                           & – variable \\
-    &        &\mid& c                           & – constant \\
-    &        &\mid& r                           & – reference \\
-  References
-    & r      &::= & \Ref e                      & – reference \\
-    &        &\mid& !e                          & – dereference \\
-    &        &\mid& e_1 := e_2                  & – assign \\
-    &        &\mid& l                           & – location \\
-    &        &\mid& p                           & – pretask \\
-  Pretasks
-    & p      &::= & \Edit e                     & – edit \\
-    &        &\mid& \Fill \beta                 & – fill \\
-    &        &\mid& \Change e                    & – watch \\
-    &        &\mid& e_1 \ExThen e_2               & – ask \\
-    &        &\mid& e_1 \Then e_2               & – sequence \\
-    &        &\mid& e_1 \And e_2                & – parallel \\
-    &        &\mid& e_1 \ExOr e_2                 & – choose \\
-    &        &\mid& \Fail                       & – fail \\
-  Constants
-    & c      &::= & B \in \BB                   & – boolean \\
-    &        &\mid& I \in \ZZ                   & – integer \\
-    &        &\mid& S \in \SS                   & – string \\
-  % &        &\mid& \ldots                      & \\
-  \addlinespace
-  Events
-    & \eta   & ::=& \alpha                      & – action \\
-    &        &\mid& \Left \eta                  & – pass to left \\
-    &        &\mid& \Right \eta                 & – pass to right \\
-  Actions
-    & \alpha & ::=& v                           & – change \\
-    &        &\mid& \Clear                      & – empty \\
-    &        &\mid& \Pick \pi                   & – pick \\
-    &        &\mid& \Next                   & – continue \\
-  Paths
-    & \pi    & ::=& \First                      & – pick first \\
-    &        &\mid& \Second                     & – pick second \\
-    &        &\mid& \Other \pi                  & – pick other \\
-  \addlinespace
-  Types
-    & \tau   &::= & \tau_1 \to \tau_2           & – abstractions \\
-    &        &\mid& \Unit                       & – unit \\
-    &        &\mid& \tau_1 \times \tau_2        & – pairs \\
-    &        &\mid& \Reference \tau             & – references \\
-    &        &\mid& \Task \tau                  & – tasks \\
-    &        &\mid& \beta                       & – builtin types \\
-  Builtins
-    & \beta  &::= & \Bool                       & – booleans \\
-    &        &\mid& \Int                        & – integers \\
-    &        &\mid& \String                     & – strings \\
-\end{grammar}
-
-
-\subsection{Values}
-
-\begin{grammar}
-  Values
-    & v      &::= & \lambda x. e                & – abstraction \\
-    &        &\mid& \{\}                        & – unit \\
-    &        &\mid& l                           & – locations \\
-    &        &\mid& c                           & – constant \\
-    &        &\mid& p                           & – pretask \\
-    & u      &::= & \lambda x. e                & – abstraction \\
-    &        &\mid& \{\}                        & – unit \\
-    &        &\mid& l                           & – locations \\
-    &        &\mid& c                           & – constant \\
-    &        &\mid& t                           & – task \\
-  Tasks
-    & t      &::= & \Edit u                     & – edit value \\
-    &        &\mid& \Fill \beta                 & – fill value \\
-    &        &\mid& \Change l                    & – watch location \\
-    &        &\mid& t_1 \Then e_2               & – sequence\footnotemark \\
-    &        &\mid& t_1 \ExThen e_2               & – ask \\
-    &        &\mid& t_1 \And t_2                & – parallel \\
-    &        &\mid& e_1 \ExOr e_2                 & – choose \\
-    &        &\mid& \Fail                       & – fail \\
-\end{grammar}
-\footnotetext{$\where \Value(t_1) \neq \nothing$}
-
-Notes:
-\begin{itemize}
-  \item Should $\Edit$ and $\Change$ be a lazy or strict constructors?
-  \item $\Then$ and $\ExThen$ are strict in their first argument, lazy in their second.
-    It doesn't matter what the continuation is.
-  \item $\And$ is strict in both arguments.
-    \todo{Why?}
-  \item $\ExOr$ is lazy in both arguments.
-    Evaluating one or both options of $e_1 \ExOr e_2$ before the user makes a choice will result in untimely reference updates.
-  \item Althoug internal steps should be evaluated without user interaction,
-    $t \Then e$ \emph{is} a task value, iff $\Value(t) = \nothing$.
-    Take for example $t = \Fill \Int$.
-\end{itemize}
-
 
 \statefultrue
 
 
-\newpage
-\subsection{Typing rules}
+\subsection{Expressions}
+
+\begin{grammar}
+  Expressions
+    & e    &::= & \lambda x:\tau.\ e   & – abstraction \\
+    &      &\mid& e_1\ e_2             & – application \\
+    &      &\mid& x                    & – variable \\
+    &      &\mid& c                    & – constant \\
+    &      &\mid& e_1 \star e_2        & – operator \\
+    &      &\mid& \If{e_1}{e_2}{e_3}   & – branching \\
+    &      &\mid& \{e_1, e_2\}         & – pair \\
+    &      &\mid& \{\}                 & – unit \\
+    &      &\mid& e_1; e_2             & – sequence \\
+    &      &\mid& \Ref e               & – reference \\
+    &      &\mid& !e                   & – dereference \\
+    &      &\mid& e_1 := e_2           & – assign \\
+    &      &\mid& l                    & – location \\
+    &      &\mid& p                    & – pretask \\
+  Constants
+    & c    &::= & B                    & – boolean \\
+    &      &\mid& I                    & – integer \\
+    &      &\mid& S                    & – string \\
+  Pretasks
+    & p    &::= & \Edit e              & – valued editor \\
+    &      &\mid& \Fill \beta          & – unvalued editor \\
+    &      &\mid& \Store e             & – stored editor \\
+    &      &\mid& \Fail                & – fail task \\
+    &      &\mid& e_1 \Then e_2        & – step \\
+    &      &\mid& e_1 \Next e_2        & – user step \\
+    &      &\mid& e_1 \And e_2         & – composition \\
+    &      &\mid& e_1 \Or e_2          & – choice \\
+    &      &\mid& e_1 \Xor e_2         & – user choice \\
+\end{grammar}
+
+
+
+\subsection{Events and actions}
+
+\begin{grammar}
+  Events
+    & h    & ::=& a                    & – action \\
+    &      &\mid& \First h             & – pass to first \\
+    &      &\mid& \Second h            & – pass to second \\
+  Actions
+    & a    & ::=& v                    & – change editor to value \\
+    &      &\mid& \Clear               & – clear an editor \\
+    &      &\mid& \Continue            & – continue with next task \\
+    &      &\mid& \Pick r              & – pick route \\
+  Routes
+    & r    & ::=& \Left r              & – go left \\
+    &      &\mid& \Right r             & – go right \\
+    &      &\mid& \Here                & – stay here \\
+\end{grammar}
+
+
+
+\subsection{Types}
+
+\begin{grammar}
+  Types
+    & \tau &::= & \tau_1 \to \tau_2    & – function type \\
+    &      &\mid& \tau_1 \times \tau_2 & – product type \\
+    &      &\mid& \Unit                & – unit type \\
+    &      &\mid& \Reference \tau      & – reference type \\
+    &      &\mid& \Task \tau           & – task type \\
+    &      &\mid& \beta                & – basic type \\
+    &      &\mid& \alpha               & – type variable \\
+  Basic types
+    &\beta &::= & \Bool                & – boolean type \\
+    &      &\mid& \Int                 & – integer type \\
+    &      &\mid& \String              & – string type \\
+\end{grammar}
 
 \begin{equation*}
   \boxed{\RelationT}
 \end{equation*}
 
 \begin{mathpar}
-  \userule{T-Done} \qquad \userule{T-Fail} \\
-  \userule{T-Edit} \qquad \userule{T-Fill} \qquad \userule{T-Watch} \\
-  \userule{T-Next} \\
-  \userule{T-Then} \\
-  \userule{T-And} \qquad \userule{T-Or}
+  \userule{T-Edit} \qquad \userule{T-Fill} \qquad \userule{T-Store} \\
+  \userule{T-Fail} \\
+  \userule{T-Then} \qquad \userule{T-Next} \\
+  \userule{T-And} \\
+  \userule{T-Or} \qquad \userule{T-Xor}
 \end{mathpar}
 
 
-\subsection{Expression evaluation}
+
+\subsection{Evaluation}
+
+\begin{grammar}
+  Values
+    & v    &::= & \lambda x.\ e        & – abstraction \\
+    &      &\mid& \{v_1, v_2\}         & – pair value \\
+    &      &\mid& \{\}                 & – unit \\
+    &      &\mid& c                    & – constant \\
+    &      &\mid& l                    & – location \\
+    &      &\mid& t                    & – task \\
+  Tasks
+    & t    &::= & \Edit v              & – valued editor \\
+    &      &\mid& \Fill \beta          & – unvalued editor \\
+    &      &\mid& \Store l             & – stored editor \\
+    &      &\mid& \Fail                & – fail task \\
+    &      &\mid& t_1 \Then e_2        & – step \\
+    &      &\mid& t_1 \Next e_2        & – user step \\
+    &      &\mid& t_1 \And t_2         & – composition \\
+    &      &\mid& t_1 \Or t_2          & – choice \\
+    &      &\mid& t_1 \Xor t_2         & – user choice \\
+\end{grammar}
+
+Notes:
+\begin{itemize}
+  \item $\Then$ and $\Next$ are strict in their first argument, lazy in their second.
+    It doesn't matter what the continuation is.
+  \item $\And$ and $\Or$ is strict in both arguments.
+    \todo{Explain why?}
+  \item $\Xor$ is lazy in both arguments.
+    Evaluating one or both options of $e_1 \Xor e_2$ before the user makes a choice will result in untimely reference updates.
+  % \item Although internal steps should be evaluated without user interaction,
+  %   $t \Then e$ \emph{is} a task value, iff $\Value(t) = \nothing$.
+  %   Take for example $t = \Fill \Int$.
+\end{itemize}
 
 \begin{equation*}
   \boxed{\RelationV}
 \end{equation*}
-(As defined by \textcite{books/Pierce02TAPL})
+
+\begin{mathpar}
+  \userule{E-Edit} \qquad \userule{E-Fill} \qquad \userule{E-Store} \\
+  \userule{E-Fail} \\
+  \userule{E-Then} \qquad \userule{E-Next} \\
+  \userule{E-And} \\
+  \userule{E-Or} \qquad \userule{E-Xor}
+\end{mathpar}
+(Standard constructs as defined by \textcite{books/Pierce02TAPL})
 
 
-\subsection{Task observation}
+\endinput
+
+
+
+
+
+
+
+\subsection{Task observations}
 
 \begin{equation*}
   \begin{array}{@{}lcl}
