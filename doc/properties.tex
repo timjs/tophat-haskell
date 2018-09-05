@@ -1,0 +1,72 @@
+\documentclass
+  [a4paper
+  ,justified
+  ,nofonts
+  % ,fleqn
+  % ,nols
+  % ,sfsidenotes
+  ]{tufte-handout}
+
+%
+% Packages
+%
+
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+\usepackage{libertine}
+\usepackage[varqu]{zi4}
+\usepackage[libertine]{newtxmath}
+
+\usepackage{amsmath}
+\usepackage{ amssymb }
+\usepackage{mathpartir}
+\usepackage{array}
+\usepackage{booktabs}
+
+%
+% Macros
+%
+
+\input macros/imports
+\input macros/setups
+\input macros/general
+\input macros/languages
+\input macros/abbreviations
+
+\input commands
+\input rules
+
+\title{Properties}
+\author{Nico Naus}
+\begin{document}
+
+\maketitle
+
+%
+% Document
+%
+\section{Safety}
+
+\begin{align*}
+  \forall e:\tau,i & e \handle{i} e' &\implies& \text{ either } \Value{(e')} \text{ or } \exists e'',i' \text{ such that } e'\handle{i'}e''&\\
+  \forall e:\tau & e \normalise e' &\implies& \text{ either } \Value{(e')} \text{ or } \exists e'',i \text{ such that } e'\handle{i}e''&\\
+  \forall e:\tau & e \evaluate e' &\implies& \text{ either } \Value{(e')} \text{ or } \exists e''\text{ such that } e'\normalise e'' \text{ or } \exists e'',i \text{ such that } e'\handle{i}e''&
+\end{align*}
+
+\section{Preservation}
+\begin{align*}
+  \forall e:\tau,i & e \handle{i} e' &\implies& e':\tau&\\
+  \forall e:\tau & e \normalise e' &\implies& e':\tau&\\
+  \forall e:\tau & e \evaluate e' &\implies& e':\tau&
+\end{align*}
+
+
+\section{Strongly Normalizing}
+\begin{align*}
+  \forall e:\tau & \exists I & e\handle{I}^* e' \text{ such that } \Value{(e')}\neq\bot
+\end{align*}
+
+
+\end{document}
