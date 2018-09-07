@@ -41,9 +41,9 @@
   {\ }
   {\Gamma\St{} \infers \Enter \beta : \Task \beta}
 
-\newrule{T-Store}
+\newrule{T-Update}
   {\Gamma\St{} \infers e : \Reference \beta}
-  {\Gamma\St{} \infers \Store e : \Task \beta}
+  {\Gamma\St{} \infers \Update e : \Task \beta}
 
 
 \newrule{T-Fail}
@@ -97,9 +97,9 @@
   {\ }
   {\Enter \beta \evaluate \Enter \beta}
 
-\newrule{E-Store}
+\newrule{E-Update}
   {e \evaluate l}
-  {\Store e \evaluate \Store l}
+  {\Update e \evaluate \Update l}
 
 
 \newrule{E-Fail}
@@ -150,9 +150,9 @@
   { }
   {\Enter \beta\st{} \normalise \Enter \beta\st{}}
 
-\newrule{N-Store}
+\newrule{N-Update}
   { }
-  {\Store l\st{} \normalise \Store l\st{}}
+  {\Update l\st{} \normalise \Update l\st{}}
 
 
 \newrule{N-Fail}
@@ -237,9 +237,9 @@
   { }
   {\Enter \beta\st{} \handle{v'} \Edit v'\st{}}
 
-\newrule{H-Store}[\Sigma(l), v' : \beta]
+\newrule{H-Update}[\Sigma(l), v' : \beta]
   { }
-  {\Store l\st{} \handle{v'} \Store l\st[l \mapsto v']{}}
+  {\Update l\st{} \handle{v'} \Update l\st[l \mapsto v']{}}
 
 
 \newrule{H-Fail}

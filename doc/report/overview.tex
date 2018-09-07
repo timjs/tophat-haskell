@@ -34,8 +34,10 @@
   \addlinespace
   Pretasks
     & p    &::= & \Edit e              & – valued editor \\
+    &      &\mid& \View e              & – valued readonly editor \\
     &      &\mid& \Enter \beta         & – unvalued editor \\
-    &      &\mid& \Store e             & – stored editor \\
+    &      &\mid& \Update e            & – stored editor \\
+    &      &\mid& \Watch e             & – stored readonly editor \\
   \addlinespace
     &      &\mid& \Fail                & – fail task \\
   \addlinespace
@@ -73,7 +75,7 @@
 \end{equation*}
 
 \begin{mathpar}
-  \userule{T-Edit} \qquad \userule{T-Fill} \qquad \userule{T-Store} \\
+  \userule{T-Edit} \qquad \userule{T-Fill} \qquad \userule{T-Update} \\
   \userule{T-Fail} \\
   \userule{T-Then} \\
   \userule{T-Next} \\
@@ -96,8 +98,10 @@
     &      &\mid& t                    & – task \\
   Tasks
     & t    &::= & \Edit v              & – valued editor \\
+    &      &\mid& \View v              & – valued readonly editor \\
     &      &\mid& \Enter \beta         & – unvalued editor \\
-    &      &\mid& \Store l             & – stored editor \\
+    &      &\mid& \Update l            & – stored editor \\
+    &      &\mid& \Watch l             & – stored readonly editor \\
     &      &\mid& \Fail                & – fail task \\
     &      &\mid& t_1 \Then e_2        & – step \\
     &      &\mid& t_1 \Next e_2        & – user step \\
@@ -124,7 +128,7 @@ Notes:
 \end{equation*}
 
 \begin{mathpar}
-  \userule{E-Edit} \qquad \userule{E-Fill} \qquad \userule{E-Store} \\
+  \userule{E-Edit} \qquad \userule{E-Fill} \qquad \userule{E-Update} \\
   \userule{E-Fail} \\
   \userule{E-Then} \qquad \userule{E-Next} \\
   \userule{E-And} \\
@@ -141,7 +145,7 @@ Notes:
     \multicolumn{3}{l}{\Value : \mathrm{Tasks} \rightharpoonup \mathrm{Values}} \\
     \Value(\Edit v)       &=& v \\
     \Value(\Enter \tau)   &=& \bot \\
-    \Value(\Store l, s)   &=& s(l) \\
+    \Value(\Update l, s)  &=& s(l) \\
     \Value(\Fail)         &=& \bot \\
     \Value(t_1 \Then e_2) &=& \bot \\
     \Value(t_1 \Next e_2) &=& \bot \\
@@ -167,7 +171,7 @@ Notes:
     \multicolumn{3}{l}{\Succeeding : \mathrm{Tasks} \to \mathrm{Booleans}} \\
     \Succeeding(\Edit v)       &=& \True \\
     \Succeeding(\Enter \tau)   &=& \True \\
-    \Succeeding(\Store l)      &=& \True \\
+    \Succeeding(\Update l)     &=& \True \\
     \Succeeding(\Fail)         &=& \False \\
     \Succeeding(t_1 \Then e_2) &=& \Succeeding(t_1) \\
     \Succeeding(t_1 \Next e_2) &=& \Succeeding(t_1) \\
@@ -184,7 +188,7 @@ Notes:
     \multicolumn{3}{l}{\Firsts : \mathrm{Tasks} \to \powerset(\mathrm{Inputs})} \\
     \Firsts(\Edit v)       &=& \set{v', \Clear} \\
     \Firsts(\Enter \tau)   &=& \set{v'} \\
-    \Firsts(\Store l)      &=& \set{v'} \\
+    \Firsts(\Update l)     &=& \set{v'} \\
     \Firsts(\Fail)         &=& \set{} \\
     \Firsts(t_1 \Then e_2) &=& \Firsts(t_1) \\
     \Firsts(t_1 \Next e_2) &=& \Firsts(t_1) \cup \set{\Continue} \\
@@ -225,7 +229,7 @@ Notes:
 
 \paragraph{Ready}
 \begin{mathpar}
-  \userule{N-Edit} \qquad \userule{N-Fill} \qquad \userule{N-Store} \\
+  \userule{N-Edit} \qquad \userule{N-Fill} \qquad \userule{N-Update} \\
   \userule{N-Fail} \qquad \userule{N-Xor}
 \end{mathpar}
 
@@ -258,7 +262,7 @@ Notes:
 \paragraph{Editing}
 \begin{mathpar}
   \userule{H-Change} \qquad \userule{H-Clear} \qquad \userule{H-Fill} \\
-  \userule{H-Store} \qquad \userule{H-Fail}
+  \userule{H-Update} \qquad \userule{H-Fail}
 \end{mathpar}
 
 \todo{

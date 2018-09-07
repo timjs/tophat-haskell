@@ -19,10 +19,12 @@
     &      &\mid& l               & – location \\
   Pretasks
     & p    & ::=& \ldots          & \\
-    &      &\mid& \Store e        & – store task \\
+    &      &\mid& \Update e       & – stored editor \\
+    &      &\mid& \Watch e        & – stored readonly editor \\
   Tasks
     & t    & ::=& \ldots          & \\
-    &      &\mid& \Store l        & – store task \\
+    &      &\mid& \Update l       & – stored editor \\
+    &      &\mid& \Watch l        & – stored readonly editor \\
   Types
     & \tau & ::=& \ldots          & \\
     &      &\mid& \Unit           & – unit \\
@@ -34,11 +36,11 @@
 \end{equation*}
 
 \begin{equation*}
-  \userule{T-Store}
+  \userule{T-Update}
 \end{equation*}
 
 \begin{equation*}
-  \userule{E-Store}
+  \userule{E-Update}
 \end{equation*}
 
 \begin{equation*}
@@ -46,11 +48,11 @@
 \end{equation*}
 
 \begin{equation*}
-  \userule{N-Store}
+  \userule{N-Update}
 \end{equation*}
 
 \begin{margintext}{Aside: Shared data in iTasks}
-  $\Store l$ is similar to \type{watch} in iTasks.
+  $\Update l$ is similar to \type{watch} in iTasks.
 \end{margintext}
 
 \begin{equation*}
@@ -59,16 +61,16 @@
 
 \begin{equation*}
   \begin{array}{lcl}
-    \Value(\Store l, s) &=& s(l)
+    \Value(\Update l, s) &=& s(l)
   \end{array}
 \end{equation*}
 
 \begin{equation*}
   \begin{array}{lcl}
-    \Succeeding(\Store l) &=& \True
+    \Succeeding(\Update l) &=& \True
   \end{array}
 \end{equation*}
 
 \begin{equation*}
-  \userule{H-Store}
+  \userule{H-Update}
 \end{equation*}
