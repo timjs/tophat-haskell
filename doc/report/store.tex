@@ -7,7 +7,7 @@
 \begin{grammar}
   Expressions
     & e    &::= & \ldots          & \\
-    &      &\mid& \{\}            & – unit \\
+    &      &\mid& \unit           & – unit \\
     &      &\mid& e_1; e_2        & – sequence \\
     &      &\mid& \Ref e          & – reference \\
     &      &\mid& !e              & – dereference \\
@@ -15,7 +15,7 @@
     &      &\mid& l               & – location \\
   Values
     & v    & ::=& \ldots          & \\
-    &      &\mid& \{\}            & – unit \\
+    &      &\mid& \unit           & – unit \\
     &      &\mid& l               & – location \\
   Pretasks
     & p    & ::=& \ldots          & \\

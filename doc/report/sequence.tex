@@ -2,7 +2,7 @@
 
 \section{Performing tasks one after the other}
 
-In the previous section we have set up our interaction model of events and actions,
+In the previous section we have set up our interaction model of inputs and actions,
 we defined our interactive component, the editor,
 and introduced the infinitely failing task.
 Now that we have the core part of an interactive workflow,
@@ -221,7 +221,7 @@ The sequence construct itself does not handle any user input.
 The left hand side however,
 can be an interactive task, such as an editor.
 To reach this encapsulated interactive task,
-$\Then$ needs to pass events to the left.
+$\Then$ needs to pass inputs to the left.
 \begin{equation*}
   \userule{H-PassThen}
 \end{equation*}
