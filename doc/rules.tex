@@ -19,12 +19,10 @@
 \statefulfalse
 \newmacro{st}[2][1]
   {\ifthenelse{\isempty{#1}}
-    {\ifstateful{\ \shortmid \mu#2}\else{}\fi}
-    {\ifstateful{\ \shortmid [#1]\mu#2}\else{}\fi}}
-  % {\ifstateful{, [#1]\mu#2}\else{}\fi}
+    {\ifstateful{,\:\mu#2}\else{}\fi}
+    {\ifstateful{,\:[#1]\mu#2}\else{}\fi}}
 \newmacro{St}[1]
-  {\ifstateful{\ \shortmid \Sigma#1}\else{}\fi}
-  % {\ifstateful{, \Sigma#1}\else{}\fi}
+  {\ifstateful{,\:\Sigma#1}\else{}\fi}
 
 
 
@@ -224,7 +222,7 @@
 
 
 \newmacro{RelationH}
-  {t\st{} \handle{h} t'\st{'}}
+  {t\st{} \handle{i} t'\st{'}}
 
 
 \newrule{H-Change}[v, v' : \beta]
@@ -246,16 +244,16 @@
 
 \newrule{H-Fail}
   { }
-  {\Fail\st{} \handle{h} \Fail\st{}}
+  {\Fail\st{} \handle{i} \Fail\st{}}
 
 
 \newrule{H-PassThen}
-  {t_1\st{} \handle{h} t_1'\st{'}}
-  {t_1 \Then e_2\st{} \handle{h} t_1' \Then e_2\st{'}}
+  {t_1\st{} \handle{i} t_1'\st{'}}
+  {t_1 \Then e_2\st{} \handle{i} t_1' \Then e_2\st{'}}
 
 \newrule{H-PassNext}
-  {t_1\st{} \handle{h} t_1'\st{'}}
-  {t_1 \Next e_2\st{} \handle{h \neq \Continue} t_1' \Next e_2\st{'}}
+  {t_1\st{} \handle{i} t_1'\st{'}}
+  {t_1 \Next e_2\st{} \handle{i \neq \Continue} t_1' \Next e_2\st{'}}
 
 \newrule{H-Next}
   { }
@@ -263,21 +261,21 @@
 
 
 \newrule{H-FirstAnd}
-  {t_1\st{} \handle{h} t_1'\st{'} }
-  {t_1 \And t_2\st{} \handle{\First h} t_1' \And t_2\st{'}}
+  {t_1\st{} \handle{i} t_1'\st{'} }
+  {t_1 \And t_2\st{} \handle{\First i} t_1' \And t_2\st{'}}
 
 \newrule{H-SecondAnd}
-  {t_2\st{} \handle{h} t_2'\st{'} }
-  {t_1\st{} \And t_2 \handle{\Second h} t_1 \And t_2'\st{'}}
+  {t_2\st{} \handle{i} t_2'\st{'} }
+  {t_1\st{} \And t_2 \handle{\Second i} t_1 \And t_2'\st{'}}
 
 
 \newrule{H-FirstOr}
-  {t_1\st{} \handle{h} t_1'\st{'} }
-  {t_1 \Or t_2\st{} \handle{\First h} t_1' \Or t_2\st{'}}
+  {t_1\st{} \handle{i} t_1'\st{'} }
+  {t_1 \Or t_2\st{} \handle{\First i} t_1' \Or t_2\st{'}}
 
 \newrule{H-SecondOr}
-  {t_2\st{} \handle{h} t_2'\st{'} }
-  {t_1\st{} \Or t_2 \handle{\Second h} t_1 \Or t_2'\st{'}}
+  {t_2\st{} \handle{i} t_2'\st{'} }
+  {t_1\st{} \Or t_2 \handle{\Second i} t_1 \Or t_2'\st{'}}
 
 
 \newrule{H-PickLeft}[\Succeeding(t_1)]
@@ -321,17 +319,17 @@
 %   {t_1 \Then e\st{} \handle{\Execute \pi} t_2'\st{'}}
 
 % \newrule{H-PassS}
-%   {t_1\st{} \handle{h} t_1'\st{'}}
-%   {t_1 \Next e\st{} \handle{h} t_1' \Next e\st{'}}
+%   {t_1\st{} \handle{i} t_1'\st{'}}
+%   {t_1 \Next e\st{} \handle{i} t_1' \Next e\st{'}}
 
-% \newrule{H-Pass}[h \neq \Execute \pi]
-%   {t_1\st{} \handle{h} t_1'\st{'}       \\
+% \newrule{H-Pass}[i \neq \Execute \pi]
+%   {t_1\st{} \handle{i} t_1'\st{'}       \\
 %    t_1' \Then e\st{'} \normalise t_2\st{''} }
-%   {t_1 \Then e\st{} \handle{h} t_2\st{''}}
+%   {t_1 \Then e\st{} \handle{i} t_2\st{''}}
 
 \newrule{H-Fallback}
   { }
-  {t\st{} \handle{h} t\st{}}
+  {t\st{} \handle{i} t\st{}}
 
 
 
@@ -339,10 +337,10 @@
 
 
 \newmacro{RelationD}
-  {t\st{} \drive{h} t'\st{'}}
+  {t\st{} \drive{i} t'\st{'}}
 
 
 \newrule{D-Main}
-  {t\st{}   \handle{h} t'\st{'} \\
+  {t\st{}   \handle{i} t'\st{'} \\
    t'\st{'} \normalise t''\st{''}}
-  {t\st{} \drive{h} t''\st{''}}
+  {t\st{} \drive{i} t''\st{''}}

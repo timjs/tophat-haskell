@@ -17,8 +17,8 @@
   \addlinespace
     &      &\mid& e_1 \star e_2        & – operate \\
     &      &\mid& \If{e_1}{e_2}{e_3}   & – branch \\
-    &      &\mid& \{e_1, e_2\}         & – pair \\
-    &      &\mid& \{\}                 & – unit \\
+    &      &\mid& \tuple{e_1, e_2}     & – pair \\
+    &      &\mid& \unit                & – unit \\
   \addlinespace
     &      &\mid& \Ref e               & – reference \\
     &      &\mid& !e                   & – dereference \\
@@ -89,8 +89,8 @@
 \begin{grammar}
   Values
     & v    &::= & \lambda x.\ e        & – abstraction \\
-    &      &\mid& \{v_1, v_2\}         & – pair value \\
-    &      &\mid& \{\}                 & – unit \\
+    &      &\mid& \tuple{v_1, v_2}     & – pair value \\
+    &      &\mid& \unit                & – unit \\
     &      &\mid& c                    & – constant \\
     &      &\mid& l                    & – location \\
     &      &\mid& t                    & – task \\
@@ -134,9 +134,9 @@ Notes:
 
 
 
-\subsection{Observating}
+\subsection{Observing}
 
-\begin{equation*}
+\begin{flalign*}
   \begin{array}{lcl}
     \multicolumn{3}{l}{\Value : \mathrm{Tasks} \rightharpoonup \mathrm{Values}} \\
     \Value(\Edit v)       &=& v \\
@@ -147,7 +147,7 @@ Notes:
     \Value(t_1 \Next e_2) &=& \bot \\
     \Value(t_1 \And t_2)  &=& \left\{
       \begin{array}{ll}
-        \{v_1, v_2\}      & \when\ \Value(t_1) = v_1 \land \Value(t_2) = v_2 \\
+        \tuple{v_1, v_2}  & \when\ \Value(t_1) = v_1 \land \Value(t_2) = v_2 \\
         \bot              & \otherwise
       \end{array}
     \right. \\
@@ -159,10 +159,10 @@ Notes:
       \end{array}
     \right. \\
     \Value(t_1 \Xor t_2)  &=& \bot
-  \end{array}
-\end{equation*}
+  \end{array} & &&
+\end{flalign*}
 
-\begin{equation*}
+\begin{flalign*}
   \begin{array}{lcl}
     \multicolumn{3}{l}{\Succeeding : \mathrm{Tasks} \to \mathrm{Booleans}} \\
     \Succeeding(\Edit v)       &=& \True \\
@@ -174,10 +174,25 @@ Notes:
     \Succeeding(t_1 \And t_2)  &=& \Succeeding(t_1) \lor \Succeeding(t_2) \\
     \Succeeding(t_1 \Or t_2)   &=& \Succeeding(t_1) \lor \Succeeding(t_2) \\
     \Succeeding(t_1 \Xor t_2)  &=& \Succeeding(t_1) \lor \Succeeding(t_2)
-  \end{array}
-\end{equation*}
+  \end{array} & &&
+\end{flalign*}
 
 \todo{Is $\Succeeding$ preserved by $\normalise$?}
+
+\begin{flalign*}
+  \begin{array}{lcl}
+    \multicolumn{3}{l}{\Firsts : \mathrm{Tasks} \to \powerset(\mathrm{Inputs})} \\
+    \Firsts(\Edit v)       &=& \set{v', \Clear} \\
+    \Firsts(\Enter \tau)   &=& \set{v'} \\
+    \Firsts(\Store l)      &=& \set{v'} \\
+    \Firsts(\Fail)         &=& \set{} \\
+    \Firsts(t_1 \Then e_2) &=& \Firsts(t_1) \\
+    \Firsts(t_1 \Next e_2) &=& \Firsts(t_1) \cup \set{\Continue} \\
+    \Firsts(t_1 \And t_2)  &=& \set{\First\ i \mid i \in \Firsts(t_1)} \cup \set{\Second\ i \mid i \in \Firsts(t_2)} \\
+    \Firsts(t_1 \Or t_2)   &=& \set{\First\ i \mid i \in \Firsts(t_1)} \cup \set{\Second\ i \mid i \in \Firsts(t_2)} \\
+    \Firsts(t_1 \Xor t_2)  &=& \set{\Pick \Left, \Pick \Right}
+  \end{array} & &&
+\end{flalign*}
 
 
 
@@ -221,10 +236,10 @@ Notes:
 \subsection{Handling}
 
 \begin{grammar}
-  Events
-    & h    & ::=& a                    & – action \\
-    &      &\mid& \First h             & – pass to first \\
-    &      &\mid& \Second h            & – pass to second \\
+  Inputs
+    & i    & ::=& a                    & – action \\
+    &      &\mid& \First i             & – pass to first \\
+    &      &\mid& \Second i            & – pass to second \\
   Actions
     & a    & ::=& v                    & – change editor to value \\
     &      &\mid& \Clear               & – clear an editor \\
@@ -245,13 +260,23 @@ Notes:
   \userule{H-Change} \qquad \userule{H-Clear} \qquad \userule{H-Fill} \\
   \userule{H-Store} \qquad \userule{H-Fail}
 \end{mathpar}
-\todo{Should $\Fail$ be a black hole or just go stuck?}
+
+\todo{
+  Should $\Fail$ be a black hole or just go stuck?
+  Probably it should go stuck, than $\Firsts(\Fail)$ is empty!
+}
 
 \paragraph{Continuing}
 \begin{mathpar}
   \userule{H-PickLeft} \qquad \userule{H-PickRight} \\
   \userule{H-PickHere} \qquad \userule{H-Next}
 \end{mathpar}
+
+\todo{
+  There is a problem with routes and picking $\Here$(ere):
+  It is an input you can always send, so it fucks up $\Firsts$\ldots
+  Should we only allow to pick $\Left$ or $\Right$ for the semantics?
+}
 
 \paragraph{Passing}
 \begin{mathpar}

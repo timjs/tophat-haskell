@@ -5,10 +5,10 @@
 \begin{grammar}
   Expressions
     & e    & ::=& \ldots               & \\
-    &      &\mid& \{e_1, e_2\}         & – pairs \\
+    &      &\mid& \tuple{e_1, e_2}     & – pairs \\
   Values
     & v    & ::=& \ldots               & \\
-    &      &\mid& \{v_1, v_2\}         & – pair value \\
+    &      &\mid& \tuple{v_1, v_2}     & – pair value \\
   Pretasks
     & p    & ::=& \ldots               & \\
     &      &\mid& e_1 \And e_2         & – task pairing \\
@@ -18,10 +18,10 @@
   Types
     & \tau & ::=& \ldots               & \\
     &      &\mid& \tau_1 \times \tau_2 & – product type \\
-  Events
-    & h    & ::=& a                    & – action \\
-    &      &\mid& \First h             & – pass to first \\
-    &      &\mid& \Second h            & – pass to second \\
+  Inputs
+    & i    & ::=& a                    & – action \\
+    &      &\mid& \First i             & – pass to first \\
+    &      &\mid& \Second i            & – pass to second \\
 \end{grammar}
 
 \begin{equation*}
@@ -40,8 +40,8 @@
   \begin{array}{lcl}
     \Value(t_1 \And t_2) &=& \left\{
       \begin{array}{ll}
-        \{v_1, v_2\} & \when\ \Value(t_1) = v_1 \land \Value(t_2) = v_2 \\
-        \bot         & \otherwise
+        \tuple{v_1, v_2} & \when\ \Value(t_1) = v_1 \land \Value(t_2) = v_2 \\
+        \bot             & \otherwise
       \end{array}
     \right.
   \end{array}
@@ -68,16 +68,16 @@
 
 \begin{equation*}
   \begin{array}{rclr}
-    \Map \Snd\ (\Edit \{\} \And t)
+    \Map \Snd\ (\Edit \unit \And t)
       &\approxeq& t
       & \text{(left identity)} \\
-    \Map \Fst\ (t \And \Edit \{\})
+    \Map \Fst\ (t \And \Edit \unit)
       &\approxeq& t
       & \text{(right identity)} \\
     \Map \Assoc\ (r \And\ (s \And t))
       &\approxeq& (r \And s) \And t
       & \text{(associativity)} \\
-    \Map\ (\lambda \{x, y\}. \{g\ x, h\ y\})\ (s \And t)
+    \Map\ (\lambda \tuple{x, y}. \tuple{g\ x, h\ y})\ (s \And t)
       &\approxeq& \Map\ g\ s \And \Map\ h\ t
       & \text{(naturality)} \\
   \end{array}

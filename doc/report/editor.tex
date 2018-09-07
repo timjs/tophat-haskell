@@ -204,7 +204,7 @@ With other words:
 \end{itemize}
 
 
-\subsection{Handling events}
+\subsection{Handling inputs}
 \label{sec:handling}
 
 To change values in an editor,
@@ -244,8 +244,8 @@ We define a new syntactic category of \emph{events} $h$.
 For now, they only contain \emph{actions} $a$.
 We will introduce more events and actions in later sections.
 \begin{grammar}
-  Events
-    & h & ::=& a      & – action \\
+  Inputs
+    & i & ::=& a      & – action \\
   Actions
     & a & ::=& v      & – change editor to value \\
     &   &\mid& \Clear & – clear an editor \\
@@ -262,7 +262,7 @@ We choose to merge the first two, filling and changing, into one action.
 The value of an editor, empty or not, can be changed to a value $v$ by just sending the value as an action.
 To clear a valued editor, we send the $\Clear$(lear) action.
 
-Handling events is done by a new semantic relation.
+Handling inputs is done by a new semantic relation.
 This small step relation takes a task $t$ and an event $h$ which results in a new task $t'$.
 We write
 \begin{equation*}
