@@ -168,6 +168,21 @@ Notes:
 
 \begin{flalign*}
   \begin{array}{lcl}
+    \multicolumn{3}{l}{\Value_{\normalise} : \mathrm{Tasks} \rightharpoonup \mathrm{Boolean}} \\
+    \Value_{\normalise}(\Edit e)       &=& \True \\
+    \Value_{\normalise}(\View e)       &=& \True \\
+    \Value_{\normalise}(\Enter \tau)   &=& \True \\
+    \Value_{\normalise}(\Fail)         &=& \True \\
+    \Value_{\normalise}(e_1 \Then e_2) &=& \neg\Value(e_1)\wedge\Value_{\normalise}(e_1) \\
+    \Value_{\normalise}(e_1 \Next e_2) &=& \Value(e_1)\vee\Value_{\normalise}(e_1)\\
+    \Value_{\normalise}(e_1 \And e_2)  &=& \Value_{\normalise}(e_1)\wedge \Value_{\normalise}(e_2) \\
+    \Value_{\normalise}(t_1 \Or t_2)   &=& \neg(\Value(e_1)\vee\Value(e_2))\wedge\Value_{\normalise}(e_1)\wedge\Value_{\normalise}(e_2) \\
+    \Value_{\normalise}(t_1 \Xor t_2)  &=& \True
+  \end{array} & &&
+\end{flalign*}
+
+\begin{flalign*}
+  \begin{array}{lcl}
     \multicolumn{3}{l}{\Succeeding : \mathrm{Tasks} \to \mathrm{Booleans}} \\
     \Succeeding(\Edit v)       &=& \True \\
     \Succeeding(\Enter \tau)   &=& \True \\
