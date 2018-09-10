@@ -1,3 +1,18 @@
 % !TEX root=../pldi2019.tex
 
 \section{Introduction}
+
+Task-Oriented Programming (TOP) is a programming paradigm aimed at writing interactive multi-user applications in a declarative way.
+There are two aspects to TOP.
+Firstly, TOP defines the primitive building blocks that are useful for high-level descriptions of how users collaborate with each other and with applications.
+These building blocks are \emph{editors}, \emph{combinators}, and \emph{shared data sources}.
+Secondly, TOP defines a type-driven way to derive applications including graphical user interfaces from workflows modelled with said building blocks.
+
+Editors represent end-points where users directly interact with applications.
+In a derived application editors can take many forms, like input fields, selection boxes, or map widgets.
+Combinators represent control flow and stand for the ways work can be coordinated in a collaborative environment.
+The three most basic combinators are sequential composition, parallel composition, and choice.
+
+iTasks is an implementation of TOP, in the form of an embedded domain-specific language (EDSL) in the lazy functional programming language Clean.
+It comes in the form of a library that provides editors and combinators.
+iTasks uses generic programming to derive web applications from workflow models.
