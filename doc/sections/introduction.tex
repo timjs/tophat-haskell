@@ -2,7 +2,7 @@
 
 \section{Introduction}
 
-Task-Oriented Programming (TOP) is a programming paradigm aimed at writing interactive multi-user applications in a declarative way.
+Task-Oriented Programming (TOP) is a programming paradigm aimed at writing interactive multi-user applications in a declarative way \cite{conf/ppdp/PlasmeijerLMAK12}.
 TOP has two aspects.
 Firstly, TOP defines the primitive building blocks that are useful for high-level descriptions of how users collaborate with each other and with applications.
 These building blocks are \emph{editors}, \emph{combinators}, and \emph{shared data sources}.
@@ -16,6 +16,9 @@ The three most important combinators are sequential composition, parallel compos
 iTasks is an implementation of TOP, in the form of an embedded domain-specific language in the lazy functional programming language Clean.
 It comes in the form of a library that provides editors and monadic combinators.
 iTasks uses the generic programming facilities of Clean to derive web applications from workflow models.
+
+iTasks has been used to implement an incident management tool for the Dutch coast guard \alert{cite incidone}.
+Furthermore it has been used numerous times to prototype ideas while studying concepts about Command and Control \alert{cite koolBachelorThesis, stutterheimPhdThesis}.
 
 iTasks has many features, and its basic combinators are versatile and powerful.
 Simpler combinators are implemented by restricting the powerful ones.
