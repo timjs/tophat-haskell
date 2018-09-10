@@ -8,8 +8,8 @@ Firstly, TOP defines the primitive building blocks that are useful for high-leve
 These building blocks are \emph{editors}, \emph{combinators}, and \emph{shared data sources}.
 Secondly, TOP defines a type-driven way to derive applications, including graphical user interfaces, from workflows modelled with said building blocks.
 
-Editors represent end-points where users directly interact with applications.
-In a derived application, editors can take many forms, like input fields, selection boxes, or map widgets.
+Editors represent end points where users directly interact with applications.
+In derived applications, editors can take many forms, like input fields, selection boxes, or map widgets.
 Combinators represent control flow and stand for the ways work can be coordinated in a collaborative environment.
 The three most important combinators are sequential composition, parallel composition, and choice.
 
@@ -20,7 +20,7 @@ iTasks uses the generic programming facilities of Clean to derive web applicatio
 iTasks has many features, and its basic combinators are versatile and powerful.
 Simpler combinators are implemented by restricting the powerful ones.
 This is useful for everyday programming, where having lots of functionality at one's fingertips is convenient and efficient.
-This approach does not lend itself well for formal treatment however, as it obscures what the essential features of TOP are, and how they interact.
+This approach does not lend itself well to formal treatment however, as it obscures what the essential features of TOP are, and how they interact.
 
 The goal of this paper is to develop a calculus that serves as a formal foundation for TOP.
 Starting with combinators that have a single responsibility, we show how more complicated combinators can be expressed in terms of those.
