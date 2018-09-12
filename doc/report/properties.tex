@@ -1,0 +1,51 @@
+% !TEX root=../report.tex
+
+\section{Overview}
+
+\statefultrue
+
+\subsection{Equality}
+
+\begin{align*}
+\forall t_1, t_2 .  t_1 \sim t_2 \iff \forall i . &        & t_1 \handle{i} t_1'\\
+                                                  & \wedge & t_2 \handle{i} t_2'\\
+                                                  & \wedge & \Value{(t_1')} \equiv \Value{(t_2')}\\
+                                                  & \wedge & t_1' \sim t_2'
+\end{align*}
+
+\subsection{Equivalence}
+
+\begin{align*}
+\forall t_1, t_2 .  t_1 \simeq t_2 \iff \forall i_1 .\exists i_2 &        & t_1 \handle{i_1} t_1'\\
+                                                    & \wedge & t_2 \handle{i_2} t_2'\\
+                                                    & \wedge & \Value{(t_1')} \equiv \Value{(t_2')}\\
+                                                    & \wedge & t_1' \simeq t_2'\\
+                                                    & \wedge & i_1 \bumpeq i_2\\
+                                      \wedge\forall i_2.\exists i_1 & & t_2 \handle{i_2} t_2'\\
+                                      & \wedge & t_1 \handle{i_1} t_1'\\
+                                      & \wedge & \Value{(t_1')} \equiv \Value{(t_2')}\\
+                                      & \wedge & t_1' \simeq t_2'\\
+                                      & \wedge & i_1 \bumpeq i_2\\
+\end{align*}
+
+\subsection{Progress}
+
+\begin{align*}
+  \forall e:\tau,i & e \handle{i} e' &\implies& \text{ either Fail}(e') \text{ or } \exists e'',i' \text{ such that } e'\handle{i'}e''&\\
+\end{align*}
+
+\subsection{Preservation}
+\begin{align*}
+  \forall e:\tau,i & e \handle{i} e' &\implies& e':\tau&\\
+  \forall e:\Task\tau & \Value{e}=v &\implies& v:\tau\\
+  \forall e:\tau & e \normalise e' &\implies& e':\tau&\\
+  \forall e:\tau & e \evaluate e' &\implies& e':\tau&
+\end{align*}
+
+\subsection{???}
+
+\begin{align*}
+  \forall e:\tau & e \normalise e' &\implies& \text{ either Fail}(e') \text{ or } \exists e'',i' \text{ such that } e'\handle{i'}e''&\\
+  \forall e:\tau & i\in\Firsts{(e)} &\implies& e\handle{i}e'\\
+  \forall e:\tau, i & e\handle{i}e' &\implies& i\in\Firsts{(e)}
+\end{align*}
