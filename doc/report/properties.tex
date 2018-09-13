@@ -42,6 +42,7 @@
 
 \begin{theorem}[preservation under normalization]
     $\forall e:\tau  e \normalise e' \implies e':\tau$
+    \label{thmpresnorm}
 \end{theorem}
 
 \begin{theorem}[preservation under evaluation]
@@ -132,6 +133,36 @@ Before we can show that normalisation also preserves, we need to show that the f
   \noindent\textbf{Case} $\Value{(t_1\Xor t_2)}=\bot$ Since this case does not lead to a value, the lemma holds trivially.\\
 \end{proof}
 
+\begin{proof}
+  We prove Theorem~\ref{thmpresnorm} by induction on $e$:\\
+
+  \noindent\textbf{Case} $\userule{N-Fail}$\\
+
+  \noindent\textbf{Case} $\userule{N-Xor}$\\
+
+  \noindent\textbf{Case} $\userule{N-Update}$\\
+
+  \noindent\textbf{Case} $\userule{N-Fill}$\\
+
+  \noindent\textbf{Case} $\userule{N-Edit}$\\
+
+  \noindent\textbf{Case} $\userule{N-And}$\\
+
+  \noindent\textbf{Case} $\userule{N-Next}$\\
+
+  \noindent\textbf{Case} $\userule{N-OrLeft}$\\
+
+  \noindent\textbf{Case} $\userule{N-OrNone}$\\
+
+  \noindent\textbf{Case} $\userule{N-OrRight}$\\
+
+  \noindent\textbf{Case} $\userule{N-ThenStay}$\\
+
+  \noindent\textbf{Case} $\userule{N-ThenFail}$\\
+
+  \noindent\textbf{Case} $\userule{N-ThenCont}$\\
+
+\end{proof}
 \subsection{???}
 
 \begin{align*}
