@@ -178,33 +178,33 @@ Notes:
 
 \begin{flalign*}
   \begin{array}{lcl}
-    \multicolumn{3}{l}{\Succeeding : \mathrm{Tasks} \to \mathrm{Booleans}} \\
-    \Succeeding(\Edit v)       &=& \True \\
-    \Succeeding(\Enter \tau)   &=& \True \\
-    \Succeeding(\Update l)     &=& \True \\
-    \Succeeding(\Fail)         &=& \False \\
-    \Succeeding(t_1 \Then e_2) &=& \Succeeding(t_1) \\
-    \Succeeding(t_1 \Next e_2) &=& \Succeeding(t_1) \\
-    \Succeeding(t_1 \And t_2)  &=& \Succeeding(t_1) \lor \Succeeding(t_2) \\
-    \Succeeding(t_1 \Or t_2)   &=& \Succeeding(t_1) \lor \Succeeding(t_2) \\
-    \Succeeding(t_1 \Xor t_2)  &=& \Succeeding(t_1) \lor \Succeeding(t_2)
+    \multicolumn{3}{l}{\Failing : \mathrm{Tasks} \to \mathrm{Booleans}} \\
+    \Failing(\Edit v)       &=& \False \\
+    \Failing(\Enter \tau)   &=& \False \\
+    \Failing(\Update l)     &=& \False \\
+    \Failing(\Fail)         &=& \True \\
+    \Failing(t_1 \Then e_2) &=& \Failing(t_1) \\
+    \Failing(t_1 \Next e_2) &=& \Failing(t_1) \\
+    \Failing(t_1 \And t_2)  &=& \Failing(t_1) \wedge \Failing(t_2) \\
+    \Failing(t_1 \Or t_2)   &=& \Failing(t_1) \wedge \Failing(t_2) \\
+    \Failing(t_1 \Xor t_2)  &=& \False
   \end{array} & &&
 \end{flalign*}
 
-\todo{Is $\Succeeding$ preserved by $\normalise$?}
+\todo{Is $\Failing$ preserved by $\normalise$?}
 
 \begin{flalign*}
   \begin{array}{lcl}
-    \multicolumn{3}{l}{\Firsts : \mathrm{Tasks} \to \powerset(\mathrm{Inputs})} \\
-    \Firsts(\Edit v)       &=& \set{v', \Clear} \\
-    \Firsts(\Enter \tau)   &=& \set{v'} \\
-    \Firsts(\Update l)     &=& \set{v'} \\
-    \Firsts(\Fail)         &=& \set{} \\
-    \Firsts(t_1 \Then e_2) &=& \Firsts(t_1) \\
-    \Firsts(t_1 \Next e_2) &=& \Firsts(t_1) \cup \set{\Continue} \\
-    \Firsts(t_1 \And t_2)  &=& \set{\First\ i \mid i \in \Firsts(t_1)} \cup \set{\Second\ i \mid i \in \Firsts(t_2)} \\
-    \Firsts(t_1 \Or t_2)   &=& \set{\First\ i \mid i \in \Firsts(t_1)} \cup \set{\Second\ i \mid i \in \Firsts(t_2)} \\
-    \Firsts(t_1 \Xor t_2)  &=& \set{\Pick \Left, \Pick \Right}
+    \multicolumn{3}{l}{\Inputs : \mathrm{Tasks} \to \powerset(\mathrm{Inputs})} \\
+    \Inputs(\Edit v)       &=& \set{v', \Clear} \\
+    \Inputs(\Enter \tau)   &=& \set{v'} \\
+    \Inputs(\Update l)     &=& \set{v'} \\
+    \Inputs(\Fail)         &=& \set{} \\
+    \Inputs(t_1 \Then e_2) &=& \Inputs(t_1) \\
+    \Inputs(t_1 \Next e_2) &=& \Inputs(t_1) \cup \set{\Continue} \\
+    \Inputs(t_1 \And t_2)  &=& \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)} \\
+    \Inputs(t_1 \Or t_2)   &=& \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)} \\
+    \Inputs(e_1 \Xor e_2)  &=& \set{\Pick \Left, \Pick \Right}
   \end{array} & &&
 \end{flalign*}
 
@@ -277,7 +277,7 @@ Notes:
 
 \todo{
   Should $\Fail$ be a black hole or just go stuck?
-  Probably it should go stuck, than $\Firsts(\Fail)$ is empty!
+  Probably it should go stuck, than $\Inputs(\Fail)$ is empty!
 }
 
 \paragraph{Continuing}
@@ -288,7 +288,7 @@ Notes:
 
 \todo{
   There is a problem with routes and picking $\Here$(ere):
-  It is an input you can always send, so it fucks up $\Firsts$\ldots
+  It is an input you can always send, so it fucks up $\Inputs$\ldots
   Should we only allow to pick $\Left$ or $\Right$ for the semantics?
 }
 

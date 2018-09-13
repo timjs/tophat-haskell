@@ -5,15 +5,15 @@
 There are three possible observations we can do on tasks:
 \begin{enumerate}
   \item Does it have a value? ($\Value(t) \neq \bot$)
-  \item Is it possible to send events to it? ($\Firsts(t) \neq \nothing$)
-  \item Is it succeeding? ($\Succeeding(t) = \True$)
+  \item Is it possible to send events to it? ($\Inputs(t) \neq \nothing$)
+  \item Is it succeeding? ($\Failing(t) = \False$)
 \end{enumerate}
 Below a table of possible results when applying these observations to different tasks.
 
 \begin{equation*}
   \begin{array}{llll}
     \toprule
-                                                         & \Value           & \Firsts                                                    & \Succeeding \\
+                                                         & \Value           & \Inputs                                                    & \Failing \\
     \midrule
     \Fail                                                & \bot             & \nothing                                                   & \False \\
     \addlinespace
@@ -60,16 +60,16 @@ Conclusions:
 }
 \begin{itemize}
   \item
-    When we have always writeable editors, $\Firsts$ and $\Succeeding$ agree.
+    When we have always writeable editors, $\Inputs$ and $\Failing$ agree.
   \item
-    Introducing readonly editors will make $\Firsts(t) = \nothing$ but keeps $\Succeeding = \True$.
+    Introducing readonly editors will make $\Inputs(t) = \nothing$ but keeps $\Failing = \True$.
   \item
-    Taking $\Firsts$ as a predicate to step to a task is tempting,
+    Taking $\Inputs$ as a predicate to step to a task is tempting,
     but as we just reasoned,
     we will not be able to step to a readonly editor\ldots
   \item
     On the other hand,
-    taking $\Succeeding$ as a predicate to step to a task,
+    taking $\Failing$ as a predicate to step to a task,
     will still prohibit to step to $\Fail$ or pairs thereof.
     However, it is possible to step to a locked task like $t_1$.
     It is not immediately observable as failing,

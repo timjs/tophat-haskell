@@ -167,6 +167,6 @@ Before we can show that normalisation also preserves, we need to show that the f
 
 \begin{align*}
   \forall e:\tau & e \normalise e' &\implies& \text{ either Fail}(e') \text{ or } \exists e'',i' \text{ such that } e'\handle{i'}e''&\\
-  \forall e:\tau & i\in\Firsts{(e)} &\implies& e\handle{i}e'\\
-  \forall e:\tau, i & e\handle{i}e' &\implies& i\in\Firsts{(e)}
+  \forall e:\tau & i\in\Inputs{(e)} &\implies& e\handle{i}e'\\
+  \forall e:\tau, i & e\handle{i}e' &\implies& i\in\Inputs{(e)}
 \end{align*}

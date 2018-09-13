@@ -164,12 +164,12 @@
   {t_1\st{} \normalise t_1'\st{'}}
   {t_1 \Then e_2\st{} \normalise t_1' \Then e_2\st{'}}
 
-\newrule{N-ThenFail}[\Value(t_1') = v_1 \land \lnot\Succeeding(t_2)]
+\newrule{N-ThenFail}[\Value(t_1') = v_1 \land \lnot\Failing(t_2)]
   {t_1\st{} \normalise t_1'\st{'} \\
    e_2\ v_1 \evaluate t_2}
   {t_1 \Then e_2\st{} \normalise t_1' \Then e_2\st{'}}
 
-\newrule{N-ThenCont}[\Value(t_1') = v_1 \land \Succeeding(t_2)]
+\newrule{N-ThenCont}[\Value(t_1') = v_1 \land \Failing(t_2)]
   {t_1\st{} \normalise t_1'\st{'} \\
    e_2\ v_1 \evaluate t_2  \\
    t_2\st{'} \normalise t_2'\st{''}}
@@ -278,11 +278,11 @@
   {t_1\st{} \Or t_2 \handle{\Second i} t_1 \Or t_2'\st{'}}
 
 
-\newrule{H-PickLeft}[\Succeeding(t_1)]
+\newrule{H-PickLeft}[\Failing(t_1)]
   {t_1\st{} \handle{\Pick r} t_1'\st{'}}
   {t_1 \Xor t_2\st{} \handle{\Pick \Left r} t_1'\st{'}}
 
-\newrule{H-PickRight}[\Succeeding(t_2)]
+\newrule{H-PickRight}[\Failing(t_2)]
   {t_2\st{} \handle{\Pick r} t_2'\st{'}}
   {t_1 \Xor t_2\st{} \handle{\Pick \Right r} t_2'\st{'}}
 

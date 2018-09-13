@@ -50,7 +50,7 @@ but nothing will ever come out!
 
 
 \subsection{Failing and succeeding}
-\label{sec:succeeding}
+\label{sec:failing}
 
 So, what is the usage of this simple and dull addition to our task language?
 Think of $\Fail$ as the error value \type{Nothing} from Haskell's \type{Maybe} data type
@@ -58,22 +58,22 @@ or \type{None} from ML's \type{option} lifted into the task world.
 Note the difference between $\Fail$ and $\Enter\beta$.
 The first is the failing task,
 the second an unvalued editor waiting for users to fill in a value.
-Editors are tasks that clearly have a future and thus are \emph{succeeding}.
+Editors are tasks that clearly have a future and thus are not \emph{failing}.
 
 We will need to distinguish tasks which succeed and tasks which fail in the remaining of this report.
 To do this,
-we introduce the predicate $\boxed{\Succeeding(t)}$,
-which tells us if a task is succeeding or not.
+we introduce the predicate $\boxed{\Failing(t)}$,
+which tells us if a task is failing or not.
 \begin{equation*}
   \begin{array}{lcl}
-    \multicolumn{3}{l}{\Succeeding : \mathrm{Tasks} \to \mathrm{Booleans}} \\
-    \Succeeding(\Edit v)     &=& \True \\
-    \Succeeding(\Enter \tau) &=& \True \\
-    \Succeeding(\Fail)       &=& \False
+    \multicolumn{3}{l}{\Failing : \mathrm{Tasks} \to \mathrm{Booleans}} \\
+    \Failing(\Edit v)     &=& \False \\
+    \Failing(\Enter \tau) &=& \False \\
+    \Failing(\Fail)       &=& \True
   \end{array}
 \end{equation*}
 For now,
-only $\Succeeding(\Fail)$ does not hold.
+only $\Failing(\Fail)$ holds.
 We will step-by-step extend this definition in future sections.
 
 

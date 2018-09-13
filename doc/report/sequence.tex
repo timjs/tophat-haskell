@@ -89,7 +89,7 @@ normalisation conceptually lies \emph{between} evaluation and handling.
 Normalisation will make use of evaluation of our underlying host language and,
 as we will see later on,
 handling will make use of normalisation
-and the functions $\Value(t)$ and $\Succeeding(t)$ from sections \autoref{sec:value} and \autoref{sec:succeeding}.
+and the functions $\Value(t)$ and $\Failing(t)$ from sections \autoref{sec:value} and \autoref{sec:failing}.
 
 Graphically,
 we now have the following semantic functions shown in \autoref{fig:semantic-functions}.
@@ -144,7 +144,7 @@ and when is the time we should proceed proceed with it?}
 There are two main principles when stepping from task $t_1$ to task $t_2$:
 \begin{enumerate}[S1]
   \item We can only step from a task if it has a value, i.e. $\Value(t_1) = v_1$. \label{itm:step1}
-  \item It is not allowed to step to a failing task, i.e. $\Succeeding(t_2)$ holds. \label{itm:step2}
+  \item It is not allowed to step to a failing task, i.e. $\Failing(t_2)$ holds. \label{itm:step2}
 \end{enumerate}
 
 The intuition behind principle \autoref{itm:step1} is simply that we are not able to calculate the next task from a function
@@ -227,7 +227,7 @@ $\Then$ needs to pass inputs to the left.
 \end{equation*}
 
 Almost there!
-We did not extend the functions $\Succeeding(t)$ and $\Value(t)$ for our new sequencing construct $\Then$.
+We did not extend the functions $\Failing(t)$ and $\Value(t)$ for our new sequencing construct $\Then$.
 Intuitively,
 when we have a task $\Fail \Then e_2$ we are stuck.
 As in the case of just the task $\Fail$,
@@ -245,7 +245,7 @@ Thus,
 a sequence $t_1 \Then e_2$ is succeeding iff its left hand side $t_1$ is succeeding.
 \begin{equation*}
   \begin{array}{lcl}
-    \Succeeding(t_1 \Then e_2) &=& \Succeeding(t_1)
+    \Failing(t_1 \Then e_2) &=& \Failing(t_1)
   \end{array}
 \end{equation*}
 
@@ -404,7 +404,7 @@ only \refrule{H-Next} is new and specific for external stepping.
 
 \begin{equation*}
   \begin{array}{lcl}
-    \Succeeding(t_1 \Next e_2) &=& \Succeeding(t_1)
+    \Failing(t_1 \Next e_2) &=& \Failing(t_1)
   \end{array}
 \end{equation*}
 
