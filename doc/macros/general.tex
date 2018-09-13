@@ -234,3 +234,16 @@
   %%NOTE: the `@{}` suppreses `\tabcolsep` before the first column
   {\begin{block}\begin{tabular}{@{}rRCLl}}
   {\end{tabular}\end{block}}
+
+
+%% Theorems %%
+
+\theoremstyle{acmplain}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{conjecture}[theorem]{Conjecture}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{definition}[theorem]{Definition}
