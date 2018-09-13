@@ -49,10 +49,6 @@
       \label{thmpreseval}
 \end{theorem}
 
-\begin{lemma}
-  $\forall e:\Task\tau . \Value{e}=v \implies v:\tau$
-\end{lemma}
-
 \begin{proof}
   We prove Theorem~\ref{thmpreseval} by induction on $e$:\\
   \noindent\textbf{Case} $e=\lambda x:\tau.e, e_1 e_2, x, c, l, e_1 \star e_2,
@@ -103,6 +99,37 @@
 
   \noindent\textbf{Case} $\userule{E-Xor}$
       Evaluation does not alter the expression, therefore this case holds tivially.
+\end{proof}
+
+Before we can show that normalisation also preserves, we need to show that the following lemma holds:\\
+
+\begin{lemma}[Task value preserves]
+  $\forall e:\Task\tau . \Value{(e)}=v \implies v:\tau$
+\end{lemma}
+\begin{proof}
+  \noindent\textbf{Case} $\Value{(\Edit v,s)}=v$ By T-Edit, if $\Edit v:\Task\tau$, then $v:\tau$.\\
+
+  \noindent\textbf{Case} $\Value{(\Enter \tau,s)}=\bot$ Since this case does not lead to a value, the lemma holds trivially.\\
+
+  \noindent\textbf{Case} $\Value{(\Update l,s)}=s(l)$ \todo{Which rule do we use here to show that s(l) has the same type as l???}\\
+
+  \noindent\textbf{Case} $\Value{(\Fail)}=\bot$ Since this case does not lead to a value, the lemma holds trivially.\\
+
+  \noindent\textbf{Case} $\Value{(t_1\Then e_2)}=\bot$ Since this case does not lead to a value, the lemma holds trivially.\\
+
+  \noindent\textbf{Case} $\Value{(t_2\Next e_2)}=\bot$ Since this case does not lead to a value, the lemma holds trivially.\\
+
+  \noindent\textbf{Case} $\Value{(t_1\And t_2)}=\tuple{v_1, v_2}, \Value{(t_1)}=v_1\wedge\Value{(t_2)}=v_2$ By T-And we have that $t_1\And t_2:\Task(\tau_1\times\tau_2)$ and $t_1:\tau_1$ and $t_2:\tau_2$. By the induction hypothesis, $ \Value{(t_1)}=v_1$ and $\Value{(t_2)}=v_2$ preserve, and thus $v_1:\tau_1$ and $v_2:\tau_2$. This gives us that $\tuple{v_1, v_2}:\Task(\tau_1\times\tau_2)$ \\
+
+  \noindent\textbf{Case} $\Value{(t_1\And t_2)}=bot, \not\Value{(t_1)}=v_1\wedge\Value{(t_2)}=v_2$ Since this case does not lead to a value, the lemma holds trivially.\\
+
+  \noindent\textbf{Case} $\Value{(t_1\Or t_2)}=v_1, \Value{(t_1)}=v_1$ By T-Or we have that $t_1\Or t_2:\Task\tau$, and $t_1:\Task\tau$ and $t_2:\Task\tau$. By the induction hypothesis, we have that $v_1:\tau$.\\
+
+  \noindent\textbf{Case} $\Value{(t_1\Or t_2)}=v_2, \Value{(t_1)}=\bot\wedge\Value{(t_2)}=v_2$ By T-Or we have that $t_1\Or t_2:\Task\tau$, and $t_1:\Task\tau$ and $t_2:\Task\tau$. By the induction hypothesis, we have that $v_2:\tau$.\\
+
+  \noindent\textbf{Case} $\Value{(t_1\Or t_2)}=\bot, \Value{(t_1)}=\bot\wedge\Value{(t_2)}=\bot$ Since this case does not lead to a value, the lemma holds trivially.\\
+
+  \noindent\textbf{Case} $\Value{(t_1\Xor t_2)}=\bot$ Since this case does not lead to a value, the lemma holds trivially.\\
 \end{proof}
 
 \subsection{???}
