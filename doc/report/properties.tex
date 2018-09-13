@@ -35,12 +35,75 @@
 \end{align*}
 
 \subsection{Preservation}
-\begin{align*}
-  \forall e:\tau,i & e \handle{i} e' &\implies& e':\tau&\\
-  \forall e:\Task\tau & \Value{e}=v &\implies& v:\tau\\
-  \forall e:\tau & e \normalise e' &\implies& e':\tau&\\
-  \forall e:\tau & e \evaluate e' &\implies& e':\tau&
-\end{align*}
+
+\begin{theorem}[preservation under handling]
+  $\forall e:\tau,i  e \handle{i} e' \implies e':\tau$
+\end{theorem}
+
+\begin{theorem}[preservation under normalization]
+    $\forall e:\tau  e \normalise e' \implies e':\tau$
+\end{theorem}
+
+\begin{theorem}[preservation under evaluation]
+      $\forall e:\tau  e \evaluate e' \implies e':\tau$
+      \label{thmpreseval}
+\end{theorem}
+
+\begin{lemma}
+  $\forall e:\Task\tau . \Value{e}=v \implies v:\tau$
+\end{lemma}
+
+\begin{proof}
+  We prove Theorem~\ref{thmpreseval} by induction on $e$:\\
+  \noindent\textbf{Case} $e=\lambda x:\tau.e, e_1 e_2, x, c, l, e_1 \star e_2,
+                            \If{e_1}{e_2}{e_3},\tuple{e_1, e_2},\unit,\Ref e,!e,
+                            e_1 := e_2,e_1; e_2$
+      preservation has been proven for these cases by \todo{insert cite}\\
+
+  \noindent\textbf{Case} $\userule{E-Edit}$
+      By T-Edit we have $\Edit e:\Task \tau$ and $e:\tau$. The induction
+      hypothesis gives us that $e\evaluate v$ also preserves, and thus $v:\tau$.
+      Therefore $\Edit v:\Task\tau$.\\
+
+  \noindent\textbf{Case} $\userule{E-Fill}$
+      Evaluation does not alter the expression, therefore this case holds tivially.\\
+
+  \noindent\textbf{Case} $\userule{E-Update}$
+      By T-Update we have $\Edit e:\Task \tau$ and $e:\Ref \tau$. The induction
+      hypothesis gives us that $e\evaluate l$ also preserves, and thus $l:\Ref\tau$.
+      Therefore $\Update l:\Task\tau$\\
+
+  \noindent\textbf{Case} $\userule{E-Fail}$
+      Evaluation does not alter the expression, therefore this case holds tivially.\\
+
+  \noindent\textbf{Case} $\userule{E-Then}$
+      Given that $e_1\Then e_2:\Task \tau$, T-Then gives us that $e_1:\Task\tau_1$
+      and $e_2:\tau_1 \to \Task \tau$. By the induction hypothesis, we know that
+      $e_1\evaluate t_1$ preserves and thus $t_1:\Task\tau_1$. Therefore
+      $t_1\Then e_2:\Task\tau$.\\
+
+  \noindent\textbf{Case} $\userule{E-Next}$
+      Given that $e_1\Next e_2:\Task \tau$, T-Then gives us that $e_1:\Task\tau_1$
+      and $e_2:\tau_1 \to \Task \tau$. By the induction hypothesis, we know that
+      $e_1\evaluate t_1$ preserves and thus $t_1:\Task\tau_1$. Therefore
+      $t_1\Next e_2:\Task\tau$.\\
+
+  \noindent\textbf{Case} $\userule{E-And}$
+      Given that $e_1\And e_2:\Task(\tau_1\times\tau_2)$, T-And gives us that
+      $e_1:\Task\tau_1$ and $e_2:\Task\tau_2$. By the induction hypothesis, we
+      know that both $e_1\evaluate t_1$ and $e_2\evaluate t_2$ preserve and thus
+      $t_1:\Task\tau_1$ and $t_2:\Task\tau_2$. Therfore
+      $t_1\And t_2:\Task(\tau_1\times\tau_2)$\\
+
+  \noindent\textbf{Case} $\userule{E-Or}$
+      Given that $e_1\Or e_2:\Task\tau$, T-Or gives us that $e_1:\Task\tau$ and
+      $e_2:\Task\tau$. By the induction hypothesis, we have that both
+      $e_1\evaluate t_1$ and $e_2\evaluate t_2$ preserve and thus $t_1:\Task\tau$
+      and $t_2:\Task\tau$. Therefore $t_1\Or t_2:\Task\tau$.\\
+
+  \noindent\textbf{Case} $\userule{E-Xor}$
+      Evaluation does not alter the expression, therefore this case holds tivially.
+\end{proof}
 
 \subsection{???}
 
