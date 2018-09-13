@@ -34,10 +34,8 @@
   \addlinespace
   Pretasks
     & p    &::= & \Edit e              & – valued editor \\
-    &      &\mid& \View e              & – valued readonly editor \\
     &      &\mid& \Enter \beta         & – unvalued editor \\
     &      &\mid& \Update e            & – stored editor \\
-    &      &\mid& \Watch e             & – stored readonly editor \\
   \addlinespace
     &      &\mid& \Fail                & – fail task \\
   \addlinespace
@@ -98,10 +96,8 @@
     &      &\mid& t                    & – task \\
   Tasks
     & t    &::= & \Edit v              & – valued editor \\
-    &      &\mid& \View v              & – valued readonly editor \\
     &      &\mid& \Enter \beta         & – unvalued editor \\
     &      &\mid& \Update l            & – stored editor \\
-    &      &\mid& \Watch l             & – stored readonly editor \\
     &      &\mid& \Fail                & – fail task \\
     &      &\mid& t_1 \Then e_2        & – step \\
     &      &\mid& t_1 \Next e_2        & – user step \\
@@ -170,7 +166,6 @@ Notes:
   \begin{array}{lcl}
     \multicolumn{3}{l}{\Value_{\normalise} : \mathrm{Tasks} \rightharpoonup \mathrm{Boolean}} \\
     \Value_{\normalise}(\Edit e)       &=& \True \\
-    \Value_{\normalise}(\View e)       &=& \True \\
     \Value_{\normalise}(\Enter \tau)   &=& \True \\
     \Value_{\normalise}(\Fail)         &=& \True \\
     \Value_{\normalise}(e_1 \Then e_2) &=& \neg\Value(e_1)\wedge\Value_{\normalise}(e_1) \\
