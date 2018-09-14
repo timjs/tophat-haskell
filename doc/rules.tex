@@ -205,6 +205,11 @@
   { }
   {e_1 \Xor e_2\st{} \normalise e_1 \Xor e_2\st{}}
 
+\newrule{N-Eval}
+    {e\evaluate e' \\
+    e\neq e'}
+    {e \normalise e'}  
+
 
 % \newrule{N-Next}[t_1' = \Edit v]
 %   {t_1\st{} \normalise t_1'\st{'}   \\
@@ -255,7 +260,7 @@
   {t_1\st{} \handle{i} t_1'\st{'}}
   {t_1 \Next e_2\st{} \handle{i \neq \Continue} t_1' \Next e_2\st{'}}
 
-\newrule{H-Next}
+\newrule{H-Next}[\neg\Failing{(t_1)}\wedge]
   { }
   {t_1 \Next e_2\st{} \handle{\Continue} t_1 \Then e_2\st{}}
 
