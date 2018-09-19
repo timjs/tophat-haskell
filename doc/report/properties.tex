@@ -1,33 +1,34 @@
 % !TEX root=../report.tex
 
-\section{Overview}
+\section{Properties}
 
 \statefultrue
 
 \subsection{Equality}
 
 \begin{align*}
-\forall t_1, t_2 .  t_1 \sim t_2 \iff \forall i . &        & t_1 \handle{i} t_1'\\
-                                                  & \wedge & t_2 \handle{i} t_2'\\
-                                                  & \wedge & \Value{(t_1')} \equiv \Value{(t_2')}\\
-                                                  & \wedge & t_1' \sim t_2'
+\forall t_1, t_2 .  t_1 \sim t_2 \iff &&\forall i . t_1 \handle{i} t_1' \implies& & t_2 \handle{i} t_2'\\
+&&&\wedge & \Value{(t_1')} \equiv \Value{(t_2')}\\
+&&&\wedge & t_1' \sim t_2'\\
+&\wedge& \forall i . t_2 \handle{i} t_2' \implies& & t_1 \handle{i} t_1'\\
+&&&\wedge & \Value{(t_1')} \equiv \Value{(t_2')}\\
+&&&\wedge & t_1' \sim t_2'
 \end{align*}
 
 \subsection{Equivalence}
 
 \begin{align*}
-\forall t_1, t_2 .  t_1 \simeq t_2 \iff \forall i_1 .\exists i_2 &        & t_1 \handle{i_1} t_1'\\
-                                                    & \wedge & t_2 \handle{i_2} t_2'\\
+\forall t_1, t_2 .  t_1 \simeq t_2 \iff \forall i_1 .\exists i_2 . t_1 \handle{i_1} t_1'\implies& & t_2 \handle{i_2} t_2'\\
                                                     & \wedge & \Value{(t_1')} \equiv \Value{(t_2')}\\
                                                     & \wedge & t_1' \simeq t_2'\\
                                                     & \wedge & i_1 \bumpeq i_2\\
-                                      \wedge\forall i_2.\exists i_1 & & t_2 \handle{i_2} t_2'\\
-                                      & \wedge & t_1 \handle{i_1} t_1'\\
+                                      \wedge\forall i_2.\exists i_1 . t_2 \handle{i_2} t_2'\implies && t_1 \handle{i_1} t_1'\\
                                       & \wedge & \Value{(t_1')} \equiv \Value{(t_2')}\\
                                       & \wedge & t_1' \simeq t_2'\\
                                       & \wedge & i_1 \bumpeq i_2\\
 \end{align*}
-
+\todo{What is missing still: $i_2$ can also be/contain empty/be a normalisation (???)}
+\todo{Define the equivalence of i's $\bumpeq$}
 \subsection{Progress}
 
 \begin{align*}
