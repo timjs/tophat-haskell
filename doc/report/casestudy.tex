@@ -17,25 +17,25 @@ Below a table of possible results when applying these observations to different 
     \midrule
     \Fail                                                & \bot             & \nothing                                                   & \False \\
     \addlinespace
-    \Edit v                                              & v                & \set{v', \Clear}                                           & \True \\
+    \Edit v                                              & v                & \set{v', \Empty}                                           & \True \\
     \View v                                              & v                & \nothing                                                   & \True \\
     \Enter \tau                                          & \bot             & \set{v'}                                                   & \True \\
     \Let l = \Ref v \In \Update l                        & v                & \set{v'}                                                   & \True \\
     \Let l = \Ref v \In \Watch l                         & v                & \nothing                                                   & \True \\
     \addlinespace
-    \Edit v \Then \lambda x. \Fail                       & \bot             & \set{v', \Clear}                                           & \True \\
+    \Edit v \Then \lambda x. \Fail                       & \bot             & \set{v', \Empty}                                           & \True \\
     \View v \Then \lambda x. \Fail                       & \bot             & \nothing                                                   & \True \\
     \Enter \tau \Then \lambda x. \Fail                   & \bot             & \set{v'}                                                   & \True \\
     \Let l = \Ref v \In \Update l \Then \lambda x. \Fail & \bot             & \set{v'}                                                   & \True \\
     \Let l = \Ref v \In \Watch l \Then \lambda x. \Fail  & \bot             & \nothing                                                   & \True \\
     \addlinespace
-    \Edit v_1 \And \Edit v_2                             & \tuple{v_1, v_2} & \set{\Left v_1', \Left \Clear, \Right v_2', \Right \Clear} & \True \\
-    \View v_1 \And \Edit v_2                             & \tuple{v_1, v_2} & \set{\Right v_2', \Right \Clear}                           & \True \\
+    \Edit v_1 \And \Edit v_2                             & \tuple{v_1, v_2} & \set{\Left v_1', \Left \Empty, \Right v_2', \Right \Empty} & \True \\
+    \View v_1 \And \Edit v_2                             & \tuple{v_1, v_2} & \set{\Right v_2', \Right \Empty}                           & \True \\
     \View v_1 \And \View v_2                             & \tuple{v_1, v_2} & \nothing                                                   & \True \\
-    \Enter \tau_1 \And \Edit v_2                         & \bot             & \set{\Left v_1', \Right v_2', \Right \Clear}               & \True \\
+    \Enter \tau_1 \And \Edit v_2                         & \bot             & \set{\Left v_1', \Right v_2', \Right \Empty}               & \True \\
     \Enter \tau_1 \And \View v_2                         & \bot             & \set{\Left v_1'}                                           & \True \\
     \Enter \tau_1 \And \Enter \tau_2                     & \bot             & \set{\Left v_1', \Right v_2'}                              & \True \\
-    \Fail \And \Edit v_2                                 & \bot             & \set{\Right v_2', \Right \Clear}                           & \True \\
+    \Fail \And \Edit v_2                                 & \bot             & \set{\Right v_2', \Right \Empty}                           & \True \\
     \Fail \And \View v_2                                 & \bot             & \nothing                                                   & \True \\
     \Fail \And \Fail                                     & \bot             & \nothing                                                   & \False \\
     \addlinespace

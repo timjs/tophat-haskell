@@ -9,7 +9,7 @@ change it, clear it, reenter it, etc.
 To do this, we introduce the concept of an \emph{editor}.
 
 Editors may or may not contain a current value.
-When an editor has a value, it can be \emph{changed} or it can be \emph{cleared}.
+When an editor has a value, it can be \emph{changed} or it can be \emph{emptied}.
 When it is empty, a value can be \emph{filled}.
 This is depicted as a state diagram in \autoref{fig:editor-state} below.
 
@@ -215,7 +215,7 @@ The user can then change and clear values continuously.
 In a text oriented world,
 we can print out the current value of an editor
 and prompt the user for a new value
-or a command to clear the editor.
+or a command to empty the editor.
 
 To abstract away from the user interface,
 we introduce an event system.
@@ -248,7 +248,7 @@ We will introduce more events and actions in later sections.
     & i & ::=& a      & – action \\
   Actions
     & a & ::=& v      & – change editor to value \\
-    &   &\mid& \Clear & – clear an editor \\
+    &   &\mid& \Empty & – empty an editor \\
 \end{grammar}
 
 As we already discussed before,
@@ -260,7 +260,7 @@ there are three actions that can be handled by editors:
 \end{enumerate*}
 We choose to merge the first two, filling and changing, into one action.
 The value of an editor, empty or not, can be changed to a value $v$ by just sending the value as an action.
-To clear a valued editor, we send the $\Clear$(lear) action.
+To empty a valued editor, we send the $\Empty$(mpty) action.
 
 Handling inputs is done by a new semantic relation.
 This small step relation takes a task $t$ and an event $h$ which results in a new task $t'$.
@@ -271,7 +271,7 @@ We write
 Formalising the states and transitions shown in \autoref{fig:editor-state},
 we need three rules to describe editors.
 \begin{equation*}
-  \userule{H-Change} \qquad \userule{H-Clear} \qquad \userule{H-Fill}
+  \userule{H-Change} \qquad \userule{H-Empty} \qquad \userule{H-Fill}
 \end{equation*}
 Note that the conditions to the right of the rules take care of typing.
 Only when the entered value $v'$ has the same type $\beta$ as the original value $v$ we can change a valued editor.
@@ -290,7 +290,7 @@ containing the value two?
     & \Edit 2 \\
   \handle{5} & \hint{change value to five} \\
     & \Edit 5 \\
-  \handle{\Clear} & \hint{clear the current value} \\
+  \handle{\Empty} & \hint{clear the current value} \\
     & \Enter \Int \\
   \handle{50} & \hint{enter the value fifty} \\
     & \Edit 50 \\

@@ -208,7 +208,7 @@
 \newrule{N-Eval}
     {e\evaluate e' \\
     e\neq e'}
-    {e \normalise e'}  
+    {e \normalise e'}
 
 
 % \newrule{N-Next}[t_1' = \Edit v]
@@ -234,9 +234,9 @@
   { }
   {\Edit v\st{} \handle{v'} \Edit v'\st{}}
 
-\newrule{H-Clear}[v : \beta]
+\newrule{H-Empty}[v : \beta]
   { }
-  {\Edit v\st{} \handle{\Clear} \Enter \beta\st{}}
+  {\Edit v\st{} \handle{\Empty} \Enter \beta\st{}}
 
 \newrule{H-Fill}[v' : \beta]
   { }

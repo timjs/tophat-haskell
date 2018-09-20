@@ -196,7 +196,7 @@ Notes:
 \begin{flalign*}
   \begin{array}{lcl}
     \multicolumn{3}{l}{\Inputs : \mathrm{Tasks} \to \powerset(\mathrm{Inputs})} \\
-    \Inputs(\Edit v)       &=& \set{v', \Clear} \\
+    \Inputs(\Edit v)       &=& \set{v', \Empty} \\
     \Inputs(\Enter \tau)   &=& \set{v'} \\
     \Inputs(\Update l)     &=& \set{v'} \\
     \Inputs(\Fail)         &=& \set{} \\
@@ -261,7 +261,7 @@ Notes:
     &      &\mid& \Second i            & – pass to second \\
   Actions
     & a    & ::=& v                    & – change editor to value \\
-    &      &\mid& \Clear               & – clear an editor \\
+    &      &\mid& \Empty               & – empty an editor \\
     &      &\mid& \Continue            & – continue with next task \\
     &      &\mid& \Pick r              & – pick route \\
   Routes
@@ -276,7 +276,7 @@ Notes:
 
 \paragraph{Editing}
 \begin{mathpar}
-  \userule{H-Change} \qquad \userule{H-Clear} \qquad \userule{H-Fill} \\
+  \userule{H-Change} \qquad \userule{H-Empty} \qquad \userule{H-Fill} \\
   \userule{H-Update}
 \end{mathpar}
 
