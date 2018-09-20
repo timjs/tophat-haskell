@@ -41,7 +41,7 @@ Show NotApplicable where
 ui : MonadRef l m => Show (typeOf a) => TaskT m a -> m String
 ui (Edit (Just x))       = pure $ "□(" ++ show x ++ ")"
 ui (Edit Nothing)        = pure $ "□(_)"
-ui (Watch loc)           = pure $ "■(" ++ show !(deref loc) ++ ")"
+ui (Store loc)           = pure $ "■(" ++ show !(deref loc) ++ ")"
 ui (All left rght)       = pure $ !(ui left) ++ "   ⋈   " ++ !(ui rght)
 ui (Any left rght)       = pure $ !(ui left) ++ "   ◆   " ++ !(ui rght)
 ui (One left rght) with ( delabel left, delabel rght )
@@ -57,12 +57,12 @@ ui (Lift _)              = pure $ "<lift>"
 
 
 
--- Helpers ---------------------------------------------------------------------
+-- Observations ----------------------------------------------------------------
 
 
 value : MonadRef l m  => TaskT m a -> m (Maybe (typeOf a))
 value (Edit val)      = pure $ val
-value (Watch loc)     = pure $ Just !(deref loc)
+value (Store loc)     = pure $ Just !(deref loc)
 value (All left rght) = pure $ !(value left) <&> !(value rght)
 value (Any left rght) = pure $ !(value left) <|> !(value rght)
 value (One _ _)       = pure $ Nothing
@@ -71,19 +71,6 @@ value (Then _ _)      = pure $ Nothing
 value (Next _ _)      = pure $ Nothing
 value (Label _ this)  = value this
 value (Lift _)        = pure $ Nothing
-
-
-failing : TaskT m a -> Bool
-failing (Edit _)        = False
-failing (Watch _)       = False
-failing (All left rght) = failing left && failing rght
-failing (Any left rght) = failing left && failing rght
-failing (One left rght) = failing left && failing rght
-failing (Fail)          = True
-failing (Then this _)   = failing this
-failing (Next this _)   = failing this
-failing (Label _ this)  = failing this
-failing (Lift _)        = False
 
 
 choices : TaskT m a -> List Path
@@ -97,18 +84,18 @@ choices (One left rght) =
 choices _          = []
 
 
-events : MonadRef l m => TaskT m a -> m (List Event)
-events (Edit {a} _) with (isBasic a)
-  | Yes p               = pure $ [ ToHere (Change {c = a} Nothing), ToHere Clear ]
-  | No _                = pure $ [ ToHere Clear ]
-events (Watch {b} _)    = pure $ [ ToHere (Change {c = b} Nothing) ]
-events (All left rght)  = pure $ map ToLeft !(events left) ++ map ToRight !(events rght)
-events (Any left rght)  = pure $ map ToLeft !(events left) ++ map ToRight !(events rght)
-events this@(One _ _)   = pure $ map (ToHere . PickWith) (labels this) ++ map (ToHere . Pick) (choices this)
-events (Fail)           = pure $ []
-events (Then this _)    = events this
-events (Next this next) = do
-    always <- events this
+inputs : MonadRef l m => TaskT m a -> m (List Event)
+inputs (Edit {a} _) with (isBasic a)
+  | Yes p               = pure $ [ ToHere (Change {c = a} Nothing), ToHere Empty ]
+  | No _                = pure $ [ ToHere Empty ]
+inputs (Store {b} _)    = pure $ [ ToHere (Change {c = b} Nothing) ]
+inputs (All left rght)  = pure $ map ToLeft !(inputs left) ++ map ToRight !(inputs rght)
+inputs (Any left rght)  = pure $ map ToLeft !(inputs left) ++ map ToRight !(inputs rght)
+inputs this@(One _ _)   = pure $ map (ToHere . PickWith) (labels this) ++ map (ToHere . Pick) (choices this)
+inputs (Fail)           = pure $ []
+inputs (Then this _)    = inputs this
+inputs (Next this next) = do
+    always <- inputs this
     Just v <- value this | Nothing => pure always
     pure $ map ToHere (go (next v)) ++ always
   where
@@ -117,8 +104,25 @@ events (Next this next) = do
       | One _ _ = map ContinueWith $ labels task
       | Fail    = []
       | _       = [ Continue ]
-events (Label _ this)   = events this
-events (Lift _)         = pure $ []
+inputs (Label _ this)   = inputs this
+inputs (Lift _)         = pure $ []
+
+
+
+-- Predicates ------------------------------------------------------------------
+
+
+failing : TaskT m a -> Bool
+failing (Edit _)        = False
+failing (Store _)       = False
+failing (All left rght) = failing left && failing rght
+failing (Any left rght) = failing left && failing rght
+failing (One left rght) = failing left && failing rght
+failing (Fail)          = True
+failing (Then this _)   = failing this
+failing (Next this _)   = failing this
+failing (Label _ this)  = failing this
+failing (Lift _)        = False
 
 
 
@@ -189,19 +193,19 @@ covering
 handle : MonadTrace NotApplicable m => MonadRef l m => TaskT m a -> Event -> m (TaskT m a)
 
 -- Edit --
-handle (Edit _) (ToHere Clear) =
+handle (Edit _) (ToHere Empty) =
   pure $ Edit Nothing
 
 handle (Edit {a} val) (ToHere (Change {c} val_new)) with (decEq c a)
   handle (Edit _)   (ToHere (Change val_new))       | Yes Refl = pure $ Edit val_new
   handle (Edit val) (ToHere (Change _))             | No _     = trace CouldNotChange $ Edit val
 
-handle (Watch {b} loc) (ToHere (Change {c} val_new)) with (decEq c b)
-  handle (Watch loc) (ToHere (Change (Just val_new)))| Yes Refl = do
+handle (Store {b} loc) (ToHere (Change {c} val_new)) with (decEq c b)
+  handle (Store loc) (ToHere (Change (Just val_new)))| Yes Refl = do
     loc := val_new
-    pure $ Watch loc
-  handle (Watch loc) (ToHere (Change (Nothing)))     | Yes Refl = trace CouldNotChange $ Watch loc
-  handle (Watch loc) (ToHere (Change _))             | No _     = trace CouldNotChange $ Watch loc
+    pure $ Store loc
+  handle (Store loc) (ToHere (Change (Nothing)))     | Yes Refl = trace CouldNotChange $ Store loc
+  handle (Store loc) (ToHere (Change _))             | No _     = trace CouldNotChange $ Store loc
 
 -- Pass to left or rght --
 handle (All left rght) (ToLeft event) = do
