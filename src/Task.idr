@@ -159,4 +159,4 @@ ask _ = Edit Nothing
 
 
 watch : MonadRef l m => {auto p : IsBasic b} -> l (typeOf b) -> TaskT m b
-watch = Watch
+watch = Store

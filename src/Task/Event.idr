@@ -27,7 +27,7 @@ namespace Path
 
   Show Path where
     show (GoLeft p)  = " l" ++ show p
-    show GoHere      = ""
+    show (GoHere)    = ""
     show (GoRight p) = " r" ++ show p
 
 
@@ -47,7 +47,7 @@ namespace Path
 public export
 data Action : Type where
   Change       : {auto p : IsBasic c} -> Maybe (typeOf c) -> Action
-  Clear        : Action
+  Empty        : Action
   Pick         : Path -> Action
   PickWith     : Label -> Action
   Continue     : Action
@@ -67,9 +67,9 @@ data Event
 
 Show Action where
   show (Change _)       = "change <val>"
-  show (Clear)          = "clear"
+  show (Empty)          = "empty"
   show (Pick p)         = "pick" ++ show p
-  show (PickWith l)       = "pick " ++ l
+  show (PickWith l)     = "pick " ++ l
   show (Continue)       = "cont"
   show (ContinueWith l) = "cont " ++ l
 
@@ -88,7 +88,7 @@ usage : String
 usage = unlines
   [ ":: Possible events are:"
   , "    change <value> : change current editor to <value> "
-  , "    clear          : clear current editor"
+  , "    empty          : empty current editor"
   , "    pick <path>    : pick amongst the possible options"
   , "    pick <label>   : pick the option labeld with <label>"
   , "    cont           : continue with the next task"
@@ -115,7 +115,7 @@ parse : List String -> Either String Event
 parse [ "change", val ] with (Universe.parse val)
   | Nothing              = throw $ "!! Error parsing value `" ++ val ++ "`"
   | Just (c ** ( p, v )) = ok $ ToHere $ Change {c} (Just v)
-parse [ "clear" ]        = ok $ ToHere $ Clear
+parse [ "empty" ]        = ok $ ToHere $ Empty
 parse [ "pick", next ]   =
   if isLabel next then
     ok $ ToHere $ PickWith next

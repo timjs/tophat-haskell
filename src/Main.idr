@@ -344,7 +344,7 @@ get = do
 loop : Show (typeOf a) => Task a -> IO ()
 loop task = do
   putStrLn !(Task.ui task)
-  putStrLn $ "Possibilities: " ++ show !(Task.events task)
+  putStrLn $ "Possibilities: " ++ show !(Task.inputs task)
   event <- get
   loop !(Task.run task event)
 
