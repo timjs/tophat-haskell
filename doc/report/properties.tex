@@ -39,6 +39,7 @@
 
 \begin{theorem}[preservation under handling]
   $\forall e:\tau,i  e \handle{i} e' \implies e':\tau$
+  \label{thmpreshandle}
 \end{theorem}
 
 \begin{theorem}[preservation under normalization]
@@ -190,6 +191,36 @@ Before we can show that normalisation also preserves, we need to show that the f
   finally by the induction hypothesis, we know that $t_2\normalise t_2'$ preserves.
   Therefore $t_2':\Task\tau$.\\
 
+\end{proof}
+
+\begin{proof}
+  We prove Theorem~\ref{thmpreshandle} by induction on $e$:
+
+  \noindent\textbf{Case} $\userule{H-Change}$ Given that $\Edit v:\Task\beta$ and $v,v':\beta$, we have that $\Edit v':\Task\beta$\\
+
+  \noindent\textbf{Case} $\userule{H-Empty}$ Given that $\Edit v:\Task\beta$, then by T-Fill we have $\Fill \beta:\Task\beta$ \\
+
+  \noindent\textbf{Case} $\userule{H-Fill}$ \\
+
+  \noindent\textbf{Case} $\userule{H-Up}$ \\
+
+  \noindent\textbf{Case} $\userule{H-PickLeft}$ \\
+
+  \noindent\textbf{Case} $\userule{H-PickRight}$ \\
+
+  \noindent\textbf{Case} $\userule{H-Next}$ \\
+
+  \noindent\textbf{Case} $\userule{H-PassThen}$ \\
+
+  \noindent\textbf{Case} $\userule{H-PassNext}$ \\
+
+  \noindent\textbf{Case} $\userule{H-FirstAnd}$ \\
+
+  \noindent\textbf{Case} $\userule{H-SecondAnd}$ \\
+
+  \noindent\textbf{Case} $\userule{H-FirstOr}$ \\
+
+  \noindent\textbf{Case} $\userule{H-SecondOr}$
 \end{proof}
 \subsection{???}
 
