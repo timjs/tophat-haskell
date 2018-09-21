@@ -2,11 +2,9 @@ module Task
 
 
 import Control.Monad.Trace
-import Control.Monad.Ref
 
 import Task.Internal
-import Task.Universe
-import Task.Event
+
 import Helpers
 
 

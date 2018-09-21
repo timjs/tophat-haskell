@@ -1,10 +1,10 @@
 module Task.Internal
 
 
-import Control.Monad.Ref
+import public Control.Monad.Ref
 
-import Task.Universe
-import Task.Event
+import public Task.Universe
+import public Task.Event
 
 
 %default total
