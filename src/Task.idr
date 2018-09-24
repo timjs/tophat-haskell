@@ -35,7 +35,7 @@ Loc b = IORef (typeOf b)
 
 
 covering
-run : Task a -> Event -> IO (Task a)
+run : Task a -> Input -> IO (Task a)
 run = drive
 
 

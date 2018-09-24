@@ -22,7 +22,7 @@ data NotApplicable
   = CouldNotChange
   | CouldNotFind Label
   | CouldNotContinue
-  | CouldNotHandle Event
+  | CouldNotHandle Input
 
 
 Show NotApplicable where
@@ -82,7 +82,7 @@ choices (Xor left rght) =
 choices _          = []
 
 
-inputs : MonadRef l m => TaskT m a -> m (List Event)
+inputs : MonadRef l m => TaskT m a -> m (List Input)
 inputs (Edit {a} _) with (isBasic a)
   | Yes p               = pure $ [ ToHere (Change {c = a} Nothing), ToHere Empty ]
   | No _                = pure $ [ ToHere Empty ]
@@ -184,11 +184,11 @@ initialise = normalise
 
 
 
--- Event handling --------------------------------------------------------------
+-- Input handling --------------------------------------------------------------
 
 
 covering
-handle : MonadTrace NotApplicable m => MonadRef l m => TaskT m a -> Event -> m (TaskT m a)
+handle : MonadTrace NotApplicable m => MonadRef l m => TaskT m a -> Input -> m (TaskT m a)
 
 -- Edit --
 handle (Edit _) (ToHere Empty) =
@@ -288,6 +288,6 @@ handle task event =
 
 
 covering
-drive : MonadTrace NotApplicable m => MonadRef l m => TaskT m a -> Event -> m (TaskT m a)
+drive : MonadTrace NotApplicable m => MonadRef l m => TaskT m a -> Input -> m (TaskT m a)
 drive task event =
   handle task event >>= normalise

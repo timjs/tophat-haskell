@@ -1,4 +1,4 @@
-module Task.Event
+module Task.Input
 
 
 import Control.Catchable
@@ -55,10 +55,10 @@ data Action : Type where
 
 
 public export
-data Event
-  = ToLeft Event
+data Input
+  = ToLeft Input
   | ToHere Action
-  | ToRight Event
+  | ToRight Input
 
 
 
@@ -74,7 +74,7 @@ Show Action where
   show (ContinueWith l) = "cont " ++ l
 
 
-Show Event where
+Show Input where
   show (ToLeft e)  = "l " ++ show e
   show (ToHere a)   = show a
   show (ToRight e) = "r " ++ show e
@@ -111,7 +111,7 @@ usage = unlines
   ]
 
 
-parse : List String -> Either String Event
+parse : List String -> Either String Input
 parse [ "change", val ] with (Universe.parse val)
   | Nothing              = throw $ "!! Error parsing value `" ++ val ++ "`"
   | Just (c ** ( p, v )) = ok $ ToHere $ Change {c} (Just v)

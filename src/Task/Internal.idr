@@ -32,7 +32,7 @@ data TaskT : (m : Type -> Type) -> Ty -> Type where
   And   : Show (typeOf a) => Show (typeOf b) => (left : TaskT m a) -> (right : TaskT m b) -> TaskT m (PAIR a b)
 
   -- Choice
-  Or   : Show (typeOf a) => (left : TaskT m a) -> (right : TaskT m a) -> TaskT m a
+  Or    : Show (typeOf a) => (left : TaskT m a) -> (right : TaskT m a) -> TaskT m a
   Xor   : Show (typeOf a) => (left : TaskT m a) -> (right : TaskT m a) -> TaskT m a
   Fail  : TaskT m a
 

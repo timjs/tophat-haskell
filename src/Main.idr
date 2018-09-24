@@ -326,14 +326,14 @@ empties = do
 %default covering
 
 
-get : IO Event
+get : IO Input
 get = do
   putStr ">> "
   input <- getLine
   case input of
     "quit" => System.exit 0
     _ =>
-      case Event.parse (words input) of
+      case Task.Input.parse (words input) of
         Right event => do
           pure event
         Left msg => do
