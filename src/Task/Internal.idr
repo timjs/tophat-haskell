@@ -26,17 +26,14 @@ data TaskT : (m : Type -> Type) -> Ty -> Type where
 
   -- Core
   Edit  : (val : Maybe (typeOf a)) -> TaskT m a
-  -- Edit  : (lbl : Label) -> (val : Maybe (typeOf a)) -> TaskT m a
   Store : MonadRef l m => {auto p : IsBasic b} -> l (typeOf b) -> TaskT m b
-  -- Store : MonadRef l m => (lbl : Label) -> {auto p : IsBasic b} -> l (typeOf b) -> TaskT m b
 
   -- Parallel
-  All   : Show (typeOf a) => Show (typeOf b) => (left : TaskT m a) -> (right : TaskT m b) -> TaskT m (PAIR a b)
+  And   : Show (typeOf a) => Show (typeOf b) => (left : TaskT m a) -> (right : TaskT m b) -> TaskT m (PAIR a b)
 
   -- Choice
-  Any   : Show (typeOf a) => (left : TaskT m a) -> (right : TaskT m a) -> TaskT m a
-  One   : Show (typeOf a) => (left : TaskT m a) -> (right : TaskT m a) -> TaskT m a
-  -- One   : Show (typeOf a) => (lbl : Label) -> ( Label, TaskT m a ) -> ( Label, TaskT m a ) -> TaskT m a
+  Or   : Show (typeOf a) => (left : TaskT m a) -> (right : TaskT m a) -> TaskT m a
+  Xor   : Show (typeOf a) => (left : TaskT m a) -> (right : TaskT m a) -> TaskT m a
   Fail  : TaskT m a
 
   -- Sequence
@@ -83,7 +80,7 @@ delabel t           = t
 labels : TaskT m a -> List Label
 labels (Label _ Fail)   = []
 labels (Label l this)   = l :: labels this
-labels (One left right) = labels left ++ labels right
+labels (Xor left right) = labels left ++ labels right
 -- --FIXME: should we also check for labels on the lhs of a step (see also `find`)?
 -- labels (Then this _)    = labels this
 -- labels (Next this _)    = labels this
@@ -97,7 +94,7 @@ find : Label -> TaskT m a -> Maybe Path
 find k (Label l this) with ( k == l )
   | True                = Just GoHere
   | False               = find k this
-find k (One left right) = map GoLeft (find k left) <|> map GoRight (find k right)
+find k (Xor left right) = map GoLeft (find k left) <|> map GoRight (find k right)
 -- --FIXME: should we can send pick-events through to the lhs of a step (see also `labels`)?
 -- find k (Then this _)    = find k this
 -- find k (Next this _)    = find k this
@@ -107,6 +104,6 @@ find k _                = Nothing
 ||| Check if a task constructor keeps its label after stepping or loses it.
 keeper : TaskT m a -> Bool
 keeper (Edit _)  = True
-keeper (All _ _) = True
+keeper (And _ _) = True
 keeper (Fail)    = True
 keeper _         = False

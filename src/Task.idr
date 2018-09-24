@@ -59,7 +59,7 @@ pure = Edit . Just
 
 
 (<&>) : Show (typeOf a) => Show (typeOf b) => TaskT m a -> TaskT m b -> TaskT m (PAIR a b)
-(<&>) = All
+(<&>) = And
 
 
 unit : TaskT m (PRIM UNIT)
@@ -75,11 +75,11 @@ unit = pure ()
 
 
 (<|>) : Show (typeOf a) => TaskT m a -> TaskT m a -> TaskT m a
-(<|>) = Any
+(<|>) = Or
 
 
 (<?>) : Show (typeOf a) => TaskT m a -> TaskT m a -> TaskT m a
-(<?>) = One
+(<?>) = Xor
 
 
 fail : TaskT m a
