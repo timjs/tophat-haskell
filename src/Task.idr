@@ -4,8 +4,6 @@ module Task
 import public Control.Monad.Ref
 import        Control.Monad.Trace
 
-import public Task.Universe
-import public Task.Event
 import public Task.Semantics
 import public Task.Internal
 

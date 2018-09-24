@@ -4,7 +4,7 @@ module Task.Internal
 import public Control.Monad.Ref
 
 import public Task.Universe
-import public Task.Event
+import public Task.Input
 
 
 %default total
