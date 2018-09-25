@@ -2,10 +2,11 @@ module Task.Universe
 
 
 import Control.Monad.Ref
+
 import Data.String
 import public Data.Universe
 
-
+import Interfaces.Named
 import Helpers
 
 
@@ -268,14 +269,14 @@ isBasic (PRIM p)         = Yes BasicPrim
 -- Parsing --
 
 
-parse : String -> Maybe (b : Ty ** ( IsBasic b, typeOf b ))
-parse "()"                                                        = Just (PRIM UNIT ** ( BasicPrim, () ))
-parse "True"                                                      = Just (PRIM BOOL ** ( BasicPrim, True ))
-parse "False"                                                     = Just (PRIM BOOL ** ( BasicPrim, False ))
+parse : String -> Maybe (b : Ty ** ( IsBasic b, Eq (typeOf b), typeOf b ))
+parse "()"                                                        = Just (PRIM UNIT ** ( BasicPrim, eqUnit, () ))
+parse "True"                                                      = Just (PRIM BOOL ** ( BasicPrim, eqBool, True ))
+parse "False"                                                     = Just (PRIM BOOL ** ( BasicPrim, eqBool, False ))
 parse s   with (the (Maybe Int) (parseInteger s))
-  parse s | (Just int)                                            = Just (PRIM INT ** ( BasicPrim, int ))
+  parse s | (Just int)                                            = Just (PRIM INT ** ( BasicPrim, eqInt, int ))
   parse s | Nothing                        with (decons s)
-    parse (between '"' '"' rest) | Nothing | (Multi '"' '"' rest) = Just (PRIM STRING ** ( BasicPrim, rest ))
+    parse (between '"' '"' rest) | Nothing | (Multi '"' '"' rest) = Just (PRIM STRING ** ( BasicPrim, eqString, rest ))
     parse _                      | Nothing | _                    = Nothing
 --FIXME: add pairs and lists
 

@@ -11,6 +11,9 @@ import Helpers
 %access export
 
 
+infix 6 =~, /~
+
+
 
 -- Paths -----------------------------------------------------------------------
 
@@ -23,6 +26,13 @@ namespace Path
     = GoLeft Path
     | GoHere
     | GoRight Path
+
+
+  Eq Path where
+    (GoLeft x)  == (GoLeft y)  = x == y
+    (GoHere)    == (GoHere)    = True
+    (GoRight x) == (GoRight y) = x == y
+    _           == _           = False
 
 
   Show Path where
@@ -46,7 +56,7 @@ namespace Path
 ||| - The `Nothing` case for `Change` is used as a dummy when calculation possible events.
 public export
 data Action : Type where
-  Change       : {auto p : IsBasic c} -> Maybe (typeOf c) -> Action
+  Change       : {auto eq : Eq (typeOf c) } -> {auto p : IsBasic c} -> Maybe (typeOf c) -> Action
   Empty        : Action
   Pick         : Path -> Action
   PickWith     : Label -> Action
@@ -54,11 +64,54 @@ data Action : Type where
   ContinueWith : Label -> Action
 
 
+Eq Action where
+  (Change {c=c1} x) == (Change {c=c2} y) with (decEq c1 c2)
+    (Change {c=c2} x) == (Change {c=c2} y) | Yes Refl = x == y
+    (Change {c=c1} x) == (Change {c=c2} y) | No _     = False
+  (Empty)           == (Empty)                        = True
+  (Pick x)          == (Pick y)                       = x == y
+  (PickWith x)      == (PickWith y)                   = x == y
+  (Continue)        == (Continue)                     = True
+  (ContinueWith x)  == (ContinueWith y)               = x == y
+
+
 public export
 data Input
   = ToLeft Input
   | ToHere Action
   | ToRight Input
+
+
+Eq Input where
+  (ToLeft x)  == (ToLeft y)  = x == y
+  (ToHere x)  == (ToHere y)  = x == y
+  (ToRight x) == (ToRight y) = x == y
+  _           == _           = False
+
+
+
+-- Conformance -----------------------------------------------------------------
+
+
+strip : (i : Input) -> Maybe (c : Ty ** (Eq (typeOf c), typeOf c))
+strip (ToHere (Change {eq} {c} (Just v))) = Just (c ** (eq, v))
+strip (ToHere (Change Nothing))           = Nothing
+strip (ToHere _)                          = Nothing
+strip (ToLeft i)                          = strip i
+strip (ToRight i)                         = strip i
+
+
+(=~) : Input -> Input -> Bool
+--FIXME: Why does a with-view not work?
+i1 =~ i2 = case ( strip i1, strip i2 ) of
+  ( Just (c1 ** (eq1, v1)), Just (c2 ** (eq2, v2)) ) => case (decEq c1 c2) of
+    Yes Refl => v1 == v2
+    No contr => False
+  _ => True
+
+
+(/~) : Input -> Input -> Bool
+i1 /~ i2 = not (i1 =~ i2)
 
 
 
@@ -114,7 +167,10 @@ usage = unlines
 parse : List String -> Either String Input
 parse [ "change", val ] with (Universe.parse val)
   | Nothing              = throw $ "!! Error parsing value `" ++ val ++ "`"
-  | Just (c ** ( p, v )) = ok $ ToHere $ Change {c} (Just v)
+  -- NOTE:
+  -- `d` is the proof that `v` `IsBasic`, and `d` is the dictionary holding `Eq (typeOf c)`.
+  -- Both are used implicitly by the `Change` constructor.
+  | Just (c**(p, d, v))  = ok $ ToHere $ Change {c} (Just v)
 parse [ "empty" ]        = ok $ ToHere $ Empty
 parse [ "pick", next ]   =
   if isLabel next then
@@ -123,7 +179,7 @@ parse [ "pick", next ]   =
     map (ToHere . Pick) $ Path.parse [ next ]
 parse ("pick" :: rest)   = map (ToHere . Pick) $ Path.parse rest
 parse [ "cont" ]         = ok $ ToHere $ Continue
-parse [ "cont", next ]  =
+parse [ "cont", next ]   =
   if isLabel next then
     ok $ ToHere $ ContinueWith next
   else
