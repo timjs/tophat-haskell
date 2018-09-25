@@ -260,7 +260,7 @@
   {t_1\st{} \handle{i} t_1'\st{'}}
   {t_1 \Next e_2\st{} \handle{i \neq \Continue} t_1' \Next e_2\st{'}}
 
-\newrule{H-Next}[\neg\Failing{(t_1)}\wedge]
+\newrule{H-Next}[\Value{(t_1)}\neq \bot \wedge \neg\Failing{(e_2 \Value{(t_1)}\normalise)}]
   { }
   {t_1 \Next e_2\st{} \handle{\Continue} t_1 \Then e_2\st{}}
 
