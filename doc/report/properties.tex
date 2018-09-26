@@ -226,7 +226,6 @@ Before we can show that normalisation also preserves, we need to show that the f
 
 \begin{align*}
   \forall e:\tau & e \normalise e' &\implies& \text{ either Fail}(e') \text{ or } \exists e'',i' \text{ such that } e'\handle{i'}e''&\\
-  \forall e:\tau, i & e\handle{i}e' &\implies& i\in\Inputs{(e)}
 \end{align*}
 
 \begin{theorem}
@@ -252,4 +251,25 @@ Before we can show that normalisation also preserves, we need to show that the f
 
   \noindent\textbf{Case} $t_1\Xor t_2$ By definition, $\Inputs(t_1\Xor t_2) = \set{\Pick \Left, \Pick \Right}$. In case $i=\Pick\Left$, H-PickLeft applies, in case $i=\Pick\Right$, H-PickRight applies.
 
+\end{proof}
+
+\begin{theorem}
+  \forall e:\tau, i & e\handle{i}e' &\implies& i\in\Inputs{(e)}
+\end{theorem}
+
+\begin{proof}
+  \noindent\textbf{Case} $e=\Edit v:\Task\tau, i= v':\tau$\\
+  \noindent\textbf{Case} $e=\Edit v:\Task\tau, i= \Empty$\\
+  \noindent\textbf{Case} $e=\Fill \tau, i= v':\tau$\\
+  \noindent\textbf{Case} $e=\Update l:\Task\tau, i= v':\tau$\\
+  \noindent\textbf{Case} $e=t_1\Or t_2 , i= \Pick\Left r $\\
+  \noindent\textbf{Case} $e=t_1\Or t_2 , i= \Pick\Right r $\\
+  \noindent\textbf{Case} $e=t, i= \Pick\Here $\\
+  \noindent\textbf{Case} $e=t_1\Next e_2 , i= \Continue $\\
+  \noindent\textbf{Case} $e=t_1\Then e_2 , i$\\
+  \noindent\textbf{Case} $e=t_1\Next e_2 , i\neq\Continue$\\
+  \noindent\textbf{Case} $e=t_1\And t_2 , i=\First i$\\
+  \noindent\textbf{Case} $e=t_1\And t_2 , i=\Second i$\\
+  \noindent\textbf{Case} $e=t_1\Or t_2 , i=\First i$\\
+  \noindent\textbf{Case} $e=t_1\Or t_2 , i=\Second i$\\
 \end{proof}
