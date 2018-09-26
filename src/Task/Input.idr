@@ -56,7 +56,7 @@ namespace Path
 ||| - The `Nothing` case for `Change` is used as a dummy when calculation possible events.
 public export
 data Action : Type where
-  Change       : {auto eq : Eq (typeOf c) } -> {auto p : IsBasic c} -> Maybe (typeOf c) -> Action
+  Change       : {auto p : IsBasic c} -> {auto eq : Eq (typeOf c) } -> Maybe (typeOf c) -> Action
   Empty        : Action
   Pick         : Path -> Action
   PickWith     : Label -> Action
@@ -168,9 +168,9 @@ parse : List String -> Either String Input
 parse [ "change", val ] with (Universe.parse val)
   | Nothing              = throw $ "!! Error parsing value `" ++ val ++ "`"
   -- NOTE:
-  -- `d` is the proof that `v` `IsBasic`, and `d` is the dictionary holding `Eq (typeOf c)`.
-  -- Both are used implicitly by the `Change` constructor.
-  | Just (c**(p, d, v))  = ok $ ToHere $ Change {c} (Just v)
+  -- `p` is the proof that `IsBasic c`, and `eq` is the dictionary holding `Eq (typeOf c)`.
+  -- Both are used by the auto-implicits of the `Change` constructor.
+  | Just (c**(p, eq, v)) = ok $ ToHere $ Change {c} (Just v)
 parse [ "empty" ]        = ok $ ToHere $ Empty
 parse [ "pick", next ]   =
   if isLabel next then

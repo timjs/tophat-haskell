@@ -29,7 +29,7 @@ Show NotApplicable where
   show (CouldNotChange)   = "Could not change value because types do not match"
   show (CouldNotFind l)   = "Could not find label `" ++ l ++ "`"
   show (CouldNotContinue) = "Could not continue because there is no value to continue with"
-  show (CouldNotHandle e) = "Could not handle event `" ++ show e ++ "`"
+  show (CouldNotHandle i) = "Could not handle input `" ++ show i ++ "`"
 
 
 
@@ -206,24 +206,24 @@ handle (Store {b} loc) (ToHere (Change {c} val_new)) with (decEq c b)
   handle (Store loc) (ToHere (Change _))             | No _     = trace CouldNotChange $ Store loc
 
 -- Pass to left or rght --
-handle (And left rght) (ToLeft event) = do
-  -- Pass the event to left
-  left_new <- handle left event
+handle (And left rght) (ToLeft input) = do
+  -- Pass the input to left
+  left_new <- handle left input
   pure $ And left_new rght
 
-handle (And left rght) (ToRight event) = do
-  -- Pass the event to rght
-  rght_new <- handle rght event
+handle (And left rght) (ToRight input) = do
+  -- Pass the input to rght
+  rght_new <- handle rght input
   pure $ And left rght_new
 
-handle (Or left rght) (ToLeft event) = do
-  -- Pass the event to left
-  left_new <- handle left event
+handle (Or left rght) (ToLeft input) = do
+  -- Pass the input to left
+  left_new <- handle left input
   pure $ Or left_new rght
 
-handle (Or left rght) (ToRight event) = do
-  -- Pass the event to rght
-  rght_new <- handle rght event
+handle (Or left rght) (ToRight input) = do
+  -- Pass the input to rght
+  rght_new <- handle rght input
   pure $ Or left rght_new
 
 -- Interact --
@@ -264,30 +264,30 @@ handle task@(Next this cont) (ToHere (ContinueWith l)) =
         Just p  => handle next (ToHere (Pick p))
 
 -- Pass to this --
-handle (Then this cont) event = do
-  -- Pass the event to this
-  this_new <- handle this event
+handle (Then this cont) input = do
+  -- Pass the input to this
+  this_new <- handle this input
   pure $ Then this_new cont
 
-handle (Next this cont) event = do
-  -- Pass the event to this
-  this_new <- handle this event
+handle (Next this cont) input = do
+  -- Pass the input to this
+  this_new <- handle this input
   pure $ Next this_new cont
 
 -- Label --
-handle (Label l this) event with (keeper this)
-  | False = handle this event
+handle (Label l this) input with (keeper this)
+  | False = handle this input
   | True = do
-      this_new <- handle this event
+      this_new <- handle this input
       pure $ Label l this_new
 
 -- Rest --
-handle task event =
+handle task input =
   -- Case `Fail`: Evaluation continues indefinitely
-  trace (CouldNotHandle event) task
+  trace (CouldNotHandle input) task
 
 
 covering
 drive : MonadTrace NotApplicable m => MonadRef l m => TaskT m a -> Input -> m (TaskT m a)
-drive task event =
-  handle task event >>= normalise
+drive task input =
+  handle task input >>= normalise
