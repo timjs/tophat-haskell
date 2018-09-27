@@ -233,6 +233,19 @@ inspect f = do
 --   f l <&> watch l
 
 
+doubleShared : Task (PAIR (PRIM UNIT) (PRIM INT))
+doubleShared = do
+  l <- ref (PRIM INT) 0
+  m <- ref (PRIM INT) 0
+  let t1 = do
+    x <- the (Task (PRIM INT)) $ watch m
+    if x >= 10 then edit (x * 2) else fail
+  let t2 = do
+    y <- the (Task (PRIM INT)) $ watch l
+    if y >= 5 then assign (PRIM INT) m 12 else fail
+  t2 <&> t1
+
+
 
 -- Choices --
 
