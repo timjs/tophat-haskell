@@ -3,6 +3,8 @@ module Task.Input
 
 import Control.Catchable
 
+import public Data.Surely
+
 import Task.Universe
 import Helpers
 
@@ -52,11 +54,9 @@ namespace Path
 -- Events ----------------------------------------------------------------------
 
 
-||| Note:
-||| - The `Nothing` case for `Change` is used as a dummy when calculation possible events.
 public export
 data Action : Type where
-  Change       : {auto p : IsBasic c} -> {auto eq : Eq (typeOf c) } -> Maybe (typeOf c) -> Action
+  Change       : {auto p : IsBasic c} -> {auto eq : Eq (typeOf c)} -> Surely (typeOf c) -> Action
   Empty        : Action
   Pick         : Path -> Action
   PickWith     : Label -> Action
@@ -94,11 +94,11 @@ Eq Input where
 
 
 strip : (i : Input) -> Maybe (c : Ty ** (Eq (typeOf c), typeOf c))
-strip (ToHere (Change {eq} {c} (Just v))) = Just (c ** (eq, v))
-strip (ToHere (Change Nothing))           = Nothing
-strip (ToHere _)                          = Nothing
-strip (ToLeft i)                          = strip i
-strip (ToRight i)                         = strip i
+strip (ToHere (Change {eq} {c} (Exactly v))) = Just (c ** (eq, v))
+strip (ToHere (Change Anything))             = Nothing
+strip (ToHere _)                             = Nothing
+strip (ToLeft i)                             = strip i
+strip (ToRight i)                            = strip i
 
 
 (=~) : Input -> Input -> Bool
@@ -170,7 +170,7 @@ parse [ "change", val ] with (Universe.parse val)
   -- NOTE:
   -- `p` is the proof that `IsBasic c`, and `eq` is the dictionary holding `Eq (typeOf c)`.
   -- Both are used by the auto-implicits of the `Change` constructor.
-  | Just (c**(p, eq, v)) = ok $ ToHere $ Change {c} (Just v)
+  | Just (c**(p, eq, v)) = ok $ ToHere $ Change {c} (Exactly v)
 parse [ "empty" ]        = ok $ ToHere $ Empty
 parse [ "pick", next ]   =
   if isLabel next then

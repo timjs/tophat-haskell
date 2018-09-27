@@ -266,6 +266,20 @@ isBasic (PRIM p)         = Yes BasicPrim
 
 
 
+-- Equality --
+
+
+eq : (b : Ty) -> {auto p : IsBasic b} -> Eq (typeOf b)
+eq (PAIR x y)    {p = (BasicPair z w)} = ?howToPassThisPairDict
+eq (LIST x)      {p = (BasicList y)}   = ?howToPassThisListDict
+eq (PRIM UNIT)   {p = BasicPrim}       = eqUnit
+eq (PRIM BOOL)   {p = BasicPrim}       = eqBool
+eq (PRIM INT)    {p = BasicPrim}       = eqInt
+eq (PRIM STRING) {p = BasicPrim}       = eqString
+eq (LOC _)       {p = _}               impossible
+
+
+
 -- Parsing --
 
 
@@ -278,7 +292,9 @@ parse s   with (the (Maybe Int) (parseInteger s))
   parse s | Nothing                        with (decons s)
     parse (between '"' '"' rest) | Nothing | (Multi '"' '"' rest) = Just (PRIM STRING ** ( BasicPrim, eqString, rest ))
     parse _                      | Nothing | _                    = Nothing
+
 --FIXME: add pairs and lists
+
 
 
 -- Defaults --
