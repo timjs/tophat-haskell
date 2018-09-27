@@ -1,7 +1,7 @@
 module Task
 
 
-import Control.Monad.Trace
+import public Control.Monad.Trace
 
 import Task.Internal
 
@@ -84,9 +84,9 @@ choices _          = []
 
 inputs : MonadRef l m => TaskT m a -> m (List Input)
 inputs (Edit {a} _) with (isBasic a)
-  | Yes p               = pure $ [ ToHere (Change {c = a} Nothing), ToHere Empty ]
+  | Yes p               = pure $ [ ToHere (Change {c = a} {eq = eq a} Anything), ToHere Empty ]
   | No _                = pure $ [ ToHere Empty ]
-inputs (Store {b} _)    = pure $ [ ToHere (Change {c = b} Nothing) ]
+inputs (Store {b} _)    = pure $ [ ToHere (Change {c = b} {eq = eq b} Anything) ]
 inputs (And left rght)  = pure $ map ToLeft !(inputs left) ++ map ToRight !(inputs rght)
 inputs (Or left rght)   = pure $ map ToLeft !(inputs left) ++ map ToRight !(inputs rght)
 inputs this@(Xor _ _)   = pure $ map (ToHere . PickWith) (labels this) ++ map (ToHere . Pick) (choices this)
@@ -195,15 +195,15 @@ handle (Edit _) (ToHere Empty) =
   pure $ Edit Nothing
 
 handle (Edit {a} val) (ToHere (Change {c} val_new)) with (decEq c a)
-  handle (Edit _)   (ToHere (Change val_new))       | Yes Refl = pure $ Edit val_new
+  handle (Edit _)   (ToHere (Change val_new))       | Yes Refl = pure $ Edit $ toMaybe val_new
   handle (Edit val) (ToHere (Change _))             | No _     = trace CouldNotChange $ Edit val
 
 handle (Store {b} loc) (ToHere (Change {c} val_new)) with (decEq c b)
-  handle (Store loc) (ToHere (Change (Just val_new)))| Yes Refl = do
+  handle (Store loc) (ToHere (Change (Exactly val_new))) | Yes Refl = do
     loc := val_new
     pure $ Store loc
-  handle (Store loc) (ToHere (Change (Nothing)))     | Yes Refl = trace CouldNotChange $ Store loc
-  handle (Store loc) (ToHere (Change _))             | No _     = trace CouldNotChange $ Store loc
+  handle (Store loc) (ToHere (Change (Anything)))        | Yes Refl = trace CouldNotChange $ Store loc
+  handle (Store loc) (ToHere (Change _))                 | No _     = trace CouldNotChange $ Store loc
 
 -- Pass to left or rght --
 handle (And left rght) (ToLeft input) = do

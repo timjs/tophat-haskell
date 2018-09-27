@@ -24,3 +24,11 @@ module Interfaces.Named
 
 [eqString] Eq String where
   (==) = boolOp prim__eqString
+
+
+[eqList] Eq a => Eq (List a) where
+  (==) []      []      = True
+  (==) (x::xs) (y::ys) with ( x == y )
+    | True             = xs == ys
+    | False            = False
+  (==) _ _             = False
