@@ -36,6 +36,19 @@ delete n (x :: xs) = x :: delete (pred n) xs
 delete _ []        = []
 
 
+||| Strict version of `Foldable.and`
+and : List Bool -> Bool
+and = foldl (\x, y => x && y) True
+
+
+
+-- Tuple extensions ------------------------------------------------------------
+
+
+bisequence : Applicative f => ( f a, f b ) -> f ( a, b )
+bisequence = uncurry (liftA2 MkPair)
+
+
 
 -- Applicative extensions ------------------------------------------------------
 
