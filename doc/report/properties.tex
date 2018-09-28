@@ -198,7 +198,7 @@ Before we can show that normalisation also preserves, we need to show that the f
 
   \noindent\textbf{Case} $\userule{H-Change}$ Given that $\Edit v:\Task\beta$ and $v,v':\beta$, we have that $\Edit v':\Task\beta$\\
 
-  \noindent\textbf{Case} $\userule{H-Empty}$ Given that $\Edit v:\Task\beta$, then by T-Fill we have $\Fill \beta:\Task\beta$ \\
+  \noindent\textbf{Case} $\userule{H-Empty}$ Given that $\Edit v:\Task\beta$, then by T-Fill we have $\Enter \beta:\Task\beta$ \\
 
   \noindent\textbf{Case} $\userule{H-Fill}$ \\
 
@@ -229,7 +229,7 @@ Before we can show that normalisation also preserves, we need to show that the f
 \end{align*}
 
 \begin{theorem}
-  \forall e:\tau & i\in\Inputs{(e)} &\implies& e\handle{i}e'
+  $\forall e:\tau i\in\Inputs{(e)} \implies e\handle{i}e'$
 \end{theorem}
 
 \begin{proof}
@@ -254,13 +254,13 @@ Before we can show that normalisation also preserves, we need to show that the f
 \end{proof}
 
 \begin{theorem}
-  \forall e:\tau, i & e\handle{i}e' &\implies& i\in\Inputs{(e)}
+  $\forall e:\tau, i e\handle{i}e' \implies i\in\Inputs{(e)}$
 \end{theorem}
 
 \begin{proof}
   \noindent\textbf{Case} $e=\Edit v:\Task\tau, i= v':\tau$\\
   \noindent\textbf{Case} $e=\Edit v:\Task\tau, i= \Empty$\\
-  \noindent\textbf{Case} $e=\Fill \tau, i= v':\tau$\\
+  \noindent\textbf{Case} $e=\Enter \tau, i= v':\tau$\\
   \noindent\textbf{Case} $e=\Update l:\Task\tau, i= v':\tau$\\
   \noindent\textbf{Case} $e=t_1\Or t_2 , i= \Pick\Left r $\\
   \noindent\textbf{Case} $e=t_1\Or t_2 , i= \Pick\Right r $\\
