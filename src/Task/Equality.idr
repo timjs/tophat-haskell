@@ -15,12 +15,13 @@ import Helpers
 -- Equivallence ----------------------------------------------------------------
 
 
-equivallent : Eq (typeOf a) => MonadRef l m => TaskT m a -> TaskT m a -> m Bool
-equivallent t1 t2 = do
+equivallent : MonadRef l m => TaskT m a -> TaskT m a -> m Bool
+equivallent {a} t1 t2 = do
   t1' <- normalise t1
   t2' <- normalise t2
   v1 <- value t1'
   v2 <- value t2'
+  let _ = eq a --NOTE: Brings `Eq` in scope for universe type `a`
   pure $ v1 == v2
 
 
@@ -28,12 +29,13 @@ equivallent t1 t2 = do
 -- Similarity ------------------------------------------------------------------
 
 
-similar : Eq (typeOf a) => MonadTrace NotApplicable m => MonadRef l m => TaskT m a -> TaskT m a -> m Bool
-similar t1 t2 = do
+similar : MonadTrace NotApplicable m => MonadRef l m => TaskT m a -> TaskT m a -> m Bool
+similar {a} t1 t2 = do
   t1' <- normalise t1
   t2' <- normalise t2
   v1 <- value t1'
   v2 <- value t2'
+  let _ = eq a --NOTE: Brings `Eq` in scope for universe type `a`
   if v1 == v2 then do
     ok12 <- sim t1 t2
     ok21 <- sim t2 t1
@@ -41,7 +43,7 @@ similar t1 t2 = do
   else
     pure False
 where
-    sim : Eq (typeOf a) => MonadTrace NotApplicable m => MonadRef l m => TaskT m a -> TaskT m a -> m Bool
+    sim : MonadTrace NotApplicable m => MonadRef l m => TaskT m a -> TaskT m a -> m Bool
     sim t1 t2 = do
       is1 <- inputs t1
       is2 <- inputs t2

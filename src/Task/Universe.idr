@@ -6,7 +6,6 @@ import Control.Monad.Ref
 import Data.String
 import public Data.Universe
 
-import Interfaces.Named
 import Helpers
 
 
@@ -95,6 +94,16 @@ Universe PrimitiveTy where
   typeOf BOOL   = Bool
   typeOf INT    = Int
   typeOf STRING = String
+
+  show UNIT   = %implementation
+  show BOOL   = %implementation
+  show INT    = %implementation
+  show STRING = %implementation
+
+  eq UNIT   = %implementation
+  eq BOOL   = %implementation
+  eq INT    = %implementation
+  eq STRING = %implementation
 
 
 
@@ -207,104 +216,51 @@ DecEq Ty where
   decEq (PRIM _)   (LOC _)                                        = No (negEqSym absurd)
 
 
+Eq (IORef a) where
+  (==) r1 r2 = False
+
+
+Show (IORef a) where
+  show ref = "<ref>"
+
+
 Universe Ty where
   typeOf (PAIR a b) = ( typeOf a, typeOf b )
   typeOf (LIST a)   = List (typeOf a)
   typeOf (LOC a)    = IORef (typeOf a) --FIXME: is this ok??? Should be parametrised over `MonadRef l m`...
   typeOf (PRIM p)   = typeOf p
 
+  show (PAIR x y) with ( show x, show y )
+    | ( show_x, show_y ) = %implementation
+  show (LIST x) with ( show x )
+    | show_x = %implementation
+  show (LOC x) with ( show x )
+    | show_x = %implementation
+  show (PRIM x) with ( show x )
+    | show_x = %implementation
 
-
--- Basic types -----------------------------------------------------------------
-
-
-data IsBasic : Ty -> Type where
-  BasicPrim : IsBasic (PRIM p)
-  BasicPair : IsBasic a -> IsBasic b -> IsBasic (PAIR a b)
-  BasicList : IsBasic a -> IsBasic (LIST a)
-
-
-private
-loc_not_basic : IsBasic (LOC a) -> Void
-loc_not_basic (BasicPrim)     impossible
-loc_not_basic (BasicPair _ _) impossible
-loc_not_basic (BasicList _)   impossible
-
-
-private
-list_not_basic : (IsBasic a -> Void) -> IsBasic (LIST a) -> Void
-list_not_basic contra (BasicList prf) = contra prf
-
-
-private
-yes_no_pair_not_basic : (IsBasic b -> Void) -> IsBasic (PAIR a b) -> Void
-yes_no_pair_not_basic contra (BasicPair _ prf_r) = contra prf_r
-
-
-private
-no_yes_pair_not_basic : (IsBasic a -> Void) -> IsBasic (PAIR a b) -> Void
-no_yes_pair_not_basic contra (BasicPair prf_l _) = contra prf_l
-
-
-private
-no_no_pair_not_basic : (IsBasic a -> Void) -> (IsBasic b -> Void) -> IsBasic (PAIR a b) -> Void
-no_no_pair_not_basic contra_l _ (BasicPair prf_l _) = contra_l prf_l
-
-
-export
-isBasic : (t : Ty) -> Dec (IsBasic t)
-isBasic (PAIR a b) with ( isBasic a, isBasic b )
-  | ( Yes l, Yes r ) = Yes $ BasicPair l r
-  | ( Yes _, No ct ) = No $ yes_no_pair_not_basic ct
-  | ( No ct, Yes _ ) = No $ no_yes_pair_not_basic ct
-  | ( No c,  No d  ) = No $ no_no_pair_not_basic c d
-isBasic (LIST a) with ( isBasic a )
-  | Yes prf              = Yes $ BasicList prf
-  | No contra            = No $ list_not_basic contra
-isBasic (LOC _)          = No loc_not_basic
-isBasic (PRIM p)         = Yes BasicPrim
-
-
-
--- Equality --
-
-
-eq : (b : Ty) -> {auto p : IsBasic b} -> Eq (typeOf b)
-eq (PAIR x y)    {p = (BasicPair z w)} = panic "howToPassThisPairDict"
-eq (LIST x)      {p = (BasicList y)}   = panic "howToPassThisListDict"
-eq (PRIM UNIT)   {p = BasicPrim}       = eqUnit
-eq (PRIM BOOL)   {p = BasicPrim}       = eqBool
-eq (PRIM INT)    {p = BasicPrim}       = eqInt
-eq (PRIM STRING) {p = BasicPrim}       = eqString
-eq (LOC _)       {p = _}               impossible
+  eq (PAIR x y) with ( eq x, eq y )
+    | ( eq_x, eq_y ) = %implementation
+  eq (LIST x) with ( eq x )
+    | eq_x = %implementation
+  eq (LOC x) with ( eq x )
+    | eq_x = %implementation
+  eq (PRIM x) with ( eq x )
+    | eq_x = %implementation
 
 
 
 -- Parsing --
 
 
-parse : String -> Maybe (b : Ty ** ( IsBasic b, Eq (typeOf b), typeOf b ))
-parse "()"                                                        = Just (PRIM UNIT ** ( BasicPrim, eqUnit, () ))
-parse "True"                                                      = Just (PRIM BOOL ** ( BasicPrim, eqBool, True ))
-parse "False"                                                     = Just (PRIM BOOL ** ( BasicPrim, eqBool, False ))
+parse : String -> Maybe (b : Ty ** ( typeOf b ))
+parse "()"                                                        = Just (PRIM UNIT ** ())
+parse "True"                                                      = Just (PRIM BOOL ** True)
+parse "False"                                                     = Just (PRIM BOOL ** False)
 parse s   with (the (Maybe Int) (parseInteger s))
-  parse s | Just int                                              = Just (PRIM INT ** ( BasicPrim, eqInt, int ))
+  parse s | Just int                                              = Just (PRIM INT ** int)
   parse s | Nothing                        with (decons s)
-    parse (between '"' '"' rest) | Nothing | (Multi '"' '"' rest) = Just (PRIM STRING ** ( BasicPrim, eqString, rest ))
+    parse (between '"' '"' rest) | Nothing | (Multi '"' '"' rest) = Just (PRIM STRING ** rest)
     parse _                      | Nothing | _                    = Nothing
 
---FIXME: add pairs and lists
-
-
-
--- Defaults --
-
-
-export
-defaultOf : (b : Ty) -> {auto p : IsBasic b} -> typeOf b
-defaultOf (PRIM UNIT)                    = ()
-defaultOf (PRIM BOOL)                    = False
-defaultOf (PRIM INT)                     = 0
-defaultOf (PRIM STRING)                  = ""
-defaultOf (LIST _)                       = []
-defaultOf (PAIR x y) {p = BasicPair l r} = ( defaultOf x, defaultOf y )
+--FIXME: add pairs and lists, but no locs

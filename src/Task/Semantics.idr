@@ -33,13 +33,15 @@ Show NotApplicable where
 
 
 
--- Showing ---------------------------------------------------------------------
+-- Observations ----------------------------------------------------------------
 
 
-ui : MonadRef l m => Show (typeOf a) => TaskT m a -> m String
-ui (Edit (Just x))       = pure $ "□(" ++ show x ++ ")"
+ui : MonadRef l m => TaskT m a -> m String
+ui (Edit {r} (Just x))   with ( show r )
+  | show_r               = pure $ "□(" ++ show x ++ ")"
 ui (Edit Nothing)        = pure $ "□(_)"
-ui (Store loc)           = pure $ "■(" ++ show !(deref loc) ++ ")"
+ui (Store {r} loc)       with ( show r )
+  | show_r               = pure $ "■(" ++ show !(deref loc) ++ ")"
 ui (And left rght)       = pure $ !(ui left) ++ "   ⋈   " ++ !(ui rght)
 ui (Or left rght)        = pure $ !(ui left) ++ "   ◆   " ++ !(ui rght)
 ui (Xor left rght) with ( delabel left, delabel rght )
@@ -52,10 +54,6 @@ ui (Then this cont)      = pure $ !(ui this) ++ " ▶…"
 ui (Next this cont)      = pure $ !(ui this) ++ " ▷…"
 ui (Label l this)        = pure $ l ++ ":\n\t" ++ !(ui this)
 ui (Lift _)              = pure $ "<lift>"
-
-
-
--- Observations ----------------------------------------------------------------
 
 
 value : MonadRef l m => TaskT m a -> m (Maybe (typeOf a))
@@ -83,10 +81,8 @@ choices _          = []
 
 
 inputs : MonadRef l m => TaskT m a -> m (List Input)
-inputs (Edit {a} _) with (isBasic a)
-  | Yes p               = pure $ [ ToHere (Change {c = a} {eq = eq a} Anything), ToHere Empty ]
-  | No _                = pure $ [ ToHere Empty ]
-inputs (Store {b} _)    = pure $ [ ToHere (Change {c = b} {eq = eq b} Anything) ]
+inputs (Edit {r} _)     = pure $ [ ToHere (Change {c=r} Anything), ToHere Empty ]
+inputs (Store {r} _)    = pure $ [ ToHere (Change {c=r} Anything) ]
 inputs (And left rght)  = pure $ map ToLeft !(inputs left) ++ map ToRight !(inputs rght)
 inputs (Or left rght)   = pure $ map ToLeft !(inputs left) ++ map ToRight !(inputs rght)
 inputs this@(Xor _ _)   = pure $ map (ToHere . PickWith) (labels this) ++ map (ToHere . Pick) (choices this)
@@ -194,11 +190,11 @@ handle : MonadTrace NotApplicable m => MonadRef l m => TaskT m a -> Input -> m (
 handle (Edit _) (ToHere Empty) =
   pure $ Edit Nothing
 
-handle (Edit {a} val) (ToHere (Change {c} val_new)) with (decEq c a)
+handle (Edit {r} val) (ToHere (Change {c} val_new)) with (decEq c r)
   handle (Edit _)   (ToHere (Change val_new))       | Yes Refl = pure $ Edit $ toMaybe val_new
   handle (Edit val) (ToHere (Change _))             | No _     = trace CouldNotChange $ Edit val
 
-handle (Store {b} loc) (ToHere (Change {c} val_new)) with (decEq c b)
+handle (Store {r} loc) (ToHere (Change {c} val_new)) with (decEq c r)
   handle (Store loc) (ToHere (Change (Exactly val_new))) | Yes Refl = do
     loc := val_new
     pure $ Store loc

@@ -22,28 +22,28 @@ infix  6 =~, /~
 
 
 public export
-data TaskT : (m : Type -> Type) -> Ty -> Type where
+data TaskT : (m : Type -> Type) -> (r : Ty) -> Type where
 
   -- Core
-  Edit  : (val : Maybe (typeOf a)) -> TaskT m a
-  Store : MonadRef l m => {auto p : IsBasic b} -> l (typeOf b) -> TaskT m b
+  Edit  : (val : Maybe (typeOf r)) -> TaskT m r
+  Store : MonadRef l m => l (typeOf r) -> TaskT m r
 
   -- Parallel
-  And   : Show (typeOf a) => Show (typeOf b) => (left : TaskT m a) -> (right : TaskT m b) -> TaskT m (PAIR a b)
+  And   : (left : TaskT m a) -> (right : TaskT m b) -> TaskT m (PAIR a b)
 
   -- Choice
-  Or    : Show (typeOf a) => (left : TaskT m a) -> (right : TaskT m a) -> TaskT m a
-  Xor   : Show (typeOf a) => (left : TaskT m a) -> (right : TaskT m a) -> TaskT m a
-  Fail  : TaskT m a
+  Or    : (left : TaskT m r) -> (right : TaskT m r) -> TaskT m r
+  Xor   : (left : TaskT m r) -> (right : TaskT m r) -> TaskT m r
+  Fail  : TaskT m r
 
   -- Sequence
-  Then  : Show (typeOf a) => (this : TaskT m a) -> (next : typeOf a -> TaskT m b) -> TaskT m b
-  Next  : Show (typeOf a) => (this : TaskT m a) -> (next : typeOf a -> TaskT m b) -> TaskT m b
+  Then  : (this : TaskT m a) -> (next : typeOf a -> TaskT m r) -> TaskT m r
+  Next  : (this : TaskT m a) -> (next : typeOf a -> TaskT m r) -> TaskT m r
 
   -- Labels
-  Label : Label -> (this : TaskT m a) -> TaskT m a
+  Label : Label -> (this : TaskT m r) -> TaskT m r
 
-  -- Lift
+  -- Lifts
   Lift  : Monad m => m (typeOf a) -> TaskT m a
 
 

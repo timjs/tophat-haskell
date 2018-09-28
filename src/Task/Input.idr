@@ -56,7 +56,7 @@ namespace Path
 
 public export
 data Action : Type where
-  Change       : {auto p : IsBasic c} -> {auto eq : Eq (typeOf c)} -> Surely (typeOf c) -> Action
+  Change       : {c : Ty} -> Surely (typeOf c) -> Action
   Empty        : Action
   Pick         : Path -> Action
   PickWith     : Label -> Action
@@ -65,8 +65,9 @@ data Action : Type where
 
 
 Eq Action where
-  (Change {c=c1} x) == (Change {c=c2} y) with (decEq c1 c2)
-    (Change {c=c2} x) == (Change {c=c2} y) | Yes Refl = x == y
+  (Change {c=c1} x) == (Change {c=c2} y) with ( decEq c1 c2 )
+    (Change {c=c2} x) == (Change {c=c2} y) | Yes Refl with ( eq c2 )
+      | eq_c2                                         = x == y
     (Change {c=c1} x) == (Change {c=c2} y) | No _     = False
   (Empty)           == (Empty)                        = True
   (Pick x)          == (Pick y)                       = x == y
@@ -94,19 +95,20 @@ Eq Input where
 -- Conformance -----------------------------------------------------------------
 
 
-strip : (i : Input) -> Maybe (c : Ty ** (Eq (typeOf c), typeOf c))
-strip (ToHere (Change {eq} {c} (Exactly v))) = Just (c ** (eq, v))
-strip (ToHere (Change Anything))             = Nothing
-strip (ToHere _)                             = Nothing
-strip (ToLeft i)                             = strip i
-strip (ToRight i)                            = strip i
+strip : (i : Input) -> Maybe (c : Ty ** typeOf c)
+strip (ToHere (Change {c} (Exactly v))) = Just (c ** v)
+strip (ToHere (Change Anything))        = Nothing
+strip (ToHere _)                        = Nothing
+strip (ToLeft i)                        = strip i
+strip (ToRight i)                       = strip i
 
 
 (=~) : Input -> Input -> Bool
 --FIXME: Why does a with-view not work?
 i1 =~ i2 = case ( strip i1, strip i2 ) of
-  ( Just (c1 ** (eq1, v1)), Just (c2 ** (eq2, v2)) ) => case (decEq c1 c2) of
-    Yes Refl => v1 == v2
+  ( Just (c1 ** v1), Just (c2 ** v2) ) => case decEq c1 c2 of
+    Yes Refl => case eq c1 of
+      eq_c1 => v1 == v2
     No contr => False
   _ => True
 
@@ -168,10 +170,8 @@ usage = unlines
 parse : List String -> Either String Input
 parse [ "change", val ] with (Universe.parse val)
   | Nothing              = throw $ "!! Error parsing value `" ++ val ++ "`"
-  -- NOTE:
-  -- `p` is the proof that `IsBasic c`, and `eq` is the dictionary holding `Eq (typeOf c)`.
-  -- Both are used by the auto-implicits of the `Change` constructor.
-  | Just (c**(p, eq, v)) = ok $ ToHere $ Change {c} (Exactly v)
+  -- NOTE: `c` is the type of `v` in our universe, which is automatically used by implicit of the `Change` constructor.
+  | Just (c ** v)        = ok $ ToHere $ Change (Exactly v)
 parse [ "empty" ]        = ok $ ToHere $ Empty
 parse [ "pick", next ]   =
   if isLabel next then
