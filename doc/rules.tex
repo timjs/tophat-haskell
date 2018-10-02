@@ -32,6 +32,24 @@
 \newmacro{RelationT}
   {\Gamma\St{} \infers e : \tau}
 
+\newrule{T-Abs}
+  {\Gamma[x:\tau_1] \St{} \infers e:\tau_2}
+  {\Gamma\St{} \infers \lambda x : \tau_1 . e :\tau_1 \to \tau_2}
+
+\newrule{T-Var}
+  {x:\tau\in\Gamma}
+  {\Gamma\St{}\infers x:\tau}
+
+\newrule{T-If}
+  {\Gamma\St{} \infers e_1:\Bool\\
+   \Gamma\St{} \infers e_2:\tau\\
+   \Gamma\St{} \infers e_3:\tau}
+  {\Gamma\St{} \infers \If{e_1}{e_2}{e_3}:\tau}
+
+\newrule{T-App}
+  {\Gamma\St{} \infers e_1:\tau_1\to\tau_2\\
+   \Gamma\St{} \infers e_2:\tau_1}
+  {\Gamma\St{} \infers e_1 e_2 :\tau_2}
 
 \newrule{T-Edit}
   {\Gamma\St{} \infers e : \beta}
