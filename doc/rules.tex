@@ -19,8 +19,8 @@
 \statefulfalse
 \newmacro{st}[2][1]
   {\ifthenelse{\isempty{#1}}
-    {\ifstateful{,\:\mu#2}\else{}\fi}
-    {\ifstateful{,\:[#1]\mu#2}\else{}\fi}}
+    {\ifstateful{,\:s#2}\else{}\fi}
+    {\ifstateful{,\:[#1]s#2}\else{}\fi}}
 \newmacro{St}[1]
   {\ifstateful{,\:\Sigma#1}\else{}\fi}
 

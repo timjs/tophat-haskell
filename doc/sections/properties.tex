@@ -27,7 +27,55 @@ Two events are \emph{essentially the same}, written $h_1 \approx h_2$ if they ar
 
 \subsection{Safety}
 \subsubsection{Preservation}
+
+\begin{theorem}[preservation under handling]
+  For all $e$, $s$ and $i$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Gamma,\Sigma\infers s$\\
+  if $ e,s \handle{i} e's'$ then $\Gamma,\Sigma'\infers e':\tau$ and $\Gamma,\Sigma'\infers s'$
+   \label{thmpreshandle}
+\end{theorem}
+
+\begin{theorem}[preservation under normalization]
+    For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Gamma,\Sigma\infers s$\\
+    if   $e,s \normalise e',s'$ then $\Gamma,\Sigma'\infers e':\tau$ and $\Gamma,\Sigma'\infers s'$
+    \label{thmpresnorm}
+\end{theorem}
+
+\begin{lemma}[Task value preserves]
+  For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\Task\tau$ and $\Gamma,\Sigma\infers s$\\
+  if $\Value{(e,s)}=v$ then $v:\tau$
+  \label{lemmavaluepreserves}
+\end{lemma}
+
+\begin{theorem}[preservation under evaluation]
+      For all $e$ and $s$ such that
+      $\Gamma,\Sigma\infers e:\tau$ and $\Gamma\St{}\infers s$\\
+      if $e,s\evaluate e',s'$
+      then $\Gamma,\Sigma'\infers e':\tau$ and $\Gamma,\Sigma'\infers s'$
+      \label{thmpreseval}
+\end{theorem}
+
 \subsubsection{Progress}
+
+\begin{theorem}[Progress of handling]
+ For all $e$, $s$ and $i$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Gamma,\Sigma\infers s$\\
+ if $e,s \handle{i} e',s'$ then either $\Failing(e')$ or there exists an $e''$ and $i'$ such that $e',s'\handle{i'}e'',s''$
+\end{theorem}
+
+which we prove by showing that the following Theorem holds:
+\begin{theorem}
+  For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Gamma,\Sigma\infers s$\\
+  if $e,s \normalise e',s'$ then either $\Failing(e')$ or there exists an $e''$ and $i$ such that $e',s'\handle{i}e'',s''$
+\end{theorem}
+
 \subsubsection{Safety of Inputs function}
 
+\begin{theorem}
+  For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Gamma,\Sigma\infers s$\\
+  if $i\in\Inputs{(e)}$ then $e,s\handle{i}e',s'$
+\end{theorem}
+
+\begin{theorem}
+  For all $e$, $s$ and $i$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Gamma,\Sigma\infers s$\\
+  if $e,s\handle{i}e',s'$ then  $i\in\Inputs{(e)}$
+\end{theorem}
 \subsection{Laws}
