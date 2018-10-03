@@ -33,7 +33,7 @@ Two events are \emph{essentially the same}, written $h_1 \approx h_2$ if they ar
       For all $e$ and $s$ such that
       $\Gamma,\Sigma\infers e:\tau$ and $\Gamma\St{}\infers s$\\
       if $e,s\evaluate e',s'$
-      then $\Gamma,\Sigma'\infers e':\tau$ and $\Gamma,\Sigma'\infers s'$
+      then $\Gamma,\Sigma\infers e':\tau$ and $\Gamma,\Sigma\infers s'$
       \label{thmpreseval}
 \end{theorem}
 
@@ -45,13 +45,13 @@ Two events are \emph{essentially the same}, written $h_1 \approx h_2$ if they ar
 
 \begin{theorem}[preservation under normalization]
     For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Gamma,\Sigma\infers s$\\
-    if   $e,s \normalise e',s'$ then $\Gamma,\Sigma'\infers e':\tau$ and $\Gamma,\Sigma'\infers s'$
+    if   $e,s \normalise e',s'$ then $\Gamma,\Sigma\infers e':\tau$ and $\Gamma,\Sigma\infers s'$
     \label{thmpresnorm}
 \end{theorem}
 
 \begin{theorem}[preservation under handling]
   For all $e$, $s$ and $i$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Gamma,\Sigma\infers s$\\
-  if $ e,s \handle{i} e's'$ then $\Gamma,\Sigma'\infers e':\tau$ and $\Gamma,\Sigma'\infers s'$
+  if $ e,s \handle{i} e's'$ then $\Gamma,\Sigma\infers e':\tau$ and $\Gamma,\Sigma\infers s'$
    \label{thmpreshandle}
 \end{theorem}
 
