@@ -98,4 +98,39 @@
 
   \subsection{Normalisation semantics}
 
+  \begin{equation*}
+    \boxed{\RelationN}
+  \end{equation*}
+
+  \paragraph{Step}
+  \begin{mathpar}
+    \userule{N-ThenStay} \\
+    \userule{N-ThenFail} \\
+    \userule{N-ThenCont}
+  \end{mathpar}
+
+  \paragraph{Choose}
+  \begin{mathpar}
+    \userule{N-OrLeft} \\
+    \userule{N-OrRight} \\
+    \userule{N-OrNone}
+  \end{mathpar}
+
+  \paragraph{Congruence}
+  \begin{mathpar}
+    \userule{N-Next} \\
+    \userule{N-And}
+  \end{mathpar}
+
+  \paragraph{Ready}
+  \begin{mathpar}
+    \userule{N-Edit} \qquad \userule{N-Fill} \qquad \userule{N-Update} \\
+    \userule{N-Fail} \qquad \userule{N-Xor}
+  \end{mathpar}
+
+  \paragraph{Driving}
+  \begin{mathpar}
+    \userule{N-Eval}
+  \end{mathpar}
+
   \subsection{Handling semantics}
