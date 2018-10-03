@@ -134,3 +134,40 @@
   \end{mathpar}
 
   \subsection{Handling semantics}
+
+
+  \begin{equation*}
+    \boxed{\RelationH}
+  \end{equation*}
+
+  \paragraph{Editing}
+  \begin{mathpar}
+    \userule{H-Change} \qquad \userule{H-Empty}\\
+    \userule{H-Fill} \\
+    \userule{H-Update}
+  \end{mathpar}
+
+  \paragraph{Continuing}
+  \begin{mathpar}
+    \userule{H-PickLeft} \qquad \userule{H-PickRight} \\
+    \userule{H-PickHere} \qquad \userule{H-Next}
+  \end{mathpar}
+
+
+  \paragraph{Passing}
+  \begin{mathpar}
+    \userule{H-PassThen} \qquad \userule{H-PassNext} \\
+    \userule{H-FirstAnd} \qquad \userule{H-SecondAnd} \\
+    \userule{H-FirstOr}  \qquad \userule{H-SecondOr}
+  \end{mathpar}
+
+
+  \subsubsection{Driving}
+
+  \begin{equation*}
+    \boxed{\RelationD}
+  \end{equation*}
+
+  \begin{mathpar}
+    \userule{D-Main}
+  \end{mathpar}
