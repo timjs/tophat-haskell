@@ -1,0 +1,224 @@
+% !TEX root=../pldi2019.tex
+
+\appendix
+\section{Appendix}
+
+  \subsection{Proofs}
+
+  \subsubsection{Theorem~\ref{thmpreseval}}
+\begin{proof}
+  We prove Theorem~\ref{thmpreseval} by induction on $e$:\\
+  \noindent\textbf{Case} $e=\lambda x:\tau.e, e_1 e_2, x, c, l, e_1 \star e_2,
+                            \If{e_1}{e_2}{e_3},\tuple{e_1, e_2},\unit,\Ref e,!e,
+                            e_1 := e_2,e_1; e_2$
+      preservation has been proven for these cases by \todo{insert cite}\\
+
+  \noindent\textbf{Case} $\userule{E-Edit}$
+      By T-Edit we have $\Edit e:\Task \tau$ and $e:\tau$. The induction
+      hypothesis gives us that $e\evaluate v$ also preserves, and thus $v:\tau$.
+      Therefore $\Edit v:\Task\tau$.\\
+
+  \noindent\textbf{Case} $\userule{E-Fill}$
+      Evaluation does not alter the expression, therefore this case holds tivially.\\
+
+  \noindent\textbf{Case} $\userule{E-Update}$
+      By T-Update we have $\Edit e:\Task \tau$ and $e:\Ref \tau$. The induction
+      hypothesis gives us that $e\evaluate l$ also preserves, and thus $l:\Ref\tau$.
+      Therefore $\Update l:\Task\tau$\\
+
+  \noindent\textbf{Case} $\userule{E-Fail}$
+      Evaluation does not alter the expression, therefore this case holds tivially.\\
+
+  \noindent\textbf{Case} $\userule{E-Then}$
+      Given that $e_1\Then e_2:\Task \tau$, T-Then gives us that $e_1:\Task\tau_1$
+      and $e_2:\tau_1 \to \Task \tau$. By the induction hypothesis, we know that
+      $e_1\evaluate t_1$ preserves and thus $t_1:\Task\tau_1$. Therefore
+      $t_1\Then e_2:\Task\tau$.\\
+
+  \noindent\textbf{Case} $\userule{E-Next}$
+      Given that $e_1\Next e_2:\Task \tau$, T-Then gives us that $e_1:\Task\tau_1$
+      and $e_2:\tau_1 \to \Task \tau$. By the induction hypothesis, we know that
+      $e_1\evaluate t_1$ preserves and thus $t_1:\Task\tau_1$. Therefore
+      $t_1\Next e_2:\Task\tau$.\\
+
+  \noindent\textbf{Case} $\userule{E-And}$
+      Given that $e_1\And e_2:\Task(\tau_1\times\tau_2)$, T-And gives us that
+      $e_1:\Task\tau_1$ and $e_2:\Task\tau_2$. By the induction hypothesis, we
+      know that both $e_1\evaluate t_1$ and $e_2\evaluate t_2$ preserve and thus
+      $t_1:\Task\tau_1$ and $t_2:\Task\tau_2$. Therfore
+      $t_1\And t_2:\Task(\tau_1\times\tau_2)$\\
+
+  \noindent\textbf{Case} $\userule{E-Or}$
+      Given that $e_1\Or e_2:\Task\tau$, T-Or gives us that $e_1:\Task\tau$ and
+      $e_2:\Task\tau$. By the induction hypothesis, we have that both
+      $e_1\evaluate t_1$ and $e_2\evaluate t_2$ preserve and thus $t_1:\Task\tau$
+      and $t_2:\Task\tau$. Therefore $t_1\Or t_2:\Task\tau$.\\
+
+  \noindent\textbf{Case} $\userule{E-Xor}$
+      Evaluation does not alter the expression, therefore this case holds tivially.
+\end{proof}
+
+
+
+\subsubsection{Lemma~\ref{lemmavaluepreserves}}
+\begin{proof}
+  \noindent\textbf{Case} $\Value{(\Edit v,s)}=v$ By T-Edit, if $\Edit v:\Task\tau$, then $v:\tau$.\\
+
+  \noindent\textbf{Case} $\Value{(\Enter \tau,s)}=\bot$ Since this case does not lead to a value, the lemma holds trivially.\\
+
+  \noindent\textbf{Case} $\Value{(\Update l,s)}=s(l)$ \todo{Which rule do we use here to show that s(l) has the same type as l???}\\
+
+  \noindent\textbf{Case} $\Value{(\Fail)}=\bot$ Since this case does not lead to a value, the lemma holds trivially.\\
+
+  \noindent\textbf{Case} $\Value{(t_1\Then e_2)}=\bot$ Since this case does not lead to a value, the lemma holds trivially.\\
+
+  \noindent\textbf{Case} $\Value{(t_2\Next e_2)}=\bot$ Since this case does not lead to a value, the lemma holds trivially.\\
+
+  \noindent\textbf{Case} $\Value{(t_1\And t_2)}=\tuple{v_1, v_2}, \Value{(t_1)}=v_1\wedge\Value{(t_2)}=v_2$ By T-And we have that $t_1\And t_2:\Task(\tau_1\times\tau_2)$ and $t_1:\tau_1$ and $t_2:\tau_2$. By the induction hypothesis, $ \Value{(t_1)}=v_1$ and $\Value{(t_2)}=v_2$ preserve, and thus $v_1:\tau_1$ and $v_2:\tau_2$. This gives us that $\tuple{v_1, v_2}:\Task(\tau_1\times\tau_2)$ \\
+
+  \noindent\textbf{Case} $\Value{(t_1\And t_2)}=bot, \not\Value{(t_1)}=v_1\wedge\Value{(t_2)}=v_2$ Since this case does not lead to a value, the lemma holds trivially.\\
+
+  \noindent\textbf{Case} $\Value{(t_1\Or t_2)}=v_1, \Value{(t_1)}=v_1$ By T-Or we have that $t_1\Or t_2:\Task\tau$, and $t_1:\Task\tau$ and $t_2:\Task\tau$. By the induction hypothesis, we have that $v_1:\tau$.\\
+
+  \noindent\textbf{Case} $\Value{(t_1\Or t_2)}=v_2, \Value{(t_1)}=\bot\wedge\Value{(t_2)}=v_2$ By T-Or we have that $t_1\Or t_2:\Task\tau$, and $t_1:\Task\tau$ and $t_2:\Task\tau$. By the induction hypothesis, we have that $v_2:\tau$.\\
+
+  \noindent\textbf{Case} $\Value{(t_1\Or t_2)}=\bot, \Value{(t_1)}=\bot\wedge\Value{(t_2)}=\bot$ Since this case does not lead to a value, the lemma holds trivially.\\
+
+  \noindent\textbf{Case} $\Value{(t_1\Xor t_2)}=\bot$ Since this case does not lead to a value, the lemma holds trivially.\\
+\end{proof}
+
+
+
+\subsubsection{Theorem~\ref{thmpresnorm}}
+\begin{proof}
+  We prove Theorem~\ref{thmpresnorm} by induction on $e$:\\
+
+  \noindent\textbf{Case} $\userule{N-Fail}$ Since this case does not alter the
+  expression, the theorem holds trivially.\\
+
+  \noindent\textbf{Case} $\userule{N-Xor}$ Since this case does not alter the
+  expression, the theorem holds trivially.\\
+
+  \noindent\textbf{Case} $\userule{N-Update}$ Since this case does not alter
+  the expression, the theorem holds trivially.\\
+
+  \noindent\textbf{Case} $\userule{N-Fill}$ Since this case does not alter the
+  expression, the theorem holds trivially.\\
+
+  \noindent\textbf{Case} $\userule{N-Edit}$ Since this case does not alter the
+  expression, the theorem holds trivially.\\
+
+  \noindent\textbf{Case} $\userule{N-And}$ Given that $t_1\And t_2:\Task(\tau_1\times\tau_2)$, by T-And we have $t_1:\tau_1$ and $t_2:\tau_2$. By the induction hypothesis, we also have $t_1':\tau_1$ and $t_2':\tau_2$. This gives us that $t_1'\And t_2':\Task(\tau_1\times\tau_2)$.\\
+
+  \noindent\textbf{Case} $\userule{N-Next}$ Given that $e_1\Next e_2:\Task \tau$, T-Then gives us that $t_1:\Task\tau_1$
+  and $e_2:\tau_1 \to \Task \tau$. By the induction hypothesis, we know that
+  $t_1\normalise t_1'$ preserves and thus $t_1':\Task\tau_1$. Therefore
+  $t_1'\Next e_2:\Task\tau$.\\\\
+
+  \noindent\textbf{Case} $\userule{N-OrLeft}$ Given that $t_1\Or t_2:\Task\tau$,
+  by T-Or we have $t_1:\Task\tau$. By the induction hypothesis, we know that
+  $t_1\normalise t_1'$ preserves and thus $t_1':\Task\tau$.\\
+
+  \noindent\textbf{Case} $\userule{N-OrRight}$ Given that $t_1\Or t_2:\Task\tau$,
+  by T-Or we have $t_2:\Task\tau$. By the induction hypothesis, we know that
+  $t_2\normalise t_2'$ preserves and thus $t_2':\Task\tau$. \todo{there might be
+  more to be said here. t1 obviously can to stuff too, but we don't say anyting about this.}\\
+
+  \noindent\textbf{Case} $\userule{N-OrNone}$ Given that $t_1\Or t_2:\Task\tau$,
+  by T-Or we have $t_1:\Task\tau$ and $t_2:\Task\tau$. By the induction hypothesis,
+  we know that $t_1\normalise t_1'$ and $t_2\normalise t_2'$ preserve, and thus
+  $t_1'\Or t_2':\Task\tau$.\\
+
+  \noindent\textbf{Case} $\userule{N-ThenStay}$ Given that $t_1\Then e_2:\Task\tau$,
+  by T-Then we have $t_1:\Task\tau_1$ and $e_2:\tau_1\to\Task\tau$. By the induction
+  hypothesis, we know that $t_1\normalise t_1'$ preserves, and thus $t_1'\Then e_2:\Task\tau$.\\
+
+  \noindent\textbf{Case} $\userule{N-ThenFail}$ Given that $t_1\Then e_2:\Task\tau$,
+  by T-Then we have $t_1:\Task\tau_1$ and $e_2:\tau_1\to\Task\tau$. By the induction
+  hypothesis, we know that $t_1\normalise t_1'$ preserves, and thus $t_1'\Then e_2:\Task\tau$.\\
+
+  \noindent\textbf{Case} $\userule{N-ThenCont}$Given that $t_1\Then e_2:\Task\tau$,
+  by T-Then we have $t_1:\Task\tau_1$ and $e_2:\tau_1\to\Task\tau$. By the induction
+  hypothesis, we know that $t_1\normalise t_1'$ preserves. By
+  Lemma~\ref{lemmavaluepreserves}, we know that $\Value{(t_1')}=v_1$ preserves.
+  By Theorem~\ref{thmpreseval} we know that $e_2 v_1\evaluate t_2$ preserves. And
+  finally by the induction hypothesis, we know that $t_2\normalise t_2'$ preserves.
+  Therefore $t_2':\Task\tau$.\\
+
+\end{proof}
+
+
+\subsubsection{Theorem~\ref{thmpreshandle}}
+
+\begin{proof}
+  We prove Theorem~\ref{thmpreshandle} by induction on $e$:
+
+  \noindent\textbf{Case} $\userule{H-Change}$ Given that $\Edit v:\Task\beta$ and $v,v':\beta$, we have that $\Edit v':\Task\beta$\\
+
+  \noindent\textbf{Case} $\userule{H-Empty}$ Given that $\Edit v:\Task\beta$, then by T-Fill we have $\Enter \beta:\Task\beta$ \\
+
+  \noindent\textbf{Case} $\userule{H-Fill}$ \\
+
+  \noindent\textbf{Case} $\userule{H-Up}$ \\
+
+  \noindent\textbf{Case} $\userule{H-PickLeft}$ \\
+
+  \noindent\textbf{Case} $\userule{H-PickRight}$ \\
+
+  \noindent\textbf{Case} $\userule{H-Next}$ \\
+
+  \noindent\textbf{Case} $\userule{H-PassThen}$ \\
+
+  \noindent\textbf{Case} $\userule{H-PassNext}$ \\
+
+  \noindent\textbf{Case} $\userule{H-FirstAnd}$ \\
+
+  \noindent\textbf{Case} $\userule{H-SecondAnd}$ \\
+
+  \noindent\textbf{Case} $\userule{H-FirstOr}$ \\
+
+  \noindent\textbf{Case} $\userule{H-SecondOr}$
+\end{proof}
+
+\subsubsection{Theorem~\ref{thmprogressnorm}}
+
+\subsubsection{Theorem~\ref{thmsafetyi1}}
+
+\begin{proof}
+  \noindent\textbf{Case} $\Edit v:\Task\tau$ By definition, $\Inputs{(\Edit v)}=\{v',\Empty\}$. For $i=v'$, we have that $\userule{H-Change}$ handles the input, and for $i=\Empty$, we have $\userule{H-Empty}$.\\
+
+  \noindent\textbf{Case} $\Enter \tau$ By definition, $\Inputs{(\Enter \tau)}=\{v':\tau\}$. For $i=v'$, we have that $\userule{H-Fill}$ handles the input.\\
+
+  \noindent\textbf{Case} $\Update l:\Task\tau$ By definition, $\Inputs{(\Update\tau)}=\{v'\}$. For $i=v'$, we have that $\userule{H-Update}$ handles the input.\\
+
+  \noindent\textbf{Case} $\Fail$ By definition, $\Inputs{(\Fail)}=\{\}$. The theorem holds trivially.\\
+
+  \noindent\textbf{Case} $t_1\Then e_2$ By definition, $\Inputs{(t_1\Then e_2)}=\Inputs{(t_1)}$. By the induction hypothesis, we have that $i\in\Inputs{(t_1)}$, then $t_1\handle{i}t_1'$. Therefore, we also have $\userule{H-PassThen}$.\\
+
+  \noindent\textbf{Case} $t_1\Next e_2$ By definiton, $\Inputs(t_1 \Next e_2) = \Inputs(t_1) \cup \set{\Continue\mid \Value{(t_1)}\neq \bot \wedge \neg\Failing{(e_2 \Value{(t_1)}\normalise)}}$. If $i=\Continue$, then we know that $\Value{(t_1)}\neq \bot \wedge \neg\Failing{(e_2 \Value{(t_1)}\normalise)}$ holds, and therefore H-Next applies. Otherwise, we have by induction hypothesis that $i\in\Inputs{(t_1)}$, then $t_1\handle{i}t_1'$. Therefore, we also have $\userule{H-PassNext}$.\\
+
+  \noindent\textbf{Case} $t_1\And t_2$ By definiiton, $\Inputs(t_1\And t_2) = \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)}$. By the induction hypothesis, we have both that if $i\in\Inputs(t_1)$ then $t_1\handle{i}t_1'$ and that if $i\in\Inputs(t_2)$ then $t_2\handle{i}t_2'$. Therefore, if $i\in\Inputs(t_1\And t_2)$, then either $\userule{H-FirstAnd}$ or $\userule{H-SecondAnd}$.\\
+
+  \noindent\textbf{Case} $t_1\Or t_2$ By definition, $\Inputs(t_1\Or t_2) = \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)}$. By the induction hypothesis, we have both that if $i\in\Inputs(t_1)$ then $t_1\handle{i}t_1'$ and that if $i\in\Inputs(t_2)$ then $t_2\handle{i}t_2'$. Therefore, if $i\in\Inputs(t_1\Or t_2)$, then either $\userule{H-FirstOr}$ or $\userule{H-SecondOr}$.\\
+
+  \noindent\textbf{Case} $t_1\Xor t_2$ By definition, $\Inputs(t_1\Xor t_2) = \set{\Pick \Left, \Pick \Right}$. In case $i=\Pick\Left$, H-PickLeft applies, in case $i=\Pick\Right$, H-PickRight applies.
+
+\end{proof}
+
+\subsubsection{Theorem~\ref{thmsafetyi2}}
+\begin{proof}
+  \noindent\textbf{Case} $e=\Edit v:\Task\tau, i= v':\tau$\\
+  \noindent\textbf{Case} $e=\Edit v:\Task\tau, i= \Empty$\\
+  \noindent\textbf{Case} $e=\Enter \tau, i= v':\tau$\\
+  \noindent\textbf{Case} $e=\Update l:\Task\tau, i= v':\tau$\\
+  \noindent\textbf{Case} $e=t_1\Or t_2 , i= \Pick\Left r $\\
+  \noindent\textbf{Case} $e=t_1\Or t_2 , i= \Pick\Right r $\\
+  \noindent\textbf{Case} $e=t, i= \Pick\Here $\\
+  \noindent\textbf{Case} $e=t_1\Next e_2 , i= \Continue $\\
+  \noindent\textbf{Case} $e=t_1\Then e_2 , i$\\
+  \noindent\textbf{Case} $e=t_1\Next e_2 , i\neq\Continue$\\
+  \noindent\textbf{Case} $e=t_1\And t_2 , i=\First i$\\
+  \noindent\textbf{Case} $e=t_1\And t_2 , i=\Second i$\\
+  \noindent\textbf{Case} $e=t_1\Or t_2 , i=\First i$\\
+  \noindent\textbf{Case} $e=t_1\Or t_2 , i=\Second i$\\
+\end{proof}
