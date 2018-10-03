@@ -17,8 +17,8 @@ iTasks is an implementation of TOP, in the form of an embedded domain-specific l
 It comes in the form of a library that provides editors and monadic combinators.
 iTasks uses the generic programming facilities of Clean to derive web applications from workflow models.
 
-iTasks has been used to implement an incident management tool for the Dutch coast guard \alert{cite incidone}.
-Furthermore it has been used numerous times to prototype ideas while studying concepts about Command and Control \alert{cite koolBachelorThesis, stutterheimPhdThesis}.
+iTasks has been used to implement an incident management tool for the Dutch coast guard \cite{conf/iscram/LijnseJP12}.
+Furthermore it has been used numerous times to prototype ideas while studying concepts about Command and Control \cite{theses/nlda/Kool17, theses/radboud/Stutterheim17}, and in a case study for the Dutch tax authority \cite{conf/sfp/StutterheimAP17}.
 
 iTasks has many features, and its basic combinators are versatile and powerful.
 Simpler combinators are implemented by restricting the powerful ones.
@@ -26,6 +26,7 @@ This is useful for everyday programming, where having lots of functionality at o
 This approach does not lend itself well to formal treatment however, as it obscures what the essential features of TOP are, and how they interact.
 
 The goal of this paper is to develop a calculus that serves as a formal foundation for TOP.
+The calculus is called Top Hat, written \tophat.
 Starting with combinators that have a single responsibility, we show how more complicated combinators can be expressed in terms of those.
 In this way we identify the essential basic features of TOP and study them in isolation.
 This approach makes the process algebra-like flavour of iTasks precise, and allows comparison with other works in the field.
