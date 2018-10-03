@@ -127,50 +127,88 @@
 
 
 \newmacro{RelationV}
-  {e \evaluate v}
+  {e,s \evaluate v,s'}
 
+\newrule{E-Value}
+  {\ }
+  {v,s\evaluate v,s}
+
+\newrule{E-App}
+  {e_1,s\evaluate \lambda x:\tau.e_1',s'\\
+   e_2,s'\evaluate e_2,s''\\
+   e_1'[x\mapsto v_2],s''\evaluate v_1,s''}
+  {e_1 e_2,s \evaluate v_1,s''}
+
+\newrule{E-IfTrue}
+    {e_1,s\evaluate \True,s'\\
+     e_2,s'\evaluate v,s''}
+    {\If{e_1}{e_2}{e_3},s\evaluate v,s''}
+
+\newrule{E-IfFalse}
+  {e_1,s\evaluate \False,s'\\
+   e_2,s'\evaluate v,s''}
+  {\If{e_1}{e_2}{e_3},s\evaluate v,s''}
+
+\newrule{E-Pair}
+  {e_1,s\evaluate v_1,s'\\
+   e_2,s'\evaluate v_2,s''}
+  {\tuple{e_1,e_2},s\evaluate\tuple{v_1,v_2},s''}
+
+\newrule{E-Ref}
+  {e,s\evaluate v,s'\\
+   l\not\in Dom(s)}
+  {\Ref e,s\evaluate l,s'[l\mapsto s]}
+
+\newrule{E-Deref}
+  {e,s\evaluate l,s'}
+  {!e,s\evaluate s'(l),s'}
+
+\newrule{E-Assign}
+  {e_1,s\evaluate l,s'\\
+   e_2,s'\evaluate v_2,s''}
+  {e_1:=e_2,s\evaluate \unit,s''[l\mapsto v_2]}
 
 \newrule{E-Edit}
-  {e \evaluate v}
-  {\Edit e \evaluate \Edit v}
+  {e,s \evaluate v,s'}
+  {\Edit e , s\evaluate \Edit v,s'}
 
 \newrule{E-Fill}
   {\ }
-  {\Enter \beta \evaluate \Enter \beta}
+  {\Enter \beta,s \evaluate \Enter \beta,s}
 
 \newrule{E-Update}
-  {e \evaluate l}
-  {\Update e \evaluate \Update l}
+  {e,s\evaluate l,s'}
+  {\Update e ,s\evaluate \Update l,s'}
 
 
 \newrule{E-Fail}
   { }
-  {\Fail \evaluate \Fail}
+  {\Fail,s \evaluate \Fail,s}
 
 
 \newrule{E-Then}
-  {e_1 \evaluate t_1}
-  {e_1 \Then e_2 \evaluate t_1 \Then e_2}
+  {e_1 ,s\evaluate t_1,s'}
+  {e_1 \Then e_2,s \evaluate t_1 \Then e_2,s'}
 
 \newrule{E-Next}
-  {e_1 \evaluate t_1}
-  {e_1 \Next e_2 \evaluate t_1 \Next e_2}
+  {e_1 ,s\evaluate t_1,s'}
+  {e_1 \Next e_2 ,s\evaluate t_1 \Next e_2,s'}
 
 
 \newrule{E-And}
-  {e_1 \evaluate t_1 \\
-   e_2 \evaluate t_2}
-  {e_1 \And e_2 \evaluate t_1 \And t_2}
+  {e_1 ,s\evaluate t_1 ,s'\\
+   e_2 ,s'\evaluate t_2,s''}
+  {e_1 \And e_2 ,s\evaluate t_1 \And t_2,s''}
 
 
 \newrule{E-Or}
-  {e_1 \evaluate t_1 \\
-   e_2 \evaluate t_2}
-  {e_1 \Or e_2 \evaluate t_1 \Or t_2}
+  {e_1 ,s\evaluate t_1 ,s'\\
+   e_2 ,s'\evaluate t_2,s''}
+  {e_1 \Or e_2 ,s\evaluate t_1 \Or t_2,s''}
 
 \newrule{E-Xor}
   {\ }
-  {e_1 \Xor e_2 \evaluate e_1 \Xor e_2}
+  {e_1 \Xor e_2 ,s\evaluate e_1 \Xor e_2,s}
 
 
 
