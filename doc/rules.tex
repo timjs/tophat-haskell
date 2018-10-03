@@ -54,7 +54,7 @@
 
 \newrule{T-Ref}
   {\Gamma,\Sigma \infers e:\tau}
-  {\Gamma,\Sigma \Ref e :\Reference \tau}
+  {\Gamma,\Sigma \infers \Ref e :\Reference \tau}
 
 \newrule{T-Deref}
   {\Gamma,\Sigma \infers e:\Reference \tau}
@@ -75,16 +75,16 @@
     {\Gamma,\Sigma \infers \tuple{e_1, e_2} :\tau_1 \times \tau_2}
 
 \newrule{T-Edit}
-  {\Gamma,\Sigma \infers e : \beta}
-  {\Gamma,\Sigma \infers \Edit e : \Task \beta}
+  {\Gamma,\Sigma \infers e : \tau}
+  {\Gamma,\Sigma \infers \Edit e : \Task \tau}
 
 \newrule{T-Fill}
   {\ }
-  {\Gamma,\Sigma \infers \Enter \beta : \Task \beta}
+  {\Gamma,\Sigma \infers \Enter \tau : \Task \tau}
 
 \newrule{T-Update}
-  {\Gamma,\Sigma \infers e : \Reference \beta}
-  {\Gamma,\Sigma \infers \Update e : \Task \beta}
+  {\Gamma,\Sigma \infers e : \Reference \tau}
+  {\Gamma,\Sigma \infers \Update e : \Task \tau}
 
 
 \newrule{T-Fail}
@@ -174,7 +174,7 @@
 
 \newrule{E-Fill}
   {\ }
-  {\Enter \beta,s \evaluate \Enter \beta,s}
+  {\Enter \tau,s \evaluate \Enter \tau,s}
 
 \newrule{E-Update}
   {e,s\evaluate l,s'}
@@ -227,7 +227,7 @@
 
 \newrule{N-Fill}
   { }
-  {\Enter \beta,s \normalise \Enter \beta,s}
+  {\Enter \tau,s \normalise \Enter \tau,s}
 
 \newrule{N-Update}
   { }
@@ -309,19 +309,19 @@
   {t,s \handle{i} t',s'}
 
 
-\newrule{H-Change}[v, v' : \beta]
+\newrule{H-Change}[v, v' : \tau]
   { }
   {\Edit v,s \handle{v'} \Edit v',s'}
 
-\newrule{H-Empty}[v : \beta]
+\newrule{H-Empty}[v : \tau]
   { }
-  {\Edit v,s \handle{\Empty} \Enter \beta,s}
+  {\Edit v,s \handle{\Empty} \Enter \tau,s}
 
-\newrule{H-Fill}[v' : \beta]
+\newrule{H-Fill}[v' : \tau]
   { }
-  {\Enter \beta,s \handle{v'} \Edit v',s}
+  {\Enter \tau,s \handle{v'} \Edit v',s}
 
-\newrule{H-Update}[s(l), v' : \beta]
+\newrule{H-Update}[s(l), v' : \tau]
   { }
   {\Update l,s \handle{v'} \Update l,s[l \mapsto v']{}}
 
