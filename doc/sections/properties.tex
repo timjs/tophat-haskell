@@ -59,7 +59,7 @@ Two events are \emph{essentially the same}, written $h_1 \approx h_2$ if they ar
 
 \begin{theorem}[Progress of handling]
  For all $e$, $s$ and $i$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Gamma,\Sigma\infers s$\\
- if $e,s \handle{i} e',s'$ then either $\Failing(e')$ or there exists an $e''$ and $i'$ such that $e',s'\handle{i'}e'',s''$
+ if $e,s \drive{i} e',s'$ then either $\Failing(e')$ or there exists an $e''$ and $i'$ such that $e',s'\handle{i'}e'',s''$
 \end{theorem}
 
 which we prove by showing that the following Theorem holds:
