@@ -10,7 +10,7 @@ module Data.Task.Internal
   ) where
 
 
-import Protolude
+import Base
 
 -- import Test.QuickCheck (Arbitrary, arbitrary)
 -- import Test.QuickCheck.Gen as Gen

@@ -1,9 +1,10 @@
 module Data.Task
   ( ui
+  , value
   ) where
 
 
-import Protolude
+import Base
 
 import Data.Task.Internal
 
@@ -52,13 +53,11 @@ ui (Label l this) = do
   t <- ui this
   pure $ l <> ":\n\t" <> t
 
-{-
-value :: forall l m a. MonadRef l m => TaskT l m a -> m (Maybe a)
-value (Edit unpack) = unpack \val ->
-  pure $ val
--- value (Store loc) = read loc >>= (pure << Just)
+
+value :: MonadRef l m => TaskT l m a -> m (Maybe a)
+value (Edit val) = pure $ val
 value (Store loc) = Just <$> read loc
-value (And unpack) = unpack \left rght -> do
+value (And left rght) = do
   l <- value left
   r <- value rght
   pure $ l <&> r
@@ -71,4 +70,3 @@ value (Fail) = pure $ Nothing
 value (Then _ _) = pure $ Nothing
 value (Next _ _) = pure $ Nothing
 value (Label _ this) = value this
--}
