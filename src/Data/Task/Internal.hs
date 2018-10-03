@@ -12,8 +12,9 @@ module Data.Task.Internal
 
 import Base
 
--- import Test.QuickCheck (Arbitrary, arbitrary)
--- import Test.QuickCheck.Gen as Gen
+import Test.QuickCheck (Arbitrary, arbitrary)
+import Test.QuickCheck.Gen as Gen
+import Test.QuickCheck.Instances.Text ()
 
 import Control.Monad.Ref (MonadRef, modify, new, read, write, (=:))
 
@@ -152,35 +153,32 @@ infixl 3 >>?
 
 
 
-{- Arbitrary --
+-- Arbitrary --
 
 
-instance arbitraryTaskInt :: Arbitrary (TaskT l m Int) where
-  arbitrary = fix arbitrary'
+instance Arbitrary (TaskT l m Int) where
+  arbitrary =
+    Gen.oneof
+      [ arbitrary >>= (pure . edit)
+      -- , arbitrary >>= (pure . update)
+      , mkpair
+      , alt' <$> arbitrary <*> arbitrary
+      , (<?>) <$> arbitrary <*> arbitrary
+      , pure fail'
+      , bind' <$> (arbitrary :: Gen (TaskT l m Int)) <*> arbitrary
+      , (>>?) <$> (arbitrary :: Gen (TaskT l m Int)) <*> arbitrary
+      , Label <$> (arbitrary :: Gen Label) <*> arbitrary
+      ]
     where
-
-      arbitrary' defered =
-        Gen.oneOf $ NonEmpty
-          ( pure fail' )
-          [ arbitrary >>= (pure << edit)
-          -- , arbitrary >>= (pure << update)
-          , mkpair defered
-          , alt' <$> defered <*> defered
-          , (<?>) <$> defered <*> defered
-          , bind' <$> defered <*> arbitrary
-          , step' <$> defered <*> arbitrary
-          , Label <$> arbitrary <*> defered
-          ]
-
-      mkpair defered = do
-        l <- defered
-        r <- defered
-        let c = \(x ** y) -> edit (x + y)
+      mkpair = do
+        l <- arbitrary
+        r <- arbitrary
+        let c = \( x, y ) -> edit (x + y)
         pure $ bind' (pair' l r) c
 
 
 
--- Labels ---------------------------------------------------------------------}
+-- Labels ----------------------------------------------------------------------
 
 
 -- | Get the current label, if one

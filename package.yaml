@@ -13,8 +13,10 @@ extra-source-files:
 
 
 dependencies:
-  - base >= 4.7 && < 5
-  - protolude >= 0.2.2
+  - base
+  - protolude
+  - QuickCheck
+  - quickcheck-instances
 
 
 default-extensions:
