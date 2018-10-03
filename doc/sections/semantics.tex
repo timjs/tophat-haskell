@@ -7,8 +7,69 @@
   \subsection{Evaluation semantics}
 
   \subsection{Observation semantics}
+    \subsubsection{Task value}
+
+    \begin{flalign*}
+      \begin{array}{lcl}
+        \multicolumn{3}{l}{\Value : \mathrm{Tasks} \rightharpoonup \mathrm{Values}} \\
+        \Value(\Edit v, s)       &=& v \\
+        \Value(\Enter \tau, s)   &=& \bot \\
+        \Value(\Update l, s)  &=& s(l) \\
+        \Value(\Fail, s)         &=& \bot \\
+        \Value(t_1 \Then e_2, s) &=& \bot \\
+        \Value(t_1 \Next e_2, s) &=& \bot \\
+        \Value(t_1 \And t_2, s)  &=& \left\{
+          \begin{array}{ll}
+            \tuple{v_1, v_2}  & \when\ \Value(t_1, s) = v_1 \land \Value(t_2, s) = v_2 \\
+            \bot              & \otherwise
+          \end{array}
+        \right. \\
+        \Value(t_1 \Or t_2, s)   &=& \left\{
+          \begin{array}{ll}
+            v_1               & \when\ \Value(t_1, s) = v_1 \\
+            v_2               & \when\ \Value(t_1, s) = \bot \lor \Value(t_2, s) = v_2 \\
+            \bot              & \otherwise
+          \end{array}
+        \right. \\
+        \Value(t_1 \Xor t_2, s)  &=& \bot
+      \end{array} & &&
+    \end{flalign*}
+
     \subsubsection{Inputs}
+
+    \begin{flalign*}
+      \begin{array}{lcl}
+        \multicolumn{3}{l}{\Inputs : \mathrm{Tasks} \to \powerset(\mathrm{Inputs})} \\
+        \Inputs(\Edit v:\Task\tau)       &=& \set{v':\tau, \Empty} \\
+        \Inputs(\Enter \tau)   &=& \set{v':\tau} \\
+        \Inputs(\Update l:\Task\tau)     &=& \set{v':\tau} \\
+        \Inputs(\Fail)         &=& \set{} \\
+        \Inputs(t_1 \Then e_2) &=& \Inputs(t_1) \\
+        \Inputs(t_1 \Next e_2) &=& \Inputs(t_1) \cup \set{\Continue\mid \Value{(t_1)}\neq \bot \wedge \neg\Failing{(e_2 \Value{(t_1)}\normalise)}} \\
+        \Inputs(t_1 \And t_2)  &=& \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)} \\
+        \Inputs(t_1 \Or t_2)   &=& \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)} \\
+        \Inputs(e_1 \Xor e_2)  &=& \set{\Pick \Left, \Pick \Right}
+      \end{array} & &&
+    \end{flalign*}
+
     \subsubsection{Failing}
+
+    \begin{flalign*}
+      \begin{array}{lcl}
+        \multicolumn{3}{l}{\Failing : \mathrm{Tasks} \to \mathrm{Booleans}} \\
+        \Failing(\Edit v)       &=& \False \\
+        \Failing(\Enter \tau)   &=& \False \\
+        \Failing(\Update l)     &=& \False \\
+        \Failing(\Fail)         &=& \True \\
+        \Failing(t_1 \Then e_2) &=& \Failing(t_1) \\
+        \Failing(t_1 \Next e_2) &=& \Failing(t_1) \\
+        \Failing(t_1 \And t_2)  &=& \Failing(t_1) \wedge \Failing(t_2) \\
+        \Failing(t_1 \Or t_2)   &=& \Failing(t_1) \wedge \Failing(t_2) \\
+        \Failing(t_1 \Xor t_2)  &=& \False
+      \end{array} & &&
+    \end{flalign*}
+
+
     \subsubsection{User Interface }
 
   \subsection{Normalisation semantics}
