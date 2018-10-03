@@ -30,73 +30,96 @@
 
 
 \newmacro{RelationT}
-  {\Gamma\St{} \infers e : \tau}
+  {\Gamma,\Sigma \infers e : \tau}
 
 \newrule{T-Abs}
-  {\Gamma[x:\tau_1] \St{} \infers e:\tau_2}
-  {\Gamma\St{} \infers \lambda x : \tau_1 . e :\tau_1 \to \tau_2}
+  {\Gamma[x:\tau_1] ,\Sigma \infers e:\tau_2}
+  {\Gamma,\Sigma \infers \lambda x : \tau_1 . e :\tau_1 \to \tau_2}
 
 \newrule{T-Var}
   {x:\tau\in\Gamma}
-  {\Gamma\St{}\infers x:\tau}
+  {\Gamma,\Sigma\infers x:\tau}
 
 \newrule{T-If}
-  {\Gamma\St{} \infers e_1:\Bool\\
-   \Gamma\St{} \infers e_2:\tau\\
-   \Gamma\St{} \infers e_3:\tau}
-  {\Gamma\St{} \infers \If{e_1}{e_2}{e_3}:\tau}
+  {\Gamma,\Sigma \infers e_1:\Bool\\
+   \Gamma,\Sigma \infers e_2:\tau\\
+   \Gamma,\Sigma \infers e_3:\tau}
+  {\Gamma,\Sigma \infers \If{e_1}{e_2}{e_3}:\tau}
 
 \newrule{T-App}
-  {\Gamma\St{} \infers e_1:\tau_1\to\tau_2\\
-   \Gamma\St{} \infers e_2:\tau_1}
-  {\Gamma\St{} \infers e_1 e_2 :\tau_2}
+  {\Gamma,\Sigma \infers e_1:\tau_1\to\tau_2\\
+   \Gamma,\Sigma \infers e_2:\tau_1}
+  {\Gamma,\Sigma \infers e_1 e_2 :\tau_2}
+
+
+\newrule{T-Ref}
+  {\Gamma,\Sigma \infers e:\tau}
+  {\Gamma,\Sigma \Ref e :\Reference \tau}
+
+\newrule{T-Deref}
+  {\Gamma,\Sigma \infers e:\Reference \tau}
+  {\Gamma,\Sigma\infers e:\tau}
+
+\newrule{T-Loc}
+  {\Sigma(l):\tau}
+  {\Gamma,\Sigma\infers l:\tau}
+
+\newrule{T-Assign}
+  {\Gamma,\Sigma\infers e_1:\Reference \tau\\
+   \Gamma,\Sigma\infers e_2:\tau}
+  {\Gamma,\Sigma\infers e_1 := e_2:\Unit}
+
+\newrule{T-Pair}
+    {\Gamma,\Sigma \infers e_1 : \tau_1 \\
+     \Gamma,\Sigma \infers e_2 : \tau_2}
+    {\Gamma,\Sigma \infers \tuple{e_1, e_2} :\tau_1 \times \tau_2}
 
 \newrule{T-Edit}
-  {\Gamma\St{} \infers e : \beta}
-  {\Gamma\St{} \infers \Edit e : \Task \beta}
+  {\Gamma,\Sigma \infers e : \beta}
+  {\Gamma,\Sigma \infers \Edit e : \Task \beta}
 
 \newrule{T-Fill}
   {\ }
-  {\Gamma\St{} \infers \Enter \beta : \Task \beta}
+  {\Gamma,\Sigma \infers \Enter \beta : \Task \beta}
 
 \newrule{T-Update}
-  {\Gamma\St{} \infers e : \Reference \beta}
-  {\Gamma\St{} \infers \Update e : \Task \beta}
+  {\Gamma,\Sigma \infers e : \Reference \beta}
+  {\Gamma,\Sigma \infers \Update e : \Task \beta}
 
 
 \newrule{T-Fail}
   { }
-  {\Gamma\St{} \infers \Fail : \Task \alpha}
+  {\Gamma,\Sigma \infers \Fail : \Task \alpha}
 
 
 \newrule{T-Then}
-  {\Gamma\St{} \infers e_1 : \Task \tau_1 \\
-   \Gamma\St{} \infers e_2 : \tau_1 \to \Task \tau_2}
-  {\Gamma\St{} \infers e_1 \Then e_2 : \Task \tau_2}
+  {\Gamma,\Sigma \infers e_1 : \Task \tau_1 \\
+   \Gamma,\Sigma \infers e_2 : \tau_1 \to \Task \tau_2}
+  {\Gamma,\Sigma \infers e_1 \Then e_2 : \Task \tau_2}
 
 
 \newrule{T-Next}
-  {\Gamma\St{} \infers e_1 : \Task \tau_1 \\
-   \Gamma\St{} \infers e_2 : \tau_1 \to \Task \tau_2}
-  {\Gamma\St{} \infers e_1 \Next e_2 : \Task \tau_2}
+  {\Gamma,\Sigma \infers e_1 : \Task \tau_1 \\
+   \Gamma,\Sigma \infers e_2 : \tau_1 \to \Task \tau_2}
+  {\Gamma,\Sigma \infers e_1 \Next e_2 : \Task \tau_2}
 
 
 \newrule{T-And}
-  {\Gamma\St{} \infers e_1 : \Task \tau_1 \\
-   \Gamma\St{} \infers e_2 : \Task \tau_2}
-  {\Gamma\St{} \infers e_1 \And e_2 : \Task\,(\tau_1 \times \tau_2)}
+  {\Gamma,\Sigma \infers e_1 : \Task \tau_1 \\
+   \Gamma,\Sigma \infers e_2 : \Task \tau_2}
+  {\Gamma,\Sigma \infers e_1 \And e_2 : \Task\,(\tau_1 \times \tau_2)}
 
 
 \newrule{T-Or}
-  {\Gamma\St{} \infers e_1 : \Task \tau \\
-   \Gamma\St{} \infers e_2 : \Task \tau }
-  {\Gamma\St{} \infers e_1 \Or e_2 : \Task \tau}
+  {\Gamma,\Sigma \infers e_1 : \Task \tau \\
+   \Gamma,\Sigma \infers e_2 : \Task \tau }
+  {\Gamma,\Sigma \infers e_1 \Or e_2 : \Task \tau}
 
 
 \newrule{T-Xor}
-  {\Gamma\St{} \infers e_1 : \Task \tau \\
-   \Gamma\St{} \infers e_2 : \Task \tau }
-  {\Gamma\St{} \infers e_1 \Xor e_2 : \Task \tau}
+  {\Gamma,\Sigma \infers e_1 : \Task \tau \\
+   \Gamma,\Sigma \infers e_2 : \Task \tau }
+  {\Gamma,\Sigma \infers e_1 \Xor e_2 : \Task \tau}
 
 
 
@@ -157,71 +180,71 @@
 
 
 \newmacro{RelationN}
-  {t\st{} \normalise t'\st{'}}
+  {t,\Sigma \normalise t'\st{'}}
 
 
 \newrule{N-Edit}
   { }
-  {\Edit v\st{} \normalise \Edit v\st{}}
+  {\Edit v,\Sigma \normalise \Edit v,\Sigma}
 
 \newrule{N-Fill}
   { }
-  {\Enter \beta\st{} \normalise \Enter \beta\st{}}
+  {\Enter \beta,\Sigma \normalise \Enter \beta,\Sigma}
 
 \newrule{N-Update}
   { }
-  {\Update l\st{} \normalise \Update l\st{}}
+  {\Update l,\Sigma \normalise \Update l,\Sigma}
 
 
 \newrule{N-Fail}
   { }
-  {\Fail\st{} \normalise \Fail\st{}}
+  {\Fail,\Sigma \normalise \Fail,\Sigma}
 
 
 \newrule{N-ThenStay}[\Value(t_1') = \bot]
-  {t_1\st{} \normalise t_1'\st{'}}
-  {t_1 \Then e_2\st{} \normalise t_1' \Then e_2\st{'}}
+  {t_1,\Sigma \normalise t_1'\st{'}}
+  {t_1 \Then e_2,\Sigma \normalise t_1' \Then e_2\st{'}}
 
 \newrule{N-ThenFail}[\Value(t_1') = v_1 \land \lnot\Failing(t_2)]
-  {t_1\st{} \normalise t_1'\st{'} \\
+  {t_1,\Sigma \normalise t_1'\st{'} \\
    e_2\ v_1 \evaluate t_2}
-  {t_1 \Then e_2\st{} \normalise t_1' \Then e_2\st{'}}
+  {t_1 \Then e_2,\Sigma \normalise t_1' \Then e_2\st{'}}
 
 \newrule{N-ThenCont}[\Value(t_1') = v_1 \land \Failing(t_2)]
-  {t_1\st{} \normalise t_1'\st{'} \\
+  {t_1,\Sigma \normalise t_1'\st{'} \\
    e_2\ v_1 \evaluate t_2  \\
    t_2\st{'} \normalise t_2'\st{''}}
-  {t_1 \Then e_2\st{} \normalise t_2'\st{''}}
+  {t_1 \Then e_2,\Sigma \normalise t_2'\st{''}}
 
 \newrule{N-Next}
-  {t_1\st{} \normalise t_1'\st{'}}
-  {t_1 \Next e_2\st{} \normalise t_1' \Next e_2\st{'}}
+  {t_1,\Sigma \normalise t_1'\st{'}}
+  {t_1 \Next e_2,\Sigma \normalise t_1' \Next e_2\st{'}}
 
 
 \newrule{N-And}
-  {t_1\st{}  \normalise t_1'\st{'} \\
+  {t_1,\Sigma  \normalise t_1'\st{'} \\
    t_2\st{'} \normalise t_2'\st{''}}
-  {t_1 \And t_2\st{} \normalise t_1' \And t_2'\st{''}}
+  {t_1 \And t_2,\Sigma \normalise t_1' \And t_2'\st{''}}
 
 
 \newrule{N-OrLeft}[\Value(t_1') = v_1]
-  {t_1\st{}  \normalise t_1'\st{'}}
-  {t_1 \Or t_2\st{} \normalise t_1'\st{'}}
+  {t_1,\Sigma  \normalise t_1'\st{'}}
+  {t_1 \Or t_2,\Sigma \normalise t_1'\st{'}}
 
 \newrule{N-OrRight}[\Value(t_1') = \bot \land \Value(t_2') = v_2]
-  {t_1\st{}  \normalise t_1'\st{'} \\
+  {t_1,\Sigma  \normalise t_1'\st{'} \\
    t_2\st{'} \normalise t_2'\st{''}}
-  {t_1 \Or t_2\st{} \normalise t_2'\st{''}}
+  {t_1 \Or t_2,\Sigma \normalise t_2'\st{''}}
 
 \newrule{N-OrNone}[\Value(t_1') = \bot \land \Value(t_2') = \bot]
-  {t_1\st{}  \normalise t_1'\st{'} \\
+  {t_1,\Sigma  \normalise t_1'\st{'} \\
    t_2\st{'} \normalise t_2'\st{''}}
-  {t_1 \Or t_2\st{} \normalise t_1' \Or t_2'\st{''}}
+  {t_1 \Or t_2,\Sigma \normalise t_1' \Or t_2'\st{''}}
 
 
 \newrule{N-Xor}
   { }
-  {e_1 \Xor e_2\st{} \normalise e_1 \Xor e_2\st{}}
+  {e_1 \Xor e_2,\Sigma \normalise e_1 \Xor e_2,\Sigma}
 
 \newrule{N-Eval}
     {e\evaluate e' \\
@@ -230,14 +253,14 @@
 
 
 % \newrule{N-Next}[t_1' = \Edit v]
-%   {t_1\st{} \normalise t_1'\st{'}   \\
+%   {t_1,\Sigma \normalise t_1'\st{'}   \\
 %    e\ v \evaluate t_2       \\
 %    t_2\st{'} \normalise t_2'\st{''} }
-%   {t_1 \Next e\st{} \normalise t_2'\st{''}}
+%   {t_1 \Next e,\Sigma \normalise t_2'\st{''}}
 
 % \newrule{N-NextEval}
-%   {e_1\st{} \normalise u_1\st{'}}
-%   {e_1 \Next e_2\st{} \normalise u_1 \Next e_2\st{'}}
+%   {e_1,\Sigma \normalise u_1\st{'}}
+%   {e_1 \Next e_2,\Sigma \normalise u_1 \Next e_2\st{'}}
 
 
 
@@ -245,73 +268,73 @@
 
 
 \newmacro{RelationH}
-  {t\st{} \handle{i} t'\st{'}}
+  {t,\Sigma \handle{i} t'\st{'}}
 
 
 \newrule{H-Change}[v, v' : \beta]
   { }
-  {\Edit v\st{} \handle{v'} \Edit v'\st{}}
+  {\Edit v,\Sigma \handle{v'} \Edit v',\Sigma}
 
 \newrule{H-Empty}[v : \beta]
   { }
-  {\Edit v\st{} \handle{\Empty} \Enter \beta\st{}}
+  {\Edit v,\Sigma \handle{\Empty} \Enter \beta,\Sigma}
 
 \newrule{H-Fill}[v' : \beta]
   { }
-  {\Enter \beta\st{} \handle{v'} \Edit v'\st{}}
+  {\Enter \beta,\Sigma \handle{v'} \Edit v',\Sigma}
 
 \newrule{H-Update}[\Sigma(l), v' : \beta]
   { }
-  {\Update l\st{} \handle{v'} \Update l\st[l \mapsto v']{}}
+  {\Update l,\Sigma \handle{v'} \Update l\st[l \mapsto v']{}}
 
 
 \newrule{H-Fail}
   { }
-  {\Fail\st{} \handle{i} \Fail\st{}}
+  {\Fail,\Sigma \handle{i} \Fail,\Sigma}
 
 
 \newrule{H-PassThen}
-  {t_1\st{} \handle{i} t_1'\st{'}}
-  {t_1 \Then e_2\st{} \handle{i} t_1' \Then e_2\st{'}}
+  {t_1,\Sigma \handle{i} t_1'\st{'}}
+  {t_1 \Then e_2,\Sigma \handle{i} t_1' \Then e_2\st{'}}
 
 \newrule{H-PassNext}
-  {t_1\st{} \handle{i} t_1'\st{'}}
-  {t_1 \Next e_2\st{} \handle{i \neq \Continue} t_1' \Next e_2\st{'}}
+  {t_1,\Sigma \handle{i} t_1'\st{'}}
+  {t_1 \Next e_2,\Sigma \handle{i \neq \Continue} t_1' \Next e_2\st{'}}
 
 \newrule{H-Next}[\Value{(t_1)}\neq \bot \wedge \neg\Failing{(e_2 \Value{(t_1)}\normalise)}]
   { }
-  {t_1 \Next e_2\st{} \handle{\Continue} t_1 \Then e_2\st{}}
+  {t_1 \Next e_2,\Sigma \handle{\Continue} t_1 \Then e_2,\Sigma}
 
 
 \newrule{H-FirstAnd}
-  {t_1\st{} \handle{i} t_1'\st{'} }
-  {t_1 \And t_2\st{} \handle{\First i} t_1' \And t_2\st{'}}
+  {t_1,\Sigma \handle{i} t_1'\st{'} }
+  {t_1 \And t_2,\Sigma \handle{\First i} t_1' \And t_2\st{'}}
 
 \newrule{H-SecondAnd}
-  {t_2\st{} \handle{i} t_2'\st{'} }
-  {t_1\st{} \And t_2 \handle{\Second i} t_1 \And t_2'\st{'}}
+  {t_2,\Sigma \handle{i} t_2'\st{'} }
+  {t_1,\Sigma \And t_2 \handle{\Second i} t_1 \And t_2'\st{'}}
 
 
 \newrule{H-FirstOr}
-  {t_1\st{} \handle{i} t_1'\st{'} }
-  {t_1 \Or t_2\st{} \handle{\First i} t_1' \Or t_2\st{'}}
+  {t_1,\Sigma \handle{i} t_1'\st{'} }
+  {t_1 \Or t_2,\Sigma \handle{\First i} t_1' \Or t_2\st{'}}
 
 \newrule{H-SecondOr}
-  {t_2\st{} \handle{i} t_2'\st{'} }
-  {t_1 \Or t_2\st{} \handle{\Second i} t_1 \Or t_2'\st{'}}
+  {t_2,\Sigma \handle{i} t_2'\st{'} }
+  {t_1 \Or t_2,\Sigma \handle{\Second i} t_1 \Or t_2'\st{'}}
 
 
 \newrule{H-PickLeft}[\Failing(t_1)]
-  {t_1\st{} \handle{\Pick r} t_1'\st{'}}
-  {t_1 \Xor t_2\st{} \handle{\Pick \Left r} t_1'\st{'}}
+  {t_1,\Sigma \handle{\Pick r} t_1'\st{'}}
+  {t_1 \Xor t_2,\Sigma \handle{\Pick \Left r} t_1'\st{'}}
 
 \newrule{H-PickRight}[\Failing(t_2)]
-  {t_2\st{} \handle{\Pick r} t_2'\st{'}}
-  {t_1 \Xor t_2\st{} \handle{\Pick \Right r} t_2'\st{'}}
+  {t_2,\Sigma \handle{\Pick r} t_2'\st{'}}
+  {t_1 \Xor t_2,\Sigma \handle{\Pick \Right r} t_2'\st{'}}
 
 \newrule{H-PickHere}
   {\ }
-  {t\st{} \handle{\Pick \Here} t\st{}}
+  {t,\Sigma \handle{\Pick \Here} t,\Sigma}
 
 
 
@@ -320,39 +343,39 @@
 
 % \newrule{H-Stay'}[\Value(t_1) = \bot]
 %   {\ }
-%   {t_1 \Next e\st{} \handle{\Next} t_1 \Next e\st{}}
+%   {t_1 \Next e,\Sigma \handle{\Next} t_1 \Next e,\Sigma}
 
 % \newrule{H-Next'}[\Value(t_1) = v]
 %   {e\ v \evaluate t_2    \\
-%    t_2\st{} \normalise t_2'\st{'} }
-%   {t_1 \Next e\st{} \handle{\Next} t_2'\st{'}}
+%    t_2,\Sigma \normalise t_2'\st{'} }
+%   {t_1 \Next e,\Sigma \handle{\Next} t_2'\st{'}}
 
 % \newrule{H-Stay}[\Value(t_1) = \bot]
 %   {\ }
-%   {t_1 \Then e\st{} \handle{\Execute \pi} t_1 \Then e\st{}}
+%   {t_1 \Then e,\Sigma \handle{\Execute \pi} t_1 \Then e,\Sigma}
 
 % \newrule{H-Fail'}[\Value(t_1) = v \land t_2 = \Fail]
 %   {e\ v \evaluate t_2    \\
-%    t_2\st{} \handle{\Pick \pi} t_2'\st{'} }
-%   {t_1 \Then e\st{} \handle{\Execute \pi} t_1 \Then e\st{}}
+%    t_2,\Sigma \handle{\Pick \pi} t_2'\st{'} }
+%   {t_1 \Then e,\Sigma \handle{\Execute \pi} t_1 \Then e,\Sigma}
 
 % \newrule{H-Next}[\Value(t_1) = v \land t_2 \neq \Fail]
 %   {e\ v \evaluate t_2    \\
-%    t_2\st{} \handle{\Pick \pi} t_2'\st{'} }
-%   {t_1 \Then e\st{} \handle{\Execute \pi} t_2'\st{'}}
+%    t_2,\Sigma \handle{\Pick \pi} t_2'\st{'} }
+%   {t_1 \Then e,\Sigma \handle{\Execute \pi} t_2'\st{'}}
 
 % \newrule{H-PassS}
-%   {t_1\st{} \handle{i} t_1'\st{'}}
-%   {t_1 \Next e\st{} \handle{i} t_1' \Next e\st{'}}
+%   {t_1,\Sigma \handle{i} t_1'\st{'}}
+%   {t_1 \Next e,\Sigma \handle{i} t_1' \Next e\st{'}}
 
 % \newrule{H-Pass}[i \neq \Execute \pi]
-%   {t_1\st{} \handle{i} t_1'\st{'}       \\
+%   {t_1,\Sigma \handle{i} t_1'\st{'}       \\
 %    t_1' \Then e\st{'} \normalise t_2\st{''} }
-%   {t_1 \Then e\st{} \handle{i} t_2\st{''}}
+%   {t_1 \Then e,\Sigma \handle{i} t_2\st{''}}
 
 \newrule{H-Fallback}
   { }
-  {t\st{} \handle{i} t\st{}}
+  {t,\Sigma \handle{i} t,\Sigma}
 
 
 
@@ -360,10 +383,10 @@
 
 
 \newmacro{RelationD}
-  {t\st{} \drive{i} t'\st{'}}
+  {t,\Sigma \drive{i} t'\st{'}}
 
 
 \newrule{D-Main}
-  {t\st{}   \handle{i} t'\st{'} \\
+  {t,\Sigma   \handle{i} t'\st{'} \\
    t'\st{'} \normalise t''\st{''}}
-  {t\st{} \drive{i} t''\st{''}}
+  {t,\Sigma \drive{i} t''\st{''}}
