@@ -1,0 +1,20 @@
+name:                tasks
+version:             0.1.0.0
+#synopsis:
+#description:
+homepage:            https://github.com/timjs/tasks#readme
+license:             BSD3
+author:              Tim Steenvoorden
+maintainer:          tim.steenvoorden@gmail.com
+copyright:           BSD3
+category:            Web
+extra-source-files:
+- README.md
+
+dependencies:
+  - base >= 4.7 && < 5
+
+executables:
+  tasks:
+    source-dirs:      src
+    main:             Main.hs
