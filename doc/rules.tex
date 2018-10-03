@@ -1,4 +1,4 @@
-% !TEX root=report.tex
+% !TEX root=pldi2019.tex
 
 
 %% Helpers %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -218,76 +218,76 @@
 
 
 \newmacro{RelationN}
-  {t,\Sigma \normalise t'\st{'}}
+  {t,s \normalise t',s'}
 
 
 \newrule{N-Edit}
   { }
-  {\Edit v,\Sigma \normalise \Edit v,\Sigma}
+  {\Edit v,s \normalise \Edit v,s}
 
 \newrule{N-Fill}
   { }
-  {\Enter \beta,\Sigma \normalise \Enter \beta,\Sigma}
+  {\Enter \beta,s \normalise \Enter \beta,s}
 
 \newrule{N-Update}
   { }
-  {\Update l,\Sigma \normalise \Update l,\Sigma}
+  {\Update l,s \normalise \Update l,s}
 
 
 \newrule{N-Fail}
   { }
-  {\Fail,\Sigma \normalise \Fail,\Sigma}
+  {\Fail,s \normalise \Fail,s}
 
 
-\newrule{N-ThenStay}[\Value(t_1') = \bot]
-  {t_1,\Sigma \normalise t_1'\st{'}}
-  {t_1 \Then e_2,\Sigma \normalise t_1' \Then e_2\st{'}}
+\newrule{N-ThenStay}[\Value(t_1',s') = \bot]
+  {t_1,s \normalise t_1',s'}
+  {t_1 \Then e_2,s \normalise t_1' \Then e_2,s'}
 
-\newrule{N-ThenFail}[\Value(t_1') = v_1 \land \lnot\Failing(t_2)]
-  {t_1,\Sigma \normalise t_1'\st{'} \\
-   e_2\ v_1 \evaluate t_2}
-  {t_1 \Then e_2,\Sigma \normalise t_1' \Then e_2\st{'}}
+\newrule{N-ThenFail}[\Value(t_1',s') = v_1 \land \lnot\Failing(t_2)]
+  {t_1,s \normalise t_1',s' \\
+   e_2\ v_1,s' \evaluate t_2,s''}
+  {t_1 \Then e_2,s \normalise t_1' \Then e_2,s''}
 
-\newrule{N-ThenCont}[\Value(t_1') = v_1 \land \Failing(t_2)]
-  {t_1,\Sigma \normalise t_1'\st{'} \\
-   e_2\ v_1 \evaluate t_2  \\
-   t_2\st{'} \normalise t_2'\st{''}}
-  {t_1 \Then e_2,\Sigma \normalise t_2'\st{''}}
+\newrule{N-ThenCont}[\Value(t_1',s') = v_1 \land \Failing(t_2)]
+  {t_1,s \normalise t_1',s' \\
+   e_2\ v_1,s' \evaluate t_2 ,s'' \\
+   t_2,s'' \normalise t_2',s'''}
+  {t_1 \Then e_2,s \normalise t_2',s'''}
 
 \newrule{N-Next}
-  {t_1,\Sigma \normalise t_1'\st{'}}
-  {t_1 \Next e_2,\Sigma \normalise t_1' \Next e_2\st{'}}
+  {t_1,s \normalise t_1',s'}
+  {t_1 \Next e_2,s \normalise t_1' \Next e_2,s'}
 
 
 \newrule{N-And}
-  {t_1,\Sigma  \normalise t_1'\st{'} \\
-   t_2\st{'} \normalise t_2'\st{''}}
-  {t_1 \And t_2,\Sigma \normalise t_1' \And t_2'\st{''}}
+  {t_1,s  \normalise t_1',s' \\
+   t_2,s' \normalise t_2',s''}
+  {t_1 \And t_2,s \normalise t_1' \And t_2',s''}
 
 
-\newrule{N-OrLeft}[\Value(t_1') = v_1]
-  {t_1,\Sigma  \normalise t_1'\st{'}}
-  {t_1 \Or t_2,\Sigma \normalise t_1'\st{'}}
+\newrule{N-OrLeft}[\Value(t_1',s') = v_1]
+  {t_1,s  \normalise t_1',s'}
+  {t_1 \Or t_2,s \normalise t_1',s'}
 
-\newrule{N-OrRight}[\Value(t_1') = \bot \land \Value(t_2') = v_2]
-  {t_1,\Sigma  \normalise t_1'\st{'} \\
-   t_2\st{'} \normalise t_2'\st{''}}
-  {t_1 \Or t_2,\Sigma \normalise t_2'\st{''}}
+\newrule{N-OrRight}[\Value(t_1',s') = \bot \land \Value(t_2',s'') = v_2]
+  {t_1,s  \normalise t_1',s' \\
+   t_2,s' \normalise t_2',s''}
+  {t_1 \Or t_2,s \normalise t_2',s''}
 
-\newrule{N-OrNone}[\Value(t_1') = \bot \land \Value(t_2') = \bot]
-  {t_1,\Sigma  \normalise t_1'\st{'} \\
-   t_2\st{'} \normalise t_2'\st{''}}
-  {t_1 \Or t_2,\Sigma \normalise t_1' \Or t_2'\st{''}}
+\newrule{N-OrNone}[\Value(t_1',s') = \bot \land \Value(t_2',s'') = \bot]
+  {t_1,s  \normalise t_1',s' \\
+   t_2,s' \normalise t_2',s''}
+  {t_1 \Or t_2,s \normalise t_1' \Or t_2',s''}
 
 
 \newrule{N-Xor}
   { }
-  {e_1 \Xor e_2,\Sigma \normalise e_1 \Xor e_2,\Sigma}
+  {e_1 \Xor e_2,s \normalise e_1 \Xor e_2,s}
 
 \newrule{N-Eval}
-    {e\evaluate e' \\
+    {e,s\evaluate e',s' \\
     e\neq e'}
-    {e \normalise e'}
+    {e,s \normalise e',s'}
 
 
 % \newrule{N-Next}[t_1' = \Edit v]
