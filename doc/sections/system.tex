@@ -3,10 +3,56 @@
 \section{System}
 
 \subsection{Base language}
+\begin{grammar}
+  Expressions
+    & e    &::= & \lambda x:\tau.\ e   & – abstraction \\
+    &      &\mid& e_1\ e_2             & – application \\
+    &      &\mid& x                    & – variable \\
+    &      &\mid& c                    & – constant \\
+  \addlinespace
+    &      &\mid& e_1 \star e_2        & – operate \\
+    &      &\mid& \If{e_1}{e_2}{e_3}   & – branch \\
+    &      &\mid& \tuple{e_1, e_2}     & – pair \\
+    &      &\mid& \unit                & – unit \\
+  \addlinespace
+  Constants
+    & c    &::= & B                    & – boolean \\
+    &      &\mid& I                    & – integer \\
+    &      &\mid& S                    & – string \\
+  \addlinespace
+\end{grammar}
 \subsection{Editors}
+\begin{grammar}
+  Expressions
+    & e    &::= & p                    & – pretask \\
+  Pretasks
+    & p    &::= & \Edit e              & – valued editor \\
+    &      &\mid& \Enter \beta         & – unvalued editor \\
+\end{grammar}
 \subsection{Steps}
+\begin{grammar}
+  Pretasks
+    & p    &::= & e_1 \Then e_2        & – step \\
+    &      &\mid& e_1 \Next e_2        & – user step
+\end{grammar}
 \subsection{Composition}
+\begin{grammar}
+  Pretasks
+    & p    &::= & e_1 \And e_2         & – composition \\
+  \addlinespace
+    &      &\mid& e_1 \Or e_2          & – choice
+\end{grammar}
 \subsection{State}
+\begin{grammar}
+  Expressions
+    & e    &::= & l                    & – location \\
+    &      &\mid& \Ref e               & – reference \\
+    &      &\mid& !e                   & – dereference \\
+    &      &\mid& e_1 := e_2           & – assign \\
+    &      &\mid& e_1; e_2             & – sequence \\
+  Pretasks
+    & p    &::= & \Update e            & – stored editor \\
+\end{grammar}
 
 \begin{mathpar}
   \userule{T-Abs}\qquad
