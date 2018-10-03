@@ -8,83 +8,89 @@
   \subsubsection{Theorem~\ref{thmpreseval}}
 \begin{proof}
   We prove Theorem~\ref{thmpreseval} by induction on $e$:\\
+
   \noindent\textbf{Case} $e=\lambda x:\tau.e, e_1 e_2, x, c, l, e_1 \star e_2,
-                            \If{e_1}{e_2}{e_3},\tuple{e_1, e_2},\unit,\Ref e,!e,
-                            e_1 := e_2,e_1; e_2$
-      preservation has been proven for these cases by \todo{insert cite}\\
+      \If{e_1}{e_2}{e_3},$\\
+      $\tuple{e_1, e_2},\unit,\Ref e,!e,e_1 := e_2,e_1; e_2$ preservation has
+      been proven for these cases by \todo{insert cite}\\
 
   \noindent\textbf{Case} $\userule{E-Edit}$
-      By T-Edit we have $\Edit e:\Task \tau$ and $e:\tau$. The induction
-      hypothesis gives us that $e\evaluate v$ also preserves, and thus $v:\tau$.
-      Therefore $\Edit v:\Task\tau$.\\
+      Given that $\Gamma,\Sigma\infers\Edit e:\Task \tau$ and $\Gamma,\Sigma\infers s$, T-Edit gives us that
+      $\Gamma,\Sigma\infers e:\tau$. The induction hypothesis gives us that
+      $e,s\evaluate v,s'$ also preserves, and thus $\Gamma,\Sigma\infers v:\tau$
+      and $\Gamma,\Sigma\infers s'$. Therefore $\Gamma,\Sigma\infers\Edit v:\Task\tau$.\\
 
   \noindent\textbf{Case} $\userule{E-Fill}$
-      Evaluation does not alter the expression, therefore this case holds tivially.\\
+      Evaluation does not alter $e$ and $s$, therefore this case holds tivially.\\
 
   \noindent\textbf{Case} $\userule{E-Update}$
-      By T-Update we have $\Edit e:\Task \tau$ and $e:\Ref \tau$. The induction
-      hypothesis gives us that $e\evaluate l$ also preserves, and thus $l:\Ref\tau$.
-      Therefore $\Update l:\Task\tau$\\
+      Given that $\Gamma,\Sigma\infers \Edit e:\Task \tau$ and
+      $\Gamma,\Sigma\infers s$, T-Update gives us that $\Gamma,\Sigma\infers e:\Ref \tau$.
+      The induction hypothesis gives us that $e,s\evaluate l,s'$ also preserves,
+      and thus $\Gamma,\Sigma\infers l:\Ref\tau$ and $\Gamma,\Sigma\infers s'$.
+      Therefore $\Gamma,\Sigma\infers\Update l:\Task\tau$\\
 
   \noindent\textbf{Case} $\userule{E-Fail}$
-      Evaluation does not alter the expression, therefore this case holds tivially.\\
+      Evaluation does not alter $e$ and $s$, therefore this case holds tivially.\\
 
   \noindent\textbf{Case} $\userule{E-Then}$
-      Given that $e_1\Then e_2:\Task \tau$, T-Then gives us that $e_1:\Task\tau_1$
-      and $e_2:\tau_1 \to \Task \tau$. By the induction hypothesis, we know that
-      $e_1\evaluate t_1$ preserves and thus $t_1:\Task\tau_1$. Therefore
-      $t_1\Then e_2:\Task\tau$.\\
+      Given that $\Gamma,\Sigma\infers e_1\Then e_2:\Task \tau$ and $\Gamma,\Sigma\infers s$, T-Then gives us that $\Gamma,\Sigma\infers e_1:\Task\tau_1$
+      and $\Gamma,\Sigma\infers e_2:\tau_1 \to \Task \tau$. By the induction hypothesis, we know that
+      $e_1,s\evaluate t_1,s'$ preserves and thus $\Gamma,\Sigma\infers t_1:\Task\tau_1$ and $\Gamma,\Sigma\infers s'$. Therefore
+      $\Gamma,\Sigma\infers t_1\Then e_2:\Task\tau$.\\
 
   \noindent\textbf{Case} $\userule{E-Next}$
-      Given that $e_1\Next e_2:\Task \tau$, T-Then gives us that $e_1:\Task\tau_1$
-      and $e_2:\tau_1 \to \Task \tau$. By the induction hypothesis, we know that
-      $e_1\evaluate t_1$ preserves and thus $t_1:\Task\tau_1$. Therefore
-      $t_1\Next e_2:\Task\tau$.\\
+      Given that $\Gamma,\Sigma\infers e_1\Next e_2:\Task \tau$ and $\Gamma,\Sigma\infers s$, T-Then gives us that $\Gamma,\Sigma\infers e_1:\Task\tau_1$
+      and $\Gamma,\Sigma\infers e_2:\tau_1 \to \Task \tau$. By the induction hypothesis, we know that
+      $e_1,s\evaluate t_1,s'$ preserves and thus $\Gamma,\Sigma\infers t_1:\Task\tau_1$ and $\Gamma,\Sigma\infers s'$. Therefore
+      $\Gamma,\Sigma\infers t_1\Next e_2:\Task\tau$.\\
 
   \noindent\textbf{Case} $\userule{E-And}$
-      Given that $e_1\And e_2:\Task(\tau_1\times\tau_2)$, T-And gives us that
-      $e_1:\Task\tau_1$ and $e_2:\Task\tau_2$. By the induction hypothesis, we
-      know that both $e_1\evaluate t_1$ and $e_2\evaluate t_2$ preserve and thus
-      $t_1:\Task\tau_1$ and $t_2:\Task\tau_2$. Therfore
-      $t_1\And t_2:\Task(\tau_1\times\tau_2)$\\
+      Given that $\Gamma,\Sigma\infers e_1\And e_2:\Task(\tau_1\times\tau_2)$ and $\Gamma,\Sigma\infers s$, T-And gives us that
+      $\Gamma,\Sigma\infers e_1:\Task\tau_1$ and $\Gamma,\Sigma\infers e_2:\Task\tau_2$. By the induction hypothesis, we
+      know that both $e_1,s\evaluate t_1,s'$ and $e_2,s'\evaluate t_2,s''$ preserve and thus
+      $\Gamma,\Sigma\infers t_1:\Task\tau_1$, $\Gamma,\Sigma\infers s'$, $\Gamma,\Sigma\infers t_2:\Task\tau_2$ and $\Gamma,\Sigma\infers s''$. Therfore
+      $\Gamma,\Sigma\infers t_1\And t_2:\Task(\tau_1\times\tau_2)$\\
 
   \noindent\textbf{Case} $\userule{E-Or}$
-      Given that $e_1\Or e_2:\Task\tau$, T-Or gives us that $e_1:\Task\tau$ and
-      $e_2:\Task\tau$. By the induction hypothesis, we have that both
-      $e_1\evaluate t_1$ and $e_2\evaluate t_2$ preserve and thus $t_1:\Task\tau$
-      and $t_2:\Task\tau$. Therefore $t_1\Or t_2:\Task\tau$.\\
+      Given that $\Gamma,\Sigma\infers e_1\Or e_2:\Task\tau$ and $\Gamma,\Sigma\infers s$, T-Or gives us that $\Gamma,\Sigma\infers e_1:\Task\tau$ and
+      $\Gamma,\Sigma\infers e_2:\Task\tau$. By the induction hypothesis, we have that both
+      $e_1,s\evaluate t_1,s'$ and $e_2,s'\evaluate t_2,s''$ preserve and thus $\Gamma,\Sigma\infers t_1:\Task\tau$, $\Gamma,\Sigma\infers s'$,
+      $\Gamma,\Sigma\infers t_2:\Task\tau$ and $\Gamma,\Sigma\infers s''$. Therefore $\Gamma,\Sigma\infers t_1\Or t_2:\Task\tau$.\\
 
   \noindent\textbf{Case} $\userule{E-Xor}$
-      Evaluation does not alter the expression, therefore this case holds tivially.
+      Evaluation does not alter $e$ and $s$, therefore this case holds tivially.
 \end{proof}
 
 
 
 \subsubsection{Lemma~\ref{lemmavaluepreserves}}
 \begin{proof}
-  \noindent\textbf{Case} $\Value{(\Edit v,s)}=v$ By T-Edit, if $\Edit v:\Task\tau$, then $v:\tau$.\\
+  We prove Lemma~\ref{lemmavaluepreserves} by induction over $e$.\\
+
+  \noindent\textbf{Case} $\Value{(\Edit v,s)}=v$ By T-Edit, if $\Gamma,\Sigma\infers \Edit v:\Task\tau$, then $\Gamma,\Sigma\infers v:\tau$.\\
 
   \noindent\textbf{Case} $\Value{(\Enter \tau,s)}=\bot$ Since this case does not lead to a value, the lemma holds trivially.\\
 
-  \noindent\textbf{Case} $\Value{(\Update l,s)}=s(l)$ \todo{Which rule do we use here to show that s(l) has the same type as l???}\\
+  \noindent\textbf{Case} $\Value{(\Update l,s)}=s(l)$ Given that $\Gamma,\Sigma\infers\Update l:\Task \tau$ and $\Gamma,\Sigma\infers s$, we know that $\Gamma,\Sigma\infers s(l):\tau$.\\
 
-  \noindent\textbf{Case} $\Value{(\Fail)}=\bot$ Since this case does not lead to a value, the lemma holds trivially.\\
+  \noindent\textbf{Case} $\Value{(\Fail,s)}=\bot$ Since this case does not lead to a value, the lemma holds trivially.\\
 
-  \noindent\textbf{Case} $\Value{(t_1\Then e_2)}=\bot$ Since this case does not lead to a value, the lemma holds trivially.\\
+  \noindent\textbf{Case} $\Value{(t_1\Then e_2,s)}=\bot$ Since this case does not lead to a value, the lemma holds trivially.\\
 
-  \noindent\textbf{Case} $\Value{(t_2\Next e_2)}=\bot$ Since this case does not lead to a value, the lemma holds trivially.\\
+  \noindent\textbf{Case} $\Value{(t_2\Next e_2,s)}=\bot$ Since this case does not lead to a value, the lemma holds trivially.\\
 
-  \noindent\textbf{Case} $\Value{(t_1\And t_2)}=\tuple{v_1, v_2}, \Value{(t_1)}=v_1\wedge\Value{(t_2)}=v_2$ By T-And we have that $t_1\And t_2:\Task(\tau_1\times\tau_2)$ and $t_1:\tau_1$ and $t_2:\tau_2$. By the induction hypothesis, $ \Value{(t_1)}=v_1$ and $\Value{(t_2)}=v_2$ preserve, and thus $v_1:\tau_1$ and $v_2:\tau_2$. This gives us that $\tuple{v_1, v_2}:\Task(\tau_1\times\tau_2)$ \\
+  \noindent\textbf{Case} $\Value{(t_1\And t_2,s)}=\tuple{v_1, v_2}$ given that $\Value{(t_1,s)}=v_1\wedge\Value{(t_2,s)}=v_2$\\ By T-And we have that $\Gamma,\Sigma\infers t_1\And t_2:\Task(\tau_1\times\tau_2)$ and $\Gamma,\Sigma\infers t_1:\tau_1$ and $\Gamma,\Sigma\infers t_2:\tau_2$. By the induction hypothesis, $ \Value{(t_1,s)}=v_1$ and $\Value{(t_2,s)}=v_2$ preserve, and thus $\Gamma,\Sigma\infers v_1:\tau_1$ and $\Gamma,\Sigma\infers v_2:\tau_2$. This gives us that $\Gamma,\Sigma\infers \tuple{v_1, v_2}:\Task(\tau_1\times\tau_2)$ \\
 
-  \noindent\textbf{Case} $\Value{(t_1\And t_2)}=bot, \not\Value{(t_1)}=v_1\wedge\Value{(t_2)}=v_2$ Since this case does not lead to a value, the lemma holds trivially.\\
+  \noindent\textbf{Case} $\Value{(t_1\And t_2,s)}=\bot$ given that $\neg(\Value{(t_1,s)}=v_1\wedge\Value{(t_2,s)}=v_2)$\\ Since this case does not lead to a value, the lemma holds trivially.\\
 
-  \noindent\textbf{Case} $\Value{(t_1\Or t_2)}=v_1, \Value{(t_1)}=v_1$ By T-Or we have that $t_1\Or t_2:\Task\tau$, and $t_1:\Task\tau$ and $t_2:\Task\tau$. By the induction hypothesis, we have that $v_1:\tau$.\\
+  \noindent\textbf{Case} $\Value{(t_1\Or t_2,s)}=v_1$ given that $\Value{(t_1,s)}=v_1$\\ By T-Or we have that $\Gamma,\Sigma\infers t_1\Or t_2:\Task\tau$, and $\Gamma,\Sigma\infers t_1:\Task\tau$ and $\Gamma,\Sigma\infers t_2:\Task\tau$. By the induction hypothesis, we have that $\Gamma,\Sigma\infers v_1:\tau$.\\
 
-  \noindent\textbf{Case} $\Value{(t_1\Or t_2)}=v_2, \Value{(t_1)}=\bot\wedge\Value{(t_2)}=v_2$ By T-Or we have that $t_1\Or t_2:\Task\tau$, and $t_1:\Task\tau$ and $t_2:\Task\tau$. By the induction hypothesis, we have that $v_2:\tau$.\\
+  \noindent\textbf{Case} $\Value{(t_1\Or t_2,s)}=v_2$ given that $\Value{(t_1,s)}=\bot\wedge\Value{(t_2,s)}=v_2$\\ By T-Or we have that $\Gamma,\Sigma\infers t_1\Or t_2:\Task\tau$, and $\Gamma,\Sigma\infers t_1:\Task\tau$ and $\Gamma,\Sigma\infers t_2:\Task\tau$. By the induction hypothesis, we have that $\Gamma,\Sigma\infers v_2:\tau$.\\
 
-  \noindent\textbf{Case} $\Value{(t_1\Or t_2)}=\bot, \Value{(t_1)}=\bot\wedge\Value{(t_2)}=\bot$ Since this case does not lead to a value, the lemma holds trivially.\\
+  \noindent\textbf{Case} $\Value{(t_1\Or t_2,s)}=\bot$ given that $\Value{(t_1,s)}=\bot\wedge\Value{(t_2,s)}=\bot$\\ Since this case does not lead to a value, the lemma holds trivially.\\
 
-  \noindent\textbf{Case} $\Value{(t_1\Xor t_2)}=\bot$ Since this case does not lead to a value, the lemma holds trivially.\\
+  \noindent\textbf{Case} $\Value{(t_1\Xor t_2,s)}=\bot$ Since this case does not lead to a value, the lemma holds trivially.\\
 \end{proof}
 
 
