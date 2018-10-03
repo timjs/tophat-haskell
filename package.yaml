@@ -11,13 +11,73 @@ category:            Web
 extra-source-files:
 - README.md
 
+
 dependencies:
   - base >= 4.7 && < 5
   - protolude >= 0.2.2
 
+
 default-extensions:
+  # Lifting limitations:
+  - EmptyDataDecls
+  - EmptyCase
+  - FlexibleContexts
+  - FlexibleInstances
+  - InstanceSigs
+  - MultiParamTypeClasses
+
+  # Syntactic conveniences:
+  - LambdaCase
+  - MultiWayIf
+  - NamedFieldPuns
+  - TupleSections
+  # - NumericUnderscores
+
+  # Deriving:
+  - DeriveGeneric
+  - DeriveFunctor
+  - DeriveFoldable
+  - DeriveTraversable
+  - GeneralizedNewtypeDeriving
+  # - StandaloneDeriving
+
+  # Syntactic adjustments:
+  - BangPatterns
+  - KindSignatures
+  - TypeOperators
+  - MonadComprehensions
+  - BinaryLiterals
+  - NegativeLiterals
+  # - NoStarIsType
+  # - BlockArguments
+
+  # Type annotations:
+  - ScopedTypeVariables
+  - TypeApplications
+  - PartialTypeSignatures
+
+  # Prelude and overloading:
   - NoImplicitPrelude
   - OverloadedStrings
+
+  # Type extensions:
+  - ConstraintKinds
+  - RankNTypes
+
+  # Intermediate syntactic adjustments:
+  - DefaultSignatures
+  - PatternSynonyms
+  - PatternGuards
+  # - ApplicativeDo
+
+  # Intermediate type extensions:
+  - FunctionalDependencies
+  - GADTs
+  # - ExistentialQuantification
+
+
+ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
+
 
 executables:
   tasks:
