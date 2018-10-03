@@ -306,73 +306,68 @@
 
 
 \newmacro{RelationH}
-  {t,\Sigma \handle{i} t'\st{'}}
+  {t,s \handle{i} t',s'}
 
 
 \newrule{H-Change}[v, v' : \beta]
   { }
-  {\Edit v,\Sigma \handle{v'} \Edit v',\Sigma}
+  {\Edit v,s \handle{v'} \Edit v',s'}
 
 \newrule{H-Empty}[v : \beta]
   { }
-  {\Edit v,\Sigma \handle{\Empty} \Enter \beta,\Sigma}
+  {\Edit v,s \handle{\Empty} \Enter \beta,s}
 
 \newrule{H-Fill}[v' : \beta]
   { }
-  {\Enter \beta,\Sigma \handle{v'} \Edit v',\Sigma}
+  {\Enter \beta,s \handle{v'} \Edit v',s}
 
-\newrule{H-Update}[\Sigma(l), v' : \beta]
+\newrule{H-Update}[s(l), v' : \beta]
   { }
-  {\Update l,\Sigma \handle{v'} \Update l\st[l \mapsto v']{}}
-
-
-\newrule{H-Fail}
-  { }
-  {\Fail,\Sigma \handle{i} \Fail,\Sigma}
+  {\Update l,s \handle{v'} \Update l,s[l \mapsto v']{}}
 
 
 \newrule{H-PassThen}
-  {t_1,\Sigma \handle{i} t_1'\st{'}}
-  {t_1 \Then e_2,\Sigma \handle{i} t_1' \Then e_2\st{'}}
+  {t_1,s \handle{i} t_1',s'}
+  {t_1 \Then e_2,s \handle{i} t_1' \Then e_2,s'}
 
 \newrule{H-PassNext}
-  {t_1,\Sigma \handle{i} t_1'\st{'}}
-  {t_1 \Next e_2,\Sigma \handle{i \neq \Continue} t_1' \Next e_2\st{'}}
+  {t_1,s \handle{i} t_1',s'}
+  {t_1 \Next e_2,s \handle{i \neq \Continue} t_1' \Next e_2,s'}
 
-\newrule{H-Next}[\Value{(t_1)}\neq \bot \wedge \neg\Failing{(e_2 \Value{(t_1)}\normalise)}]
+\newrule{H-Next}[\Value{(t_1,s)}\neq \bot \wedge \neg\Failing{(e_2 \Value{(t_1,s)}\normalise)}]
   { }
-  {t_1 \Next e_2,\Sigma \handle{\Continue} t_1 \Then e_2,\Sigma}
+  {t_1 \Next e_2,s \handle{\Continue} t_1 \Then e_2,s}
 
 
 \newrule{H-FirstAnd}
-  {t_1,\Sigma \handle{i} t_1'\st{'} }
-  {t_1 \And t_2,\Sigma \handle{\First i} t_1' \And t_2\st{'}}
+  {t_1,s \handle{i} t_1',s' }
+  {t_1 \And t_2,s \handle{\First i} t_1' \And t_2,s'}
 
 \newrule{H-SecondAnd}
-  {t_2,\Sigma \handle{i} t_2'\st{'} }
-  {t_1,\Sigma \And t_2 \handle{\Second i} t_1 \And t_2'\st{'}}
+  {t_2,s \handle{i} t_2',s'}
+  {t_1,s \And t_2 \handle{\Second i} t_1 \And t_2',s'}
 
 
 \newrule{H-FirstOr}
-  {t_1,\Sigma \handle{i} t_1'\st{'} }
-  {t_1 \Or t_2,\Sigma \handle{\First i} t_1' \Or t_2\st{'}}
+  {t_1,s \handle{i} t_1',s'}
+  {t_1 \Or t_2,s \handle{\First i} t_1' \Or t_2,s'}
 
 \newrule{H-SecondOr}
-  {t_2,\Sigma \handle{i} t_2'\st{'} }
-  {t_1 \Or t_2,\Sigma \handle{\Second i} t_1 \Or t_2'\st{'}}
+  {t_2,s \handle{i} t_2',s' }
+  {t_1 \Or t_2,s \handle{\Second i} t_1 \Or t_2',s'}
 
 
 \newrule{H-PickLeft}[\Failing(t_1)]
-  {t_1,\Sigma \handle{\Pick r} t_1'\st{'}}
-  {t_1 \Xor t_2,\Sigma \handle{\Pick \Left r} t_1'\st{'}}
+  {t_1,s \handle{\Pick r} t_1',s'}
+  {t_1 \Xor t_2,s \handle{\Pick \Left r} t_1',s'}
 
 \newrule{H-PickRight}[\Failing(t_2)]
-  {t_2,\Sigma \handle{\Pick r} t_2'\st{'}}
-  {t_1 \Xor t_2,\Sigma \handle{\Pick \Right r} t_2'\st{'}}
+  {t_2,s \handle{\Pick r} t_2',s'}
+  {t_1 \Xor t_2,s \handle{\Pick \Right r} t_2',s'}
 
 \newrule{H-PickHere}
   {\ }
-  {t,\Sigma \handle{\Pick \Here} t,\Sigma}
+  {t,s \handle{\Pick \Here} t,s}
 
 
 
@@ -421,10 +416,10 @@
 
 
 \newmacro{RelationD}
-  {t,\Sigma \drive{i} t'\st{'}}
+  {t,s \drive{i} t',s'}
 
 
 \newrule{D-Main}
-  {t,\Sigma   \handle{i} t'\st{'} \\
-   t'\st{'} \normalise t''\st{''}}
-  {t,\Sigma \drive{i} t''\st{''}}
+  {t,s   \handle{i} t',s' \\
+   t',s' \normalise t'',s''}
+  {t,s \drive{i} t'',s''}
