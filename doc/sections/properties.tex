@@ -66,6 +66,7 @@ which we prove by showing that the following Theorem holds:
 \begin{theorem}
   For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Gamma,\Sigma\infers s$\\
   if $e,s \normalise e',s'$ then either $\Failing(e')$ or there exists an $e''$ and $i$ such that $e',s'\handle{i}e'',s''$
+  \label{thmprogressnorm}
 \end{theorem}
 
 \subsubsection{Safety of Inputs function}
@@ -73,10 +74,12 @@ which we prove by showing that the following Theorem holds:
 \begin{theorem}
   For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Gamma,\Sigma\infers s$\\
   if $i\in\Inputs{(e)}$ then $e,s\handle{i}e',s'$
+  \label{thmsafetyi1}
 \end{theorem}
 
 \begin{theorem}
   For all $e$, $s$ and $i$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Gamma,\Sigma\infers s$\\
   if $e,s\handle{i}e',s'$ then  $i\in\Inputs{(e)}$
+  \label{thmsafetyi2}
 \end{theorem}
 \subsection{Laws}
