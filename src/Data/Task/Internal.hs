@@ -3,7 +3,7 @@ module Data.Task.Internal
   , Label
   , edit, enter, update
   , map', pure', none', pair', fail', alt', (<?>), bind', (>>?)
-  , label, delabel
+  , label, delabel, keeper
   , module Control.Monad.Ref
   , module Data.Basic
   ) where
@@ -233,3 +233,11 @@ label _           = Nothing
 delabel :: TaskT l m a -> TaskT l m a
 delabel (Label _ t) = delabel t
 delabel t           = t
+
+
+-- | Check if a task constructor keeps its label after stepping or loses it.
+keeper :: TaskT l m a -> Bool
+keeper (Edit _)  = True
+keeper (And _ _) = True
+keeper (Fail)    = True
+keeper _         = False
