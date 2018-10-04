@@ -19,6 +19,9 @@ import Control.Monad.Ref (MonadRef, modify, new, read, write, (=:))
 
 import Data.Basic (Basic)
 
+import GHC.Show (Show(..))
+import GHC.Show as GHC
+
 
 
 -- Data ------------------------------------------------------------------------
@@ -89,6 +92,26 @@ update r = Store r
 
 
 -- Instances -------------------------------------------------------------------
+
+-- Show --
+
+instance Show (TaskT l m a) where
+  show (Edit (Just x)) = "□(" <> GHC.show x <> ")"
+  show (Edit Nothing)  = "□(_)"
+  show (Store _) = "■<loc>"
+  show (And left rght) = GHC.show left <> "   ⋈   " <> GHC.show rght
+  show (Or left rght) = GHC.show left <> "   ◆   " <> GHC.show rght
+  show (Xor left rght) =
+    case ( delabel left, delabel rght ) of
+      ( Xor _ _, Xor _ _ ) -> GHC.show left <> " ◇ " <> GHC.show rght
+      ( Xor _ _, _ ) -> GHC.show left <> " ◇ " <> (toS $ fromMaybe "…" (label rght))
+      ( _, Xor _ _ ) -> (toS $ fromMaybe "…" (label left)) <> " ◇ " <> GHC.show rght
+      ( _, _ ) -> (toS $ fromMaybe "…" (label left)) <> " ◇ " <> (toS $ fromMaybe "…" (label rght))
+  show (Fail) = "↯"
+  show (Then this _) = GHC.show this <> " ▶…"
+  show (Next this _) = GHC.show this <> " ▷…"
+  show (Label lbl this) = toS lbl <> ":\n\t" <> GHC.show this
+
 
 -- Functor --
 
