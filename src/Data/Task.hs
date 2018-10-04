@@ -1,9 +1,15 @@
 module Data.Task
-  ( Task
-  , ui
-  , value
-  , failing
-  , normalise
+  ( Task, TaskT
+  , ui, value, failing
+  , normalise --,initialise , handle, drive
+  -- ** Constructors
+  , Label
+  , edit, enter, update
+  , tmap, (|&|), (|||), (|?|), fail, (>>-), (>>?)
+  , label, delabel, keeper
+  -- ** Reexports
+  , MonadRef
+  , Basic
   ) where
 
 
