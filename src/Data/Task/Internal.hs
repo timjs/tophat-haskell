@@ -19,8 +19,7 @@ import Control.Monad.Ref (MonadRef, modify, new, read, write, (=:))
 
 import Data.Basic (Basic)
 
-import GHC.Show (Show(..))
-import GHC.Show as GHC
+import GHC.Show (Show(showsPrec), ShowS, showString, showParen)
 
 
 
@@ -96,20 +95,44 @@ update r = Store r
 -- Show --
 
 instance Show (TaskT l m a) where
-  show (Edit (Just x))  = "□(" <> GHC.show x <> ")"
-  show (Edit Nothing)   = "□(_)"
-  show (Store _)        = "■<loc>"
-  show (And left rght)  = "(" <> GHC.show left <> " ⋈ " <> GHC.show rght <> ")"
-  show (Or left rght)   = "(" <> GHC.show left <> " ◆ " <> GHC.show rght <> ")"
-  show (Xor left rght)  = "(" <> GHC.show left <> " ◇ " <> GHC.show rght <> ")"
-    -- case ( delabel left, delabel rght ) of
-    --   ( Xor _ _, _ ) -> "(" <> GHC.show left <> " ◇ " <> (toS $ fromMaybe "…" (label rght)) <> ")"
-    --   ( _, Xor _ _ ) -> "(" <> (toS $ fromMaybe "…" (label left)) <> " ◇ " <> GHC.show rght <> ")"
-    --   ( _, _ ) -> "(" <> (toS $ fromMaybe "…" (label left)) <> " ◇ " <> (toS $ fromMaybe "…" (label rght)) <> ")"
-  show (Fail)           = "↯"
-  show (Then this _)    = "(" <> GHC.show this <> " ▶ …" <> ")"
-  show (Next this _)    = "(" <> GHC.show this <> " ▷ …" <> ")"
-  show (Label lbl this) = "(" <> toS lbl <> ": " <> GHC.show this <> ")"
+  showsPrec d (Edit (Just x)) =
+    showParen (d > p) $ showString "Edit " . showsPrec (succ p) x
+      where p = 10
+  showsPrec d (Edit Nothing) =
+    showParen (d > p) $ showString "Edit _"
+      where p = 10
+  showsPrec d (Store _) =
+    showParen (d > p) $ showString "Store"
+      where p = 10
+  showsPrec d (And left rght) =
+    showParen (d > p) $ showsPrec (succ p) left . showString " <&> " . showsPrec (succ p) rght
+      where p = 5
+  showsPrec d (Or left rght) =
+    showParen (d > p) $ showsPrec (succ p) left . showString " <|> " . showsPrec (succ p) rght
+      where p = 3
+  showsPrec d (Xor left rght)  =
+    case ( delabel left, delabel rght ) of
+      ( Xor _ _, Xor _ _ ) -> showParen (d > p) $               showsPrec (succ p) left . showString " <?> " . showsPrec (succ p) rght
+      ( Xor _ _, _ )       -> showParen (d > p) $               showsPrec (succ p) left . showString " <?> " . showText (fromMaybe "…" $ label rght)
+      ( _, Xor _ _ )       -> showParen (d > p) $ showText (fromMaybe "…" $ label left) . showString " <?> " . showsPrec (succ p) rght
+      ( _, _ )             -> showParen (d > p) $ showText (fromMaybe "…" $ label left) . showString " <?> " . showText (fromMaybe "…" $ label rght)
+      where p = 3
+  showsPrec _ (Fail) =
+    showString "Fail"
+  showsPrec d (Then this _) =
+    showParen (d > p) $ showsPrec (succ p) this . showString " >>= …"
+      where p = 1
+  showsPrec d (Next this _) =
+    showParen (d > p) $ showsPrec (succ p) this . showString " >>? …"
+      where p = 1
+  showsPrec d (Label lbl this) =
+    showParen (d > p) $ showText lbl . showString ": " . showsPrec (succ p) this
+      where p = 9
+
+
+showText :: Text -> ShowS
+showText = showString . toS
+
 
 
 -- Functor --
