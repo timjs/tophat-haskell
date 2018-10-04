@@ -13,7 +13,7 @@ import Test.QuickCheck
 
 main :: IO ()
 main =
-  quickCheck prop_equal_values
+  verboseCheck prop_equal_values
   where
     prop_equal_values :: Task Int -> Bool
     prop_equal_values t = unsafePerformIO $ do
