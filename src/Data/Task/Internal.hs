@@ -1,6 +1,5 @@
 module Data.Task.Internal
   ( TaskT(..)
-  , Task
   , Label
   , edit, enter, update
   , map', pure', none', pair', fail', alt', (<?>), bind', (>>?)
@@ -19,7 +18,6 @@ import Test.QuickCheck.Instances.Text ()
 import Control.Monad.Ref (MonadRef, modify, new, read, write, (=:))
 
 import Data.Basic (Basic)
-import Data.IORef
 
 
 
@@ -71,9 +69,6 @@ data TaskT :: (* -> *) -> (* -> *) -> * -> * where
 
   -- | Labeled tasks.
   Label :: Label -> TaskT l m r -> TaskT l m r
-
-
-type Task = TaskT IORef IO
 
 
 

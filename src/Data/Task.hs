@@ -1,12 +1,18 @@
 module Data.Task
-  ( ui
+  ( Task
+  , ui
   , value
   ) where
 
 
 import Base
 
+import Data.IORef
 import Data.Task.Internal
+
+
+
+type Task = TaskT IORef IO
 
 
 
