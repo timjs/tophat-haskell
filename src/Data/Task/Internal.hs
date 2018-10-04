@@ -2,7 +2,7 @@ module Data.Task.Internal
   ( TaskT(..)
   , Label
   , edit, enter, update
-  , map', pure', none', pair', fail', alt', (<?>), bind', (>>?)
+  , tmap, (|&|), (|||), (|?|), fail, (>>-), (>>?)
   , label, delabel, keeper
   , module Control.Monad.Ref
   , module Data.Basic
@@ -20,6 +20,11 @@ import Control.Monad.Ref (MonadRef, modify, new, read, write, (=:))
 import Data.Basic (Basic)
 
 import GHC.Show (Show(showsPrec), ShowS, showString, showParen)
+
+
+infixl 5 |&|
+infixl 3 |||, |?|
+infixl 1 >>-, >>?
 
 
 
@@ -74,20 +79,6 @@ data TaskT :: (* -> *) -> (* -> *) -> * -> * where
 
 
 
--- Editors --
-
-
-edit :: Basic a => a -> TaskT l m a
-edit x = Edit (Just x)
-
-
-enter :: Basic a => TaskT l m a
-enter = Edit Nothing
-
-
-update :: MonadRef l m => Basic a => l a -> TaskT l m a
-update r = Store r
-
 
 
 -- Instances -------------------------------------------------------------------
@@ -105,22 +96,22 @@ instance Show (TaskT l m a) where
     showParen (d > p) $ showString "Store"
       where p = 10
   showsPrec d (And left rght) =
-    showParen (d > p) $ showsPrec (succ p) left . showString " <&> " . showsPrec (succ p) rght
+    showParen (d > p) $ showsPrec (succ p) left . showString " |&| " . showsPrec (succ p) rght
       where p = 5
   showsPrec d (Or left rght) =
-    showParen (d > p) $ showsPrec (succ p) left . showString " <|> " . showsPrec (succ p) rght
+    showParen (d > p) $ showsPrec (succ p) left . showString " ||| " . showsPrec (succ p) rght
       where p = 3
   showsPrec d (Xor left rght)  =
     case ( delabel left, delabel rght ) of
-      ( Xor _ _, Xor _ _ ) -> showParen (d > p) $               showsPrec (succ p) left . showString " <?> " . showsPrec (succ p) rght
-      ( Xor _ _, _ )       -> showParen (d > p) $               showsPrec (succ p) left . showString " <?> " . showText (fromMaybe "…" $ label rght)
-      ( _, Xor _ _ )       -> showParen (d > p) $ showText (fromMaybe "…" $ label left) . showString " <?> " . showsPrec (succ p) rght
-      ( _, _ )             -> showParen (d > p) $ showText (fromMaybe "…" $ label left) . showString " <?> " . showText (fromMaybe "…" $ label rght)
+      ( Xor _ _, Xor _ _ ) -> showParen (d > p) $               showsPrec (succ p) left . showString " |?| " . showsPrec (succ p) rght
+      ( Xor _ _, _ )       -> showParen (d > p) $               showsPrec (succ p) left . showString " |?| " . showText (fromMaybe "…" $ label rght)
+      ( _, Xor _ _ )       -> showParen (d > p) $ showText (fromMaybe "…" $ label left) . showString " |?| " . showsPrec (succ p) rght
+      ( _, _ )             -> showParen (d > p) $ showText (fromMaybe "…" $ label left) . showString " |?| " . showText (fromMaybe "…" $ label rght)
       where p = 3
   showsPrec _ (Fail) =
     showString "Fail"
   showsPrec d (Then this _) =
-    showParen (d > p) $ showsPrec (succ p) this . showString " >>= …"
+    showParen (d > p) $ showsPrec (succ p) this . showString " >>- …"
       where p = 1
   showsPrec d (Next this _) =
     showParen (d > p) $ showsPrec (succ p) this . showString " >>? …"
@@ -138,24 +129,28 @@ showText = showString . toS
 -- Functor --
 
 
-map' :: Basic b => (a -> b) -> TaskT l m a -> TaskT l m b
-map' f t = bind' t (\x -> pure' (f x))
+tmap :: Basic b => (a -> b) -> TaskT l m a -> TaskT l m b
+tmap f t = (>>-) t (\x -> edit (f x))
 
 
 
 -- Applicative --
 
 
-pure' :: Basic a => a -> TaskT l m a
-pure' = edit
+edit :: Basic a => a -> TaskT l m a
+edit x = Edit (Just x)
 
 
-none' :: TaskT l m ()
-none' = pure' ()
+enter :: Basic a => TaskT l m a
+enter = Edit Nothing
 
 
-pair' :: TaskT l m a -> TaskT l m b -> TaskT l m ( a, b )
-pair' = And
+update :: MonadRef l m => Basic a => l a -> TaskT l m a
+update r = Store r
+
+
+(|&|) :: TaskT l m a -> TaskT l m b -> TaskT l m ( a, b )
+(|&|) = And
 
 
 -- apply' :: TaskT l m (a -> b) -> TaskT l m a -> TaskT l m b
@@ -166,28 +161,26 @@ pair' = And
 -- Alternative --
 
 
-fail' :: TaskT l m a
-fail' = Fail
+fail :: TaskT l m a
+fail = Fail
 
 
-alt' :: TaskT l m a -> TaskT l m a -> TaskT l m a
-alt' = Or
+(|||) :: TaskT l m a -> TaskT l m a -> TaskT l m a
+(|||) = Or
 
 
-infixl 3 <?>
-(<?>) :: TaskT l m a -> TaskT l m a -> TaskT l m a
-(<?>) = Xor
+(|?|) :: TaskT l m a -> TaskT l m a -> TaskT l m a
+(|?|) = Xor
 
 
 
 -- Monad --
 
 
-bind' :: TaskT l m b -> (b -> TaskT l m a) -> TaskT l m a
-bind' = Then
+(>>-) :: TaskT l m b -> (b -> TaskT l m a) -> TaskT l m a
+(>>-) = Then
 
 
-infixl 3 >>?
 (>>?) :: TaskT l m a -> (a -> TaskT l m b) -> TaskT l m b
 (>>?) = Next
 
@@ -202,10 +195,10 @@ instance Arbitrary (TaskT l m Int) where
       [ arbitrary >>= (pure . edit)
       -- , arbitrary >>= (pure . update)
       , mkpair
-      , alt' <$> arbitrary <*> arbitrary
-      , (<?>) <$> arbitrary <*> arbitrary
-      , pure fail'
-      , bind' <$> (arbitrary :: Gen (TaskT l m Int)) <*> arbitrary
+      , (|||) <$> arbitrary <*> arbitrary
+      , (|?|) <$> arbitrary <*> arbitrary
+      , pure fail
+      , (>>-) <$> (arbitrary :: Gen (TaskT l m Int)) <*> arbitrary
       , (>>?) <$> (arbitrary :: Gen (TaskT l m Int)) <*> arbitrary
       -- , Label <$> (arbitrary :: Gen Label) <*> arbitrary
       ]
@@ -214,7 +207,7 @@ instance Arbitrary (TaskT l m Int) where
         l <- arbitrary
         r <- arbitrary
         let c = \( x, y ) -> edit (x + y)
-        pure $ bind' (pair' l r) c
+        pure $ (l |&| r) >>- c
 
 
 
