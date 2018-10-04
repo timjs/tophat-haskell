@@ -357,18 +357,13 @@
   {t_1 \Or t_2,s \handle{\Second i} t_1 \Or t_2',s'}
 
 
-\newrule{H-PickLeft}[\Failing(t_1)]
-  {t_1,s \handle{\Pick r} t_1',s'}
-  {t_1 \Xor t_2,s \handle{\Pick \Left r} t_1',s'}
-
-\newrule{H-PickRight}[\Failing(t_2)]
-  {t_2,s \handle{\Pick r} t_2',s'}
-  {t_1 \Xor t_2,s \handle{\Pick \Right r} t_2',s'}
-
-\newrule{H-PickHere}
+\newrule{H-PickLeft}[\neg\Failing(t_1)]
   {\ }
-  {t,s \handle{\Pick \Here} t,s}
+  {t_1 \Xor t_2,s \handle{\Left} t_1,s}
 
+\newrule{H-PickRight}[\neg\Failing(t_2)]
+  {\ }
+  {t_1 \Xor t_2,s \handle{\Right} t_2,s}
 
 
 %%%%
