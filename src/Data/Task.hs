@@ -2,6 +2,8 @@ module Data.Task
   ( Task
   , ui
   , value
+  , failing
+  , normalise
   ) where
 
 
