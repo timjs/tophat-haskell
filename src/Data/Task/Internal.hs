@@ -2,7 +2,7 @@ module Data.Task.Internal
   ( TaskT(..)
   , Label
   , edit, enter, update
-  , tmap, (|&|), (|||), (|?|), fail, (>>-), (>>?)
+  , tmap, (|&|), (|!|), (|?|), fail, (>>!), (>>?)
   , label, delabel, keeper
   , module Control.Monad.Ref
   , module Data.Basic
@@ -15,7 +15,7 @@ import Test.QuickCheck (Arbitrary, arbitrary)
 import Test.QuickCheck.Gen as Gen
 import Test.QuickCheck.Instances.Text ()
 
-import Control.Monad.Ref (MonadRef(..)) 
+import Control.Monad.Ref (MonadRef(..))
 
 import Data.Basic (Basic)
 
@@ -23,8 +23,8 @@ import GHC.Show (Show(showsPrec), ShowS, showString, showParen)
 
 
 infixl 5 |&|
-infixl 3 |||, |?|
-infixl 1 >>-, >>?
+infixl 3 |!|, |?|
+infixl 1 >>!, >>?
 
 
 
@@ -99,7 +99,7 @@ instance Show (TaskT l m a) where
     showParen (d > p) $ showsPrec (succ p) left . showString " |&| " . showsPrec (succ p) rght
       where p = 5
   showsPrec d (Or left rght) =
-    showParen (d > p) $ showsPrec (succ p) left . showString " ||| " . showsPrec (succ p) rght
+    showParen (d > p) $ showsPrec (succ p) left . showString " |!| " . showsPrec (succ p) rght
       where p = 3
   showsPrec d (Xor left rght)  =
     case ( delabel left, delabel rght ) of
@@ -111,7 +111,7 @@ instance Show (TaskT l m a) where
   showsPrec _ (Fail) =
     showString "Fail"
   showsPrec d (Then this _) =
-    showParen (d > p) $ showsPrec (succ p) this . showString " >>- …"
+    showParen (d > p) $ showsPrec (succ p) this . showString " >>! …"
       where p = 1
   showsPrec d (Next this _) =
     showParen (d > p) $ showsPrec (succ p) this . showString " >>? …"
@@ -130,7 +130,7 @@ showText = showString . toS
 
 
 tmap :: Basic b => (a -> b) -> TaskT l m a -> TaskT l m b
-tmap f t = (>>-) t (\x -> edit (f x))
+tmap f t = (>>!) t (\x -> edit (f x))
 
 
 
@@ -165,8 +165,8 @@ fail :: TaskT l m a
 fail = Fail
 
 
-(|||) :: TaskT l m a -> TaskT l m a -> TaskT l m a
-(|||) = Or
+(|!|) :: TaskT l m a -> TaskT l m a -> TaskT l m a
+(|!|) = Or
 
 
 (|?|) :: TaskT l m a -> TaskT l m a -> TaskT l m a
@@ -177,8 +177,8 @@ fail = Fail
 -- Monad --
 
 
-(>>-) :: TaskT l m b -> (b -> TaskT l m a) -> TaskT l m a
-(>>-) = Then
+(>>!) :: TaskT l m b -> (b -> TaskT l m a) -> TaskT l m a
+(>>!) = Then
 
 
 (>>?) :: TaskT l m a -> (a -> TaskT l m b) -> TaskT l m b
@@ -195,10 +195,10 @@ instance Arbitrary (TaskT l m Int) where
       [ arbitrary >>= (pure . edit)
       -- , arbitrary >>= (pure . update)
       , mkpair
-      , (|||) <$> arbitrary <*> arbitrary
+      , (|!|) <$> arbitrary <*> arbitrary
       , (|?|) <$> arbitrary <*> arbitrary
       , pure fail
-      , (>>-) <$> (arbitrary :: Gen (TaskT l m Int)) <*> arbitrary
+      , (>>!) <$> (arbitrary :: Gen (TaskT l m Int)) <*> arbitrary
       , (>>?) <$> (arbitrary :: Gen (TaskT l m Int)) <*> arbitrary
       -- , Label <$> (arbitrary :: Gen Label) <*> arbitrary
       ]
@@ -207,7 +207,7 @@ instance Arbitrary (TaskT l m Int) where
         l <- arbitrary
         r <- arbitrary
         let c = \( x, y ) -> edit (x + y)
-        pure $ (l |&| r) >>- c
+        pure $ (l |&| r) >>! c
 
 
 

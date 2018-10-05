@@ -4,7 +4,7 @@ module Data.Task
   , normalise --,initialise , handle, drive
   -- ** Constructors
   , edit, enter, update
-  , tmap, (|&|), (|||), (|?|), fail, (>>-), (>>?)
+  , tmap, (|&|), (|!|), (|?|), fail, (>>!), (>>?)
   , label, delabel, keeper
   -- ** Reexports
   , Label
