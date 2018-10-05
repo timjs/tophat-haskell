@@ -18,16 +18,16 @@ main = do
   quickCheck prop_pair_left_identity
   quickCheck prop_pair_right_identity
   quickCheck prop_pair_associativity
-  
+
   where
 
-    prop_equal_val :: Task Int -> Bool
+    prop_equal_val :: TaskIO Int -> Bool
     prop_equal_val t = unsafePerformIO $ do
       x <- value t
       y <- value t
       pure $ x == y
 
-    prop_normalising_preserves_failing :: Task Int -> Bool
+    prop_normalising_preserves_failing :: TaskIO Int -> Bool
     prop_normalising_preserves_failing t = unsafePerformIO $ do
       t' <- normalise t
       pure $ failing t == failing t'

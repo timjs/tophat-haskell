@@ -1,5 +1,5 @@
 module Data.Task
-  ( Task, TaskT
+  ( TaskIO, TaskST, TaskT
   , ui, value, failing
   , normalise --,initialise , handle, drive
   -- ** Constructors
@@ -16,11 +16,18 @@ module Data.Task
 import Preload
 
 import Data.IORef
+import Data.STRef
 import Data.Task.Internal
 
 
 
-type Task = TaskT IORef IO
+-- Aliases ---------------------------------------------------------------------
+
+
+type TaskIO = TaskT IORef IO
+
+
+type TaskST s = TaskT (STRef s) (ST s)
 
 
 
