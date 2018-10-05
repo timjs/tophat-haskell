@@ -137,7 +137,7 @@
     {e,s\evaluate t,s'}
     {u @ e,s\evaluate u @ t,s'}
 
-\newrule{E-Value}
+\newrule{E-Value}[v\in\set{\lambda x:\tau.e, \unit, l, B, I, S}]
   {\ }
   {v,s\evaluate v,s}
 
@@ -165,7 +165,7 @@
 \newrule{E-Ref}
   {e,s\evaluate v,s'\\
    l\not\in Dom(s)}
-  {\Ref e,s\evaluate l,s'[l\mapsto s]}
+  {\Ref e,s\evaluate l,s'[l\mapsto v]}
 
 \newrule{E-Deref}
   {e,s\evaluate l,s'}
