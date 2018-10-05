@@ -34,7 +34,7 @@ infixl 1 >>!, >>?
 type Label = Text
 
 
-data TaskT :: (* -> *) -> (* -> *) -> * -> * where
+data TaskT :: (Type -> Type) -> (Type -> Type) -> Type -> Type where
   -- | Editors, valued or unvalued
   Edit :: Basic r => Maybe r -> TaskT l m r
 
