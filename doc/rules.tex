@@ -286,8 +286,9 @@
 
 \newrule{N-Eval}
     {e,s\evaluate e',s' \\
+     e',s'\normalise e'',s''\\
     e\neq e'}
-    {e,s \normalise e',s'}
+    {e,s \normalise e'',s''}
 
 
 % \newrule{N-Next}[t_1' = \Edit v]
