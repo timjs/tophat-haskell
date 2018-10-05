@@ -357,13 +357,13 @@
   {t_1 \Or t_2,s \handle{\Second i} t_1 \Or t_2',s'}
 
 
-\newrule{H-PickLeft}[\neg\Failing(t_1)]
+\newrule{H-PickLeft}[e_1,s\evaluate t_1,s'\quad \neg\Failing(t_1)]
   {\ }
-  {t_1 \Xor t_2,s \handle{\Left} t_1,s}
+  {e_1 \Xor e_2,s \handle{\Left} e_1,s}
 
-\newrule{H-PickRight}[\neg\Failing(t_2)]
+\newrule{H-PickRight}[e_2,s\evaluate t_2,s'\quad \neg\Failing(t_2)]
   {\ }
-  {t_1 \Xor t_2,s \handle{\Right} t_2,s}
+  {e_1 \Xor e_2,s \handle{\Right} e_2,s}
 
 
 %%%%
