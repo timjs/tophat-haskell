@@ -1,5 +1,6 @@
 module Data.Task
   ( TaskIO, TaskST, TaskT
+  , NotApplicable
   , ui, value, failing
   , normalise, initialise, handle, drive
   -- ** Constructors
@@ -10,10 +11,11 @@ module Data.Task
   , Label
   , Basic
   , MonadRef
+  , MonadTrace
   ) where
 
 
-import Preload hiding (handle, trace)
+import Preload
 
 import Control.Monad.Trace
 
@@ -106,6 +108,30 @@ failing (Fail)          = True
 failing (Then this _)   = failing this
 failing (Next this _)   = failing this
 failing (Label _ this)  = failing this
+
+
+-- inputs :: MonadRef l m => TaskT l m a -> m (List Input b)
+-- inputs (Edit {r} _)     = pure $ [ ToHere (Change {c=r} Anything), ToHere Empty ]
+-- inputs (Store {r} _)    = pure $ [ ToHere (Change {c=r} Anything) ]
+-- inputs (And left rght)  = pure $ map ToLeft !(inputs left) ++ map ToRight !(inputs rght)
+-- inputs (Or left rght)   = pure $ map ToLeft !(inputs left) ++ map ToRight !(inputs rght)
+-- inputs this@(Xor _ _)   = pure $ map (ToHere . PickWith) (labels this) ++ map (ToHere . Pick) (choices this)
+-- inputs (Fail)           = pure $ []
+-- inputs (Then this _)    = inputs this
+-- inputs (Next this next) = do
+--     always <- inputs this
+--     Just v <- value this | Nothing => pure always
+--     pure $ map ToHere (go (next v)) ++ always
+--   where
+--     go : TaskT m a -> List Action
+--     go task with (delabel task)
+--       | Xor _ _ = map ContinueWith $ labels task
+--       | Fail    = []
+--       | _       = [ Continue ]
+-- inputs (Label _ this)   = inputs this
+-- inputs (Lift _)         = pure $ []
+
+
 
 
 

@@ -1,5 +1,6 @@
 module Data.Task.Input
   ( Path(..), Action(..), Input(..)
+  , strip, (~?)
   , module Data.Surely
   ) where
 
@@ -12,7 +13,7 @@ import Data.Task.Internal
 
 
 
--- infix 6 =~, /~
+infix 6 ~?
 
 
 
@@ -25,16 +26,16 @@ data Path
   deriving (Show, Eq)
 
 
--- Events ----------------------------------------------------------------------
+-- Inputs and Actions ----------------------------------------------------------
 
 
 data Action b
   = Change (Surely b)
   | Empty
   | Pick Path
-  | PickWith Label
+  -- | PickWith Label
   | Continue
-  | ContinueWith Label
+  -- | ContinueWith Label
   deriving (Show, Eq)
 
 
@@ -46,29 +47,18 @@ data Input b
 
 
 
-{- Conformance -----------------------------------------------------------------
+-- Conformance -----------------------------------------------------------------
 
 
-strip : (i : Input) -> Maybe (c : Ty ** typeOf c)
-strip (ToHere (Change {c} (Exactly v))) = Just (c ** v)
-strip (ToHere (Change Anything))        = Nothing
-strip (ToHere _)                        = Nothing
-strip (ToLeft i)                        = strip i
-strip (ToRight i)                       = strip i
+strip :: Input b -> Maybe b
+strip (ToHere (Change (Exactly v))) = Just v
+strip (ToHere (Change Anything))    = Nothing
+strip (ToHere _)                    = Nothing
+strip (ToLeft i)                    = strip i
+strip (ToRight i)                   = strip i
 
 
-(=~) : Input -> Input -> Bool
---FIXME: Why does a with-view not work?
-i1 =~ i2 = case ( strip i1, strip i2 ) of
-  ( Just (c1 ** v1), Just (c2 ** v2) ) => case decEq c1 c2 of
-    Yes Refl => case eq c1 of
-      eq_c1 => v1 == v2
-    No contr => False
-  _ => True
-
-
-(/~) : Input -> Input -> Bool
-i1 /~ i2 = not (i1 =~ i2)
-
-
--------------------------------------------------------------------------------}
+(~?) :: Basic b => Input b -> Input b -> Bool
+i1 ~? i2
+  | ( Just v1, Just v2 ) <- ( strip i1, strip i2 ) = v1 == v2
+  | otherwise = True

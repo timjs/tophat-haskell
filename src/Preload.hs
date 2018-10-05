@@ -1,11 +1,14 @@
 module Preload
   ( module Protolude
+  , module Data.Bitraversable
   , neutral
   , (<&>), unit
   ) where
 
 
-import Protolude hiding ((<&>), (<&&>))
+import Protolude hiding ((<&>), (<&&>), trace, handle)
+
+import Data.Bitraversable
 
 
 -- Extras ----------------------------------------------------------------------
