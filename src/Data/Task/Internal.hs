@@ -24,7 +24,7 @@ import GHC.Show (Show(showsPrec), ShowS, showString, showParen)
 
 infixl 5 |&|
 infixl 3 |!|, |?|
-infixl 1 >>!, >>?
+infixl 2 >>!, >>?
 
 
 
@@ -42,11 +42,6 @@ data TaskT :: (Type -> Type) -> (Type -> Type) -> Type -> Type where
   Store :: ( MonadRef l m, Basic r ) => l r -> TaskT l m r
 
   -- | Composition of two tasks.
-  -- |
-  -- | Encoded in double negation style, conceptually equal to:
-  -- |
-  -- |     And (exist a b. TypeEquals r (Tuple a b) => Tuple (TaskT l m a) (TaskT l m b))
-  -- |
   And :: TaskT l m a -> TaskT l m b -> TaskT l m ( a, b )
 
   -- | Internal choice between two tasks.
@@ -59,25 +54,13 @@ data TaskT :: (Type -> Type) -> (Type -> Type) -> Type -> Type where
   Fail :: TaskT l m r
 
   -- | Internal, or system step.
-  -- |
-  -- | Encoded in double negation style, conceptually equal to:
-  -- |
-  -- |     Then (exist a. Tuple (TaskT l m a) (a -> TaskT l m r))
-  -- |
   Then :: TaskT l m a -> (a -> TaskT l m r) -> TaskT l m r
 
   -- | External, or user step.
-  -- |
-  -- | Encoded in double negation style, conceptually equal to:
-  -- |
-  -- |     Next (exist a. Tuple (TaskT l m a) (a -> TaskT l m r))
-  -- |
   Next :: TaskT l m a -> (a -> TaskT l m r) -> TaskT l m r
 
   -- | Labeled tasks.
   Label :: Label -> TaskT l m r -> TaskT l m r
-
-
 
 
 

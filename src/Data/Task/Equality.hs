@@ -8,7 +8,7 @@ import Data.Task
 import System.IO.Unsafe
 
 
-infix 4 ===
+infix 1 ===
 
 
 
@@ -27,6 +27,8 @@ t1 === t2 = do
 
 -- Properties ------------------------------------------------------------------
 
+-- Monoidal functor --
+
 
 prop_pair_left_identity :: TaskIO Int -> Bool
 prop_pair_left_identity t = unsafePerformIO $
@@ -41,6 +43,35 @@ prop_pair_right_identity t = unsafePerformIO $
 prop_pair_associativity :: TaskIO Int -> TaskIO Int -> TaskIO Int -> Bool
 prop_pair_associativity r s t = unsafePerformIO $
   tmap assoc (r |&| (s |&| t)) === (r |&| s) |&| t
+
+
+
+-- Alternative functor --
+
+
+prop_choose_left_identity :: TaskIO Int -> Bool
+prop_choose_left_identity t = unsafePerformIO $
+  fail |!| t === t
+
+
+prop_choose_right_identity :: TaskIO Int -> Bool
+prop_choose_right_identity t = unsafePerformIO $
+  t |!| fail === t
+
+
+prop_choose_associativity :: TaskIO Int -> TaskIO Int -> TaskIO Int -> Bool
+prop_choose_associativity r s t = unsafePerformIO $
+  r |!| (s |!| t) === (r |!| s) |!| t
+
+
+prop_choose_left_absorbtion :: TaskIO Int -> Bool
+prop_choose_left_absorbtion t = unsafePerformIO $
+  fail >>! (\x -> t) === fail
+
+
+prop_choose_left_catch :: Int -> TaskIO Int -> Bool
+prop_choose_left_catch x t = unsafePerformIO $
+  edit x |!| t === edit x
 
 
 

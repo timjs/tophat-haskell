@@ -15,9 +15,16 @@ main :: IO ()
 main = do
   quickCheck prop_equal_val
   quickCheck prop_normalising_preserves_failing
+
   quickCheck prop_pair_left_identity
   quickCheck prop_pair_right_identity
   quickCheck prop_pair_associativity
+
+  quickCheck prop_choose_left_identity
+  quickCheck prop_choose_right_identity
+  quickCheck prop_choose_associativity
+  quickCheck prop_choose_left_absorbtion
+  quickCheck prop_choose_left_catch
 
   where
 
