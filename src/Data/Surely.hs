@@ -1,7 +1,7 @@
 module Data.Surely where
 
 
-import Base
+import Preload
 
 
 -- | A `Surely a` represents an input value.

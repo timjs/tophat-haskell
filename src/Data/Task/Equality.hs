@@ -1,7 +1,7 @@
 module Data.Task.Equality where
 
 
-import Base
+import Preload
 
 import Data.Task
 

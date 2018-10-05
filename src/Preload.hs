@@ -1,4 +1,4 @@
-module Base
+module Preload
   ( module Protolude
   , neutral
   , (<&>), unit
@@ -8,7 +8,7 @@ module Base
 import Protolude hiding ((<&>), (<&&>))
 
 
--- EXTRAS ----------------------------------------------------------------------
+-- Extras ----------------------------------------------------------------------
 
 
 infixl 5 <&>

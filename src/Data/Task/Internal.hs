@@ -9,7 +9,7 @@ module Data.Task.Internal
   ) where
 
 
-import Base
+import Preload
 
 import Test.QuickCheck (Arbitrary, arbitrary)
 import Test.QuickCheck.Gen as Gen

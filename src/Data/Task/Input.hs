@@ -1,7 +1,7 @@
 module Data.Task.Input where
 
 
-import Base
+import Preload
 
 import Data.Surely
 

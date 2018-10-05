@@ -3,17 +3,17 @@ module Data.Task
   , ui, value, failing
   , normalise --,initialise , handle, drive
   -- ** Constructors
-  , Label
   , edit, enter, update
   , tmap, (|&|), (|||), (|?|), fail, (>>-), (>>?)
   , label, delabel, keeper
   -- ** Reexports
-  , MonadRef
+  , Label
   , Basic
+  , MonadRef
   ) where
 
 
-import Base
+import Preload
 
 import Data.IORef
 import Data.Task.Internal

@@ -1,7 +1,7 @@
 module Control.Monad.Trace where
 
 
-import Base
+import Preload
 
 
 
