@@ -18,6 +18,7 @@ main = do
   quickCheck prop_pair_left_identity
   quickCheck prop_pair_right_identity
   quickCheck prop_pair_associativity
+  
   where
 
     prop_equal_val :: Task Int -> Bool

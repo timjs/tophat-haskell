@@ -17,6 +17,7 @@ dependencies:
   - protolude
   - QuickCheck
   - quickcheck-instances
+  - ref-fd
 
 
 default-extensions:

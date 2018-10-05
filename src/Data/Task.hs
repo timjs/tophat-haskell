@@ -31,7 +31,7 @@ ui :: MonadRef l m => TaskT l m a -> m Text
 ui (Edit (Just x)) = pure $ "□(" <> show x <> ")"
 ui (Edit Nothing)  = pure $ "□(_)"
 ui (Store l) = do
-  x <- read l
+  x <- readRef l
   pure $ "■(" <> show x <> ")"
 ui (And left rght) = do
   l <- ui left
@@ -70,7 +70,7 @@ ui (Label l this) = do
 
 value :: MonadRef l m => TaskT l m a -> m (Maybe a)
 value (Edit val) = pure $ val
-value (Store loc) = Just <$> read loc
+value (Store loc) = Just <$> readRef loc
 value (And left rght) = do
   l <- value left
   r <- value rght

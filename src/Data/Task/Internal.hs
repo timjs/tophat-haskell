@@ -15,7 +15,7 @@ import Test.QuickCheck (Arbitrary, arbitrary)
 import Test.QuickCheck.Gen as Gen
 import Test.QuickCheck.Instances.Text ()
 
-import Control.Monad.Ref (MonadRef, modify, new, read, write, (=:))
+import Control.Monad.Ref (MonadRef(..)) 
 
 import Data.Basic (Basic)
 
