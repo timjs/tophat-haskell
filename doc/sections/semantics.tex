@@ -74,7 +74,7 @@
         \Inputs(t_1 \Next e_2) &=& \Inputs(t_1) \cup \set{\Continue\mid \Value{(t_1)}\neq \bot \wedge \neg\Failing{(e_2 \Value{(t_1)}\normalise)}} \\
         \Inputs(t_1 \And t_2)  &=& \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)} \\
         \Inputs(t_1 \Or t_2)   &=& \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)} \\
-        \Inputs(e_1 \Xor e_2)  &=& \set{\Pick \Left, \Pick \Right} \\
+        \Inputs(e_1 \Xor e_2)  &=& \set{\Left, \Right} \\
         \Inputs(u_1 @ t)       &=& \set{u_2 @ i\mid u_2 @ i \in \Inputs(t)} \cup \set{u_1 @ i\mid i\in \Inputs(t)}
       \end{array} & &&
     \end{flalign*}

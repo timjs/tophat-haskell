@@ -258,7 +258,7 @@
 \newrule{N-ThenFail}[\Value(t_1',s') = v_1 \land \lnot\Failing(t_2)]
   {t_1,s \normalise t_1',s' \\
    e_2\ v_1,s' \evaluate t_2,s''}
-  {t_1 \Then e_2,s \normalise t_1' \Then e_2,s''}
+  {t_1 \Then e_2,s \normalise t_1' \Then e_2,s'}
 
 \newrule{N-ThenCont}[\Value(t_1',s') = v_1 \land \Failing(t_2)]
   {t_1,s \normalise t_1',s' \\

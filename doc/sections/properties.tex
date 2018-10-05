@@ -65,9 +65,10 @@ Two events are \emph{essentially the same}, written $h_1 \approx h_2$ if they ar
 which we prove by showing that the following Theorem holds:
 \begin{theorem}
   For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Gamma,\Sigma\infers s$\\
-  if $e,s \normalise e',s'$ then either $\Failing(e')$ or there exists an $e''$ and $i$ such that $e',s'\handle{i}e'',s''$
+  if $e,s \normalise e',s'$ then either $\Failing(e')$ or there exists an $e''$, $s''$ and $i$ such that $e',s'\handle{i}e'',s''$
   \label{thmprogressnorm}
 \end{theorem}
+\todo{Do we also need the theorem $e,s\normalise e',s'$ and $e',s'\normalise e'',s''$ implies $e'\equiv e''$ and $s'\equiv s''$ }
 
 \subsubsection{Safety of Inputs function}
 
