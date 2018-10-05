@@ -16,6 +16,7 @@
     \userule{E-IfTrue}\quad
     \userule{E-IfFalse}\\
     \userule{E-Pair}\quad
+    \userule{E-At}\\
     \userule{E-Ref}\\
     \userule{E-Deref}\quad
     \userule{E-Assign}\\
@@ -55,7 +56,8 @@
             \bot              & \otherwise
           \end{array}
         \right. \\
-        \Value(t_1 \Xor t_2, s)  &=& \bot
+        \Value(t_1 \Xor t_2, s)  &=& \bot\\
+        \Value(u @ t, s)  &=& \Value(t,s)
       \end{array} & &&
     \end{flalign*}
 
@@ -72,7 +74,8 @@
         \Inputs(t_1 \Next e_2) &=& \Inputs(t_1) \cup \set{\Continue\mid \Value{(t_1)}\neq \bot \wedge \neg\Failing{(e_2 \Value{(t_1)}\normalise)}} \\
         \Inputs(t_1 \And t_2)  &=& \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)} \\
         \Inputs(t_1 \Or t_2)   &=& \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)} \\
-        \Inputs(e_1 \Xor e_2)  &=& \set{\Pick \Left, \Pick \Right}
+        \Inputs(e_1 \Xor e_2)  &=& \set{\Pick \Left, \Pick \Right} \\
+        \Inputs(u_1 @ t)       &=& \set{u_2 @ i\mid u_2 @ i \in \Inputs(t)} \cup \set{u_1 @ i\mid i\in \Inputs(t)}
       \end{array} & &&
     \end{flalign*}
 
@@ -89,7 +92,8 @@
         \Failing(t_1 \Next e_2) &=& \Failing(t_1) \\
         \Failing(t_1 \And t_2)  &=& \Failing(t_1) \wedge \Failing(t_2) \\
         \Failing(t_1 \Or t_2)   &=& \Failing(t_1) \wedge \Failing(t_2) \\
-        \Failing(t_1 \Xor t_2)  &=& \False
+        \Failing(t_1 \Xor t_2)  &=& \False\\
+        \Failing(u @ t)         &=& \Failing(t)
       \end{array} & &&
     \end{flalign*}
 
@@ -158,7 +162,8 @@
   \begin{mathpar}
     \userule{H-PassThen} \qquad \userule{H-PassNext} \\
     \userule{H-FirstAnd} \qquad \userule{H-SecondAnd} \\
-    \userule{H-FirstOr}  \qquad \userule{H-SecondOr}
+    \userule{H-FirstOr}  \qquad \userule{H-SecondOr}\\
+    \userule{H-Assign}
   \end{mathpar}
 
 

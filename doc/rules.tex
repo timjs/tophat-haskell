@@ -121,6 +121,10 @@
    \Gamma,\Sigma \infers e_2 : \Task \tau }
   {\Gamma,\Sigma \infers e_1 \Xor e_2 : \Task \tau}
 
+\newrule{T-At}
+  {\Gamma,\Sigma\infers e:\Task\tau}
+  {\Gamma,\Sigma\infers u @ e:\Task\tau}
+
 
 
 %% Evaluation %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -128,6 +132,10 @@
 
 \newmacro{RelationV}
   {e,s \evaluate v,s'}
+
+\newrule{E-At}
+    {e,s\evaluate t,s'}
+    {u @ e,s\evaluate u @ t,s'}
 
 \newrule{E-Value}
   {\ }
@@ -221,6 +229,10 @@
   {t,s \normalise t',s'}
 
 
+  \newrule{N-Assign}
+    {t,s\normalise t',s'}
+    {u @ t,s\normalise u @ t',s'}
+
 \newrule{N-Edit}
   { }
   {\Edit v,s \normalise \Edit v,s}
@@ -309,6 +321,9 @@
 \newmacro{RelationH}
   {t,s \handle{i} t',s'}
 
+\newrule{H-Assign}
+  {t,s\handle{i}t',s'}
+  {u @ t,s\handle{i}u @ t',s'}
 
 \newrule{H-Change}[v, v' : \tau]
   { }

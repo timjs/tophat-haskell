@@ -54,6 +54,12 @@
     & p    &::= & \Update e            & – stored editor \\
 \end{grammar}
 
+\subsection{Users}
+\begin{grammar}
+  Expressions
+    & e    &::= & u @ e                & – assign \\
+\end{grammar}
+
 \begin{mathpar}
   \userule{T-Abs}\qquad
   \userule{T-Var}\\
@@ -72,5 +78,6 @@
   \userule{T-Next} \\
   \userule{T-And} \\
   \userule{T-Or} \\
-  \userule{T-Xor}
+  \userule{T-Xor}\\
+  \userule{T-At}
 \end{mathpar}
