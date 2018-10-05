@@ -1,7 +1,7 @@
 module Data.Task
   ( TaskIO, TaskST, TaskT
   , ui, value, failing
-  , normalise --,initialise , handle, drive
+  , normalise, initialise, handle, drive
   -- ** Constructors
   , edit, enter, update
   , tmap, (|&|), (|!|), (|?|), fail, (>>!), (>>?)
@@ -13,10 +13,13 @@ module Data.Task
   ) where
 
 
-import Preload
+import Preload hiding (handle, trace)
+
+import Control.Monad.Trace
 
 import Data.IORef
 import Data.STRef
+import Data.Task.Input
 import Data.Task.Internal
 
 
@@ -159,25 +162,41 @@ normalise task = do
   pure $ task
 
 
-{- Input handling --------------------------------------------------------------
+initialise :: MonadRef l m => TaskT l m a -> m (TaskT l m a)
+initialise = normalise
 
 
-handle :: MonadTrace NotApplicable m => MonadRef l m => TaskT m a -> Input -> m (TaskT m a)
+
+-- Handling --------------------------------------------------------------------
+
+
+data NotApplicable
+  = CouldNotChange
+  -- | CouldNotFind Label
+  -- | CouldNotContinue
+  | CouldNotHandle
+
+
+handle :: forall l m a b. Basic b => MonadTrace NotApplicable m => MonadRef l m => TaskT l m a -> Input b -> m (TaskT l m a)
 
 -- Edit --
 handle (Edit _) (ToHere Empty) =
   pure $ Edit Nothing
 
-handle (Edit {r} val) (ToHere (Change {c} val_new)) with (decEq c r)
-  handle (Edit _)   (ToHere (Change val_new))       | Yes Refl = pure $ Edit $ toMaybe val_new
-  handle (Edit val) (ToHere (Change _))             | No _     = trace CouldNotChange $ Edit val
+handle (Edit val) (ToHere (Change val_new))
+  | Just (Refl :: a:~:b) <- eqT = pure $ Edit $ toMaybe val_new
+  | otherwise = trace CouldNotChange $ Edit val
 
-handle (Store {r} loc) (ToHere (Change {c} val_new)) with (decEq c r)
-  handle (Store loc) (ToHere (Change (Exactly val_new))) | Yes Refl = do
-    loc := val_new
-    pure $ Store loc
-  handle (Store loc) (ToHere (Change (Anything)))        | Yes Refl = trace CouldNotChange $ Store loc
-  handle (Store loc) (ToHere (Change _))                 | No _     = trace CouldNotChange $ Store loc
+handle (Store loc) (ToHere (Change val_ext))
+  | Just (Refl :: a:~:b) <- eqT =
+      case val_ext of
+        Exactly val_new -> do
+          writeRef loc val_new
+          pure $ Store loc
+        Anything ->
+          trace CouldNotChange $ Store loc
+  | otherwise =
+      trace CouldNotChange $ Store loc
 
 -- Pass to left or rght --
 handle (And left rght) (ToLeft input) = do
@@ -201,41 +220,37 @@ handle (Or left rght) (ToRight input) = do
   pure $ Or left rght_new
 
 -- Interact --
-handle task@(Xor left _) (ToHere (Pick (GoLeft p))) =
+handle (Xor left _) (ToHere (Pick GoLeft)) =
   -- Go left
   --FIXME: add failing for left?
-  handle (assert_smaller task (delabel left)) (ToHere (Pick p))
+  pure $ delabel left
 
-handle task@(Xor _ rght) (ToHere (Pick (GoRight p))) =
+handle (Xor _ rght) (ToHere (Pick GoRight)) =
   -- Go rght
   --FIXME: add failing for rght?
-  handle (assert_smaller task (delabel rght)) (ToHere (Pick p))
+  pure $ delabel rght
 
-handle task (ToHere (Pick GoHere)) =
-  -- Go here
-  pure $ task
+-- handle task@(Xor _ _) (ToHere (PickWith l)) =
+--   case find l task of
+--     Nothing -> trace (CouldNotFind l) task
+--     --XXX: needs `assert_smaller` for totallity, be aware of long type checks...
+--     -- Just p  -> handle task (assert_smaller (ToHere (PickWith l)) (ToHere (Pick p)))
+--     Just p  -> handle task (ToHere (Pick p))
 
-handle task@(Xor _ _) (ToHere (PickWith l)) =
-  case find l task of
-    Nothing -> trace (CouldNotFind l) task
-    --XXX: needs `assert_smaller` for totallity, be aware of long type checks...
-    -- Just p  -> handle task (assert_smaller (ToHere (PickWith l)) (ToHere (Pick p)))
-    Just p  -> handle task (ToHere (Pick p))
-
-handle task@(Next this cont) (ToHere Continue) =
+handle (Next this cont) (ToHere Continue) =
   -- When pressed continue rewrite to an internal step
   pure $ Then this cont
 
-handle task@(Next this cont) (ToHere (ContinueWith l)) =
-  case !(value this) of
-    Nothing -> trace CouldNotContinue task
-    Just v  ->
-      let
-        next = cont v
-      in
-      case find l next of
-        Nothing -> trace (CouldNotFind l) task
-        Just p  -> handle next (ToHere (Pick p))
+-- handle task@(Next this cont) (ToHere (ContinueWith l)) =
+--   case !(value this) of
+--     Nothing -> trace CouldNotContinue task
+--     Just v  ->
+--       let
+--         next = cont v
+--       in
+--       case find l next of
+--         Nothing -> trace (CouldNotFind l) task
+--         Just p  -> handle next (ToHere (Pick p))
 
 -- Pass to this --
 handle (Then this cont) input = do
@@ -256,13 +271,11 @@ handle (Label l this) input
       pure $ Label l this_new
 
 -- Rest --
-handle task input =
-  -- Case `Fail`: Evaluation continues indefinitely
-  trace (CouldNotHandle input) task
+handle task _ =
+  -- trace (CouldNotHandle input) task
+  trace CouldNotHandle task
 
 
-drive :: MonadTrace NotApplicable m => MonadRef l m => TaskT m a -> Input -> m (TaskT m a)
+drive :: Basic b => MonadTrace NotApplicable m => MonadRef l m => TaskT l m a -> Input b -> m (TaskT l m a)
 drive task input =
   handle task input >>= normalise
-
--------------------------------------------------------------------------------}

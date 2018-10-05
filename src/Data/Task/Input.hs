@@ -1,4 +1,7 @@
-module Data.Task.Input where
+module Data.Task.Input
+  ( Path(..), Action(..), Input(..)
+  , module Data.Surely
+  ) where
 
 
 import Preload
