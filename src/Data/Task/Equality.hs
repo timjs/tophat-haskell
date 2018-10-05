@@ -66,12 +66,31 @@ prop_choose_associativity r s t = unsafePerformIO $
 
 prop_choose_left_absorbtion :: TaskIO Int -> Bool
 prop_choose_left_absorbtion t = unsafePerformIO $
-  fail >>! (\x -> t) === fail
+  fail >>! (\_ -> t) === fail
 
 
 prop_choose_left_catch :: Int -> TaskIO Int -> Bool
 prop_choose_left_catch x t = unsafePerformIO $
   edit x |!| t === edit x
+
+
+
+-- Monad --
+
+
+prop_step_left_identity :: Int -> TaskIO Int -> Bool
+prop_step_left_identity x t = unsafePerformIO $
+  edit x >>! (\_ -> t) === t
+
+
+prop_step_right_identity :: TaskIO Int -> Bool
+prop_step_right_identity t = unsafePerformIO $
+  t >>! (\y -> edit y) === t
+
+
+prop_step_assocaitivity :: TaskIO Int -> TaskIO Int -> TaskIO Int -> Bool
+prop_step_assocaitivity r s t = unsafePerformIO $
+  (r >>! (\_ -> s)) >>! (\_ -> t) === r >>! (\_ -> s >>! (\_ -> t))
 
 
 
