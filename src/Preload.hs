@@ -4,13 +4,13 @@ module Preload
   , List
   , Pretty(..)
   , neutral
-  , (<&>), unit
+  , (<&>), skip
   , forany, forall
   , sameT
   ) where
 
 
-import Protolude hiding ((<&>), (<&&>), trace, handle)
+import Protolude hiding ((<&>), (<&&>), trace, handle, lift)
 
 import Data.Bitraversable
 
@@ -40,9 +40,9 @@ infixl 5 <&>
 (<&>) x y = (,) <$> x <*> y
 
 
-{-# INLINE unit #-}
-unit :: Applicative f => f ()
-unit = pure ()
+{-# INLINE skip #-}
+skip :: Applicative f => f ()
+skip = pure ()
 
 
 
@@ -51,9 +51,9 @@ unit = pure ()
 
 -- | A version of 'any' lifted to a monad. Retains the short-circuiting behaviour.
 --
--- > forany Just [False,True ,undefined] == Just True
--- > forany Just [False,False,undefined] == undefined
--- > \(f :: Int -> Maybe Bool) xs -> forany f xs == orM (map f xs)
+-- > forany [False,True ,undefined] Just == Just True
+-- > forany [False,False,undefined] Just == undefined
+-- > xs \(f :: Int -> Maybe Bool) -> forany xs f == orM (map f xs)
 forany :: Monad m => List a -> (a -> m Bool) -> m Bool
 forany [] _ = return False
 forany (x:xs) p = ifM (p x) (return True) (forany xs p)
@@ -61,9 +61,9 @@ forany (x:xs) p = ifM (p x) (return True) (forany xs p)
 
 -- | A version of 'all' lifted to a monad. Retains the short-circuiting behaviour.
 --
--- > forall Just [True,False,undefined] == Just False
--- > forall Just [True,True ,undefined] == undefined
--- > \(f :: Int -> Maybe Bool) xs -> forany f xs == orM (map f xs)
+-- > forall [True,False,undefined] Just == Just False
+-- > forall [True,True ,undefined] Just == undefined
+-- > xs \(f :: Int -> Maybe Bool) -> forany xs f == orM (map f xs)
 forall :: Monad m => List a -> (a -> m Bool) -> m Bool
 forall [] _ = return True
 forall (x:xs) p = ifM (p x) (forall xs p) (return False)

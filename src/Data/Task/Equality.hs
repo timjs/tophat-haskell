@@ -75,17 +75,17 @@ t1 ~= t2 = do
 
 prop_pair_left_identity :: TaskIO Int -> Bool
 prop_pair_left_identity t = unsafePerformIO $
-  tmap snd (edit () |&| t) === t
+  lift snd (edit () |&| t) === t
 
 
 prop_pair_right_identity :: TaskIO Int -> Bool
 prop_pair_right_identity t = unsafePerformIO $
-  tmap fst (t |&| edit ()) === t
+  lift fst (t |&| edit ()) === t
 
 
 prop_pair_associativity :: TaskIO Int -> TaskIO Int -> TaskIO Int -> Bool
 prop_pair_associativity r s t = unsafePerformIO $
-  tmap assoc (r |&| (s |&| t)) === (r |&| s) |&| t
+  lift assoc (r |&| (s |&| t)) === (r |&| s) |&| t
 
 
 

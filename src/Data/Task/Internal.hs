@@ -2,7 +2,7 @@ module Data.Task.Internal
   ( TaskT(..)
   , Label
   , edit, enter, update
-  , tmap, (|&|), (|!|), (|?|), fail, (>>!), (>>?)
+  , lift, (|&|), (|!|), (|?|), fail, (>>!), (>>?)
   , label, delabel, keeper
   , module Control.Monad.Ref
   , module Data.Basic
@@ -113,8 +113,8 @@ showText = showString . toS
 -- Functor --
 
 
-tmap :: Basic b => (a -> b) -> TaskT l m a -> TaskT l m b
-tmap f t = (>>!) t (\x -> edit (f x))
+lift :: Basic b => (a -> b) -> TaskT l m a -> TaskT l m b
+lift f t = (>>!) t (\x -> edit (f x))
 
 
 
