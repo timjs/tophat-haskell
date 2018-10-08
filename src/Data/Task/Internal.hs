@@ -68,6 +68,7 @@ data TaskT :: (Type -> Type) -> (Type -> Type) -> Type -> Type where
 
 -- Show --
 
+
 instance Show (TaskT l m a) where
   showsPrec d (Edit (Just x)) =
     showParen (d > p) $ showString "Edit " . showsPrec (succ p) x

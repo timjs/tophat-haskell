@@ -1,17 +1,12 @@
 module Data.Task.Input
   ( Path(..), Action(..), Input(..)
   , strip, (~?)
-  , module Data.Surely
   ) where
 
 
 import Preload
 
-import Data.Surely
-
 import Data.Task.Internal
-
-
 
 infix 6 ~?
 
@@ -23,42 +18,86 @@ infix 6 ~?
 data Path
   = GoLeft
   | GoRight
-  deriving (Show, Eq)
+  deriving (Eq)
+
+
+instance Pretty Path where
+  pretty GoLeft  = "l"
+  pretty GoRight = "r"
+
 
 
 -- Inputs and Actions ----------------------------------------------------------
 
 
-data Action b
-  = Change (Surely b)
-  | Empty
-  | Pick Path
-  -- | PickWith Label
-  | Continue
-  -- | ContinueWith Label
-  deriving (Show, Eq)
+data Action :: Type where
+  Change :: Basic b => Maybe b -> Action
+  Empty :: Action
+  Pick :: Path -> Action
+  -- PickWith :: Label -> Action
+  Continue :: Action
+  -- ContinueWith :: Label -> Action
 
 
-data Input b
-  = ToLeft (Input b)
-  | ToHere (Action b)
-  | ToRight (Input b)
-  deriving (Show, Eq)
+instance Eq Action where
+  Change x == Change y
+    | Just Refl <- sameT x y = x == y
+    | otherwise = False
+  Empty == Empty = True
+  Pick x == Pick y = x == y
+  -- PickWith x == PickWith y = x == y
+  Continue == Continue = True
+  -- ContinueWith x  == ContinueWith y = x == y
+  _ == _ = False
+
+
+instance Pretty Action where
+  pretty (Change _)       = "change <val>"
+  pretty (Empty)          = "empty"
+  pretty (Pick p)         = "pick" <> pretty p
+  -- pretty (PickWith l)     = "pick " <> l
+  pretty (Continue)       = "cont"
+  -- pretty (ContinueWith l) = "cont " <> l
+
+
+data Input
+  = ToLeft Input
+  | ToHere Action
+  | ToRight Input
+  deriving (Eq)
+
+
+instance Pretty Input where
+  pretty (ToLeft e)  = "l " <> pretty e
+  pretty (ToHere a)   = pretty a
+  pretty (ToRight e) = "r " <> pretty e
 
 
 
 -- Conformance -----------------------------------------------------------------
 
 
-strip :: Input b -> Maybe b
-strip (ToHere (Change (Exactly v))) = Just v
-strip (ToHere (Change Anything))    = Nothing
-strip (ToHere _)                    = Nothing
-strip (ToLeft i)                    = strip i
-strip (ToRight i)                   = strip i
+-- | A GADT representing some basic value `b` or no value at all.
+data Stripped :: Type where
+  Some :: Basic b => b -> Stripped
+  None :: Stripped
 
 
-(~?) :: Basic b => Input b -> Input b -> Bool
-i1 ~? i2
-  | ( Just v1, Just v2 ) <- ( strip i1, strip i2 ) = v1 == v2
-  | otherwise = True
+instance Eq Stripped where
+  Some x == Some y
+    | Just Refl <- sameT x y = x == y
+    | otherwise = False
+  None == None = True
+  _ == _ = False
+
+
+strip :: Input -> Stripped
+strip (ToHere (Change (Just v))) = Some v
+strip (ToHere (Change Nothing))  = None
+strip (ToHere _)                 = None
+strip (ToLeft i)                 = strip i
+strip (ToRight i)                = strip i
+
+
+(~?) :: Input -> Input -> Bool
+i1 ~? i2 = strip i1 == strip i2

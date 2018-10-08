@@ -111,8 +111,8 @@ failing (Label _ this)  = failing this
 
 
 -- inputs :: MonadRef l m => TaskT l m a -> m (List Input b)
--- inputs (Edit {r} _)     = pure $ [ ToHere (Change {c=r} Anything), ToHere Empty ]
--- inputs (Store {r} _)    = pure $ [ ToHere (Change {c=r} Anything) ]
+-- inputs (Edit {r} _)     = pure $ [ ToHere (Change {c=r} Nothing), ToHere Empty ]
+-- inputs (Store {r} _)    = pure $ [ ToHere (Change {c=r} Nothing) ]
 -- inputs (And left rght)  = pure $ map ToLeft !(inputs left) ++ map ToRight !(inputs rght)
 -- inputs (Or left rght)   = pure $ map ToLeft !(inputs left) ++ map ToRight !(inputs rght)
 -- inputs this@(Xor _ _)   = pure $ map (ToHere . PickWith) (labels this) ++ map (ToHere . Pick) (choices this)
@@ -203,23 +203,30 @@ data NotApplicable
   | CouldNotHandle
 
 
-handle :: forall l m a b. Basic b => MonadTrace NotApplicable m => MonadRef l m => TaskT l m a -> Input b -> m (TaskT l m a)
+handle :: forall l m a. MonadTrace NotApplicable m => MonadRef l m => TaskT l m a -> Input -> m (TaskT l m a)
 
 -- Edit --
 handle (Edit _) (ToHere Empty) =
   pure $ Edit Nothing
 
 handle (Edit val) (ToHere (Change val_new))
-  | Just (Refl :: a:~:b) <- eqT = pure $ Edit $ toMaybe val_new
+  -- NOTE: Here we check if `val` and `val_new` have the same type.
+  -- If this is the case, it would be inhabited by `Refl :: a :~: b`, where `b` is the type of the value inside `Change`.
+  -- Because we can't acces the type variable `b` directly, we use `sameT` as a trick.
+  | Just Refl <- sameT val val_new = pure $ Edit $ val_new
   | otherwise = trace CouldNotChange $ Edit val
 
 handle (Store loc) (ToHere (Change val_ext))
-  | Just (Refl :: a:~:b) <- eqT =
+  -- NOTE: As in the `Edit` case above, we check for type equality.
+  -- Here, we can't annotate `Refl`, because we do not have acces to the type variable `b` inside `Store`.
+  -- We also do not have acces to the value stored in `loc` (we could read it first using `readRef`).
+  -- Therefore we use a proxy `Nothing` of the correct scoped type to mach against the type of `val_ext`.
+  | Just Refl <- sameT (Nothing :: Maybe a) val_ext =
       case val_ext of
-        Exactly val_new -> do
+        Just val_new -> do
           writeRef loc val_new
           pure $ Store loc
-        Anything ->
+        Nothing ->
           trace CouldNotChange $ Store loc
   | otherwise =
       trace CouldNotChange $ Store loc
@@ -302,6 +309,6 @@ handle task _ =
   trace CouldNotHandle task
 
 
-drive :: Basic b => MonadTrace NotApplicable m => MonadRef l m => TaskT l m a -> Input b -> m (TaskT l m a)
+drive :: MonadTrace NotApplicable m => MonadRef l m => TaskT l m a -> Input -> m (TaskT l m a)
 drive task input =
   handle task input >>= normalise
