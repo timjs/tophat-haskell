@@ -1,6 +1,6 @@
 package task
 
-sourcedir = src
+sourcedir = src-idris
 -- pkgs = contrib
 
 main = Main
