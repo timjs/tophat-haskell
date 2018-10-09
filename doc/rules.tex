@@ -303,6 +303,15 @@
     {e,s \normalise e'',s''}
 
 
+\newrule{N-Stable}[\Delta(s,s')\cap w(t') \equiv \emptyset]
+    {e,s\normalise e',s'}
+    {e,s\bar{\normalise}e',s'}
+
+\newrule{N-Memory}[\Delta(s,s')\cap w(t') \neq \emptyset]
+    {e,s\normalise e',s'\\
+    e',s'\bar{\normalise}e'',s''}
+    {e,s\bar{\normalise}e',s'}
+
 % \newrule{N-Next}[t_1' = \Edit v]
 %   {t_1,\Sigma \normalise t_1'\st{'}   \\
 %    e\ v \evaluate t_2       \\
