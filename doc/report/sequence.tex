@@ -309,7 +309,7 @@ denoted $t_1 \equiv t_2$,
 which is obviously too strong.
 We define a new relation $t_1 \approxeq t_2$,
 which we read as \enquote{$t_1$ is \emph{normalised equal} to $t_2$} as follows.
-\todo{This is wrong! It makes $\Enter \beta$ and $\Fail$ equivallent.}
+\todo{Only for well typed expressions, otherwise it makes $\Enter \beta$ and $\Fail$ equivalent, which is obvously not what we want.}
 \begin{equation*}
   \begin{array}{crc}
     t_1 \approxeq t_2 &\text{if and only if}& t_1 \normalise t_1' \\
