@@ -84,5 +84,5 @@ ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-pattern
 
 executables:
   tasks:
-    source-dirs:      src
+    source-dirs:      src-haskell
     main:             Main.hs
