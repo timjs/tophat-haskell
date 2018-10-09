@@ -1,0 +1,20 @@
+A modular calculus for interactive workflows
+
+Task Oriented Programming (TOP) is a programming paradigm which focusses on modelling real world collaborations between people.
+It prescribes a declarative programming style to specify multi-user workflows.
+Workflows can be higher-order and communicate through typed values on a local or global level.
+Such specifications can be turned into interactive applications for different platforms,
+supporting collaborators during execution.
+
+In this talk we decompose the rich features of TOP into elementary language elements,
+which makes them suitable for formal treatment.
+We use the simply typed lambda calculus, extended with pairs and references, as a base language.
+On top of this, we develop a modular calculus for interactive workflows.
+
+The embedding of our calculus gives rise to a layered semantics.
+The layers consists of multiple big step evaluations of expressions,
+and labelled small step handling of user inputs working in unison.
+We use this machinery to show some interesting properties.
+
+Our approach allows for comparison with other works in the field.
+We place our calculus in perspective with iTasks, a reference implementation of TOP, and the process calculi CSP and CCS.
