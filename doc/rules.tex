@@ -255,12 +255,12 @@
   {t_1,s \normalise t_1',s'}
   {t_1 \Then e_2,s \normalise t_1' \Then e_2,s'}
 
-\newrule{N-ThenFail}[\Value(t_1',s') = v_1 \land \lnot\Failing(t_2)]
+\newrule{N-ThenFail}[\Value(t_1',s') = v_1 \land \Failing(t_2,s'')]
   {t_1,s \normalise t_1',s' \\
    e_2\ v_1,s' \evaluate t_2,s''}
   {t_1 \Then e_2,s \normalise t_1' \Then e_2,s'}
 
-\newrule{N-ThenCont}[\Value(t_1',s') = v_1 \land \Failing(t_2)]
+\newrule{N-ThenCont}[\Value(t_1',s') = v_1 \land \lnot\Failing(t_2,s'')]
   {t_1,s \normalise t_1',s' \\
    e_2\ v_1,s' \evaluate t_2 ,s'' \\
    t_2,s'' \normalise t_2',s'''}
@@ -359,7 +359,7 @@
   {t_1,s \handle{i} t_1',s'}
   {t_1 \Next e_2,s \handle{i \neq \Continue} t_1' \Next e_2,s'}
 
-\newrule{H-Next}[\Value{(t_1,s)}\neq \bot \wedge \neg\Failing{(e_2 \Value{(t_1,s)}\normalise)}]
+\newrule{H-Next}[\Value{(t_1,s)}\neq \bot \wedge e_2 \Value{(t_1,s)},s\normalise t_2,s' \wedge \neg\Failing{(t_2,s')}]
   { }
   {t_1 \Next e_2,s \handle{\Continue} t_1 \Then e_2,s}
 
@@ -382,11 +382,11 @@
   {t_1 \Or t_2,s \handle{\Second i} t_1 \Or t_2',s'}
 
 
-\newrule{H-PickLeft}[e_1,s\evaluate t_1,s'\quad \neg\Failing(t_1)]
+\newrule{H-PickLeft}[e_1,s\evaluate t_1,s'\quad \neg\Failing(t_1,s')]
   {\ }
   {e_1 \Xor e_2,s \handle{\Left} e_1,s}
 
-\newrule{H-PickRight}[e_2,s\evaluate t_2,s'\quad \neg\Failing(t_2)]
+\newrule{H-PickRight}[e_2,s\evaluate t_2,s'\quad \neg\Failing(t_2,s')]
   {\ }
   {e_1 \Xor e_2,s \handle{\Right} e_2,s}
 

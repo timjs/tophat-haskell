@@ -84,16 +84,16 @@
     \begin{flalign*}
       \begin{array}{lcl}
         \multicolumn{3}{l}{\Failing : \mathrm{Tasks} \to \mathrm{Booleans}} \\
-        \Failing(\Edit v)       &=& \False \\
-        \Failing(\Enter \tau)   &=& \False \\
-        \Failing(\Update l)     &=& \False \\
-        \Failing(\Fail)         &=& \True \\
-        \Failing(t_1 \Then e_2) &=& \Failing(t_1) \\
-        \Failing(t_1 \Next e_2) &=& \Failing(t_1) \\
-        \Failing(t_1 \And t_2)  &=& \Failing(t_1) \wedge \Failing(t_2) \\
-        \Failing(t_1 \Or t_2)   &=& \Failing(t_1) \wedge \Failing(t_2) \\
-        \Failing(t_1 \Xor t_2)  &=& \False\\
-        \Failing(u @ t)         &=& \Failing(t)
+        \Failing(\Edit v,s)       &=& \False \\
+        \Failing(\Enter \tau,s)   &=& \False \\
+        \Failing(\Update l,s)     &=& \False \\
+        \Failing(\Fail,s)         &=& \True \\
+        \Failing(t_1 \Then e_2,s) &=& \Failing(t_1,s) \\
+        \Failing(t_1 \Next e_2,s) &=& \Failing(t_1,s) \\
+        \Failing(t_1 \And t_2,s)  &=& \Failing(t_1,s) \wedge \Failing(t_2,s) \\
+        \Failing(t_1 \Or t_2,s)   &=& \Failing(t_1,s) \wedge \Failing(t_2,s) \\
+        \Failing(e_1 \Xor e_2,s)  &=& \Failing(t_1,s') \wedge \Failing(t_2,s') \mid e_1,s\normalise t_1,s' \quad e_2,s\normalise t_2,s'\\
+        \Failing(u @ t,s)         &=& \Failing(t,s)
       \end{array} & &&
     \end{flalign*}
 
