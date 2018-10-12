@@ -68,7 +68,22 @@ which we prove by showing that the following Theorem holds:
   if $e,s \normalise e',s'$ then either $\Failing(e')$ or there exists an $e''$, $s''$ and $i$ such that $e',s'\handle{i}e'',s''$
   \label{thmprogressnorm}
 \end{theorem}
-\todo{Do we also need the theorem $e,s\normalise e',s'$ and $e',s'\normalise e'',s''$ implies $e'\equiv e''$ and $s'\equiv s''$ }
+
+\subsubsection{Normalisation is Big-Step}
+
+\begin{theorem}
+  For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Gamma,\Sigma\infers s$\\
+  if $e,s\normalise e',s'$ and $e',s'\normalise e'',s''$, then $e'\equiv e''$ and $s'\equiv s''$.
+\end{theorem}
+
+\subsubsection{Failing means no interaction possible}
+
+\begin{theorem}
+  For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Gamma,\Sigma\infers s$\\
+  if $\Failing(e,s)\equiv \True$, then $e,s\normalise e',s'$ implies $e\equiv e'$ and $s\equiv s'$\\
+  and there is no $i$ such that $e,s\handle{i}e',s'$ for some $e'$ and $s'$.
+\end{theorem}
+
 
 \subsubsection{Safety of Inputs function}
 
