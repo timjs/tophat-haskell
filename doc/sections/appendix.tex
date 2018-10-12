@@ -59,7 +59,10 @@
       $\Gamma,\Sigma\infers t_2:\Task\tau$ and $\Gamma,\Sigma\infers s''$. Therefore $\Gamma,\Sigma\infers t_1\Or t_2:\Task\tau$.\\
 
   \noindent\textbf{Case} $\userule{E-Xor}$
-      Evaluation does not alter $e$ and $s$, therefore this case holds tivially.
+      Evaluation does not alter $e$ and $s$, therefore this case holds tivially.\\
+
+  \noindent\textbf{Case} $\userule{E-At}$
+      Given that $\Gamma,\Sigma\infers u@e:\Task\tau$ and $\Gamma,\Sigma\infers s$, the induction hypothesis gives us that $e,s\evaluate t,s'$ also preserves, and therefore by T-At $\Gamma,\Sigma\infers u@t:\Task\tau$.
 \end{proof}
 
 
