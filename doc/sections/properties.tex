@@ -26,8 +26,22 @@ Two events are \emph{essentially the same}, written $h_1 \approx h_2$ if they ar
 \end{definition}
 
 \subsection{Safety}
+
+In order to validate our semantics, we show that our evaluation, normalisation
+and handling semantics is type preserving. We additionally prove a progress
+theorem for our small-step handling semantics.
+
+Additionally, we show that the normalisation semantics is a big-step semantics.
+While at first sight, this might seem obvious, the fact that we are dealing with
+state complicates matters.
+
+We show that our failing function $\Failing$ indeed only indicates expressions
+that can not be normalised and that allow no further interaction.
+
+Finally we prove that the function to compute all possible inputs $\Inputs$ is sound and complete.
 \subsubsection{Preservation}
 
+We show that the following three preservation Theorems hold.
 
 \begin{theorem}[preservation under evaluation]
       For all $e$ and $s$ such that
@@ -37,17 +51,31 @@ Two events are \emph{essentially the same}, written $h_1 \approx h_2$ if they ar
       \label{thmpreseval}
 \end{theorem}
 
+Theorem~\ref{thmpreseval} is shown to be correct by induction over $e$. The full
+proof can be found in the appendix.
+
+
+Moving on, we show that normalisation also preserves, by showing that the
+following Theorem holds.
+
+\begin{theorem}[preservation under normalisation]
+    For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Gamma,\Sigma\infers s$\\
+    if   $e,s \normalise e',s'$ then $\Gamma,\Sigma\infers e':\tau$ and $\Gamma,\Sigma\infers s'$
+    \label{thmpresnorm}
+\end{theorem}
+
+Since this semantics makes use of the value function $\Value$, we first need to
+show that this function also preserves types.
+
 \begin{lemma}[Task value preserves]
   For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\Task\tau$ and $\Gamma,\Sigma\infers s$\\
   if $\Value{(e,s)}=v$ then $v:\tau$
   \label{lemmavaluepreserves}
 \end{lemma}
 
-\begin{theorem}[preservation under normalization]
-    For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Gamma,\Sigma\infers s$\\
-    if   $e,s \normalise e',s'$ then $\Gamma,\Sigma\infers e':\tau$ and $\Gamma,\Sigma\infers s'$
-    \label{thmpresnorm}
-\end{theorem}
+Lemma~\ref{lemmavaluepreserves} states exactly this poperty, and is proven in the
+appendix by induction over $e$. This subseqently allows us to prove
+Theorem~\ref{thmpresnorm}, again by induction over $e$.
 
 \begin{theorem}[preservation under handling]
   For all $e$, $s$ and $i$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Gamma,\Sigma\infers s$\\
