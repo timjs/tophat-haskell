@@ -197,40 +197,45 @@ This lemma follows immediately from definition.
   \noindent\textbf{Case} $\userule{H-SecondOr}$ Given that $\Gamma,\Sigma\infers t_1\Or t_2:\Task\tau$ and $\Gamma,\Sigma\infers s$, T-Or gives us that $\Gamma,\Sigma\infers t_1:\Task\tau$ and $\Gamma,\Sigma\infers t_2:\Task\tau$. By the induction hypothesis we know that $t_2,s\handle{i}t_2',s'$ also preserves, and therefore $\Gamma,\Sigma\infers t_2':\Task\tau$ and $\Gamma,\Sigma\infers s'$. By T-Or we now obtain $\Gamma,\Sigma\infers t_1\Or t_2':\Task\tau$.
 \end{proof}
 
-\subsubsection{Theorem~\ref{thmprogressnorm}}
+% \subsubsection{Theorem~\ref{thmprogressnorm}}
+%
+% \begin{proof} We prove this Theorem by induction on $e$.\\
+%
+%   \noindent\textbf{Case} $\userule{N-Edit}$ Given that $\Gamma,\Sigma\infers \Edit v : \Task \tau$, let $e''=\Edit v'$, $s''=s$ and $i=v':\tau$. Then H-Edit gives $\Edit v,s\handle{v'}\Edit v',s$. \\
+%
+%
+%   \noindent\textbf{Case} $\userule{N-Fill}$ Given that $\Gamma,\Sigma\infers \Enter \tau : \Task \tau$, let $e''=\Edit v$, $s''=s$ and $i=v:\tau$. Then H-Fill gives $\Enter \tau,s\handle{v}\Edit v,s$. \\
+%
+%   \noindent\textbf{Case} $\userule{N-Update}$ Given that $\Gamma,\Sigma\infers \Update l : \Task \tau$, let $e''=\Update l$, $s''=s[l\mapsto v]$ and $i=v:\tau$. Then H-Update gives $\Update l ,s\handle{v}\Update l,s[l\mapsto v]$. \\
+%
+%   \noindent\textbf{Case} $\userule{N-Fail}$ Since $\Failing(\Fail)=\True$, the theorem holds in this case. \\
+%
+%   \noindent\textbf{Case} $\userule{N-Xor}$ \todo{Here we have an issue with the defintion of $\Failing$ and the sideconditions of external choice. These definitions should concur, so we can finish the proof, but $\Failing$ is a static property}\\
+%
+%   \noindent\textbf{Case} $\userule{N-Eval}$ By induction hypothesis we have that there exists an $e'''$, $s'''$ and $i$ such that $e'',s''\handle{i}e''',s'''$.\\
+%
+%   \noindent\textbf{Case} $\userule{N-ThenStay}$ By the induction hyposthesis we have that there exists an $e''$, $s''$ and $i$ such that $t_1',s'\handle{i}e'',s''$. Then by H-Pass, we know that we can apply the same $i$ to obtain $t_1\Then e_2,s'\handle{i} e''\Then e,s''$.\\
+%
+%   \noindent\textbf{Case} $\userule{N-ThenFail}$ By the induction hyposthesis we have that there exists an $e''$, $s''$ and $i$ such that $t_1',s'\handle{i}e'',s''$. Then by H-Pass, we know that we can apply the same $i$ to obtain $t_1\Then e_2,s'\handle{i} e''\Then e,s''$.\\
+%
+%   \noindent\textbf{Case} $\userule{N-ThenCont}$ By the induction hypothesis, we have that there exists an $e''$, $s''''$ and $i$ such that $t_2',s''\handle{i}e'',s''''$.\\
+%
+%   \noindent\textbf{Case} $\userule{N-OrLeft}$ By the induction hypothesis, we have that there exists an $e''$, $s'$ and $i$ such that $t_1',s\handle{i}e'',s''$.\\
+%
+%   \noindent\textbf{Case} $\userule{N-OrRight}$ By the induction hypothesis, we have that there exists an $e''$, $s'$ and $i$ such that $t_2',s\handle{i}e'',s''$.\\
+%
+%   \noindent\textbf{Case} $\userule{N-OrNone}$ \todo{   }\\
+%
+%   \noindent\textbf{Case} $\userule{N-Next}$ By the induction hypothesis, we have that there exists an $e''$, $s'$ and $i$ such that $t_1',s'\handle{i}e'',s''$. Then by the H-PassNext rule, we know that we can apply the same $i$ to obtain $t_1'\Next e_2,s'\handle{i}e'',s''$.\\
+%
+%   \noindent\textbf{Case} $\userule{N-And}$ By the induction hypothesis, we have that there exists an $e''$, $s'$ and $i$ such that $t_1',s'\handle{i}e'',s''$. Then by the H-FirstOr rule, we know that we can apply $\First i$ to obtain $t_1'\And t_2',s'\handle{\First i} t_1''\And t_2',s''$
+%
+% \end{proof}
 
-\begin{proof} We prove this Theorem by induction on $e$.\\
 
-  \noindent\textbf{Case} $\userule{N-Edit}$ Given that $\Gamma,\Sigma\infers \Edit v : \Task \tau$, let $e''=\Edit v'$, $s''=s$ and $i=v':\tau$. Then H-Edit gives $\Edit v,s\handle{v'}\Edit v',s$. \\
+\subsubsection{Theorem~\ref{thmnormisbigstep}}
 
-
-  \noindent\textbf{Case} $\userule{N-Fill}$ Given that $\Gamma,\Sigma\infers \Enter \tau : \Task \tau$, let $e''=\Edit v$, $s''=s$ and $i=v:\tau$. Then H-Fill gives $\Enter \tau,s\handle{v}\Edit v,s$. \\
-
-  \noindent\textbf{Case} $\userule{N-Update}$ Given that $\Gamma,\Sigma\infers \Update l : \Task \tau$, let $e''=\Update l$, $s''=s[l\mapsto v]$ and $i=v:\tau$. Then H-Update gives $\Update l ,s\handle{v}\Update l,s[l\mapsto v]$. \\
-
-  \noindent\textbf{Case} $\userule{N-Fail}$ Since $\Failing(\Fail)=\True$, the theorem holds in this case. \\
-
-  \noindent\textbf{Case} $\userule{N-Xor}$ \todo{Here we have an issue with the defintion of $\Failing$ and the sideconditions of external choice. These definitions should concur, so we can finish the proof, but $\Failing$ is a static property}\\
-
-  \noindent\textbf{Case} $\userule{N-Eval}$ By induction hypothesis we have that there exists an $e'''$, $s'''$ and $i$ such that $e'',s''\handle{i}e''',s'''$.\\
-
-  \noindent\textbf{Case} $\userule{N-ThenStay}$ By the induction hyposthesis we have that there exists an $e''$, $s''$ and $i$ such that $t_1',s'\handle{i}e'',s''$. Then by H-Pass, we know that we can apply the same $i$ to obtain $t_1\Then e_2,s'\handle{i} e''\Then e,s''$.\\
-
-  \noindent\textbf{Case} $\userule{N-ThenFail}$ By the induction hyposthesis we have that there exists an $e''$, $s''$ and $i$ such that $t_1',s'\handle{i}e'',s''$. Then by H-Pass, we know that we can apply the same $i$ to obtain $t_1\Then e_2,s'\handle{i} e''\Then e,s''$.\\
-
-  \noindent\textbf{Case} $\userule{N-ThenCont}$ By the induction hypothesis, we have that there exists an $e''$, $s''''$ and $i$ such that $t_2',s''\handle{i}e'',s''''$.\\
-
-  \noindent\textbf{Case} $\userule{N-OrLeft}$ By the induction hypothesis, we have that there exists an $e''$, $s'$ and $i$ such that $t_1',s\handle{i}e'',s''$.\\
-
-  \noindent\textbf{Case} $\userule{N-OrRight}$ By the induction hypothesis, we have that there exists an $e''$, $s'$ and $i$ such that $t_2',s\handle{i}e'',s''$.\\
-
-  \noindent\textbf{Case} $\userule{N-OrNone}$ \todo{   }\\
-
-  \noindent\textbf{Case} $\userule{N-Next}$ By the induction hypothesis, we have that there exists an $e''$, $s'$ and $i$ such that $t_1',s'\handle{i}e'',s''$. Then by the H-PassNext rule, we know that we can apply the same $i$ to obtain $t_1'\Next e_2,s'\handle{i}e'',s''$.\\
-
-  \noindent\textbf{Case} $\userule{N-And}$ By the induction hypothesis, we have that there exists an $e''$, $s'$ and $i$ such that $t_1',s'\handle{i}e'',s''$. Then by the H-FirstOr rule, we know that we can apply $\First i$ to obtain $t_1'\And t_2',s'\handle{\First i} t_1''\And t_2',s''$
-
-\end{proof}
+\subsubsection{Theorem~\ref{thmfailing}}
 
 \subsubsection{Theorem~\ref{thmsafetyi1}}
 

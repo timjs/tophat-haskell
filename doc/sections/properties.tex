@@ -77,43 +77,97 @@ Lemma~\ref{lemmavaluepreserves} states exactly this poperty, and is proven in th
 appendix by induction over $e$. This subseqently allows us to prove
 Theorem~\ref{thmpresnorm}, again by induction over $e$.
 
+This brings us finally to the type preservation property of the handling semantics.
+
 \begin{theorem}[preservation under handling]
   For all $e$, $s$ and $i$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Gamma,\Sigma\infers s$\\
   if $ e,s \handle{i} e's'$ then $\Gamma,\Sigma\infers e':\tau$ and $\Gamma,\Sigma\infers s'$
    \label{thmpreshandle}
 \end{theorem}
 
-\subsubsection{Progress}
+And again, this is proven by induction over $e$.
 
-\begin{theorem}[Progress of handling]
- For all $e$, $s$ and $i$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Gamma,\Sigma\infers s$\\
- if $e,s \drive{i} e',s'$ then either $\Failing(e')$ or there exists an $e''$ and $i'$ such that $e',s'\handle{i'}e'',s''$
-\end{theorem}
+\subsection{Progress}
 
-which we prove by showing that the following Theorem holds:
+Furthermore, a well-typed term of a task type is guaranteed to progress after
+normalisation, unless it is failing.
+
+We define what we mean with progress in Theorem~\ref{thmprogressnorm}.
+
 \begin{theorem}
-  For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Gamma,\Sigma\infers s$\\
-  if $e,s \normalise e',s'$ then either $\Failing(e')$ or there exists an $e''$, $s''$ and $i$ such that $e',s'\handle{i}e'',s''$
+  For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\Task\tau$ and $\Gamma,\Sigma\infers s$\\
+  if $e,s \bar{\normalise} e',s'$ then either $\Failing(e')$ or there exists an $e''$, $s''$ and $i$ such that $e',s'\handle{i}e'',s''$
   \label{thmprogressnorm}
 \end{theorem}
 
+If an expression $e$ and state $s$ are well-typed, then after normalisation, it
+either fails, or there exists some input $i$ that can be handled by it.
+In order to prove this Theorem to be true, we require two additional theorems.
+
 \subsubsection{Normalisation is Big-Step}
 
+The normalisation semantics is a big-step stemantics. This would be quite
+straight-forward, if we did not have to deal with state. Consider the following
+example.
+
+$(\Update l \Then \lambda x:\Bool .\ \If{x}{e}{\Fail})\And (\Edit l:=\True)$ with $s=\{l\mapsto \False\}$
+
+When we apply N-And in order to normalise the expression above, we obtain
+$(\Update l \Then \lambda x:\Bool .\ \If{x}{e}{\Fail})\And (\Edit \unit)$ with $s'=\{l\mapsto \True\}$
+
+an expression which in fact is not normalised. The issue here lies in the fact
+that $s$ gets updated, and allows the first component of $\And$ to be further
+normalised, in this case to $e$. To overcome this problem, the N-Stable and
+N-Memory rules have been added. They ensure that normalisation is applied untill
+the shared memory $s$ has become stable and no further normalisation can be
+applied.
+
+To prove that this is true, and that therefore normalisation is a big-step
+semantics, we show the following theorem to be true.
+
 \begin{theorem}
   For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Gamma,\Sigma\infers s$\\
-  if $e,s\normalise e',s'$ and $e',s'\normalise e'',s''$, then $e'\equiv e''$ and $s'\equiv s''$.
+  if $e,s\bar{\normalise} e',s'$ and $e',s'\bar{\normalise} e'',s''$, then $e'\equiv e''$ and $s'\equiv s''$.
+  \label{thmnormisbigstep}
 \end{theorem}
 
-\subsubsection{Failing means no interaction possible}
+\subsubsection{Failing}
 
-\begin{theorem}
+We then show that the failing function $\Failing$ behaves as desired.
+
+\begin{theorem}[Failing means no interaction possible]
   For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Gamma,\Sigma\infers s$\\
-  if $\Failing(e,s)\equiv \True$, then $e,s\normalise e',s'$ implies $e\equiv e'$ and $s\equiv s'$\\
+  if $\Failing(e,s)\equiv \True$, then $e,s\bar{\normalise} e',s'$ implies $e\equiv e'$ and $s\equiv s'$\\
   and there is no $i$ such that $e,s\handle{i}e',s'$ for some $e'$ and $s'$.
+  \label{thmfailing}
 \end{theorem}
 
+The Theorem above states that an expression $e$ and state $s$ are failing, if no
+normalisation can be applied, and there exists no input that can be handled by it.
+We prove the theorem to be true by induction on $e$.
 
-\subsubsection{Safety of Inputs function}
+\subsubsection{Proof}
+
+We now have the ingredients to prove Theorem~\ref{thmprogressnorm}.
+
+\begin{proof}
+  Given $\Gamma,\Sigma\infers e:\Task\tau$ and $\Gamma,\Sigma\infers s$ and after
+  normalisation $e,s \normalise e',s'$, we find ourselves in either one of the
+  following situations:\\
+
+  There exists an $i$ such that $e',s'\handle{i}\_,\_$. \qed\\
+
+  There does not exist an $i$ such that $e',s'\handle{i}\_,\_$. In this case, we
+  know that $\Failing(e',s')$ must be true, since Theorem~\ref{thmnormisbigstep}
+  gives us that $e',s'$ can not be normalised further and we assumed that there
+  is no possible input that can be handled.
+\end{proof}
+
+
+
+
+
+\subsection{Safety of Inputs function}
 
 \begin{theorem}
   For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Gamma,\Sigma\infers s$\\
