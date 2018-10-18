@@ -136,15 +136,14 @@ semantics, we show the following theorem to be true.
 We then show that the failing function $\Failing$ behaves as desired.
 
 \begin{theorem}[Failing means no interaction possible]
-  For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Gamma,\Sigma\infers s$\\
-  if $\Failing(e,s)\equiv \True$, then $e,s\bar{\normalise} e',s'$ implies $e\equiv e'$ and $s\equiv s'$\\
-  and there is no $i$ such that $e,s\handle{i}e',s'$ for some $e'$ and $s'$.
+  For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\Task\tau$ and $\Gamma,\Sigma\infers s$\\
+  and $e,s\normalise e',s'$, then $\Failing(e',s')\equiv \True$, if and only if there is no $i$ such that $e',s'\handle{i}e'',s''$ for some $e''$ and $s''$.
   \label{thmfailing}
 \end{theorem}
 
-The Theorem above states that an expression $e$ and state $s$ are failing, if no
-normalisation can be applied, and there exists no input that can be handled by it.
-We prove the theorem to be true by induction on $e$.
+The Theorem above states that an expression $e$ and state $s$ are failing, if,
+after normalisation, there exists no input that can be handled by it.
+We prove the theorem to be true by induction on $e'$.
 
 \subsubsection{Proof}
 
