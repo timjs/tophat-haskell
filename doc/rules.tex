@@ -143,9 +143,9 @@
 
 \newrule{E-App}
   {e_1,s\evaluate \lambda x:\tau.e_1',s'\\
-   e_2,s'\evaluate e_2,s''\\
-   e_1'[x\mapsto v_2],s''\evaluate v_1,s''}
-  {e_1 e_2,s \evaluate v_1,s''}
+   e_2,s'\evaluate v_2,s''\\
+   e_1'[x\mapsto v_2],s''\evaluate v_1,s'''}
+  {e_1 e_2,s \evaluate v_1,s'''}
 
 \newrule{E-IfTrue}
     {e_1,s\evaluate \True,s'\\
