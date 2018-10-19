@@ -56,7 +56,7 @@
         \Value(t_1 \Or t_2, s)   &=& \left\{
           \begin{array}{ll}
             v_1               & \when\ \Value(t_1, s) = v_1 \\
-            v_2               & \when\ \Value(t_1, s) = \bot \lor \Value(t_2, s) = v_2 \\
+            v_2               & \when\ \Value(t_1, s) = \bot \land \Value(t_2, s) = v_2 \\
             \bot              & \otherwise
           \end{array}
         \right. \\
