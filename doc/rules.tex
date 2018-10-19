@@ -61,8 +61,8 @@
   {\Gamma,\Sigma\infers\ !e:\tau}
 
 \newrule{T-Loc}
-  {\Sigma(l):\tau}
-  {\Gamma,\Sigma\infers l:\tau}
+  {\Sigma(l) = \tau}
+  {\Gamma,\Sigma\infers l:\Reference \tau}
 
 \newrule{T-Assign}
   {\Gamma,\Sigma\infers e_1:\Reference \tau\\
