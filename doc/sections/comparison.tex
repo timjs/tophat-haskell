@@ -55,6 +55,19 @@ The process $(x:B \to P(x))$ then reacts as if it receives the action \textit{in
 To send a value to this process, the environment has to provide an action with a concrete number, for example $\textit{in}.7$.
 Sending is therefore the willingness to engage in one concrete action of a given form, while receiving is the willingness to engage in any action of this form.
 
+In TOP, communication with the environment is represented by editors.
+A task of the form $\Enter \tau$ can receive any change event with a value of type $\tau$.
+A task of the form $\Edit v$, where $v$ is of type $\tau$, can receive the same
+events, and additionally the special event $\Empty$ that empties the editor.
+The environment can always inspect the current value of an editor.
+
+Editors have no notion of continuation.
+Their sole purpose is to interact with the environment, retaining the last value that has been sent to them.
+
+Editors can be used for both input and output.
+The interpretation of whether an editor represents input or output is left to the reader.
+An empty editor is most commonly interpreted as a prompt to input data, while a filled editor can be seen either as outputting its value, or as an input that comes with a default value.
+
 
 \subsubsection*{Communication between subsystems}
 Concealment vs. shared data and monadic bind
