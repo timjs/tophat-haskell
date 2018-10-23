@@ -14,12 +14,22 @@ Third, we provide some example problems and illustrate how they can be solved in
 
 \subsection{Scope}
 
+The central goal of CSP is to model the patters of behaviour of processes.
+These patterns of behaviour manifest themselves in sequences of actions that actors can perform.
+
+The central goal of TOP is to coordinate the collaboration between people who work in a team to reach a common goal.
+
 \subsection{Features}
 
+In this section we focus on certain features common to TOP and CSP, and study their respective realization.
+When we point out differences, we do not argue that the different realizations are incompatible.
+As a matter of fact the primitives can certainly be expressed in terms of each other, with more or less effort.
+Instead, we point out how the systems emphasize certain points of view by choosing different basic building blocks.
+
 \begin{itemize}
-\item Prefixing, communication with the environment
-\item Concealment, communication between subsystems
-\item Sequential composition
+\item Communication with the environment: prefixing vs. editors
+\item Communication between subsystems: concealment vs. shared data and monadic bind
+\item Sequential composition: success vs. monadic bind
 \item Concurrency, parallel composition
 \item Synchronization
 \item Nondeterminism
