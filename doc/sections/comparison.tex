@@ -34,7 +34,24 @@ As a matter of fact the primitives can certainly be expressed in terms of each o
 Instead, we point out how the systems emphasize certain points of view by choosing different basic building blocks.
 
 \subsubsection*{Communication with the environment}
-Prefixing vs. editors
+
+In CSP, communication with the environment is represented by prefixing.
+The process $(a \to P)$ can engage in action $a$, after which it continues as process $P$.
+In general, if $B$ is a set of events and $P(x)$ is an expression that evaluates to a process for each $x \in B$, the process $(x:B \to P(x))$ can engage in any one of the actions in $B$, after which it continues as the process determined by $P(x)$.
+Hoare does not specify the language in which $P(x)$ is to be expressed.
+He seems to permit any kind of mathematical formula, or any programming language.
+
+Pure prefixing has no direction of sending and receiving.
+The interpretation of whether an action stands for input or output is left to the reader.
+For example, a vending machine $P = (\textit{coin} \to \textit{choc} \to P)$ is to be interpreted as taking a coin as input and producing chocolate as output.
+
+Sending and receiving of values is modelled by giving additional structure to the names of actions.
+For example, an action name could be of the form $\textit{in}.5$.
+Let's take as the set $B$ all actions $\textit{in}.n$ for all $n \in \mathbb{N}$.
+Let $P(x)$ be an expression that for a given action of this form employs a parser that extracts the number after the dot, the process $(x:B \to P(x))$ reacts as if it receives the action \textit{in}, parameterized with a number.
+To send a value to this process, the environment has to provide an appropriate action with a concrete number, for example $\textit{in}.7$.
+Sending is therefore the willingness to engage in one concrete action of a given form, while receiving is the willingness to engage in any action of this form.
+
 
 \subsubsection*{Communication between subsystems}
 Concealment vs. shared data and monadic bind
