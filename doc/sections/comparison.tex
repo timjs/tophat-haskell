@@ -68,6 +68,9 @@ Editors can be used for both input and output.
 The interpretation of whether an editor represents input or output is left to the reader.
 An empty editor is most commonly interpreted as a prompt to input data, while a filled editor can be seen either as outputting its value, or as an input that comes with a default value.
 
+In TOP, event values are typed to match the type of the receiving editor.
+In CSP, action names are essentially strings, subject to implicit restrictions.
+
 
 \subsubsection*{Communication between subsystems}
 Concealment vs. shared data and monadic bind
