@@ -2,7 +2,8 @@
 
 \section{Comparison}
 
-In this section we compare TOP with Hoare's Communicating Sequential Processes (CSP) \cite{books/Hoare85CSP}.
+In this section we compare TOP with Hoare's Communicating Sequential Processes (CSP).
+The discussion here is based on the book by \citet{books/Hoare85CSP}.
 We chose CSP as an example to stand for the numerous process algebras in existence, which, as far as this section is concerned, are reasonably similar.
 Notions like communication with the environment and between subsystems, concurrency, and sequential composition can be found in both TOP and in process algebras.
 This raises the question of how these systems relate.
@@ -41,14 +42,16 @@ In general, if $B$ is a set of events and $P(x)$ is an expression that evaluates
 Hoare does not specify the language in which $P(x)$ is to be expressed.
 He seems to permit any kind of mathematical formula, or any programming language.
 
-Pure prefixing has no direction of sending and receiving.
+Prefixing has no direction of sending and receiving.
+Hoare uses the neutral phrase \emph{engaging in an action}.
 The interpretation of whether an action stands for input or output is left to the reader.
 For example, a vending machine $P = (\textit{coin} \to \textit{choc} \to P)$ is to be interpreted as taking a coin as input and producing chocolate as output.
 
 Sending and receiving of values is modelled by giving additional structure to the names of actions.
 For example, an action name could be of the form $\textit{in}.5$.
-Let's take as the set $B$ all actions $\textit{in}.n$ for all $n \in \mathbb{N}$.
-Let $P(x)$ be an expression that for a given action of this form employs a parser that extracts the number after the dot, the process $(x:B \to P(x))$ reacts as if it receives the action \textit{in}, parameterized with a number.
+Let $B$ be the set of all actions $\textit{in}.n$ for all $n \in \mathbb{N}$.
+Let $P(x)$ be an expression that for a given action of this form employs a parser that extracts the number after the dot.
+The process $(x:B \to P(x))$ reacts as if it receives the action \textit{in}, parameterized with a number.
 To send a value to this process, the environment has to provide an action with a concrete number, for example $\textit{in}.7$.
 Sending is therefore the willingness to engage in one concrete action of a given form, while receiving is the willingness to engage in any action of this form.
 
