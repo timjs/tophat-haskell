@@ -6,7 +6,7 @@ module Data.Task.Equality
   , prop_choose_left_absorbtion, prop_choose_left_catch, prop_choose_idempotent
   , prop_choose_not_commutative
   , prop_step_left_identity, prop_step_right_identity, prop_step_assocaitivity, prop_step_left_anihilation
-  , prop_pick_distributive 
+  , prop_pick_distributive
   ) where
 
 
@@ -170,23 +170,26 @@ prop_choose_not_commutative t1 t2 = unsafePerformIO $
 -- Monad --
 
 
-prop_step_left_identity :: Int -> TaskIO Int -> Bool
-prop_step_left_identity x t = unsafePerformIO $
+type Bind = TaskIO Int -> (Int -> TaskIO Int) -> TaskIO Int
+
+
+prop_step_left_identity :: Bind -> Int -> TaskIO Int -> Bool
+prop_step_left_identity (>>-) x t = unsafePerformIO $
   edit x >>- (\_ -> t) === t
 
 
-prop_step_right_identity :: TaskIO Int -> Bool
-prop_step_right_identity t = unsafePerformIO $
+prop_step_right_identity :: Bind -> TaskIO Int -> Bool
+prop_step_right_identity (>>-) t = unsafePerformIO $
   t >>- (\y -> edit y) === t
 
 
-prop_step_assocaitivity :: TaskIO Int -> TaskIO Int -> TaskIO Int -> Bool
-prop_step_assocaitivity r s t = unsafePerformIO $
+prop_step_assocaitivity :: Bind -> TaskIO Int -> TaskIO Int -> TaskIO Int -> Bool
+prop_step_assocaitivity (>>-) r s t = unsafePerformIO $
   (r >>- (\_ -> s)) >>- (\_ -> t) === r >>- (\_ -> s >>- (\_ -> t))
 
 
-prop_step_left_anihilation :: TaskIO Int -> Bool
-prop_step_left_anihilation t = unsafePerformIO $
+prop_step_left_anihilation :: Bind -> TaskIO Int -> Bool
+prop_step_left_anihilation (>>-) t = unsafePerformIO $
   fail >>- (\_ -> t) === fail
 
 
