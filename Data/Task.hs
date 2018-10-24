@@ -5,7 +5,7 @@ module Data.Task
   , normalise, initialise, handle, drive
   -- ** Constructors
   , edit, enter, update
-  , lift, (|&|), (|!|), (|?|), fail, (>>!), (>>?)
+  , lift, (-&&-), (&&-), (-&&), (-||-), (-??-), fail, (>>-), (>>?)
   , label, delabel, keeper
   -- ** Reexports
   , Label

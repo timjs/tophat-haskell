@@ -1,11 +1,12 @@
 module Data.Task.Equality
-  ( (===), (~=)
+  ( (===), (!==), (~=)
   , prop_equal_val, prop_failing_preserved
   , prop_pair_left_identity, prop_pair_right_identity, prop_pair_associativity, prop_pair_swap
   , prop_choose_left_identity, prop_choose_right_identity, prop_choose_associativity
   , prop_choose_left_absorbtion, prop_choose_left_catch, prop_choose_idempotent
   , prop_choose_not_commutative
   , prop_step_left_identity, prop_step_right_identity, prop_step_assocaitivity, prop_step_left_anihilation
+  , prop_pick_distributive 
   ) where
 
 
@@ -108,22 +109,22 @@ prop_failing_preserved t = unsafePerformIO $ do
 
 prop_pair_left_identity :: TaskIO Int -> Bool
 prop_pair_left_identity t = unsafePerformIO $
-  lift fst (t |&| edit ()) === t
+  lift fst (t -&&- edit ()) === t
 
 
 prop_pair_right_identity :: TaskIO Int -> Bool
 prop_pair_right_identity t = unsafePerformIO $
-  lift snd (edit () |&| t) === t
+  lift snd (edit () -&&- t) === t
 
 
 prop_pair_associativity :: TaskIO Int -> TaskIO Int -> TaskIO Int -> Bool
 prop_pair_associativity r s t = unsafePerformIO $
-  lift assoc (r |&| (s |&| t)) === (r |&| s) |&| t
+  lift assoc (r -&&- (s -&&- t)) === (r -&&- s) -&&- t
 
 
 prop_pair_swap :: TaskIO Int -> TaskIO Int -> Bool
 prop_pair_swap s t = unsafePerformIO $
-  lift swap (s |&| t) === t |&| s
+  lift swap (s -&&- t) === t -&&- s
 
 
 
@@ -132,37 +133,37 @@ prop_pair_swap s t = unsafePerformIO $
 
 prop_choose_left_identity :: TaskIO Int -> Bool
 prop_choose_left_identity t = unsafePerformIO $
-  fail |!| t === t
+  fail -||- t === t
 
 
 prop_choose_right_identity :: TaskIO Int -> Bool
 prop_choose_right_identity t = unsafePerformIO $
-  t |!| fail === t
+  t -||- fail === t
 
 
 prop_choose_associativity :: TaskIO Int -> TaskIO Int -> TaskIO Int -> Bool
 prop_choose_associativity r s t = unsafePerformIO $
-  r |!| (s |!| t) === (r |!| s) |!| t
+  r -||- (s -||- t) === (r -||- s) -||- t
 
 
 prop_choose_left_absorbtion :: TaskIO Int -> Bool
 prop_choose_left_absorbtion t = unsafePerformIO $
-  fail >>! (\_ -> t) === fail
+  fail >>- (\_ -> t) === fail
 
 
 prop_choose_left_catch :: Int -> TaskIO Int -> Bool
 prop_choose_left_catch x t = unsafePerformIO $
-  edit x |!| t === edit x
+  edit x -||- t === edit x
 
 
 prop_choose_idempotent :: TaskIO Int -> Bool
 prop_choose_idempotent t = unsafePerformIO $
-  t |!| t === t
+  t -||- t === t
 
 
 prop_choose_not_commutative :: TaskIO Int -> TaskIO Int -> Bool
 prop_choose_not_commutative t1 t2 = unsafePerformIO $
-  t1 |!| t2 === t2 |!| t1
+  t1 -||- t2 === t2 -||- t1
 
 
 
@@ -171,22 +172,31 @@ prop_choose_not_commutative t1 t2 = unsafePerformIO $
 
 prop_step_left_identity :: Int -> TaskIO Int -> Bool
 prop_step_left_identity x t = unsafePerformIO $
-  edit x >>! (\_ -> t) === t
+  edit x >>- (\_ -> t) === t
 
 
 prop_step_right_identity :: TaskIO Int -> Bool
 prop_step_right_identity t = unsafePerformIO $
-  t >>! (\y -> edit y) === t
+  t >>- (\y -> edit y) === t
 
 
 prop_step_assocaitivity :: TaskIO Int -> TaskIO Int -> TaskIO Int -> Bool
 prop_step_assocaitivity r s t = unsafePerformIO $
-  (r >>! (\_ -> s)) >>! (\_ -> t) === r >>! (\_ -> s >>! (\_ -> t))
+  (r >>- (\_ -> s)) >>- (\_ -> t) === r >>- (\_ -> s >>- (\_ -> t))
 
 
 prop_step_left_anihilation :: TaskIO Int -> Bool
 prop_step_left_anihilation t = unsafePerformIO $
-  fail >>! (\_ -> t) === fail
+  fail >>- (\_ -> t) === fail
+
+
+
+-- External --
+
+
+prop_pick_distributive :: TaskIO Int -> TaskIO Int -> TaskIO Int -> Bool
+prop_pick_distributive r s t = unsafePerformIO $
+  (r -??- s) >>- (\_ -> t) === (r >>- \_ -> t) -??- (s >>- \_ -> t)
 
 
 

@@ -2,7 +2,7 @@ module Data.Task.Internal
   ( TaskT(..)
   , Label
   , edit, enter, update
-  , lift, (|&|), (|!|), (|?|), fail, (>>!), (>>?)
+  , lift, (-&&-), (&&-), (-&&), (-||-), (-??-), fail, (>>-), (>>?)
   , label, delabel, keeper
   , module Control.Monad.Ref
   , module Data.Basic
@@ -22,13 +22,9 @@ import Data.Basic (Basic)
 import GHC.Show (Show(showsPrec), ShowS, showString, showParen)
 
 
-infixl 5 |&|
-infixl 3 |!|, |?|
-infixl 2 >>!, >>?
-
--- -&&-, -&&, &&-
--- -||-, -??-
--- >>-, >>?
+infixl 5 -&&-, -&&, &&-
+infixl 3 -||-, -??-
+infixl 2 >>-, >>?
 
 
 
@@ -84,22 +80,22 @@ instance Show (TaskT l m a) where
     showParen (d > p) $ showString "Store"
       where p = 10
   showsPrec d (And left rght) =
-    showParen (d > p) $ showsPrec (succ p) left . showString " |&| " . showsPrec (succ p) rght
+    showParen (d > p) $ showsPrec (succ p) left . showString " -&&- " . showsPrec (succ p) rght
       where p = 5
   showsPrec d (Or left rght) =
-    showParen (d > p) $ showsPrec (succ p) left . showString " |!| " . showsPrec (succ p) rght
+    showParen (d > p) $ showsPrec (succ p) left . showString " -||- " . showsPrec (succ p) rght
       where p = 3
   showsPrec d (Xor left rght)  =
     case ( delabel left, delabel rght ) of
-      ( Xor _ _, Xor _ _ ) -> showParen (d > p) $               showsPrec (succ p) left . showString " |?| " . showsPrec (succ p) rght
-      ( Xor _ _, _ )       -> showParen (d > p) $               showsPrec (succ p) left . showString " |?| " . showText (fromMaybe "…" $ label rght)
-      ( _, Xor _ _ )       -> showParen (d > p) $ showText (fromMaybe "…" $ label left) . showString " |?| " . showsPrec (succ p) rght
-      ( _, _ )             -> showParen (d > p) $ showText (fromMaybe "…" $ label left) . showString " |?| " . showText (fromMaybe "…" $ label rght)
+      ( Xor _ _, Xor _ _ ) -> showParen (d > p) $               showsPrec (succ p) left . showString " -??- " . showsPrec (succ p) rght
+      ( Xor _ _, _ )       -> showParen (d > p) $               showsPrec (succ p) left . showString " -??- " . showText (fromMaybe "…" $ label rght)
+      ( _, Xor _ _ )       -> showParen (d > p) $ showText (fromMaybe "…" $ label left) . showString " -??- " . showsPrec (succ p) rght
+      ( _, _ )             -> showParen (d > p) $ showText (fromMaybe "…" $ label left) . showString " -??- " . showText (fromMaybe "…" $ label rght)
       where p = 3
   showsPrec _ (Fail) =
     showString "Fail"
   showsPrec d (Then this _) =
-    showParen (d > p) $ showsPrec (succ p) this . showString " >>! …"
+    showParen (d > p) $ showsPrec (succ p) this . showString " >>- …"
       where p = 1
   showsPrec d (Next this _) =
     showParen (d > p) $ showsPrec (succ p) this . showString " >>? …"
@@ -118,7 +114,7 @@ showText = showString . toS
 
 
 lift :: Basic b => (a -> b) -> TaskT l m a -> TaskT l m b
-lift f t = (>>!) t (\x -> edit (f x))
+lift f t = (>>-) t (\x -> edit (f x))
 
 
 
@@ -137,8 +133,16 @@ update :: MonadRef l m => Basic a => l a -> TaskT l m a
 update r = Store r
 
 
-(|&|) :: TaskT l m a -> TaskT l m b -> TaskT l m ( a, b )
-(|&|) = And
+(-&&-) :: TaskT l m a -> TaskT l m b -> TaskT l m ( a, b )
+(-&&-) = And
+
+
+(-&&) :: Basic a => TaskT l m a -> TaskT l m b -> TaskT l m a
+ta -&& tb = lift fst $ ta -&&- tb
+
+
+(&&-) :: Basic b => TaskT l m a -> TaskT l m b -> TaskT l m b
+ta &&- tb = lift snd $ ta -&&- tb
 
 
 -- apply' :: TaskT l m (a -> b) -> TaskT l m a -> TaskT l m b
@@ -153,20 +157,20 @@ fail :: TaskT l m a
 fail = Fail
 
 
-(|!|) :: TaskT l m a -> TaskT l m a -> TaskT l m a
-(|!|) = Or
+(-||-) :: TaskT l m a -> TaskT l m a -> TaskT l m a
+(-||-) = Or
 
 
-(|?|) :: TaskT l m a -> TaskT l m a -> TaskT l m a
-(|?|) = Xor
+(-??-) :: TaskT l m a -> TaskT l m a -> TaskT l m a
+(-??-) = Xor
 
 
 
 -- Monad --
 
 
-(>>!) :: TaskT l m b -> (b -> TaskT l m a) -> TaskT l m a
-(>>!) = Then
+(>>-) :: TaskT l m b -> (b -> TaskT l m a) -> TaskT l m a
+(>>-) = Then
 
 
 (>>?) :: TaskT l m a -> (a -> TaskT l m b) -> TaskT l m b
@@ -183,10 +187,10 @@ instance Arbitrary (TaskT l m Int) where
       [ arbitrary >>= (pure . edit)
       -- , arbitrary >>= (pure . update)
       , mkpair
-      , (|!|) <$> arbitrary <*> arbitrary
-      , (|?|) <$> arbitrary <*> arbitrary
+      , (-||-) <$> arbitrary <*> arbitrary
+      , (-??-) <$> arbitrary <*> arbitrary
       , pure fail
-      , (>>!) <$> (arbitrary :: Gen (TaskT l m Int)) <*> arbitrary
+      , (>>-) <$> (arbitrary :: Gen (TaskT l m Int)) <*> arbitrary
       , (>>?) <$> (arbitrary :: Gen (TaskT l m Int)) <*> arbitrary
       -- , Label <$> (arbitrary :: Gen Label) <*> arbitrary
       ]
@@ -195,7 +199,7 @@ instance Arbitrary (TaskT l m Int) where
         l <- arbitrary
         r <- arbitrary
         let c = \( x, y ) -> edit (x + y)
-        pure $ (l |&| r) >>! c
+        pure $ (l -&&- r) >>- c
 
 
 
