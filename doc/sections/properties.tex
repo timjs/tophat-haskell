@@ -47,7 +47,7 @@ We show that the following three preservation Theorems hold.
       For all $e$ and $s$ such that
       $\Gamma,\Sigma\infers e:\tau$ and $\Gamma\St{}\infers s$\\
       if $e,s\evaluate e',s'$
-      then $\Gamma,\Sigma\infers e':\tau$ and $\Gamma,\Sigma\infers s'$
+      then $\Gamma,\Sigma\infers e':\tau$ and $\Sigma\infers s'$
       \label{thmpreseval}
 \end{theorem}
 
@@ -59,8 +59,8 @@ Moving on, we show that normalisation also preserves, by showing that the
 following Theorem holds.
 
 \begin{theorem}[preservation under normalisation]
-    For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Gamma,\Sigma\infers s$\\
-    if   $e,s \normalise e',s'$ then $\Gamma,\Sigma\infers e':\tau$ and $\Gamma,\Sigma\infers s'$
+    For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Sigma\infers s$\\
+    if   $e,s \normalise e',s'$ then $\Gamma,\Sigma\infers e':\tau$ and $\Sigma\infers s'$
     \label{thmpresnorm}
 \end{theorem}
 
@@ -68,7 +68,7 @@ Since this semantics makes use of the value function $\Value$, we first need to
 show that this function also preserves types.
 
 \begin{lemma}[Task value preserves]
-  For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\Task\tau$ and $\Gamma,\Sigma\infers s$\\
+  For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\Task\tau$ and $\Sigma\infers s$\\
   if $\Value{(e,s)}=v$ then $v:\tau$
   \label{lemmavaluepreserves}
 \end{lemma}
@@ -80,8 +80,8 @@ Theorem~\ref{thmpresnorm}, again by induction over $e$.
 This brings us finally to the type preservation property of the handling semantics.
 
 \begin{theorem}[preservation under handling]
-  For all $e$, $s$ and $i$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Gamma,\Sigma\infers s$\\
-  if $ e,s \handle{i} e's'$ then $\Gamma,\Sigma\infers e':\tau$ and $\Gamma,\Sigma\infers s'$
+  For all $e$, $s$ and $i$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Sigma\infers s$\\
+  if $ e,s \handle{i} e's'$ then $\Gamma,\Sigma\infers e':\tau$ and $\Sigma\infers s'$
    \label{thmpreshandle}
 \end{theorem}
 
@@ -95,7 +95,7 @@ normalisation, unless it is failing.
 We define what we mean with progress in Theorem~\ref{thmprogressnorm}.
 
 \begin{theorem}
-  For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\Task\tau$ and $\Gamma,\Sigma\infers s$\\
+  For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\Task\tau$ and $\Sigma\infers s$\\
   if $e,s \bar{\normalise} e',s'$ then either $\Failing(e')$ or there exists an $e''$, $s''$ and $i$ such that $e',s'\handle{i}e'',s''$
   \label{thmprogressnorm}
 \end{theorem}
@@ -126,7 +126,7 @@ To prove that this is true, and that therefore normalisation is a big-step
 semantics, we show the following theorem to be true.
 
 \begin{theorem}
-  For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Gamma,\Sigma\infers s$\\
+  For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Sigma\infers s$\\
   if $e,s\bar{\normalise} e',s'$ and $e',s'\bar{\normalise} e'',s''$, then $e'\equiv e''$ and $s'\equiv s''$.
   \label{thmnormisbigstep}
 \end{theorem}
@@ -136,7 +136,7 @@ semantics, we show the following theorem to be true.
 We then show that the failing function $\Failing$ behaves as desired.
 
 \begin{theorem}[Failing means no interaction possible]
-  For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\Task\tau$ and $\Gamma,\Sigma\infers s$\\
+  For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\Task\tau$ and $\Sigma\infers s$\\
   and $e,s\normalise e',s'$, then $\Failing(e',s')\equiv \True$, if and only if there is no $i$ such that $e',s'\handle{i}e'',s''$ for some $e''$ and $s''$.
   \label{thmfailing}
 \end{theorem}
@@ -150,7 +150,7 @@ We prove the theorem to be true by induction on $e'$.
 We now have the ingredients to prove Theorem~\ref{thmprogressnorm}.
 
 \begin{proof}
-  Given $\Gamma,\Sigma\infers e:\Task\tau$ and $\Gamma,\Sigma\infers s$ and after
+  Given $\Gamma,\Sigma\infers e:\Task\tau$ and $\Sigma\infers s$ and after
   normalisation $e,s \normalise e',s'$, we find ourselves in either one of the
   following situations:\\
 
@@ -169,13 +169,13 @@ We now have the ingredients to prove Theorem~\ref{thmprogressnorm}.
 \subsection{Safety of Inputs function}
 
 \begin{theorem}
-  For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Gamma,\Sigma\infers s$\\
+  For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Sigma\infers s$\\
   if $i\in\Inputs{(e)}$ then $e,s\handle{i}e',s'$
   \label{thmsafetyi1}
 \end{theorem}
 
 \begin{theorem}
-  For all $e$, $s$ and $i$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Gamma,\Sigma\infers s$\\
+  For all $e$, $s$ and $i$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Sigma\infers s$\\
   if $e,s\handle{i}e',s'$ then  $i\in\Inputs{(e)}$
   \label{thmsafetyi2}
 \end{theorem}
