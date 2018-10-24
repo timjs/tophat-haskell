@@ -1,14 +1,12 @@
 module Data.Task.Input
-  ( Path(..), Action(..), Input(..)
-  , strip, (~?)
+  ( Path(..), Action(..), Dummy(..), Input(..)
+  , dummyfy, strip
   ) where
 
 
 import Preload
 
 import Data.Task.Internal
-
-infix 6 ~?
 
 
 
@@ -27,49 +25,82 @@ instance Pretty Path where
 
 
 
--- Inputs and Actions ----------------------------------------------------------
+-- Inputs ----------------------------------------------------------------------
+
+-- Real actions --
 
 
 data Action :: Type where
-  Change :: Basic b => Maybe b -> Action
-  Empty :: Action
-  Pick :: Path -> Action
-  -- PickWith :: Label -> Action
-  Continue :: Action
+  Change       :: Basic b => b -> Action
+  Empty        :: Action
+  Pick         :: Path -> Action
+  Continue     :: Action
+  -- PickWith     :: Label -> Action
   -- ContinueWith :: Label -> Action
 
 
 instance Eq Action where
   Change x == Change y
     | Just Refl <- sameT x y = x == y
-    | otherwise = False
-  Empty == Empty = True
-  Pick x == Pick y = x == y
-  -- PickWith x == PickWith y = x == y
-  Continue == Continue = True
-  -- ContinueWith x  == ContinueWith y = x == y
-  _ == _ = False
+    | otherwise              = False
+  Empty    == Empty          = True
+  Pick x   == Pick y         = x == y
+  Continue == Continue       = True
+  _        == _              = False
 
 
 instance Pretty Action where
-  pretty (Change _)       = "change <val>"
-  pretty (Empty)          = "empty"
-  pretty (Pick p)         = "pick" <> pretty p
-  -- pretty (PickWith l)     = "pick " <> l
-  pretty (Continue)       = "cont"
-  -- pretty (ContinueWith l) = "cont " <> l
+  pretty (Change x) = "change " <> show x
+  pretty (Empty)    = "empty"
+  pretty (Pick p)   = "pick" <> pretty p
+  pretty (Continue) = "cont"
 
 
-data Input
-  = ToLeft Input
-  | ToHere Action
-  | ToRight Input
-  deriving (Eq)
+
+-- Dummy actions --
 
 
-instance Pretty Input where
+data Dummy :: Type where
+  AChange       :: Basic b => Proxy b -> Dummy
+  AEmpty        :: Dummy
+  APick         :: Path -> Dummy
+  AContinue     :: Dummy
+  -- APickWith     :: Label -> Dummy
+  -- AContinueWith :: Label -> Dummy
+
+
+instance Eq Dummy where
+  AChange x == AChange y
+    -- We're comparing proxies, they are always equal when the types are equal.
+    | Just Refl <- sameT x y = True
+    | otherwise              = False
+  AEmpty    == AEmpty        = True
+  APick x   == APick y       = x == y
+  AContinue == AContinue     = True
+  _         == _             = False
+
+
+instance Pretty Dummy where
+  pretty (AChange _) = "change <val>"
+  pretty (AEmpty)    = "empty"
+  pretty (APick p)   = "pick" <> pretty p
+  pretty (AContinue) = "cont"
+
+
+
+-- Inputs --
+
+
+data Input a
+  = ToLeft (Input a)
+  | ToHere a
+  | ToRight (Input a)
+  deriving (Eq, Functor)
+
+
+instance Pretty a => Pretty (Input a) where
   pretty (ToLeft e)  = "l " <> pretty e
-  pretty (ToHere a)   = pretty a
+  pretty (ToHere a)  = pretty a
   pretty (ToRight e) = "r " <> pretty e
 
 
@@ -77,27 +108,12 @@ instance Pretty Input where
 -- Conformance -----------------------------------------------------------------
 
 
--- | A GADT representing some basic value `b` or no value at all.
-data Stripped :: Type where
-  Some :: Basic b => b -> Stripped
-  None :: Stripped
+dummyfy :: Action -> Dummy
+dummyfy (Change x) = AChange (proxyOf x)
+dummyfy Empty      = AEmpty
+dummyfy (Pick p)   = APick p
+dummyfy Continue   = AContinue
 
 
-instance Eq Stripped where
-  Some x == Some y
-    | Just Refl <- sameT x y = x == y
-    | otherwise = False
-  None == None = True
-  _ == _ = False
-
-
-strip :: Input -> Stripped
-strip (ToHere (Change (Just v))) = Some v
-strip (ToHere (Change Nothing))  = None
-strip (ToHere _)                 = None
-strip (ToLeft i)                 = strip i
-strip (ToRight i)                = strip i
-
-
-(~?) :: Input -> Input -> Bool
-i1 ~? i2 = strip i1 == strip i2
+strip :: Input Action -> Input Dummy
+strip = map dummyfy

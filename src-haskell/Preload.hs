@@ -6,7 +6,7 @@ module Preload
   , neutral
   , (<&>), skip
   , forany, forall
-  , sameT
+  , sameT, proxyOf
   ) where
 
 
@@ -70,13 +70,16 @@ forall (x:xs) p = ifM (p x) (forall xs p) (return False)
 
 
 
--- Type equality ---------------------------------------------------------------
+-- Type equality & Proxys ------------------------------------------------------
 
 
 {-# INLINE sameT #-}
 sameT :: ( Typeable a, Typeable b ) => a -> b -> Maybe (a :~: b)
 sameT _ _ = eqT
 
+
+proxyOf :: a -> Proxy a
+proxyOf _ = Proxy
 
 
 -- Pretty printing -------------------------------------------------------------
