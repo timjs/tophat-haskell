@@ -1,10 +1,12 @@
 module Data.Task.Input
   ( Path(..), Action(..), Dummy(..), Input(..)
-  , dummyfy, strip
+  , dummyfy, reify, strip, fill
   ) where
 
 
 import Preload
+
+import Test.QuickCheck (Gen, vectorOf)
 
 import Data.Task.Internal
 
@@ -95,7 +97,7 @@ data Input a
   = ToLeft (Input a)
   | ToHere a
   | ToRight (Input a)
-  deriving (Eq, Functor)
+  deriving (Eq, Functor, Foldable, Traversable)
 
 
 instance Pretty a => Pretty (Input a) where
@@ -110,10 +112,20 @@ instance Pretty a => Pretty (Input a) where
 
 dummyfy :: Action -> Dummy
 dummyfy (Change x) = AChange (proxyOf x)
-dummyfy Empty      = AEmpty
+dummyfy (Empty)    = AEmpty
 dummyfy (Pick p)   = APick p
-dummyfy Continue   = AContinue
+dummyfy (Continue) = AContinue
+
+
+reify :: Dummy -> Gen (List Action)
+reify (AChange p) = map Change <$> vectorOf 5 (arbitraryOf p)
+reify (AEmpty)    = pure [ Empty ]
+reify (APick p)   = pure [ Pick p ]
+reify (AContinue) = pure [ Continue ]
 
 
 strip :: Input Action -> Input Dummy
 strip = map dummyfy
+
+fill :: Input Dummy -> Gen (List (Input Action))
+fill = map sequence << sequence << map reify

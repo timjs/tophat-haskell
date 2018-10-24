@@ -71,7 +71,7 @@ data TaskT :: (Type -> Type) -> (Type -> Type) -> Type -> Type where
 
 instance Show (TaskT l m a) where
   showsPrec d (Edit (Just x)) =
-    showParen (d > p) $ showString "Edit " . showsPrec (succ p) x
+    showParen (d > p) $ showString "Edit " << showsPrec (succ p) x
       where p = 10
   showsPrec d (Edit Nothing) =
     showParen (d > p) $ showString "Edit _"
@@ -80,33 +80,33 @@ instance Show (TaskT l m a) where
     showParen (d > p) $ showString "Store"
       where p = 10
   showsPrec d (And left rght) =
-    showParen (d > p) $ showsPrec (succ p) left . showString " -&&- " . showsPrec (succ p) rght
+    showParen (d > p) $ showsPrec (succ p) left << showString " -&&- " << showsPrec (succ p) rght
       where p = 5
   showsPrec d (Or left rght) =
-    showParen (d > p) $ showsPrec (succ p) left . showString " -||- " . showsPrec (succ p) rght
+    showParen (d > p) $ showsPrec (succ p) left << showString " -||- " << showsPrec (succ p) rght
       where p = 3
   showsPrec d (Xor left rght)  =
     case ( delabel left, delabel rght ) of
-      ( Xor _ _, Xor _ _ ) -> showParen (d > p) $               showsPrec (succ p) left . showString " -??- " . showsPrec (succ p) rght
-      ( Xor _ _, _ )       -> showParen (d > p) $               showsPrec (succ p) left . showString " -??- " . showText (fromMaybe "…" $ label rght)
-      ( _, Xor _ _ )       -> showParen (d > p) $ showText (fromMaybe "…" $ label left) . showString " -??- " . showsPrec (succ p) rght
-      ( _, _ )             -> showParen (d > p) $ showText (fromMaybe "…" $ label left) . showString " -??- " . showText (fromMaybe "…" $ label rght)
+      ( Xor _ _, Xor _ _ ) -> showParen (d > p) $               showsPrec (succ p) left << showString " -??- " << showsPrec (succ p) rght
+      ( Xor _ _, _ )       -> showParen (d > p) $               showsPrec (succ p) left << showString " -??- " << showText (fromMaybe "…" $ label rght)
+      ( _, Xor _ _ )       -> showParen (d > p) $ showText (fromMaybe "…" $ label left) << showString " -??- " << showsPrec (succ p) rght
+      ( _, _ )             -> showParen (d > p) $ showText (fromMaybe "…" $ label left) << showString " -??- " << showText (fromMaybe "…" $ label rght)
       where p = 3
   showsPrec _ (Fail) =
     showString "Fail"
   showsPrec d (Then this _) =
-    showParen (d > p) $ showsPrec (succ p) this . showString " >>- …"
+    showParen (d > p) $ showsPrec (succ p) this << showString " >>- …"
       where p = 1
   showsPrec d (Next this _) =
-    showParen (d > p) $ showsPrec (succ p) this . showString " >>? …"
+    showParen (d > p) $ showsPrec (succ p) this << showString " >>? …"
       where p = 1
   showsPrec d (Label lbl this) =
-    showParen (d > p) $ showText lbl . showString ": " . showsPrec (succ p) this
+    showParen (d > p) $ showText lbl << showString ": " << showsPrec (succ p) this
       where p = 9
 
 
 showText :: Text -> ShowS
-showText = showString . toS
+showText = showString << toS
 
 
 
@@ -184,7 +184,7 @@ fail = Fail
 instance Arbitrary (TaskT l m Int) where
   arbitrary =
     Gen.oneof
-      [ arbitrary >>= (pure . edit)
+      [ arbitrary >>= (pure << edit)
       -- , arbitrary >>= (pure . update)
       , mkpair
       , (-||-) <$> arbitrary <*> arbitrary
