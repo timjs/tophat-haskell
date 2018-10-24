@@ -138,11 +138,11 @@ update r = Store r
 
 
 (-&&) :: Basic a => TaskT l m a -> TaskT l m b -> TaskT l m a
-ta -&& tb = lift fst $ ta -&&- tb
+x -&& y = lift fst $ x -&&- y
 
 
 (&&-) :: Basic b => TaskT l m a -> TaskT l m b -> TaskT l m b
-ta &&- tb = lift snd $ ta -&&- tb
+x &&- y = lift snd $ x -&&- y
 
 
 -- apply' :: TaskT l m (a -> b) -> TaskT l m a -> TaskT l m b
