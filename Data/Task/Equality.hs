@@ -3,6 +3,7 @@ module Data.Task.Equality
   , prop_pair_left_identity, prop_pair_right_identity, prop_pair_associativity
   , prop_choose_left_identity, prop_choose_right_identity, prop_choose_associativity
   , prop_choose_left_absorbtion, prop_choose_left_catch
+  , prop_choose_not_commutative
   , prop_step_left_identity, prop_step_right_identity, prop_step_assocaitivity
   ) where
 
@@ -15,7 +16,7 @@ import Data.Task.Input
 import System.IO.Unsafe
 
 
-infix 1 ===, ~=
+infix 1 ===, !==, ~=
 
 
 
@@ -26,6 +27,12 @@ infix 1 ===, ~=
 t1 === t2 = do
   ( (_, v1), (_, v2) ) <- norm t1 t2
   pure $ v1 == v2
+
+
+(!==) :: Basic a => MonadRef l m => TaskT l m a -> TaskT l m a -> m Bool
+t1 !== t2 = do
+  ( (_, v1), (_, v2) ) <- norm t1 t2
+  pure $ v1 /= v2
 
 
 norm :: MonadRef l m => TaskT l m a -> TaskT l m a -> m ( (TaskT l m a, Maybe a), ( TaskT l m a, Maybe a ) )
@@ -115,6 +122,11 @@ prop_choose_left_absorbtion t = unsafePerformIO $
 prop_choose_left_catch :: Int -> TaskIO Int -> Bool
 prop_choose_left_catch x t = unsafePerformIO $
   edit x |!| t === edit x
+
+
+prop_choose_not_commutative :: TaskIO Int -> TaskIO Int -> Bool
+prop_choose_not_commutative t1 t2 = unsafePerformIO $
+  t1 |!| t2 === t2 |!| t1
 
 
 

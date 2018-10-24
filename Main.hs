@@ -13,6 +13,8 @@ import Test.QuickCheck
 
 main :: IO ()
 main = do
+  putText ">>> Valid properties:"
+
   quickCheck prop_equal_val
   quickCheck prop_normalising_preserves_failing
 
@@ -26,9 +28,14 @@ main = do
   quickCheck prop_choose_left_absorbtion
   quickCheck prop_choose_left_catch
 
-  verboseCheck prop_step_left_identity
+  quickCheck prop_step_left_identity
   quickCheck prop_step_right_identity
   quickCheck prop_step_assocaitivity
+
+  putText ""
+  putText ">>> Invalid properties:"
+
+  quickCheck prop_choose_not_commutative
 
   where
 
