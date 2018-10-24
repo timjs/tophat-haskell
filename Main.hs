@@ -22,25 +22,33 @@ main = do
   quickCheck prop_pair_swap
 
   putText "\n>>> Properties on choice:"
-  quickCheck prop_choose_left_identity
-  quickCheck prop_choose_right_identity
-  quickCheck prop_choose_associativity
-  quickCheck prop_choose_left_absorbtion
-  quickCheck prop_choose_left_catch
-  quickCheck prop_choose_idempotent
-  quickCheck $ expectFailure prop_choose_not_commutative
+  quickCheck (prop_choose_left_identity (-||-))
+  quickCheck (prop_choose_right_identity (-||-))
+  quickCheck (prop_choose_associativity (-||-))
+  quickCheck (prop_choose_left_catch (-||-))
+  quickCheck (prop_choose_idempotent (-||-))
+  quickCheck $ expectFailure (prop_choose_commutative (-||-))
+  quickCheck (prop_choose_distributive (-||-))
 
   putText "\n>>> Properties on external choice:"
-  quickCheck prop_pick_distributive
+  quickCheck $ expectFailure (prop_choose_left_identity (-??-))
+  quickCheck $ expectFailure (prop_choose_right_identity (-??-))
+  quickCheck (prop_choose_associativity (-??-))
+  quickCheck $ expectFailure (prop_choose_left_catch (-??-))
+  quickCheck $ expectFailure (prop_choose_idempotent (-??-))
+  quickCheck (prop_choose_commutative (-??-))
+  quickCheck (prop_choose_distributive (-??-))
 
   putText "\n>>> Properties on steps:"
   quickCheck (prop_step_left_identity (>>-))
   quickCheck (prop_step_right_identity (>>-))
   quickCheck (prop_step_assocaitivity (>>-))
   quickCheck (prop_step_left_anihilation (>>-))
+  quickCheck (prop_step_left_absorption (>>-))
 
   putText "\n>>> Properties on external steps:"
   quickCheck $ expectFailure (prop_step_left_identity (>>?))
   quickCheck $ expectFailure (prop_step_right_identity (>>?))
   quickCheck (prop_step_assocaitivity (>>?))
   quickCheck (prop_step_left_anihilation (>>?))
+  quickCheck (prop_step_left_absorption (>>?))
