@@ -1,5 +1,5 @@
 module Data.Task.Equality
-  ( (===), (!==), (~=)
+  ( (===), (!==) --, (~=)
   , prop_equal_val, prop_failing_preserved
   , prop_pair_left_identity, prop_pair_right_identity, prop_pair_associativity, prop_pair_swap
   , prop_choose_left_identity, prop_choose_right_identity, prop_choose_associativity
@@ -17,7 +17,7 @@ import Data.Task.Input
 import System.IO.Unsafe
 
 
-infix 1 ===, !==, ~=
+infix 1 ===, !== --, ~=
 
 
 
@@ -36,7 +36,10 @@ t1 !== t2 = do
   pure $ v1 /= v2
 
 
-norm :: MonadRef l m => TaskT l m a -> TaskT l m a -> m ( (TaskT l m a, Maybe a), ( TaskT l m a, Maybe a ) )
+norm ::
+  MonadRef l m =>
+  TaskT l m a -> TaskT l m a ->
+  m ( (TaskT l m a, Maybe a), ( TaskT l m a, Maybe a ) )
 norm t1 t2 = do
   t1' <- normalise t1
   t2' <- normalise t2
@@ -46,33 +49,44 @@ norm t1 t2 = do
 
 
 
--- Similarity ------------------------------------------------------------------
+{- Similarity ------------------------------------------------------------------
 
 
-(~=) :: Basic a => MonadTrace NotApplicable m => MonadRef l m => TaskT l m a -> TaskT l m a -> m Bool
-t1 ~= t2 = do
-  ( (t1', v1), (t2', v2) ) <- norm t1 t2
-  if v1 == v2 then do
-    ok12 <- simulating t1' t2'
-    ok21 <- simulating t2' t1'
-    pure $ ok12 && ok21
-  else
-    pure False
+(~=) ::
+  Basic a => MonadTrace NotApplicable m => MonadRef l m =>
+  TaskT l m a -> TaskT l m a ->
+  m Bool
+t1 ~= t2 =
+  --NOTE: Check bisimulation with a maximum recursion depth
+  go 5 t1 t2
 
   where
 
-    simulating t1' t2' = do
-      is1 <- inputs t1'
-      is2 <- inputs t2'
-      forall is1 $ \i1 -> forany is2 $ \i2 -> progressing t1' i1 t2' i2
+    go 0 _ _ =
+      pure True
+    go maxIter t1 t2 = do
+      ( (t1', v1), (t2', v2) ) <- norm t1 t2
+      if v1 == v2 then do
+        ok12 <- simulating maxIter t1' t2'
+        ok21 <- simulating maxIter t2' t1'
+        pure $ ok12 && ok21
+      else
+        pure False
 
-    progressing t1' i1 t2' i2
-      | i1 ~? i2 = do
-          t1'' <- handle t1' i1
-          t2'' <- handle t2' i2
-          t1'' ~= t2''
-      | otherwise =
-          pure True
+    simulating maxIter t1' t2' = do
+      is1 <- map fill <$> inputs t1'
+      is2 <- map fill <$> inputs t2'
+      forall is1 $ \i1 -> forany is2 $ \i2 -> progressing maxIter t1' i1 t2' i2
+
+    progressing ::
+      Int -> TaskT l m a -> Input Action -> TaskT l m a -> Input Action ->
+      m Bool
+    progressing maxIter t1' i1 t2' i2 = do
+      t1'' <- handle t1' i1
+      t2'' <- handle t2' i2
+      go (pred maxIter) t1'' t2''
+
+-}
 
 
 
@@ -101,6 +115,21 @@ prop_failing_preserved t = unsafePerformIO $ do
 --   v' <- value t'
 --   pure $ v == v'
 
+
+{- Equivallences --
+
+
+prop_choose_is_edit :: TaskIO Int -> TaskIO Int -> Bool
+prop_choose_is_edit s t = unsafePerformIO $ do
+  s -??- t ~= (enter >>- \b -> if b then s else t)
+
+
+prop_continue_is_edit :: TaskIO Int -> TaskIO Int -> Bool
+prop_continue_is_edit s t = unsafePerformIO $ do
+  (s >>? \_ -> t) ~= (enter -&&- s >>- \( (), _ ) -> t)
+
+
+-}
 
 
 -- Monoidal functor --
@@ -142,7 +171,9 @@ prop_choose_right_identity (-||-) t = unsafePerformIO $
   t -||- fail === t
 
 
-prop_choose_associativity :: Choose -> TaskIO Int -> TaskIO Int -> TaskIO Int -> Bool
+prop_choose_associativity ::
+  Choose -> TaskIO Int -> TaskIO Int -> TaskIO Int ->
+  Bool
 prop_choose_associativity (-||-) r s t = unsafePerformIO $
   r -||- (s -||- t) === (r -||- s) -||- t
 
@@ -162,7 +193,9 @@ prop_choose_commutative (-||-) t1 t2 = unsafePerformIO $
   t1 -||- t2 === t2 -||- t1
 
 
-prop_choose_distributive :: Choose -> TaskIO Int -> TaskIO Int -> TaskIO Int -> Bool
+prop_choose_distributive ::
+  Choose -> TaskIO Int -> TaskIO Int -> TaskIO Int ->
+  Bool
 prop_choose_distributive (-||-) r s t = unsafePerformIO $
   (r -||- s) >>- (\_ -> t) === (r >>- \_ -> t) -||- (s >>- \_ -> t)
 

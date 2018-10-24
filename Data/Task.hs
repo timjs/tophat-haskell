@@ -123,7 +123,7 @@ inputs (Or left rght) = do
   r <- inputs rght
   pure $ map ToLeft l ++ map ToRight r
 inputs (Xor left rght) =
-  pure $ map (ToHere . APick) choices
+  pure $ map (ToHere << APick) choices
   where
     choices =
       case ( delabel left, delabel rght ) of
