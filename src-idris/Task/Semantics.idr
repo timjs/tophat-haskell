@@ -116,7 +116,7 @@ failing (Fail)          = True
 failing (Then this _)   = failing this
 failing (Next this _)   = failing this
 failing (Label _ this)  = failing this
-failing (Lift _)        = False
+failing (Lift _)        = False --FIXME: needs normalisation!!!
 
 
 
