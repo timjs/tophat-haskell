@@ -3,10 +3,9 @@ module Data.Task.Equality
   , prop_equal_val, prop_failing_preserved
   , prop_pair_left_identity, prop_pair_right_identity, prop_pair_associativity, prop_pair_swap
   , prop_choose_left_identity, prop_choose_right_identity, prop_choose_associativity
-  , prop_choose_left_absorbtion, prop_choose_left_catch, prop_choose_idempotent
-  , prop_choose_not_commutative
-  , prop_step_left_identity, prop_step_right_identity, prop_step_assocaitivity, prop_step_left_anihilation
-  , prop_pick_distributive
+  , prop_choose_left_catch, prop_choose_idempotent
+  , prop_choose_commutative, prop_choose_distributive
+  , prop_step_left_identity, prop_step_right_identity, prop_step_assocaitivity, prop_step_left_anihilation, prop_step_left_absorption
   ) where
 
 
@@ -131,39 +130,41 @@ prop_pair_swap s t = unsafePerformIO $
 -- Alternative functor --
 
 
-prop_choose_left_identity :: TaskIO Int -> Bool
-prop_choose_left_identity t = unsafePerformIO $
+type Choose = TaskIO Int -> TaskIO Int -> TaskIO Int
+
+prop_choose_left_identity :: Choose -> TaskIO Int -> Bool
+prop_choose_left_identity (-||-) t = unsafePerformIO $
   fail -||- t === t
 
 
-prop_choose_right_identity :: TaskIO Int -> Bool
-prop_choose_right_identity t = unsafePerformIO $
+prop_choose_right_identity :: Choose -> TaskIO Int -> Bool
+prop_choose_right_identity (-||-) t = unsafePerformIO $
   t -||- fail === t
 
 
-prop_choose_associativity :: TaskIO Int -> TaskIO Int -> TaskIO Int -> Bool
-prop_choose_associativity r s t = unsafePerformIO $
+prop_choose_associativity :: Choose -> TaskIO Int -> TaskIO Int -> TaskIO Int -> Bool
+prop_choose_associativity (-||-) r s t = unsafePerformIO $
   r -||- (s -||- t) === (r -||- s) -||- t
 
 
-prop_choose_left_absorbtion :: TaskIO Int -> Bool
-prop_choose_left_absorbtion t = unsafePerformIO $
-  fail >>- (\_ -> t) === fail
-
-
-prop_choose_left_catch :: Int -> TaskIO Int -> Bool
-prop_choose_left_catch x t = unsafePerformIO $
+prop_choose_left_catch :: Choose -> Int -> TaskIO Int -> Bool
+prop_choose_left_catch (-||-) x t = unsafePerformIO $
   edit x -||- t === edit x
 
 
-prop_choose_idempotent :: TaskIO Int -> Bool
-prop_choose_idempotent t = unsafePerformIO $
+prop_choose_idempotent :: Choose -> TaskIO Int -> Bool
+prop_choose_idempotent (-||-) t = unsafePerformIO $
   t -||- t === t
 
 
-prop_choose_not_commutative :: TaskIO Int -> TaskIO Int -> Bool
-prop_choose_not_commutative t1 t2 = unsafePerformIO $
+prop_choose_commutative :: Choose -> TaskIO Int -> TaskIO Int -> Bool
+prop_choose_commutative (-||-) t1 t2 = unsafePerformIO $
   t1 -||- t2 === t2 -||- t1
+
+
+prop_choose_distributive :: Choose -> TaskIO Int -> TaskIO Int -> TaskIO Int -> Bool
+prop_choose_distributive (-||-) r s t = unsafePerformIO $
+  (r -||- s) >>- (\_ -> t) === (r >>- \_ -> t) -||- (s >>- \_ -> t)
 
 
 
@@ -193,13 +194,10 @@ prop_step_left_anihilation (>>-) t = unsafePerformIO $
   fail >>- (\_ -> t) === fail
 
 
+prop_step_left_absorption :: Bind -> TaskIO Int -> Bool
+prop_step_left_absorption (>>-) t = unsafePerformIO $
+  fail >>- (\_ -> t) === fail
 
--- External --
-
-
-prop_pick_distributive :: TaskIO Int -> TaskIO Int -> TaskIO Int -> Bool
-prop_pick_distributive r s t = unsafePerformIO $
-  (r -??- s) >>- (\_ -> t) === (r >>- \_ -> t) -??- (s >>- \_ -> t)
 
 
 
