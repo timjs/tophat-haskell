@@ -32,6 +32,8 @@ main = do
   quickCheck prop_step_assocaitivity
   quickCheck prop_step_left_anihilation
 
+  quickCheck prop_pick_distributive
+  
   putText ""
   putText ">>> Invalid properties:"
 
