@@ -73,6 +73,20 @@ In CSP, action names are essentially strings, subject to implicit restrictions.
 
 
 \subsubsection*{Communication between subsystems}
+
+Another important feature in both TOP and CSP is communication between subsystems, that is between tasks and between processes.
+
+CSP uses the same method for internal and for external communication, that is prefixing.
+The intuitive idea is that parallel processes that all eventually are willing to engage in some action must wait for the others and then progress in one synchronized step.
+This step in its own is still visible to the environment, which means the processes can not engage in this action unless the environment is also willing to.
+Communication becomes internal by using \emph{concealment}.
+
+Concealment is an operator that hides a given set of actions from the environment, which changes the semantics of prefixing for the concealed actions.
+The process does not have to wait for the environment to be willing to engage in concealed actions, it can just step on its own.
+In fact, the process must take any concealed steps as soon as possible, before any further communication with the environment can take place.
+This means internal steps have priority over external communication.
+In other words, computation before communication.
+
 Concealment vs. shared data and monadic bind
 
 \subsubsection*{Sequential composition}
