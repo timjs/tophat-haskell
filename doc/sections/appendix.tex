@@ -290,13 +290,16 @@ We prove Theorem~\ref{thmfailing} by induction on $e'$.
 
   \noindent\textbf{Case} $e = t_1\Next e_2$ $\Failing(t_1\Next e_2)=\Failing(t_1)$. If there exitsts an $i$ for $t_1$, then this $i$ also applies to $t_1\Next e_2$. This case therefore holds by the induction hypothesis.\\
 
-  \noindent\textbf{Case} $e = e_1\Xor e_2$\\
+  \noindent\textbf{Case} $e = e_1\Xor e_2$ We normalise the two expressions first, $e_1,s\normalise t_1,s'$, $e_2,s\normalise t_2,s'$ and we can then be in two situations. One, we can have that $\Failing(t_1,s')$ and $\Failing(t_2,s')$ are both true. If that is so, then by definiton, we have both $\Failing(e_1\Xor e_2,s)$ and no rule of the hanlding semantics applies, and therefore there exists no input for this case.\\
+                                           Or we are in the situation where one or both of the two sub expressions does not fail. In that case, we know that $\Failing(e_1\Xor e_2,s)$ does not hold, and that at least one of the handling rules applies. Therefore, there must be an input $i$, namely $\Left$, $\Right$ or both.
 
-  \noindent\textbf{Case} $e = t_1\And t_2$\\
+  \noindent\textbf{Case} $e = t_1\And t_2$ We can again find ourselfs in one of two situations. In the first case, both sub expressions fail, $\Failing(t_1,s)$ and $\Failing(t_2,s)$. In that case, we know that $\Failing(t_1\And t_2,s)$ also fails by definition. By the induction hypothesis, we know that for both $t_1$ and $t_2$ there is no input that can be handled. Since the only two rules for $\And$ that handle input just pass this input on to one of the two expressions, we know that indeed no $i$ applies.\\
+                                           In the case that one or both sub expressions do not fail, then by definition $t_1\And t_2$ not failing under $s$. Again by induction hypothesis, we know that for one or both of the expressions, there exits an $i$ that can be handled. Then by H-FirstAnd and H-SecondAnd, we know that we can pass this $i$, by prefixing it with either $\First$ or $\Second$.\\
 
-  \noindent\textbf{Case} $e = t_1\Or t_2$\\
+  \noindent\textbf{Case} $e = t_1\Or t_2$We can again find ourselfs in one of two situations. In the first case, both sub expressions fail, $\Failing(t_1,s)$ and $\Failing(t_2,s)$. In that case, we know that $\Failing(t_1\Or t_2,s)$ also fails by definition. By the induction hypothesis, we know that for both $t_1$ and $t_2$ there is no input that can be handled. Since the only two rules for $\Or$ that handle input just pass this input on to one of the two expressions, we know that indeed no $i$ applies.\\
+                                           In the case that one or both sub expressions do not fail, then by definition $t_1\Or t_2$ not failing under $s$. Again by induction hypothesis, we know that for one or both of the expressions, there exits an $i$ that can be handled. Then by H-FirstOr and H-SecondOr, we know that we can pass this $i$, by prefixing it with either $\First$ or $\Second$.\\
 
-  \noindent\textbf{Case} $e = u@t$\\
+  \noindent\textbf{Case} $e = u@t$ This case follows directly from applying the induction hypothesis, since $\Failing(u@t,s)=\Failing(t,s)$ and any input that applies to $t$ also applies to $u@t$.\\
 \end{proof}
 
 \subsubsection{Theorem~\ref{thmsafetyi1}}
