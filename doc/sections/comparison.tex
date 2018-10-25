@@ -13,6 +13,7 @@ First, we compare the scope of the languages, as intended by the authors.
 Second, we show how similar features like concurrency or communication work.
 Third, we provide some example problems and illustrate how they can be solved in each language.
 
+
 \subsection{Scope}
 
 The central goal of CSP is to model the patters of behaviour of processes.
@@ -27,12 +28,14 @@ TOP focuses less on formal correctness, and more on practical applicability.
 It wants to be a language with intuitive semantics that facilitates communication between programmers and domain experts.
 TOP programs are supposed to hide implementation details from domain experts while containing enough information to allow automatic generation of executable applications, including user interfaces.
 
+
 \subsection{Features}
 
 In this section we focus on certain features common to TOP and CSP, and study their respective realization.
 When we point out differences, we do not argue that the different realizations are incompatible.
 As a matter of fact the primitives can certainly be expressed in terms of each other, with more or less effort.
 Instead, we point out how the systems emphasize certain points of view by choosing different basic building blocks.
+
 
 \subsubsection*{Communication with the environment}
 
@@ -101,8 +104,26 @@ Shared data sources are assignable references, whose changes in value are immedi
 The semantics of TOP requires all updates to shared data and all enabled internal steps to be processed before any further communication with the environment can take place.
 This introduces the possibility of diverging computations, where a cyclic dependency between shared data causes updates to enable steps, which cause more updates ad infinitum.
 
+
 \subsubsection*{Sequential composition}
-Success vs. step
+
+The intuition about sequential composition is to first do one thing, and once it is done, do some other thing.
+
+In CSP, sequential composition is represented by the semicolon combinator together with the special action $\checkmark$, called \emph{success}.
+We assume that if a process engages in $\checkmark$, it must be the single last action.
+If that is the case, we say the process terminates successfully.
+The process $P;Q$ behaves like $P$ until $P$ successfully terminates, after which it continues as $Q$.
+If $P$ never terminates successfully, neither does $P;Q$
+
+In TOP, tasks never terminate.
+Nonetheless, the notion of sequential composition exists in two forms: the external and the internal step.
+The task $t \Then c$ acts like $t$ as long as the step is guarded.
+Once it becomes unguarded, the task continues as $cv$, where $v$ is the value of $t$.
+The task $t \Next c$ requires an input event $\Continue$ in addition to the step being unguarded in order to step.
+
+In CSP, it is the first process that decides when to step.
+In TOP, it is the step combinators that make this decision.
+
 
 \subsubsection*{Concurrency}
 Parallel composition
