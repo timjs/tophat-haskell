@@ -2,17 +2,20 @@ module Preload
   ( module Protolude
   , module Data.Bitraversable
   , List
+  , (<<), (>>)
   , Pretty(..)
   , neutral
   , (<&>), skip
   , forany, forall
-  , sameT
+  , sameT, proxyOf, arbitraryOf
   ) where
 
 
-import Protolude hiding ((<&>), (<&&>), trace, handle, lift)
+import Protolude hiding ((<&>), (<&&>), (.), (>>), trace, handle, lift)
 
 import Data.Bitraversable
+
+import Test.QuickCheck (Arbitrary(..), Gen)
 
 
 
@@ -20,6 +23,21 @@ import Data.Bitraversable
 
 
 type List a = [a]
+
+
+-- Functions -------------------------------------------------------------------
+
+
+infixr 9 <<
+{-# INLINE (<<) #-}
+(<<) :: (b -> c) -> (a -> b) -> a -> c
+f << g = \x -> f (g x)
+
+
+infixr 9 >>
+{-# INLINE (>>) #-}
+(>>) :: (a -> b) -> (b -> c) -> a -> c
+(>>) = flip (<<)
 
 
 
@@ -70,12 +88,22 @@ forall (x:xs) p = ifM (p x) (forall xs p) (return False)
 
 
 
--- Type equality ---------------------------------------------------------------
+-- Type equality & Proxys ------------------------------------------------------
 
 
 {-# INLINE sameT #-}
 sameT :: ( Typeable a, Typeable b ) => a -> b -> Maybe (a :~: b)
 sameT _ _ = eqT
+
+
+{-# INLINE proxyOf #-}
+proxyOf :: a -> Proxy a
+proxyOf _ = Proxy
+
+
+{-# INLINE arbitraryOf #-}
+arbitraryOf :: Arbitrary a => Proxy a -> Gen a
+arbitraryOf _ = arbitrary
 
 
 

@@ -5,7 +5,7 @@ module Data.Task
   , normalise, initialise, handle, drive
   -- ** Constructors
   , edit, enter, update
-  , lift, (|&|), (|!|), (|?|), fail, (>>!), (>>?)
+  , lift, (-&&-), (&&-), (-&&), (-||-), (-??-), fail, (>>-), (>>?)
   , label, delabel, keeper
   -- ** Reexports
   , Label
@@ -109,9 +109,11 @@ failing (Next this _)   = failing this
 failing (Label _ this)  = failing this
 
 
-inputs :: forall l m a. MonadRef l m => TaskT l m a -> m (List Input)
-inputs (Edit _) = pure $ [ ToHere (Change (Nothing :: Maybe a)), ToHere Empty ]
-inputs (Store _) = pure $ [ ToHere (Change (Nothing :: Maybe a)) ]
+inputs :: forall l m a. MonadRef l m => TaskT l m a -> m (List (Input Dummy))
+inputs (Edit _) =
+  pure $ [ ToHere (AChange (Proxy :: Proxy a)), ToHere AEmpty ]
+inputs (Store _) =
+  pure $ [ ToHere (AChange (Proxy :: Proxy a)) ]
 inputs (And left rght) = do
   l <- inputs left
   r <- inputs rght
@@ -121,7 +123,7 @@ inputs (Or left rght) = do
   r <- inputs rght
   pure $ map ToLeft l ++ map ToRight r
 inputs (Xor left rght) =
-  pure $ map (ToHere . Pick) choices
+  pure $ map (ToHere << APick) choices
   where
     choices =
       case ( delabel left, delabel rght ) of
@@ -129,15 +131,18 @@ inputs (Xor left rght) =
         ( _,    Fail ) -> [ GoLeft ]
         ( Fail, _ ) -> [ GoRight ]
         ( _,    _ ) -> [ GoLeft, GoRight ]
-inputs (Fail) = pure $ []
-inputs (Then this _) = inputs this
+inputs (Fail) =
+  pure $ []
+inputs (Then this _) =
+  inputs this
 inputs (Next this next) = do
-  always <- inputs this
+  available <- inputs this
   val <- value this
-  pure $ maybe [] check val ++ always
+  pure $ maybe [] cont val ++ available
   where
-    check v = if failing (next v) then [] else [ ToHere Continue ]
-inputs (Label _ this) = inputs this
+    cont v = if failing (next v) then [] else [ ToHere AContinue ]
+inputs (Label _ this) =
+  inputs this
 
 
 
@@ -209,7 +214,7 @@ data NotApplicable
   | CouldNotHandle
 
 
-handle :: forall l m a. MonadTrace NotApplicable m => MonadRef l m => TaskT l m a -> Input -> m (TaskT l m a)
+handle :: forall l m a. MonadTrace NotApplicable m => MonadRef l m => TaskT l m a -> Input Action -> m (TaskT l m a)
 
 -- Edit --
 handle (Edit _) (ToHere Empty) =
@@ -315,6 +320,6 @@ handle task _ =
   trace CouldNotHandle task
 
 
-drive :: MonadTrace NotApplicable m => MonadRef l m => TaskT l m a -> Input -> m (TaskT l m a)
+drive :: MonadTrace NotApplicable m => MonadRef l m => TaskT l m a -> Input Action -> m (TaskT l m a)
 drive task input =
   handle task input >>= normalise
