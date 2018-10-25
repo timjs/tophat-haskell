@@ -278,17 +278,17 @@ We prove Theorem~\ref{thmfailing} by induction on $e'$.
 
 \begin{proof}
 
-  \noindent\textbf{Case} $e = \Fail$ \\
+  \noindent\textbf{Case} $e = \Fail$ $\Failing(\Fail)=\True$, and there is no handling rule that applies to fail.\\
 
-  \noindent\textbf{Case} $e = \Edit v$ \\
+  \noindent\textbf{Case} $e = \Edit v$ Given that $\Gamma,\Sigma\infers\Edit v:\Task\tau$, $\Failing(\Edit v)=\False$, and there exists an input $i$, namely $v':\tau$.\\
 
-  \noindent\textbf{Case} $e = \Enter \tau$\\
+  \noindent\textbf{Case} $e = \Enter \tau$ $\Failing(\Enter \tau)=\False$, and there exists an in put i, namely $v:\tau$.\\
 
-  \noindent\textbf{Case} $e = \Update l$\\
+  \noindent\textbf{Case} $e = \Update l$ Given that $\Gamma,\Sigma\infers\Update l:\Task\tau$, $\Failing(\Update l)=\False$, and there exists an input $i$, namely $v:\tau$.\\
 
-  \noindent\textbf{Case} $e = t_1\Then e_2$\\
+  \noindent\textbf{Case} $e = t_1\Then e_2$ $\Failing(t_1\Then e_2)=\Failing(t_1)$. If there exitsts an $i$ for $t_1$, then this $i$ also applies to $t_1\Then e_2$. This case therefore holds by the induction hypothesis.\\
 
-  \noindent\textbf{Case} $e = t_1\Next e_2$\\
+  \noindent\textbf{Case} $e = t_1\Next e_2$ $\Failing(t_1\Next e_2)=\Failing(t_1)$. If there exitsts an $i$ for $t_1$, then this $i$ also applies to $t_1\Next e_2$. This case therefore holds by the induction hypothesis.\\
 
   \noindent\textbf{Case} $e = e_1\Xor e_2$\\
 
