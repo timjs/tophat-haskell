@@ -86,8 +86,20 @@ The process does not have to wait for the environment to be willing to engage in
 In fact, the process must take any concealed steps as soon as possible, before any further communication with the environment can take place.
 This means internal steps have priority over external communication.
 In other words, computation before communication.
+This introduces the possibility of diverging computations, that is processes which continuously take internal steps without ever being able to engage in external communication.
 
-Concealment vs. shared data and monadic bind
+To exchange values over internal communication, CSP employs the same technique of decoding action names as described in the section about external communication.
+
+TOP has two methods for internal communication, both different from its method for external communication.
+There is the step combinator and there is shared data.
+All tasks have values, and the step combinator in $t \Then c$ passes the value of $t$ to the continuation $c$.
+The step combinator represents data flow that follows control flow.
+
+Shared data on the other hand represents data flow across control flow.
+Shared data sources are assignable references, whose changes in value are immediately visible to all tasks interested in them.
+
+The semantics of TOP requires all updates to shared data and all enabled internal steps to be processed before any further communication with the environment can take place.
+This introduces the possibility of diverging computations, where a cyclic dependency between shared data causes updates to enable steps, which cause more updates ad infinitum.
 
 \subsubsection*{Sequential composition}
 Success vs. step
@@ -104,7 +116,7 @@ Synchronized actions vs. guarded transitions
 \subsection{Examples}
 
 \begin{itemize}
-\item Mutual exclusion
 \item Semaphores
+\item Vending machine
 \item Cigarette smokers
 \end{itemize}
