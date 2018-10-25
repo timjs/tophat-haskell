@@ -133,13 +133,20 @@ Both TOP and CSP are models of \emph{multiprogramming}, as opposed to true paral
 This means that concurrent agents take their steps in an interleaving fashion.
 
 In CSP, there are two different combinators for parallel composition: parallel and interleave.
-The process $P || Q$ can take $P$-steps and $Q$-steps in arbitrary interleaving for actions unique to $P$ and $Q$.
+The parallel process $P || Q$ can take $P$-steps and $Q$-steps in arbitrary interleaving for actions unique to $P$ and $Q$.
 Actions in the alphabets of both $P$ and $Q$ must be taken in synchronization, so if one process wants to make such a step, it must wait until the other is ready to do so.
 Synchronized steps are the only occasion where two processes actually do something at the same time.
 
 The interleaving operator $P ||| Q$ does not synchronize any actions of $P$ and $Q$.
 All steps are arbitrarily interleaved.
 Actions that occur in both alphabets are taken nondeterministically by $P$ or $Q$.
+
+In TOP, parallel composition of tasks $t_1 \And t_2$, stands for two independent tasks, carried out at the same time.
+For the system it does not matter if this is done by two people actually in parallel, or by one person who switches between the tasks.
+The system interleaves all events sent to the combined task into a serial stream of inputs.
+No synchronized steps take place.
+Events to $t_1$ and $t_2$ must be prefixed by $\Left$ and $\Right$ respectively.
+This unambiguously renames the events, removing any source of nondeterminism.
 
 \subsubsection*{Synchronization}
 Synchronized actions vs. guarded transitions
