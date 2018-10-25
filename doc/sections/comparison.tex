@@ -126,7 +126,20 @@ In TOP, it is the step combinators that make this decision.
 
 
 \subsubsection*{Concurrency}
-Parallel composition
+
+The intuition about concurrency is that two things are done at the same time.
+
+Both TOP and CSP are models of \emph{multiprogramming}, as opposed to true parallelism.
+This means that concurrent agents take their steps in an interleaving fashion.
+
+In CSP, there are two different combinators for parallel composition: parallel and interleave.
+The process $P || Q$ can take $P$-steps and $Q$-steps in arbitrary interleaving for actions unique to $P$ and $Q$.
+Actions in the alphabets of both $P$ and $Q$ must be taken in synchronization, so if one process wants to make such a step, it must wait until the other is ready to do so.
+Synchronized steps are the only occasion where two processes actually do something at the same time.
+
+The interleaving operator $P ||| Q$ does not synchronize any actions of $P$ and $Q$.
+All steps are arbitrarily interleaved.
+Actions that occur in both alphabets are taken nondeterministically by $P$ or $Q$.
 
 \subsubsection*{Synchronization}
 Synchronized actions vs. guarded transitions
