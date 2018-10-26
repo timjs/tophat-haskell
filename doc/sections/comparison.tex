@@ -193,8 +193,43 @@ Input events for parallel tasks are disambiguated, internal steps have a well-de
 
 \subsection{Examples}
 
-\begin{itemize}
-\item Semaphores
-\item Vending machine
-\item Cigarette smokers
-\end{itemize}
+In this section we describe a couple of example problems, and show how they can be solved in both languages.
+
+
+\begin{example}(Vending machine)
+The vending machine is a classical example, often used as a hello-world program for process algebras.
+It demonstrates external communication and choice.
+It does not demonstrate concurrency.
+
+The following CSP program models a vending machine that dispenses a small biscuit for one coin and a large biscuit for two coins. $$V = \textit{coin} \to (\textit{small} \to \text{STOP} \mid \textit{coin} \to \textit{large} \to \text{STOP})$$
+Intuitively, we see coins as inputs and products as outputs.
+CSP does not distinguish between inputs and outputs, which is reflected by the choice after inserting a coin.
+The machine can either output a small biscuit or take another coin as input.
+For CSP, it only matters in which of the actions the environment is willing to engage in.
+In order to actually dispense a small biscuit, we have to put the machine into an environment that is willing to engage in this behaviour. $$\text{Customer} = \textit{coin} \to \textit{small} \to \text{STOP}$$
+
+A vending machine in TOP that is close in spirit to the one above looks as follows.
+\begin{equation*}
+  \begin{array}{l @{} l}
+    \Enter \Int \Next \lambda n. &
+          \IF n \equiv 1 \THEN \Edit \str{small} \ELSE \\
+        & \IF n \equiv 2 \THEN \Edit \str{large} \ELSE \Fail
+  \end{array}
+\end{equation*}
+This machine does not exhibit exactly the same behaviour as the one in CSP, nor is it intended to.
+Instead, this machine demonstrates how the same choice of buying a small biscuit for one coin or a large biscuit for two coins is expressed in TOP.
+
+The machine asks the user to enter an amount of money.
+This editor stands for a module in the machine that freely accepts and returns coins.
+There is a continue button that is initially disabled.
+When the user has input exactly 1 or 2 coins, a continue button becomes enabled.
+When the user presses the continue button, the machine dispenses either a large or a small biscuit, depending on the amount of money.
+
+
+
+\end{example}
+
+\subsubsection*{Semaphores}
+
+
+\subsubsection*{Cigarette smokers}
