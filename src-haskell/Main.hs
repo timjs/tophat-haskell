@@ -1,7 +1,7 @@
 module Main where
 
 
-import Protolude
+import Preload
 
 import Data.Task
 import Data.Task.Equality
