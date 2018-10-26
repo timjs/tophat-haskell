@@ -175,6 +175,19 @@ Task $t$ must have a value $v$, and $cv$ must not evaluate to $\Fail$.
 
 \subsubsection*{Nondeterminism}
 
+Nondeterminism means that a system can react to the same input in different ways, the choice of which can not be influenced by the environment.
+
+CSP has an operator to explicitly introduce nondeterminism.
+Furthermore, nondeterminism can arise from the combination of some other combinators, for example choice and concealment.
+If a process is willing to engage in two actions, and both are concealed, the choice which one the system takes is nondeterministic.
+
+Hoare states that nondeterminism is only useful for \emph{specifying} processes, never for \emph{implementing} them \cite{books/Hoare85CSP}.
+CSP can be used for both.
+A process with nondeterministic behaviour must always be regarded as a specification, while a deterministic process can be seen as specification or implementation.
+
+TOP is meant solely for implementation and does not have any form of nondeterminism.
+Input events for parallel tasks are disambiguated, internal steps have a well-defined evaluation order, and internal choice is left-biased.
+
 
 \subsection{Examples}
 
