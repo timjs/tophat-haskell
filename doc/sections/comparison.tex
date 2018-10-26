@@ -155,12 +155,12 @@ Synchronization means that an agent has to pause execution until some condition 
 The need for synchronization arises quite naturally in countless variations in situations involving concurrency.
 For multiprogramming, synchronization always means that some of the possible interleavings are forbidden.
 
-For example, the mutual exclusion problem for two parallel processes $P = a_p \to b_p \to P $ and $Q = a_q \to b_q \to Q$ can be stated as:
+For example, the mutual exclusion problem for two parallel processes $a_p \to b_p \to \text{STOP} $ and $a_q \to b_q \to \text{STOP}$ can be stated as:
 In no interleaving should there be two adjacent $a$'s.
 
 The mutual exclusion problem for two parallel tasks can be stated as follows.
 Let \textit{inc} and \textit{dec} be tasks that increment and decrement some shared counter.
-In $(\textit{inc} \Next \textit{dec}) \And (\textit{inc} \Next \textit{dec})$, the shared counter should never be greater than 1.
+In $(\textit{inc} \Next \textit{dec}) \And (\textit{inc} \Next \textit{dec})$, the shared counter should at no point be greater than 1.
 Intuitively this means that in no interleaving should there be two adjacent \textit{inc}'s.
 
 The basic method for synchronization in CSP is synchronized prefixing.
@@ -169,7 +169,7 @@ They both have to wait for the condition that the other process is ready to take
 All synchronization problems in CSP must be solved by employing synchronized steps in some form.
 
 The basic method for synchronization in TOP is built into the step combinator.
-The task $t \Then c$ can only continue execution when two conditions are met:
+The task $t \Next c$ can only continue execution when two conditions are met:
 Task $t$ must have a value $v$, and $cv$ must not evaluate to $\Fail$.
 
 
