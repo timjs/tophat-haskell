@@ -110,9 +110,9 @@ This introduces the possibility of diverging computations, where a cyclic depend
 The intuition about sequential composition is to first do one thing, and once it is done, do some other thing.
 
 In CSP, sequential composition is represented by the semicolon combinator together with the special action $\checkmark$, called \emph{success}.
-We assume that if a process engages in $\checkmark$, it must be the single last action.
-If that is the case, we say the process terminates successfully.
-The process $P;Q$ behaves like $P$ until $P$ successfully terminates, after which it continues as $Q$.
+We require that if a process engages in $\checkmark$ at all, it must be its single last action.
+When that happens, we say the process terminates successfully.
+The process $P;Q$ behaves like $P$ until $P$ terminates successfully, after which it continues as $Q$.
 If $P$ never terminates successfully, neither does $P;Q$
 
 In TOP, tasks never terminate.
@@ -121,8 +121,8 @@ The task $t \Then c$ acts like $t$ as long as the step is guarded.
 Once it becomes unguarded, the task continues as $cv$, where $v$ is the value of $t$.
 The task $t \Next c$ requires an input event $\Continue$ in addition to the step being unguarded in order to step.
 
-In CSP, it is the first process that decides when to step.
-In TOP, it is the step combinators that make this decision.
+In CSP, the first process initiates the step.
+In TOP, the step combinator initiates the step.
 
 
 \subsubsection*{Concurrency}
