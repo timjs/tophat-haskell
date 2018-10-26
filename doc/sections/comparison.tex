@@ -148,8 +148,30 @@ No synchronization takes place.
 Events to $t_1$ and $t_2$ must be prefixed by $\Left$ and $\Right$ respectively.
 This unambiguously renames the events, removing any source of nondeterminism.
 
+
 \subsubsection*{Synchronization}
-Synchronized actions vs. guarded transitions
+
+Synchronization means that an agent has to pause execution until some condition is met.
+The need for synchronization arises quite naturally in countless variations in situations involving concurrency.
+For multiprogramming, synchronization always means that some of the possible interleavings are forbidden.
+
+For example, the mutual exclusion problem for two parallel processes $P = a_p \to b_p \to P $ and $Q = a_q \to b_q \to Q$ can be stated as:
+In no interleaving should there be two adjacent $a$'s.
+
+The mutual exclusion problem for two parallel tasks can be stated as follows.
+Let \textit{inc} and \textit{dec} be tasks that increment and decrement some shared counter.
+In $(\textit{inc} \Next \textit{dec}) \And (\textit{inc} \Next \textit{dec})$, the shared counter should never be greater than 1.
+Intuitively this means that in no interleaving should there be two adjacent \textit{inc}'s.
+
+The basic method for synchronization in CSP is synchronized prefixing.
+If some action $a$ is in the alphabets of both $P$ and $Q$, then their parallel composition $P||Q$ can take an $a$-step only if both $P$ and $Q$ are ready to take an $a$-step, in which case they both take their $a$-step simultaneously.
+They both have to wait for the condition that the other process is ready to take the step.
+All synchronization problems in CSP must be solved by employing synchronized steps in some form.
+
+The basic method for synchronization in TOP is built into the step combinator.
+The task $t \Then c$ can only continue execution when two conditions are met:
+Task $t$ must have a value $v$, and $cv$ must not evaluate to $\Fail$.
+
 
 \subsubsection*{Nondeterminism}
 
