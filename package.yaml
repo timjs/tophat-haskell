@@ -18,6 +18,8 @@ dependencies:
   - QuickCheck
   - quickcheck-instances
   - ref-fd
+  - mtl
+  - containers
 
 
 default-extensions:
@@ -42,7 +44,7 @@ default-extensions:
   - DeriveFoldable
   - DeriveTraversable
   - GeneralizedNewtypeDeriving
-  # - StandaloneDeriving
+  - StandaloneDeriving
 
   # Syntactic adjustments:
   - BangPatterns
@@ -77,6 +79,10 @@ default-extensions:
   - FunctionalDependencies
   - GADTs
   # - ExistentialQuantification
+
+  # Advanced type extensions:
+  - DataKinds
+  - PolyKinds
 
 
 ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
