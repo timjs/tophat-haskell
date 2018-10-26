@@ -1,0 +1,108 @@
+% !TEX root=pldi2019.tex
+
+
+%% Language %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newmacro{G-Language}{
+  \begin{grammar}
+    Expressions
+      & e    &::= & \lambda x:\tau.\ e   & – abstraction \\
+      &      &\mid& e_1\ e_2             & – application \\
+      &      &\mid& x                    & – variable \\
+      &      &\mid& c                    & – constant \\
+    \addlinespace
+      &      &\mid& e_1 \star e_2        & – operation \\
+      &      &\mid& \If{e_1}{e_2}{e_3}   & – branch \\
+      &      &\mid& \tuple{e_1, e_2}     & – pair \\
+      &      &\mid& \unit                & – unit \\
+    \addlinespace
+      &      &\mid& \Ref e               & – reference \\
+      &      &\mid& !e                   & – dereference \\
+      &      &\mid& e_1 := e_2           & – assignment \\
+      % &      &\mid& e_1; e_2             & – sequence \\
+      &      &\mid& l                    & – location \\
+    \addlinespace
+      &      &\mid& p                    & – pretask \\
+    \addlinespace
+    Constants
+      & c    &::= & B                    & – boolean \\
+      &      &\mid& I                    & – integer \\
+      &      &\mid& S                    & – string \\
+  \end{grammar}
+}
+
+\newmacro{G-Pretasks}{
+  \begin{grammar}
+    Pretasks
+      & p    &::= & \Edit e              & – valued editor \\
+      &      &\mid& \Enter \beta         & – unvalued editor \\
+      &      &\mid& \Update e            & – stored editor \\
+    \addlinespace
+      &      &\mid& e_1 \Then e_2        & – step \\
+      &      &\mid& e_1 \Next e_2        & – user step \\
+    \addlinespace
+      &      &\mid& e_1 \And e_2         & – composition \\
+    \addlinespace
+      &      &\mid& e_1 \Or e_2          & – choice \\
+      &      &\mid& e_1 \Xor e_2         & – user choice \\
+    \addlinespace
+      &      &\mid& u \At e              & – appoint \\
+      &      &\mid& \Fail                & – fail task \\
+  \end{grammar}
+}
+
+\newmacro{G-Types}{
+  \begin{grammar}
+    Types
+      & \tau &::= & \tau_1 \to \tau_2    & – function type \\
+      &      &\mid& \tau_1 \times \tau_2 & – product type \\
+      &      &\mid& \Unit                & – unit type \\
+      &      &\mid& \Reference \tau      & – reference type \\
+      &      &\mid& \Task \tau           & – task type \\
+      &      &\mid& \beta                & – basic type \\
+      % &      &\mid& \alpha               & – universal type \\
+    Basic types
+      &\beta &::= & \Bool                & – boolean type \\
+      &      &\mid& \Int                 & – integer type \\
+      &      &\mid& \String              & – string type \\
+  \end{grammar}
+}
+
+\newmacro{G-Values}{
+  \begin{grammar}
+    Values
+      & v    &::= & \lambda x:\tau.\ e        & – abstraction \\
+      &      &\mid& \tuple{v_1, v_2}     & – pair value \\
+      &      &\mid& \unit                & – unit \\
+      &      &\mid& c                    & – constant \\
+      &      &\mid& l                    & – location \\
+      &      &\mid& t                    & – task \\
+    Tasks
+      & t    &::= & \Edit v              & – valued editor \\
+      &      &\mid& \Enter \beta         & – unvalued editor \\
+      &      &\mid& \Update l            & – stored editor \\
+      &      &\mid& \Fail                & – fail task \\
+      &      &\mid& t_1 \Then e_2        & – step \\
+      &      &\mid& t_1 \Next e_2        & – user step \\
+      &      &\mid& t_1 \And t_2         & – composition \\
+      &      &\mid& t_1 \Or t_2          & – choice \\
+      &      &\mid& t_1 \Xor t_2         & – user choice \\
+  \end{grammar}
+}
+
+\newmacro{G-Inputs}{
+  \begin{grammar}
+    Inputs
+      & i    & ::=& a                    & – action \\
+      &      &\mid& \First i             & – pass to first \\
+      &      &\mid& \Second i            & – pass to second \\
+    Actions
+      & a    & ::=& v                    & – change editor to value \\
+      &      &\mid& \Empty               & – empty an editor \\
+      &      &\mid& \Continue            & – continue with next task \\
+      &      &\mid& \Pick                & – pick route \\
+    Routes
+      & r    & ::=& \Left                & – go left \\
+      &      &\mid& \Right               & – go right \\
+  \end{grammar}
+}

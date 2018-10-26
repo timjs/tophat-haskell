@@ -1,85 +1,63 @@
 % !TEX root=../pldi2019.tex
 
+
+
 \section{Language}
 
-\subsection{Base language}\todo{Consistent capitalization style of section headings}
-\begin{grammar}
-  Expressions
-    & e    &::= & \lambda x:\tau.\ e   & – abstraction \\
-    &      &\mid& e_1\ e_2             & – application \\
-    &      &\mid& x                    & – variable \\
-    &      &\mid& c                    & – constant \\
-    &      &\mid& \Fail                & – fail \\
-  \addlinespace
-    &      &\mid& e_1 \star e_2        & – operate \\
-    &      &\mid& \If{e_1}{e_2}{e_3}   & – branch \\
-    &      &\mid& \tuple{e_1, e_2}     & – pair \\
-    &      &\mid& \unit                & – unit \\
-  \addlinespace
-  Constants
-    & c    &::= & B                    & – boolean \\
-    &      &\mid& I                    & – integer \\
-    &      &\mid& S                    & – string \\
-  \addlinespace
-\end{grammar}
+
+
+\subsection{Base language}
+
+\begin{figure}
+  \usemacro{G-Language}
+  \caption{Language grammar} \label{fig:language-grammar}
+\end{figure}
+
+\begin{figure}
+  \usemacro{G-Pretasks}
+  \caption{Task grammar} \label{fig:task-grammar}
+\end{figure}
+
+
+
 \subsection{Editors}
-\begin{grammar}
-  Expressions
-    & e    &::= & p                    & – pretask \\
-  Pretasks
-    & p    &::= & \Edit e              & – valued editor \\
-    &      &\mid& \Enter \tau          & – unvalued editor \\
-\end{grammar}
+
+
+
 \subsection{Steps}
-\begin{grammar}
-  Pretasks
-    & p    &::= & e_1 \Then e_2        & – step \\
-    &      &\mid& e_1 \Next e_2        & – user step\\
-    &      &\mid& e_1 \Xor e_2         & – external choice
-\end{grammar}
+
+
+
 \subsection{Composition}
-\begin{grammar}
-  Pretasks
-    & p    &::= & e_1 \And e_2         & – composition \\
-  \addlinespace
-    &      &\mid& e_1 \Or e_2          & – choice
-\end{grammar}
+
+
+
 \subsection{State}
-\begin{grammar}
-  Expressions
-    & e    &::= & l                    & – location \\
-    &      &\mid& \Ref e               & – reference \\
-    &      &\mid& !e                   & – dereference \\
-    &      &\mid& e_1 := e_2           & – assign \\
-    &      &\mid& e_1; e_2             & – sequence \\
-  Pretasks
-    & p    &::= & \Update e            & – stored editor \\
-\end{grammar}
+
+
 
 \subsection{Users}
-\begin{grammar}
-  Expressions
-    & e    &::= & u @ e                & – assign \\
-\end{grammar}
 
-\begin{mathpar}
-  \userule{T-Abs}\qquad
-  \userule{T-Var}\\
-  \userule{T-If}\\
-  \userule{T-App}\qquad
-  \userule{T-Ref}\\
-  \userule{T-Deref}\qquad
-  \userule{T-Loc}\\
-  \userule{T-Assign}\qquad
-  \userule{T-Pair}\\
-  \userule{T-Edit}\\
-  \userule{T-Fill}\qquad
-  \userule{T-Update} \\
-  \userule{T-Fail} \\
-  \userule{T-Then} \\
-  \userule{T-Next} \\
-  \userule{T-And} \\
-  \userule{T-Or} \\
-  \userule{T-Xor}\\
-  \userule{T-At}
-\end{mathpar}
+
+\begin{figure}
+  \usemacro{G-Types}
+  \caption{Type grammar} \label{fig:type-grammar}
+\end{figure}
+
+\begin{figure}
+  \small
+  \begin{mathpar}
+    \boxed{\RelationT} \\
+    \userule{T-Edit} \quad
+    \userule{T-Fill} \quad
+    \userule{T-Update} \\
+    \userule{T-Then} \\
+    \userule{T-Next} \\
+    \userule{T-And} \\
+    \userule{T-Or} \\
+    \userule{T-Xor}\\
+    \userule{T-Appoint} \quad
+    \userule{T-Fail} \\
+  \end{mathpar}
+  \caption{Typing rules} \label{fig:typing-rules}
+\end{figure}

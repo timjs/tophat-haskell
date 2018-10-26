@@ -1,113 +1,60 @@
 % !TEX root=../pldi2019.tex
 
+
 \section{Semantics}
 
-  \subsection{Layers}
 
-  \subsection{Evaluation semantics}
 
-  \begin{equation*}
-    \boxed{\RelationV}
-  \end{equation*}
+\subsection{Layers}
+
+
+
+\subsection{Evaluation semantics}
+
+\begin{figure}
+  \small
+  \begin{mathpar}
+    \boxed{\RelationE} \\
+    \userule{E-Edit} \quad
+    \userule{E-Fill} \quad
+    \userule{E-Update} \\
+    \userule{E-Then} \quad
+    \userule{E-Next} \\
+    \userule{E-And} \\
+    \userule{E-Or} \quad
+    \userule{E-Xor} \\
+    \userule{E-Appoint} \quad
+    \userule{E-Fail} \\
+  \end{mathpar}
+  \caption{Evaluation semantics} \label{fig:evaluation-semantics}
+\end{figure}
+
+
+
+\subsection{Observation semantics}
+
+
+\paragraph{Task value}
+
+\paragraph{Inputs}
+
+\paragraph{Failing}
+
+When an expression fails, it can not be normalised and there is no possible
+input that it will handle. The function $\Failing$ determines this property.
+
+\paragraph{User Interface }
+
+
+
+\subsection{Normalisation semantics}
+
+\begin{figure}
+  \small
 
   \begin{mathpar}
-    \userule{E-Value}\\
-    \userule{E-App}\\
-    \userule{E-IfTrue}\quad
-    \userule{E-IfFalse}\\
-    \userule{E-Pair}\quad
-    \userule{E-At}\\
-    \userule{E-Ref}\\
-    \userule{E-Deref}\quad
-    \userule{E-Assign}\\
-    \userule{E-Sequence}\\
-    \userule{E-Edit}\quad
-    \userule{E-Fill}\\
-    \userule{E-Update}\quad
-    \userule{E-Fail} \\
-    \userule{E-Then}\quad
-    \userule{E-Next} \\
-    \userule{E-And} \quad
-    \userule{E-Or}\\
-    \userule{E-Xor}
-  \end{mathpar}
-
-  \subsection{Observation semantics}
-    \subsubsection{Task value}
-
-    \begin{flalign*}
-      \begin{array}{lcl}
-        \multicolumn{3}{l}{\Value : \mathrm{Tasks} \rightharpoonup \mathrm{Values}} \\
-        \Value(\Edit v, s)       &=& v \\
-        \Value(\Enter \tau, s)   &=& \bot \\
-        \Value(\Update l, s)  &=& s(l) \\
-        \Value(\Fail, s)         &=& \bot \\
-        \Value(t_1 \Then e_2, s) &=& \bot \\
-        \Value(t_1 \Next e_2, s) &=& \bot \\
-        \Value(t_1 \And t_2, s)  &=& \left\{
-          \begin{array}{ll}
-            \tuple{v_1, v_2}  & \when\ \Value(t_1, s) = v_1 \land \Value(t_2, s) = v_2 \\
-            \bot              & \otherwise
-          \end{array}
-        \right. \\
-        \Value(t_1 \Or t_2, s)   &=& \left\{
-          \begin{array}{ll}
-            v_1               & \when\ \Value(t_1, s) = v_1 \\
-            v_2               & \when\ \Value(t_1, s) = \bot \land \Value(t_2, s) = v_2 \\
-            \bot              & \otherwise
-          \end{array}
-        \right. \\
-        \Value(t_1 \Xor t_2, s)  &=& \bot\\
-        \Value(u @ t, s)  &=& \Value(t,s)
-      \end{array} & &&
-    \end{flalign*}
-
-    \subsubsection{Inputs}
-
-    \begin{flalign*}
-      \begin{array}{lcl}
-        \multicolumn{3}{l}{\Inputs : \mathrm{Tasks} \to \powerset(\mathrm{Inputs})} \\
-        \Inputs(\Edit v:\Task\tau)       &=& \set{v':\tau, \Empty} \\
-        \Inputs(\Enter \tau)   &=& \set{v':\tau} \\
-        \Inputs(\Update l:\Task\tau)     &=& \set{v':\tau} \\
-        \Inputs(\Fail)         &=& \set{} \\
-        \Inputs(t_1 \Then e_2) &=& \Inputs(t_1) \\
-        \Inputs(t_1 \Next e_2) &=& \Inputs(t_1) \cup \set{\Continue\mid \Value{(t_1)}\neq \bot \wedge \neg\Failing{(e_2 \Value{(t_1)}\normalise)}} \\
-        \Inputs(t_1 \And t_2)  &=& \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)} \\
-        \Inputs(t_1 \Or t_2)   &=& \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)} \\
-        \Inputs(e_1 \Xor e_2)  &=& \set{\Left, \Right} \\
-        \Inputs(u_1 @ t)       &=& \set{u_2 @ i\mid u_2 @ i \in \Inputs(t)} \cup \set{u_1 @ i\mid i\in \Inputs(t)}
-      \end{array} & &&
-    \end{flalign*}
-
-    \subsubsection{Failing}
-    When an expression fails, it can not be normalised and there is no possible
-    input that it will handle. The function $\Failing$ determines this property.
-
-    \begin{flalign*}
-      \begin{array}{lcl}
-        \multicolumn{3}{l}{\Failing : \mathrm{Tasks} \to \mathrm{Booleans}} \\
-        \Failing(\Edit v,s)       &=& \False \\
-        \Failing(\Enter \tau,s)   &=& \False \\
-        \Failing(\Update l,s)     &=& \False \\
-        \Failing(\Fail,s)         &=& \True \\
-        \Failing(t_1 \Then e_2,s) &=& \Failing(t_1,s) \\
-        \Failing(t_1 \Next e_2,s) &=& \Failing(t_1,s) \\
-        \Failing(t_1 \And t_2,s)  &=& \Failing(t_1,s) \wedge \Failing(t_2,s) \\
-        \Failing(t_1 \Or t_2,s)   &=& \Failing(t_1,s) \wedge \Failing(t_2,s) \\
-        \Failing(e_1 \Xor e_2,s)  &=& \Failing(t_1,s') \wedge \Failing(t_2,s') \mid e_1,s\normalise t_1,s' \quad e_2,s\normalise t_2,s'\\
-        \Failing(u @ t,s)         &=& \Failing(t,s)
-      \end{array} & &&
-    \end{flalign*}
-
-
-    \subsubsection{User Interface }
-
-  \subsection{Normalisation semantics}
-
-  \begin{equation*}
     \boxed{\RelationN}
-  \end{equation*}
+  \end{mathpar}
 
   \paragraph{Step}
   \begin{mathpar}
@@ -123,41 +70,48 @@
     \userule{N-OrNone}
   \end{mathpar}
 
-  \paragraph{Congruence}
-  \begin{mathpar}
-    \userule{N-Next} \\
-    \userule{N-And} \\
-    \userule{N-Assign}
-  \end{mathpar}
-
   \paragraph{Ready}
   \begin{mathpar}
-    \userule{N-Edit} \qquad \userule{N-Fill} \qquad \userule{N-Update} \\
-    \userule{N-Fail} \qquad \userule{N-Xor}
+    \userule{N-Edit} \quad \userule{N-Fill} \qquad \userule{N-Update} \\
+    \userule{N-Fail} \quad \userule{N-Xor}
   \end{mathpar}
 
-  \paragraph{Driving}
+  \paragraph{Congruence}
   \begin{mathpar}
+    \userule{N-Next} \quad
+    \userule{N-And} \\
+    \userule{N-Appoint} \quad
     \userule{N-Eval}
   \end{mathpar}
 
-  \paragraph{Memory}
+  \caption{Normalisation semantics} \label{fig:normalisation-semantics}
+\end{figure}
+
+\begin{figure}
+  \small
   \begin{mathpar}
-    \userule{N-Stable}\\
+    \userule{N-Stable} \\
     \userule{N-Memory}
   \end{mathpar}
+  \caption{Memory semantics} \label{fig:memory-semantics}
+\end{figure}
 
-  \subsection{Handling semantics}
+
+\subsection{Handling semantics}
 
 
-  \begin{equation*}
+\begin{figure}
+  \small
+
+  \begin{mathpar}
     \boxed{\RelationH}
-  \end{equation*}
+  \end{mathpar}
 
   \paragraph{Editing}
   \begin{mathpar}
-    \userule{H-Change} \qquad \userule{H-Empty}\\
-    \userule{H-Fill} \\
+    \userule{H-Change} \quad
+    \userule{H-Empty} \\
+    \userule{H-Fill} \quad
     \userule{H-Update}
   \end{mathpar}
 
@@ -170,19 +124,47 @@
 
   \paragraph{Passing}
   \begin{mathpar}
-    \userule{H-PassThen} \qquad \userule{H-PassNext} \\
-    \userule{H-FirstAnd} \qquad \userule{H-SecondAnd} \\
-    \userule{H-FirstOr}  \qquad \userule{H-SecondOr}\\
+    \userule{H-PassThen} \quad \userule{H-PassNext} \\
+    \userule{H-FirstAnd} \quad \userule{H-SecondAnd} \\
+    \userule{H-FirstOr}  \quad \userule{H-SecondOr}\\
     \userule{H-Assign}
   \end{mathpar}
 
+  \caption{Handling semantics} \label{fig:handling-semantics}
+\end{figure}
 
-  \subsubsection{Driving}
 
-  \begin{equation*}
-    \boxed{\RelationD}
-  \end{equation*}
+\paragraph{Memory}
 
+\paragraph{Driving}
+
+\begin{figure}
+  \small
   \begin{mathpar}
+    \boxed{\RelationD} \\
     \userule{D-Main}
   \end{mathpar}
+  \caption{Driving semantics} \label{fig:driving-semantics}
+\end{figure}
+
+
+
+
+
+\begin{figure}
+  \small
+  \usemacro{O-Value}
+  \caption{Values} \label{fig:observation-value}
+\end{figure}
+
+\begin{figure}
+  \small
+  \usemacro{O-Inputs}
+  \caption{Inputs} \label{fig:observation-value}
+\end{figure}
+
+\begin{figure}
+  \small
+  \usemacro{O-Failing}
+  \caption{Failing} \label{fig:observation-failing}
+\end{figure}

@@ -3,6 +3,34 @@
 \appendix
 \section{Appendix}
 
+  \subsection{Rules}
+
+    \begin{mathpar}
+      \boxed{\RelationT} \\
+      \userule{T-Abs}\qquad
+      \userule{T-Var}\\
+      \userule{T-If}\\
+      \userule{T-App}\qquad
+      \userule{T-Ref}\\
+      \userule{T-Deref}\qquad
+      \userule{T-Loc}\\
+      \userule{T-Assign}\qquad
+      \userule{T-Pair}\\
+    \end{mathpar}
+
+    \begin{mathpar}
+      \boxed{\RelationE} \\
+      \userule{E-Value}\\
+      \userule{E-App}\\
+      \userule{E-IfTrue}\quad
+      \userule{E-IfFalse}\\
+      \userule{E-Pair}\quad
+      \userule{E-Ref}\\
+      \userule{E-Deref}\quad
+      \userule{E-Assign}\\
+      \userule{E-Sequence}\\
+    \end{mathpar}
+
   \subsection{Proofs}
 
   \subsubsection{Theorem~\ref{thmpreseval}}
@@ -61,8 +89,8 @@
   \noindent\textbf{Case} $\userule{E-Xor}$
       Evaluation does not alter $e$ and $s$, therefore this case holds tivially.\\
 
-  \noindent\textbf{Case} $\userule{E-At}$
-      Given that $\Gamma,\Sigma\infers u@e:\Task\tau$ and $\Sigma\infers s$, the induction hypothesis gives us that $e,s\evaluate t,s'$ also preserves, and therefore by T-At $\Gamma,\Sigma\infers u@t:\Task\tau$.
+  \noindent\textbf{Case} $\userule{E-Appoint}$
+      Given that $\Gamma,\Sigma\infers u \At e:\Task\tau$ and $\Sigma\infers s$, the induction hypothesis gives us that $e,s\evaluate t,s'$ also preserves, and therefore by T-Appoint $\Gamma,\Sigma\infers u \At t:\Task\tau$.
 \end{proof}
 
 
@@ -299,7 +327,7 @@ We prove Theorem~\ref{thmfailing} by induction on $e'$.
   \noindent\textbf{Case} $e = t_1\Or t_2$We can again find ourselfs in one of two situations. In the first case, both sub expressions fail, $\Failing(t_1,s)$ and $\Failing(t_2,s)$. In that case, we know that $\Failing(t_1\Or t_2,s)$ also fails by definition. By the induction hypothesis, we know that for both $t_1$ and $t_2$ there is no input that can be handled. Since the only two rules for $\Or$ that handle input just pass this input on to one of the two expressions, we know that indeed no $i$ applies.\\
                                            In the case that one or both sub expressions do not fail, then by definition $t_1\Or t_2$ not failing under $s$. Again by induction hypothesis, we know that for one or both of the expressions, there exits an $i$ that can be handled. Then by H-FirstOr and H-SecondOr, we know that we can pass this $i$, by prefixing it with either $\First$ or $\Second$.\\
 
-  \noindent\textbf{Case} $e = u@t$ This case follows directly from applying the induction hypothesis, since $\Failing(u@t,s)=\Failing(t,s)$ and any input that applies to $t$ also applies to $u@t$.\\
+  \noindent\textbf{Case} $e = u \At t$ This case follows directly from applying the induction hypothesis, since $\Failing(u \At t,s)=\Failing(t,s)$ and any input that applies to $t$ also applies to $u \At t$.\\
 \end{proof}
 
 \subsubsection{Theorem~\ref{thmsafetyi1}}

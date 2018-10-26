@@ -32,13 +32,21 @@
 \newmacro{RelationT}
   {\Gamma,\Sigma \infers e : \tau}
 
-\newrule{T-Abs}
-  {\Gamma[x:\tau_1] ,\Sigma \infers e:\tau_2}
-  {\Gamma,\Sigma \infers \lambda x : \tau_1 . e :\tau_1 \to \tau_2}
 
 \newrule{T-Var}
   {x:\tau\in\Gamma}
   {\Gamma,\Sigma\infers x:\tau}
+
+
+\newrule{T-Abs}
+  {\Gamma[x:\tau_1] ,\Sigma \infers e:\tau_2}
+  {\Gamma,\Sigma \infers \lambda x : \tau_1 . e :\tau_1 \to \tau_2}
+
+\newrule{T-App}
+  {\Gamma,\Sigma \infers e_1:\tau_1\to\tau_2\\
+   \Gamma,\Sigma \infers e_2:\tau_1}
+  {\Gamma,\Sigma \infers e_1 e_2 :\tau_2}
+
 
 \newrule{T-If}
   {\Gamma,\Sigma \infers e_1:\Bool\\
@@ -46,10 +54,11 @@
    \Gamma,\Sigma \infers e_3:\tau}
   {\Gamma,\Sigma \infers \If{e_1}{e_2}{e_3}:\tau}
 
-\newrule{T-App}
-  {\Gamma,\Sigma \infers e_1:\tau_1\to\tau_2\\
-   \Gamma,\Sigma \infers e_2:\tau_1}
-  {\Gamma,\Sigma \infers e_1 e_2 :\tau_2}
+
+\newrule{T-Pair}
+    {\Gamma,\Sigma \infers e_1 : \tau_1 \\
+     \Gamma,\Sigma \infers e_2 : \tau_2}
+    {\Gamma,\Sigma \infers \tuple{e_1, e_2} :\tau_1 \times \tau_2}
 
 
 \newrule{T-Ref}
@@ -60,19 +69,15 @@
   {\Gamma,\Sigma \infers e:\Reference \tau}
   {\Gamma,\Sigma\infers\ !e:\tau}
 
-\newrule{T-Loc}
-  {\Sigma(l) = \tau}
-  {\Gamma,\Sigma\infers l:\Reference \tau}
-
 \newrule{T-Assign}
   {\Gamma,\Sigma\infers e_1:\Reference \tau\\
    \Gamma,\Sigma\infers e_2:\tau}
   {\Gamma,\Sigma\infers e_1 := e_2:\Unit}
 
-\newrule{T-Pair}
-    {\Gamma,\Sigma \infers e_1 : \tau_1 \\
-     \Gamma,\Sigma \infers e_2 : \tau_2}
-    {\Gamma,\Sigma \infers \tuple{e_1, e_2} :\tau_1 \times \tau_2}
+\newrule{T-Loc}
+  {\Sigma(l) = \tau}
+  {\Gamma,\Sigma\infers l:\Reference \tau}
+
 
 \newrule{T-Edit}
   {\Gamma,\Sigma \infers e : \tau}
@@ -88,7 +93,7 @@
 
 
 \newrule{T-Fail}
-  { }
+  {\ }
   {\Gamma,\Sigma \infers \Fail : \Task \tau}
 
 
@@ -121,21 +126,19 @@
    \Gamma,\Sigma \infers e_2 : \Task \tau }
   {\Gamma,\Sigma \infers e_1 \Xor e_2 : \Task \tau}
 
-\newrule{T-At}
+
+\newrule{T-Appoint}
   {\Gamma,\Sigma\infers e:\Task\tau}
-  {\Gamma,\Sigma\infers u @ e:\Task\tau}
+  {\Gamma,\Sigma\infers u \At e:\Task\tau}
 
 
 
 %% Evaluation %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-\newmacro{RelationV}
+\newmacro{RelationE}
   {e,s \evaluate v,s'}
 
-\newrule{E-At}
-    {e,s\evaluate t,s'}
-    {u @ e,s\evaluate u @ t,s'}
 
 \newrule{E-Value}[v\in\set{\lambda x:\tau.e, \unit, l, B, I, S}]
   {\ }
@@ -147,6 +150,7 @@
    e_1'[x\mapsto v_2],s''\evaluate v_1,s'''}
   {e_1 e_2,s \evaluate v_1,s'''}
 
+
 \newrule{E-IfTrue}
     {e_1,s\evaluate \True,s'\\
      e_2,s'\evaluate v,s''}
@@ -157,10 +161,12 @@
    e_3,s'\evaluate v,s''}
   {\If{e_1}{e_2}{e_3},s\evaluate v,s''}
 
+
 \newrule{E-Pair}
   {e_1,s\evaluate v_1,s'\\
    e_2,s'\evaluate v_2,s''}
   {\tuple{e_1,e_2},s\evaluate\tuple{v_1,v_2},s''}
+
 
 \newrule{E-Ref}
   {e,s\evaluate v,s'\\
@@ -175,6 +181,7 @@
   {e_1,s\evaluate l,s'\\
    e_2,s'\evaluate v_2,s''}
   {e_1:=e_2,s\evaluate \unit,s''[l\mapsto v_2]}
+
 
 \newrule{E-Sequence}
   {?}
@@ -194,7 +201,7 @@
 
 
 \newrule{E-Fail}
-  { }
+  {\ }
   {\Fail,s \evaluate \Fail,s}
 
 
@@ -223,6 +230,9 @@
   {e_1 \Xor e_2 ,s\evaluate e_1 \Xor e_2,s}
 
 
+\newrule{E-Appoint}
+    {e,s\evaluate t,s'}
+    {u \At e,s\evaluate u \At t,s'}
 
 
 
@@ -232,10 +242,6 @@
 \newmacro{RelationN}
   {t,s \normalise t',s'}
 
-
-  \newrule{N-Assign}
-    {t,s\normalise t',s'}
-    {u @ t,s\normalise u @ t',s'}
 
 \newrule{N-Edit}
   { }
@@ -307,14 +313,10 @@
     {e,s \normalise e'',s''}
 
 
-\newrule{N-Stable}[\Delta(s,s')\cap w(t') \equiv \emptyset]
-    {e,s\normalise e',s'}
-    {e,s\bar{\normalise}e',s'}
+\newrule{N-Appoint}
+  {t,s\normalise t',s'}
+  {u \At t,s\normalise u \At t',s'}
 
-\newrule{N-Memory}[\Delta(s,s')\cap w(t') \neq \emptyset]
-    {e,s\normalise e',s'\\
-    e',s'\bar{\normalise}e'',s''}
-    {e,s\bar{\normalise}e',s'}
 
 % \newrule{N-Next}[t_1' = \Edit v]
 %   {t_1,\Sigma \normalise t_1'\st{'}   \\
@@ -334,9 +336,9 @@
 \newmacro{RelationH}
   {t,s \handle{i} t',s'}
 
-\newrule{H-Assign}
+\newrule{H-Appoint}
   {t,s\handle{i}t',s'}
-  {u @ t,s\handle{i}u @ t',s'}
+  {u \At t,s\handle{i}u \At t',s'}
 
 \newrule{H-Change}[v, v' : \tau]
   { }
@@ -447,3 +449,13 @@
   {t,s   \handle{i} t',s' \\
    t',s' \bar{\normalise} t'',s''}
   {t,s \drive{i} t'',s''}
+
+
+\newrule{N-Stable}[\Delta(s,s')\cap w(t') \equiv \emptyset]
+    {e,s\normalise e',s'}
+    {e,s\bar{\normalise}e',s'}
+
+\newrule{N-Memory}[\Delta(s,s')\cap w(t') \neq \emptyset]
+    {e,s\normalise e',s'\\
+    e',s'\bar{\normalise}e'',s''}
+    {e,s\bar{\normalise}e',s'}
