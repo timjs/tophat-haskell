@@ -171,6 +171,8 @@ All synchronization problems in CSP must be solved by employing synchronized ste
 The basic method for synchronization in TOP is built into the step combinator.
 The task $t \Next c$ can only continue execution when two conditions are met:
 Task $t$ must have a value $v$, and $cv$ must not evaluate to $\Fail$.
+Programmers can encode arbitrary conditions in $cv$, which are evaluated atomically between interaction steps.
+This allows a variety of synchronization problems to be solved in an intuitive and straight-forward manner.
 
 
 \subsubsection*{Nondeterminism}
