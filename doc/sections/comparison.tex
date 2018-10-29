@@ -265,7 +265,7 @@ In state $C_0$, which represents a counter of 0, only \emph{signal} actions are 
 A thread willing to engage in \emph{wait} while the semaphore is in $C_0$ must wait until the other process has engaged in \emph{signal} with the semaphore.
 
 
-In TOP, a semaphore is a shared integer, together with two functions \emph{signal} and \emph{wait}.
+In TOP, a semaphore is a shared integer, together with two tasks \emph{signal} and \emph{wait}.
 \begin{equation*}
   \begin{array}{l}
   \text{type}\ \text{Semaphore} = \Reference \Int \\
@@ -273,8 +273,9 @@ In TOP, a semaphore is a shared integer, together with two functions \emph{signa
   \textit{wait}   :: \text{Semaphore} \to \Task \Unit
   \end{array}
 \end{equation*}
-\emph{signal} simply increments the shared integer.
+\emph{signal} simply increments the shared counter.
 \emph{wait} watches the counter and has a guarded step that is enabled if and only if the counter is greater than zero.
+The editor $\Update s$ should be regarded as read-only.
 \begin{equation*}
   \begin{array}{r @{\,} c @{\,} l}
     \textit{signal}\ s & = & s := {!s} + 1; \Edit \tuple{} \\
