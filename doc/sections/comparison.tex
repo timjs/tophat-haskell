@@ -231,5 +231,62 @@ When the user presses the continue button, the machine dispenses either a large 
 
 \subsubsection*{Semaphores}
 
+Semaphores are a synchronization mechanism on a medium level of abstraction.
+Their two operations \emph{signal} and \emph{wait} can be used in different ways to solve a variety of synchronization problems \cite{books/Downey08LBOS}.
+To make semaphores available in a system, they must be implemented using the system's primitive synchronization features, such as atomic test-and-set instructions, synchronized actions, or guarded transitions.
+
+Semaphores are supposed to be shared among agents.
+Semaphores have an internal counter and two methods \emph{signal} and \emph{wait}.
+The counter can be initialized once, but subsequently not accessed directly.
+When an agent invokes \emph{wait} and the counter is greater than zero, the semaphore decreases the counter and the agent continues.
+When an agent invokes \emph{wait} while the counter is zero, the agent blocks and has to wait until the counter increases.
+When an agent invokes \emph{signal}, the counter is increased.
+If there are any agents waiting for the semaphore, one of them is woken up.
+
+In CSP, a semaphore is a process that runs in parallel with all processes it is supposed to coordinate.
+For the sake of this example, we study a semaphore with maximum counter of 2, initialized to 1, that coordinates two processes $A$ and $B$.
+The example can be generalized to an arbitrary counter and arbitrary many processes.
+
+\begin{equation*}
+  \begin{array}{rcl}
+  Sem & = & C_1 \\
+  C_2 & = & (wait_A \to C_1 \mid wait_B \to C_1) \\
+  C_1 & = & (wait_A \to C_0 \mid wait_B \to C_0 \\
+      &   & \mid signal_A \to C_2 \mid signal_B \to C_2) \\
+  C_0 & = & (signal_A \to C_1 \mid signal_B \to C_1)
+  \end{array}
+\end{equation*}
+
+The semaphore starts in state $C_1$, which represents a counter of 1.
+Every process has its own actions \emph{signal} and \emph{wait}, because we want these actions to be synchronized only between semaphore and process, not directly between the processes.
+In state $C_1$, the semaphore can engage in \emph{wait} and \emph{signal} actions for both processes.
+\emph{wait} decreases the counter, \emph{signal} increases the counter.
+In state $C_0$, which represents a counter of 0, only \emph{signal} actions are possible.
+A thread willing to engage in \emph{wait} while the semaphore is in $C_0$ must wait until the other process has engaged in \emph{signal} with the semaphore.
+
+
+In TOP, a semaphore is a shared integer, together with two functions \emph{signal} and \emph{wait}.
+\begin{equation*}
+  \begin{array}{l}
+  \text{type}\ \text{Semaphore} = \Reference \Int \\
+  \textit{signal} :: \text{Semaphore} \to \Task \Unit \\
+  \textit{wait}   :: \text{Semaphore} \to \Task \Unit
+  \end{array}
+\end{equation*}
+\emph{signal} simply increments the shared integer.
+\emph{wait} watches the counter and has a guarded step that is enabled if and only if the counter is greater than zero.
+\begin{equation*}
+  \begin{array}{r @{\,} c @{\,} l}
+    \textit{signal}\ s & = & s := {!s} + 1; \Edit \tuple{} \\
+    \textit{wait}\ s   & = & \Update s \Next \lambda c. \IF c > 0 \THEN s := c - 1; \Edit \tuple{} \ELSE \Fail
+  \end{array}
+\end{equation*}
+When the step in \emph{wait} is enabled and receives a continue event, it decrements the counter.
+Decrementing the counter happens in the normalization semantics, and is therefore atomic with respect to event handling.
+When this causes the counter to become zero, all tasks that happen to wait for the semaphore have their step disabled simultaneously.
+Once the semaphore gets signalled, all steps become enabled.
+The first task to take the step again disables the step for all others.
+
+
 
 \subsubsection*{Cigarette smokers}
