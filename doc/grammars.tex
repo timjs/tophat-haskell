@@ -27,8 +27,40 @@
     Constants
       & c    &::= & B                    & – boolean \\
       &      &\mid& I                    & – integer \\
-      &      &\mid& S                    & – string \\
+      &      &\mid& S                    & – string
   \end{grammar}
+}
+
+\newmacro{G-Language-Compact}{
+  \begin{grammar*}
+    \head{4}{Expressions} \\
+    e &
+      ::= & \lambda x:\tau.\ e
+      \Mid  e_1\ e_2
+          & – abstraction, application \\
+    & \mid& x
+      \Mid  c
+          & – variable, constant \\
+    & \mid& \If{e_1}{e_2}{e_3}
+          & – branch \\
+    & \mid& e_1 \star e_2
+      \Mid  \tuple{e_1, e_2}
+      \Mid  \unit
+          & – operation, pair, unit \\
+    & \mid& \Ref e
+      \Mid  !e
+      \Mid  e_1 := e_2
+      \Mid  l
+          & – references and locations \\
+    & \mid& p
+          & – pretask \\
+    \head{4}{Constants} \\
+    c &
+      ::= & B
+      \Mid  I
+      \Mid  S
+          & – booleans, integers, strings
+  \end{grammar*}
 }
 
 \newmacro{G-Pretasks}{
@@ -47,8 +79,29 @@
       &      &\mid& e_1 \Xor e_2         & – user choice \\
     \addlinespace
       &      &\mid& u \At e              & – appoint \\
-      &      &\mid& \Fail                & – fail task \\
+      &      &\mid& \Fail                & – fail task
   \end{grammar}
+}
+
+\newmacro{G-Pretasks-Compact}{
+  \begin{grammar*}
+    \head{4}{Pretasks} \\
+      p &::= & \Edit e
+        \Mid   \Enter \beta
+        \Mid   \Update e
+        & – editors: valued, unvalued, stored \\
+        &\mid& e_1 \Then e_2
+        \Mid   e_1 \Next e_2
+        & – steps: internal, external \\
+        &\mid& e_1 \And e_2
+        & – pairing \\
+        &\mid& e_1 \Or e_2
+        \Mid   e_1 \Xor e_2
+        & – choice: internal, external \\
+        &\mid& u \At e
+        \Mid   \Fail
+        & – appoint, fail
+  \end{grammar*}
 }
 
 \newmacro{G-Types}{
@@ -66,6 +119,22 @@
       &      &\mid& \Int                 & – integer type \\
       &      &\mid& \String              & – string type \\
   \end{grammar}
+}
+
+\newmacro{G-Types-Compact}{
+  \begin{grammar*}
+    \head{4}{Types} \\
+      \tau &::= & \tau_1 \to \tau_2
+           \Mid   \tau_1 \times \tau_2 & – function type, product type \\
+           &\mid& \Unit
+           \Mid   \Reference \tau      & – unit type, reference type \\
+           &\mid& \Task \tau
+           \Mid   \beta                & – task type, basic type \\
+    \head{4}{Basic types} \\
+      \beta &::= & \Bool
+            \Mid   \Int
+            \Mid   \String             &
+  \end{grammar*}
 }
 
 \newmacro{G-Values}{
