@@ -37,7 +37,7 @@ As a matter of fact the primitives can certainly be expressed in terms of each o
 Instead, we point out how the systems emphasize certain points of view by choosing different basic building blocks.
 
 
-\subsubsection*{Communication with the environment}
+\subsubsection{Communication with the environment}
 
 In CSP, communication with the environment is represented by prefixing.
 The process $(a \to P)$ can engage in action $a$, after which it continues as process $P$.
@@ -75,7 +75,7 @@ In TOP, event values are typed to match the type of the receiving editor.
 In CSP, action names are essentially strings, subject to implicit restrictions.
 
 
-\subsubsection*{Communication between subsystems}
+\subsubsection{Communication between subsystems}
 
 Another important feature in both TOP and CSP is communication between subsystems, that is between tasks and between processes.
 
@@ -105,7 +105,7 @@ The semantics of TOP requires all updates to shared data and all enabled interna
 This introduces the possibility of diverging computations, where a cyclic dependency between shared data causes updates to enable steps, which cause more updates ad infinitum.
 
 
-\subsubsection*{Sequential composition}
+\subsubsection{Sequential composition}
 
 The intuition about sequential composition is to first do one thing, and once it is done, do some other thing.
 
@@ -125,7 +125,7 @@ In CSP, the first process initiates the step.
 In TOP, the step combinator initiates the step.
 
 
-\subsubsection*{Concurrency}
+\subsubsection{Concurrency}
 
 The intuition about concurrency is that two things are done at the same time.
 
@@ -149,7 +149,7 @@ Events to $t_1$ and $t_2$ must be prefixed by $\Left$ and $\Right$ respectively.
 This unambiguously renames the events, removing any source of nondeterminism.
 
 
-\subsubsection*{Synchronization}
+\subsubsection{Synchronization}
 
 Synchronization means that an agent has to pause execution until some condition is met.
 The need for synchronization arises quite naturally in countless variations in situations involving concurrency.
@@ -175,7 +175,7 @@ Programmers can encode arbitrary conditions in $cv$, which are evaluated atomica
 This allows a variety of synchronization problems to be solved in an intuitive and straight-forward manner.
 
 
-\subsubsection*{Nondeterminism}
+\subsubsection{Nondeterminism}
 
 Nondeterminism means that a system can react to the same input in different ways, the choice of which can not be influenced by the environment.
 
@@ -196,7 +196,8 @@ Input events for parallel tasks are disambiguated, internal steps have a well-de
 In this section we describe a couple of example problems, and show how they can be solved in both languages.
 
 
-\begin{example}(Vending machine)
+\subsubsection{Vending machine}
+
 The vending machine is an example often used as a hello-world program for process algebras.
 It demonstrates external communication and choice.
 It does not demonstrate concurrency.
@@ -226,10 +227,8 @@ There is a continue button that is initially disabled.
 When the user has input exactly 1 or 2 coins, the continue button becomes enabled.
 When the user presses the continue button, the machine dispenses either a large or a small biscuit, depending on the amount of money.
 
-\end{example}
 
-
-\subsubsection*{Semaphores}
+\subsubsection{Semaphores}
 
 Semaphores are a synchronization mechanism on a medium level of abstraction.
 Their two operations \emph{signal} and \emph{wait} can be used in different ways to solve a variety of synchronization problems \cite{books/Downey08LBOS}.
@@ -289,7 +288,7 @@ Once the semaphore gets signalled, all steps become enabled.
 The first task to take the step again disables the step for all others.
 
 
-\subsubsection*{Cigarette smokers}
+\subsubsection{Cigarette smokers}
 
 The cigarette smokers problem \cite{books/Downey08LBOS} is a surprisingly tricky synchronization problem.
 It requires waiting for two conditions, waking up only if both conditions are satisfied.
