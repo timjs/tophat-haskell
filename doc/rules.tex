@@ -306,10 +306,9 @@
   { }
   {e_1 \Xor e_2,s \normalise e_1 \Xor e_2,s}
 
-\newrule{N-Eval}
-    {e,s\evaluate e',s' \\
-     e',s'\normalise e'',s''\\
-    e\neq e'}
+\newrule{N-Eval}[e \neq e']
+    {e,s \evaluate e',s' \\
+     e',s' \normalise e'',s''}
     {e,s \normalise e'',s''}
 
 
@@ -432,9 +431,9 @@
 %    t_1' \Then e\st{'} \normalise t_2\st{''} }
 %   {t_1 \Then e,\Sigma \handle{i} t_2\st{''}}
 
-\newrule{H-Fallback}
-  { }
-  {t,\Sigma \handle{i} t,\Sigma}
+% \newrule{H-Fallback}
+%   { }
+%   {t,\Sigma \handle{i} t,\Sigma}
 
 
 
@@ -445,17 +444,19 @@
   {t,s \drive{i} t',s'}
 
 
-\newrule{D-Main}
-  {t,s   \handle{i} t',s' \\
-   t',s' \bar{\normalise} t'',s''}
+\newrule{D-Handle}
+  {t,s \handle{i} t',s' \\
+   t',s' \Normalise t'',s''}
   {t,s \drive{i} t'',s''}
 
 
-\newrule{N-Stable}[\Delta(s,s')\cap w(t') \equiv \emptyset]
-    {e,s\normalise e',s'}
-    {e,s\bar{\normalise}e',s'}
+\newrule{N-Done}[\Dirty(s,s'') \cap \Watching(t') = \nothing]
+    {e,s \evaluate t,s' \\
+     t,s' \normalise t',s''}
+    {t,s \Normalise t',s''}
 
-\newrule{N-Memory}[\Delta(s,s')\cap w(t') \neq \emptyset]
-    {e,s\normalise e',s'\\
-    e',s'\bar{\normalise}e'',s''}
-    {e,s\bar{\normalise}e',s'}
+\newrule{N-Stride}[\Dirty(s,s'') \cap \Watching(t') \neq \nothing]
+    {e,s \evaluate t,s' \\
+     t,s' \normalise t',s'' \\
+     t',s'' \Normalise t'',s'''}
+    {e,s \Normalise t'',s''}

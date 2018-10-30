@@ -80,20 +80,20 @@ input that it will handle. The function $\Failing$ determines this property.
   \begin{mathpar}
     \userule{N-Next} \quad
     \userule{N-And} \\
-    \userule{N-Appoint} \quad
-    \userule{N-Eval}
+    \userule{N-Appoint}
+    % \userule{N-Eval}
   \end{mathpar}
 
-  \caption{Normalisation semantics} \label{fig:normalisation-semantics}
+  \caption{Striding semantics} \label{fig:normalisation-semantics}
 \end{figure}
 
 \begin{figure}
   \small
   \begin{mathpar}
-    \userule{N-Stable} \\
-    \userule{N-Memory}
+    \userule{N-Done} \\
+    \userule{N-Stride}
   \end{mathpar}
-  \caption{Memory semantics} \label{fig:memory-semantics}
+  \caption{Normalisation semantics} \label{fig:memory-semantics}
 \end{figure}
 
 
@@ -142,7 +142,7 @@ input that it will handle. The function $\Failing$ determines this property.
   \small
   \begin{mathpar}
     \boxed{\RelationD} \\
-    \userule{D-Main}
+    \userule{D-Handle}
   \end{mathpar}
   \caption{Driving semantics} \label{fig:driving-semantics}
 \end{figure}
