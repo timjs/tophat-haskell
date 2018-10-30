@@ -31,9 +31,6 @@
 \newmacro{type}[1]
   {\texttt{#1}}
 
-\newmacro{head}[2]
-  {\addlinespace\multicolumn{#1}{c}{\textit{\textbf{#2}}}}
-
 \newenvironment{fadeout}
   {\color{gray}}
   {}
@@ -241,7 +238,7 @@
   {\end{tabular}\end{block}}
 \newenvironment*{grammar*}
   %%NOTE: the `@{}` suppreses `\tabcolsep` before the first column
-  {\begin{block}\begin{tabular}{@{}RCLl}}
+  {\begin{block}\begin{tabular}{@{}RLl}}
   {\end{tabular}\end{block}}
 
 
