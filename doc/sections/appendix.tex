@@ -355,18 +355,19 @@ We prove Theorem~\ref{thmfailing} by induction on $e'$.
 
 \subsubsection{Theorem~\ref{thmsafetyi2}}
 \begin{proof}
-  \noindent\textbf{Case} $e=\Edit v:\Task\tau, i= v':\tau$\\
-  \noindent\textbf{Case} $e=\Edit v:\Task\tau, i= \Empty$\\
-  \noindent\textbf{Case} $e=\Enter \tau, i= v':\tau$\\
-  \noindent\textbf{Case} $e=\Update l:\Task\tau, i= v':\tau$\\
-  \noindent\textbf{Case} $e=t_1\Or t_2 , i= \Pick\Left r $\\
-  \noindent\textbf{Case} $e=t_1\Or t_2 , i= \Pick\Right r $\\
-  \noindent\textbf{Case} $e=t, i= \Pick\Here $\\
-  \noindent\textbf{Case} $e=t_1\Next e_2 , i= \Continue $\\
-  \noindent\textbf{Case} $e=t_1\Then e_2 , i$\\
-  \noindent\textbf{Case} $e=t_1\Next e_2 , i\neq\Continue$\\
-  \noindent\textbf{Case} $e=t_1\And t_2 , i=\First i$\\
-  \noindent\textbf{Case} $e=t_1\And t_2 , i=\Second i$\\
-  \noindent\textbf{Case} $e=t_1\Or t_2 , i=\First i$\\
-  \noindent\textbf{Case} $e=t_1\Or t_2 , i=\Second i$\\
+
+  \noindent\textbf{Case} $e=\Edit v:\Task\tau, i= v':\tau$ Given that $\userule{H-Change}$, we have by definition that $\Inputs(\Edit v:\Task\tau) = \set{v':\tau,\Empty}$, which includes $v':\tau$.\\
+  \noindent\textbf{Case} $e=\Edit v:\Task\tau, i= \Empty$ Given that $\userule{H-Empty}$, we have by definition that $\Inputs(\Edit v:\Task\tau) = \set{v':\tau,\Empty}$, which includes $\Empty$.\\
+  \noindent\textbf{Case} $e=\Enter \tau, i= v':\tau$ Given that $\userule{H-Fill}$, we have by definiton that $\Inputs(\Enter \tau) = \set{v':\tau }$, which includes $v':\tau$.\\
+  \noindent\textbf{Case} $e=\Update l:\Task\tau, i= v':\tau$ Given that $\userule{H-Update}$, we have by definiton that $\Inputs(\Update l:\Task\tau)= \set{v':\tau }$, which includes $v':\tau$.\\
+  \noindent\textbf{Case} $e=t_1\Xor t_2 , i= \Left$ Given that $\userule{H-PickLeft}$, we have by definition that $\Inputs(t_1\Xor t_2) = \set{ \Left,\Right}$, which includes $\Left$.\\
+  \noindent\textbf{Case} $e=t_1\Xor t_2 , i= \Right$ Given that $\userule{H-PickRight}$, we have by definition that $\Inputs(t_1\Xor t_2) = \set{ \Left,\Right}$, which includes $\Right$.\\
+  \noindent\textbf{Case} $e=t_1\Next e_2 , i= \Continue $ Given that $\userule{H-Next}$, we have by definition that $\Inputs(t_1\Next e_2) = \Inputs(t_1) \cup \set{\Continue\mid \Value{(t_1)} = v_1 \wedge \neg\Failing{(e_2 v_1\stride)}}$. If the H-Next rule applies, this means that the conditions $\Value{(t_1)} = v_1 \wedge \neg\Failing{(e_2 v_1\stride)}$ are fulfilled, and therefore $\Continue$ is contained. \\
+  \noindent\textbf{Case} $e=t_1\Next e_2 , i\neq\Continue$ Given that $\userule{H-PassNext}$, we have by definition that $\Inputs(t_1\Next e_2) = \Inputs(t_1) \cup \set{\Continue\mid \Value{(t_1)} = v_1 \wedge \neg\Failing{(e_2 v_1\stride)}}$. By the induction hypthesis, we have that $i\in \Inputs(t_1)$, and by definiton of $\Inputs$, $i$ is therefore also included in this case.\\
+  \noindent\textbf{Case} $e=t_1\Then e_2 , i$ Given that $\userule{H-PassThen}$, we have by definition that $\Inputs(t_1\Then e_2)= \Inputs(t_1)$. By the induction hypthesis, we have that $i\in \Inputs(t_1)$, and by definiton of $\Inputs$, $i$ is therefore also included in this case.\\
+  \noindent\textbf{Case} $e=t_1\And t_2 , i=\First i$ Given that $\userule{H-FirstOr}$ we have by definition that $\Inputs(t_1\And t_2) = \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)}$. By the induction hypothesis, we have that $i\in\Inputs(t_1)$, and by definition of $\Inputs$, $\First i$ is therefore als included in this case.\\
+  \noindent\textbf{Case} $e=t_1\And t_2 , i=\Second i$ Given that $\userule{H-SecondOr}$ we have by definition that $\Inputs(t_1\And t_2) = \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)}$. By the induction hypothesis, we have that $i\in\Inputs(t_2)$, and by definition of $\Inputs$, $\Second i$ is therefore als included in this case.\\
+  \noindent\textbf{Case} $e=t_1\Or t_2 , i=\First i$ Given that $\userule{H-FirstOr}$ we have by definition that $\Inputs(t_1\Or t_2) = \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)}$. By the induction hypothesis, we have that $i\in\Inputs(t_1)$, and by definition of $\Inputs$, $\First i$ is therefore als included in this case.\\
+  \noindent\textbf{Case} $e=t_1\Or t_2 , i=\Second i$ Given that $\userule{H-FirstOr}$ we have by definition that $\Inputs(t_1\Or t_2) = \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)}$. By the induction hypothesis, we have that $i\in\Inputs(t_2)$, and by definition of $\Inputs$, $\Second i$ is therefore als included in this case.\\
+  \noindent\textbf{Case} $e=u\At t, i$ Given that $\userule{H-Assign}$, we can directly apply the induction hypothesis to prove this case.
 \end{proof}
