@@ -334,4 +334,20 @@ There are three actions \emph{match}, \emph{tobac}, and \emph{paper}, and we ima
 \end{equation*}
 When the environment is willing to engage in the sequence $\textit{tobac} \to \textit{paper} \to \textit{smoke}$ with $S$, and the \emph{paperSmoker} synchronizes with the action \emph{tobac}, the system deadlocks before anyone can smoke.
 
-A similar effort as in Downey's solution must be made in order to solve the problem with synchronized actions in CSP.
+A similar effort as in Downey's solution must be made in order to solve the problem using synchronized actions in CSP.
+
+TOP allows a simple solution to this problem, using guarded steps.
+Steps can be guarded with arbitrary expressions, and the parallel combinator can be used to watch two shared data sources at the same time.
+Let \textit{match}, \textit{paper}, and \textit{tobac} be shared Booleans.
+The smokers are defined as follows.
+\begin{equation*}
+\begin{array}{l @{\,} c @{\,} l}
+  \textit{tobacSmoker} & = & (\Update \textit{match} \And \Update \textit{paper}) \Next \lambda \tuple{x,y}. \\
+    & & \quad \IF x \mathrel{\&\&} y \THEN \textit{smoke} \ELSE \Fail \\
+  \textit{paperSmoker} & = & (\Update \textit{tobac} \And \Update \textit{match}) \Next \lambda \tuple{x,y}. \\
+    & & \quad \IF x \mathrel{\&\&} y \THEN \textit{smoke} \ELSE \Fail \\
+  \textit{matchSmoker} & = & (\Update \textit{tobac} \And \Update \textit{paper}) \Next \lambda \tuple{x,y}. \\
+    & & \quad \IF x \mathrel{\&\&} y \THEN \textit{smoke} \ELSE \Fail \\
+\end{array}
+\end{equation*}
+When the agent supplies two of the ingredients by setting the respective shares to $\True$, only the step of the smoker that waits for those becomes enabled.
