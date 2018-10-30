@@ -36,16 +36,16 @@
   \begin{flalign*}
     \begin{array}{lcl}
       \multicolumn{3}{l}{\Inputs : \mathrm{Tasks} \to \powerset(\mathrm{Inputs})} \\
-      \Inputs(\Edit v:\Task\tau)       &=& \set{v':\tau, \Empty} \\
-      \Inputs(\Enter \tau)   &=& \set{v':\tau} \\
-      \Inputs(\Update l:\Task\tau)     &=& \set{v':\tau} \\
-      \Inputs(\Fail)         &=& \set{} \\
-      \Inputs(t_1 \Then e_2) &=& \Inputs(t_1) \\
-      \Inputs(t_1 \Next e_2) &=& \Inputs(t_1) \cup \set{\Continue\mid \Value{(t_1)}\neq \bot \wedge \neg\Failing{(e_2 \Value{(t_1)}\stride)}} \\
-      \Inputs(t_1 \And t_2)  &=& \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)} \\
-      \Inputs(t_1 \Or t_2)   &=& \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)} \\
-      \Inputs(e_1 \Xor e_2)  &=& \set{\Left, \Right} \\
-      \Inputs(u_1 \At t)       &=& \set{u_2 \At i\mid u_2 \At i \in \Inputs(t)} \cup \set{u_1 \At i\mid i\in \Inputs(t)}
+      \Inputs(\Edit v:\Task\tau)   &=& \set{v':\tau, \Empty} \\
+      \Inputs(\Enter \tau)         &=& \set{v':\tau} \\
+      \Inputs(\Update l:\Task\tau) &=& \set{v':\tau} \\
+      \Inputs(\Fail)               &=& \nothing \\
+      \Inputs(t_1 \Then e_2)       &=& \Inputs(t_1) \\
+      \Inputs(t_1 \Next e_2)       &=& \Inputs(t_1) \cup \set{\Continue \mid \Value{(t_1)} = v_1 \land \lnot\Failing(e_2 v_1)} \\
+      \Inputs(t_1 \And t_2)        &=& \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)} \\
+      \Inputs(t_1 \Or t_2)         &=& \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)} \\
+      \Inputs(e_1 \Xor e_2)        &=& \set{\Left, \Right} \\
+      \Inputs(u_1 \At t)           &=& \set{u_2 \At i\mid u_2 \At i \in \Inputs(t)} \cup \set{u_1 \At i\mid i\in \Inputs(t)}
     \end{array} & &&
   \end{flalign*}
 }
@@ -60,10 +60,29 @@
       \Failing(\Fail,s)         &=& \True \\
       \Failing(t_1 \Then e_2,s) &=& \Failing(t_1,s) \\
       \Failing(t_1 \Next e_2,s) &=& \Failing(t_1,s) \\
-      \Failing(t_1 \And t_2,s)  &=& \Failing(t_1,s) \wedge \Failing(t_2,s) \\
-      \Failing(t_1 \Or t_2,s)   &=& \Failing(t_1,s) \wedge \Failing(t_2,s) \\
-      \Failing(e_1 \Xor e_2,s)  &=& \Failing(t_1,s') \wedge \Failing(t_2,s') \mid e_1,s\stride t_1,s' \quad e_2,s\stride t_2,s'\\
-      \Failing(u \At t,s)         &=& \Failing(t,s)
+      \Failing(t_1 \And t_2,s)  &=& \Failing(t_1,s) \land \Failing(t_2,s) \\
+      \Failing(t_1 \Or t_2,s)   &=& \Failing(t_1,s) \land \Failing(t_2,s) \\
+      \Failing(e_1 \Xor e_2,s)  &=& \Failing(t_1,s') \land \Failing(t_2,s') \\
+      \multicolumn{3}{l}{\qquad\where\ e_1,s\stride t_1,s' \quad e_2,s\stride t_2,s'} \\
+      \Failing(u \At t,s)       &=& \Failing(t,s)
+    \end{array} & &&
+  \end{flalign*}
+}
+
+\newmacro{O-Watching}{
+  \begin{flalign*}
+    \begin{array}{lcl}
+      \multicolumn{3}{l}{\Watching : \mathrm{Tasks} \to \powerset(\mathrm{Locations})} \\
+      \Watching(\Edit v)       &=& \nothing \\
+      \Watching(\Enter \tau)   &=& \nothing \\
+      \Watching(\Update l)     &=& \set{l} \\
+      \Watching(\Fail)         &=& \nothing\\
+      \Watching(t_1 \Then e_2) &=& \Watching(t_1) \\
+      \Watching(t_1 \Next e_2) &=& \Watching(t_1) \\
+      \Watching(t_1 \And t_2)  &=& \Watching(t_1) \cup \Watching(t_2) \\
+      \Watching(t_1 \Or t_2)   &=& \Watching(t_1) \cup \Watching(t_2) \\
+      \Watching(e_1 \Xor e_2)  &=& \nothing \\
+      \Watching(u \At t)       &=& \Watching(t)
     \end{array} & &&
   \end{flalign*}
 }
