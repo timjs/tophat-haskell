@@ -53,35 +53,35 @@ input that it will handle. The function $\Failing$ determines this property.
   \small
 
   \begin{mathpar}
-    \boxed{\RelationN}
+    \boxed{\RelationS}
   \end{mathpar}
 
   \paragraph{Step}
   \begin{mathpar}
-    \userule{N-ThenStay} \\
-    \userule{N-ThenFail} \\
-    \userule{N-ThenCont}
+    \userule{S-ThenStay} \\
+    \userule{S-ThenFail} \\
+    \userule{S-ThenCont}
   \end{mathpar}
 
   \paragraph{Choose}
   \begin{mathpar}
-    \userule{N-OrLeft} \\
-    \userule{N-OrRight} \\
-    \userule{N-OrNone}
+    \userule{S-OrLeft} \\
+    \userule{S-OrRight} \\
+    \userule{S-OrNone}
   \end{mathpar}
 
   \paragraph{Ready}
   \begin{mathpar}
-    \userule{N-Edit} \quad \userule{N-Fill} \qquad \userule{N-Update} \\
-    \userule{N-Fail} \quad \userule{N-Xor}
+    \userule{S-Edit} \quad \userule{S-Fill} \qquad \userule{S-Update} \\
+    \userule{S-Fail} \quad \userule{S-Xor}
   \end{mathpar}
 
   \paragraph{Congruence}
   \begin{mathpar}
-    \userule{N-Next} \quad
-    \userule{N-And} \\
-    \userule{N-Appoint}
-    % \userule{N-Eval}
+    \userule{S-Next} \quad
+    \userule{S-And} \\
+    \userule{S-Appoint}
+    % \userule{S-Eval}
   \end{mathpar}
 
   \caption{Striding semantics} \label{fig:normalisation-semantics}
@@ -90,6 +90,7 @@ input that it will handle. The function $\Failing$ determines this property.
 \begin{figure}
   \small
   \begin{mathpar}
+    \boxed{\RelationN} \\
     \userule{N-Done} \\
     \userule{N-Stride}
   \end{mathpar}

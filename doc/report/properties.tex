@@ -43,7 +43,7 @@
 \end{theorem}
 
 \begin{theorem}[preservation under normalization]
-    $\forall e:\tau  e \normalise e' \implies e':\tau$
+    $\forall e:\tau  e \stride e' \implies e':\tau$
     \label{thmpresnorm}
 \end{theorem}
 
@@ -139,56 +139,56 @@ Before we can show that normalisation also preserves, we need to show that the f
 \begin{proof}
   We prove Theorem~\ref{thmpresnorm} by induction on $e$:\\
 
-  \noindent\textbf{Case} $\userule{N-Fail}$ Since this case does not alter the
+  \noindent\textbf{Case} $\userule{S-Fail}$ Since this case does not alter the
   expression, the theorem holds trivially.\\
 
-  \noindent\textbf{Case} $\userule{N-Xor}$ Since this case does not alter the
+  \noindent\textbf{Case} $\userule{S-Xor}$ Since this case does not alter the
   expression, the theorem holds trivially.\\
 
-  \noindent\textbf{Case} $\userule{N-Update}$ Since this case does not alter
+  \noindent\textbf{Case} $\userule{S-Update}$ Since this case does not alter
   the expression, the theorem holds trivially.\\
 
-  \noindent\textbf{Case} $\userule{N-Fill}$ Since this case does not alter the
+  \noindent\textbf{Case} $\userule{S-Fill}$ Since this case does not alter the
   expression, the theorem holds trivially.\\
 
-  \noindent\textbf{Case} $\userule{N-Edit}$ Since this case does not alter the
+  \noindent\textbf{Case} $\userule{S-Edit}$ Since this case does not alter the
   expression, the theorem holds trivially.\\
 
-  \noindent\textbf{Case} $\userule{N-And}$ Given that $t_1\And t_2:\Task(\tau_1\times\tau_2)$, by T-And we have $t_1:\tau_1$ and $t_2:\tau_2$. By the induction hypothesis, we also have $t_1':\tau_1$ and $t_2':\tau_2$. This gives us that $t_1'\And t_2':\Task(\tau_1\times\tau_2)$.\\
+  \noindent\textbf{Case} $\userule{S-And}$ Given that $t_1\And t_2:\Task(\tau_1\times\tau_2)$, by T-And we have $t_1:\tau_1$ and $t_2:\tau_2$. By the induction hypothesis, we also have $t_1':\tau_1$ and $t_2':\tau_2$. This gives us that $t_1'\And t_2':\Task(\tau_1\times\tau_2)$.\\
 
-  \noindent\textbf{Case} $\userule{N-Next}$ Given that $e_1\Next e_2:\Task \tau$, T-Then gives us that $t_1:\Task\tau_1$
+  \noindent\textbf{Case} $\userule{S-Next}$ Given that $e_1\Next e_2:\Task \tau$, T-Then gives us that $t_1:\Task\tau_1$
   and $e_2:\tau_1 \to \Task \tau$. By the induction hypothesis, we know that
-  $t_1\normalise t_1'$ preserves and thus $t_1':\Task\tau_1$. Therefore
+  $t_1\stride t_1'$ preserves and thus $t_1':\Task\tau_1$. Therefore
   $t_1'\Next e_2:\Task\tau$.\\\\
 
-  \noindent\textbf{Case} $\userule{N-OrLeft}$ Given that $t_1\Or t_2:\Task\tau$,
+  \noindent\textbf{Case} $\userule{S-OrLeft}$ Given that $t_1\Or t_2:\Task\tau$,
   by T-Or we have $t_1:\Task\tau$. By the induction hypothesis, we know that
-  $t_1\normalise t_1'$ preserves and thus $t_1':\Task\tau$.\\
+  $t_1\stride t_1'$ preserves and thus $t_1':\Task\tau$.\\
 
-  \noindent\textbf{Case} $\userule{N-OrRight}$ Given that $t_1\Or t_2:\Task\tau$,
+  \noindent\textbf{Case} $\userule{S-OrRight}$ Given that $t_1\Or t_2:\Task\tau$,
   by T-Or we have $t_2:\Task\tau$. By the induction hypothesis, we know that
-  $t_2\normalise t_2'$ preserves and thus $t_2':\Task\tau$. \todo{there might be
+  $t_2\stride t_2'$ preserves and thus $t_2':\Task\tau$. \todo{there might be
   more to be said here. t1 obviously can to stuff too, but we don't say anyting about this.}\\
 
-  \noindent\textbf{Case} $\userule{N-OrNone}$ Given that $t_1\Or t_2:\Task\tau$,
+  \noindent\textbf{Case} $\userule{S-OrNone}$ Given that $t_1\Or t_2:\Task\tau$,
   by T-Or we have $t_1:\Task\tau$ and $t_2:\Task\tau$. By the induction hypothesis,
-  we know that $t_1\normalise t_1'$ and $t_2\normalise t_2'$ preserve, and thus
+  we know that $t_1\stride t_1'$ and $t_2\stride t_2'$ preserve, and thus
   $t_1'\Or t_2':\Task\tau$.\\
 
-  \noindent\textbf{Case} $\userule{N-ThenStay}$ Given that $t_1\Then e_2:\Task\tau$,
+  \noindent\textbf{Case} $\userule{S-ThenStay}$ Given that $t_1\Then e_2:\Task\tau$,
   by T-Then we have $t_1:\Task\tau_1$ and $e_2:\tau_1\to\Task\tau$. By the induction
-  hypothesis, we know that $t_1\normalise t_1'$ preserves, and thus $t_1'\Then e_2:\Task\tau$.\\
+  hypothesis, we know that $t_1\stride t_1'$ preserves, and thus $t_1'\Then e_2:\Task\tau$.\\
 
-  \noindent\textbf{Case} $\userule{N-ThenFail}$ Given that $t_1\Then e_2:\Task\tau$,
+  \noindent\textbf{Case} $\userule{S-ThenFail}$ Given that $t_1\Then e_2:\Task\tau$,
   by T-Then we have $t_1:\Task\tau_1$ and $e_2:\tau_1\to\Task\tau$. By the induction
-  hypothesis, we know that $t_1\normalise t_1'$ preserves, and thus $t_1'\Then e_2:\Task\tau$.\\
+  hypothesis, we know that $t_1\stride t_1'$ preserves, and thus $t_1'\Then e_2:\Task\tau$.\\
 
-  \noindent\textbf{Case} $\userule{N-ThenCont}$Given that $t_1\Then e_2:\Task\tau$,
+  \noindent\textbf{Case} $\userule{S-ThenCont}$Given that $t_1\Then e_2:\Task\tau$,
   by T-Then we have $t_1:\Task\tau_1$ and $e_2:\tau_1\to\Task\tau$. By the induction
-  hypothesis, we know that $t_1\normalise t_1'$ preserves. By
+  hypothesis, we know that $t_1\stride t_1'$ preserves. By
   Lemma~\ref{lemmavaluepreserves}, we know that $\Value{(t_1')}=v_1$ preserves.
   By Theorem~\ref{thmpreseval} we know that $e_2 v_1\evaluate t_2$ preserves. And
-  finally by the induction hypothesis, we know that $t_2\normalise t_2'$ preserves.
+  finally by the induction hypothesis, we know that $t_2\stride t_2'$ preserves.
   Therefore $t_2':\Task\tau$.\\
 
 \end{proof}
@@ -225,7 +225,7 @@ Before we can show that normalisation also preserves, we need to show that the f
 \subsection{???}
 
 \begin{align*}
-  \forall e:\tau & e \normalise e' &\implies& \text{ either Fail}(e') \text{ or } \exists e'',i' \text{ such that } e'\handle{i'}e''&\\
+  \forall e:\tau & e \stride e' &\implies& \text{ either Fail}(e') \text{ or } \exists e'',i' \text{ such that } e'\handle{i'}e''&\\
 \end{align*}
 
 \begin{theorem}
@@ -243,7 +243,7 @@ Before we can show that normalisation also preserves, we need to show that the f
 
   \noindent\textbf{Case} $t_1\Then e_2$ By definition, $\Inputs{(t_1\Then e_2)}=\Inputs{(t_1)}$. By the induction hypothesis, we have that $i\in\Inputs{(t_1)}$, then $t_1\handle{i}t_1'$. Therefore, we also have $\userule{H-PassThen}$.\\
 
-  \noindent\textbf{Case} $t_1\Next e_2$ By definiton, $\Inputs(t_1 \Next e_2) = \Inputs(t_1) \cup \set{\Continue\mid \Value{(t_1)}\neq \bot \wedge \neg\Failing{(e_2 \Value{(t_1)}\normalise)}}$. If $i=\Continue$, then we know that $\Value{(t_1)}\neq \bot \wedge \neg\Failing{(e_2 \Value{(t_1)}\normalise)}$ holds, and therefore H-Next applies. Otherwise, we have by induction hypothesis that $i\in\Inputs{(t_1)}$, then $t_1\handle{i}t_1'$. Therefore, we also have $\userule{H-PassNext}$.\\
+  \noindent\textbf{Case} $t_1\Next e_2$ By definiton, $\Inputs(t_1 \Next e_2) = \Inputs(t_1) \cup \set{\Continue\mid \Value{(t_1)}\neq \bot \wedge \neg\Failing{(e_2 \Value{(t_1)}\stride)}}$. If $i=\Continue$, then we know that $\Value{(t_1)}\neq \bot \wedge \neg\Failing{(e_2 \Value{(t_1)}\stride)}$ holds, and therefore H-Next applies. Otherwise, we have by induction hypothesis that $i\in\Inputs{(t_1)}$, then $t_1\handle{i}t_1'$. Therefore, we also have $\userule{H-PassNext}$.\\
 
   \noindent\textbf{Case} $t_1\And t_2$ By definiiton, $\Inputs(t_1\And t_2) = \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)}$. By the induction hypothesis, we have both that if $i\in\Inputs(t_1)$ then $t_1\handle{i}t_1'$ and that if $i\in\Inputs(t_2)$ then $t_2\handle{i}t_2'$. Therefore, if $i\in\Inputs(t_1\And t_2)$, then either $\userule{H-FirstAnd}$ or $\userule{H-SecondAnd}$.\\
 

@@ -167,15 +167,15 @@ Notes:
 
 \begin{flalign*}
   \begin{array}{lcl}
-    \multicolumn{3}{l}{\Value_{\normalise} : \mathrm{Tasks} \rightharpoonup \mathrm{Boolean}} \\
-    \Value_{\normalise}(\Edit e)       &=& \True \\
-    \Value_{\normalise}(\Enter \tau)   &=& \True \\
-    \Value_{\normalise}(\Fail)         &=& \True \\
-    \Value_{\normalise}(e_1 \Then e_2) &=& \neg\Value(e_1)\wedge\Value_{\normalise}(e_1) \\
-    \Value_{\normalise}(e_1 \Next e_2) &=& \Value(e_1)\vee\Value_{\normalise}(e_1)\\
-    \Value_{\normalise}(e_1 \And e_2)  &=& \Value_{\normalise}(e_1)\wedge \Value_{\normalise}(e_2) \\
-    \Value_{\normalise}(t_1 \Or t_2)   &=& \neg(\Value(e_1)\vee\Value(e_2))\wedge\Value_{\normalise}(e_1)\wedge\Value_{\normalise}(e_2) \\
-    \Value_{\normalise}(t_1 \Xor t_2)  &=& \True
+    \multicolumn{3}{l}{\Value_{\stride} : \mathrm{Tasks} \rightharpoonup \mathrm{Boolean}} \\
+    \Value_{\stride}(\Edit e)       &=& \True \\
+    \Value_{\stride}(\Enter \tau)   &=& \True \\
+    \Value_{\stride}(\Fail)         &=& \True \\
+    \Value_{\stride}(e_1 \Then e_2) &=& \neg\Value(e_1)\wedge\Value_{\stride}(e_1) \\
+    \Value_{\stride}(e_1 \Next e_2) &=& \Value(e_1)\vee\Value_{\stride}(e_1)\\
+    \Value_{\stride}(e_1 \And e_2)  &=& \Value_{\stride}(e_1)\wedge \Value_{\stride}(e_2) \\
+    \Value_{\stride}(t_1 \Or t_2)   &=& \neg(\Value(e_1)\vee\Value(e_2))\wedge\Value_{\stride}(e_1)\wedge\Value_{\stride}(e_2) \\
+    \Value_{\stride}(t_1 \Xor t_2)  &=& \True
   \end{array} & &&
 \end{flalign*}
 
@@ -194,7 +194,7 @@ Notes:
   \end{array} & &&
 \end{flalign*}
 
-\todo{Is $\Failing$ preserved by $\normalise$?}
+\todo{Is $\Failing$ preserved by $\stride$?}
 
 \begin{flalign*}
   \begin{array}{lcl}
@@ -204,7 +204,7 @@ Notes:
     \Inputs(\Update l:\Task\tau)     &=& \set{v':\tau} \\
     \Inputs(\Fail)         &=& \set{} \\
     \Inputs(t_1 \Then e_2) &=& \Inputs(t_1) \\
-    \Inputs(t_1 \Next e_2) &=& \Inputs(t_1) \cup \set{\Continue\mid \Value{(t_1)}\neq \bot \wedge \neg\Failing{(e_2 \Value{(t_1)}\normalise)}} \\
+    \Inputs(t_1 \Next e_2) &=& \Inputs(t_1) \cup \set{\Continue\mid \Value{(t_1)}\neq \bot \wedge \neg\Failing{(e_2 \Value{(t_1)}\stride)}} \\
     \Inputs(t_1 \And t_2)  &=& \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)} \\
     \Inputs(t_1 \Or t_2)   &=& \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)} \\
     \Inputs(e_1 \Xor e_2)  &=& \set{\Pick \Left, \Pick \Right}
@@ -222,36 +222,36 @@ Notes:
 
 \paragraph{Step}
 \begin{mathpar}
-  \userule{N-ThenStay} \\
-  \userule{N-ThenFail} \\
-  \userule{N-ThenCont}
+  \userule{S-ThenStay} \\
+  \userule{S-ThenFail} \\
+  \userule{S-ThenCont}
 \end{mathpar}
 
 \paragraph{Choose}
 \begin{mathpar}
-  \userule{N-OrLeft} \\
-  \userule{N-OrRight} \\
-  \userule{N-OrNone}
+  \userule{S-OrLeft} \\
+  \userule{S-OrRight} \\
+  \userule{S-OrNone}
 \end{mathpar}
 
 \paragraph{Congruence}
 \begin{mathpar}
-  \userule{N-Next} \\
-  \userule{N-And}
+  \userule{S-Next} \\
+  \userule{S-And}
 \end{mathpar}
 
 \paragraph{Ready}
 \begin{mathpar}
-  \userule{N-Edit} \qquad \userule{N-Fill} \qquad \userule{N-Update} \\
-  \userule{N-Fail} \qquad \userule{N-Xor}
+  \userule{S-Edit} \qquad \userule{S-Fill} \qquad \userule{S-Update} \\
+  \userule{S-Fail} \qquad \userule{S-Xor}
 \end{mathpar}
 
 \paragraph{Driving}
 \begin{mathpar}
-  \userule{N-Eval}
+  \userule{S-Eval}
 \end{mathpar}
 
-\todo{Do we need to normalise \refrule{N-And} further to a pair for nice equality properties or can we just use $\Value(t)$ to check if we have a pair?}
+\todo{Do we need to normalise \refrule{S-And} further to a pair for nice equality properties or can we just use $\Value(t)$ to check if we have a pair?}
 
 
 

@@ -41,7 +41,7 @@
       \Inputs(\Update l:\Task\tau)     &=& \set{v':\tau} \\
       \Inputs(\Fail)         &=& \set{} \\
       \Inputs(t_1 \Then e_2) &=& \Inputs(t_1) \\
-      \Inputs(t_1 \Next e_2) &=& \Inputs(t_1) \cup \set{\Continue\mid \Value{(t_1)}\neq \bot \wedge \neg\Failing{(e_2 \Value{(t_1)}\normalise)}} \\
+      \Inputs(t_1 \Next e_2) &=& \Inputs(t_1) \cup \set{\Continue\mid \Value{(t_1)}\neq \bot \wedge \neg\Failing{(e_2 \Value{(t_1)}\stride)}} \\
       \Inputs(t_1 \And t_2)  &=& \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)} \\
       \Inputs(t_1 \Or t_2)   &=& \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)} \\
       \Inputs(e_1 \Xor e_2)  &=& \set{\Left, \Right} \\
@@ -62,7 +62,7 @@
       \Failing(t_1 \Next e_2,s) &=& \Failing(t_1,s) \\
       \Failing(t_1 \And t_2,s)  &=& \Failing(t_1,s) \wedge \Failing(t_2,s) \\
       \Failing(t_1 \Or t_2,s)   &=& \Failing(t_1,s) \wedge \Failing(t_2,s) \\
-      \Failing(e_1 \Xor e_2,s)  &=& \Failing(t_1,s') \wedge \Failing(t_2,s') \mid e_1,s\normalise t_1,s' \quad e_2,s\normalise t_2,s'\\
+      \Failing(e_1 \Xor e_2,s)  &=& \Failing(t_1,s') \wedge \Failing(t_2,s') \mid e_1,s\stride t_1,s' \quad e_2,s\stride t_2,s'\\
       \Failing(u \At t,s)         &=& \Failing(t,s)
     \end{array} & &&
   \end{flalign*}

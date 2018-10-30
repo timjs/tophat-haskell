@@ -239,93 +239,115 @@
 %% Normalisation %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-\newmacro{RelationN}
-  {t,s \normalise t',s'}
+\newmacro{RelationS}
+  {t,s \stride t',s'}
 
 
-\newrule{N-Edit}
+\newrule{S-Edit}
   { }
-  {\Edit v,s \normalise \Edit v,s}
+  {\Edit v,s \stride \Edit v,s}
 
-\newrule{N-Fill}
+\newrule{S-Fill}
   { }
-  {\Enter \tau,s \normalise \Enter \tau,s}
+  {\Enter \tau,s \stride \Enter \tau,s}
 
-\newrule{N-Update}
+\newrule{S-Update}
   { }
-  {\Update l,s \normalise \Update l,s}
+  {\Update l,s \stride \Update l,s}
 
 
-\newrule{N-Fail}
+\newrule{S-Fail}
   { }
-  {\Fail,s \normalise \Fail,s}
+  {\Fail,s \stride \Fail,s}
 
 
-\newrule{N-ThenStay}[\Value(t_1',s') = \bot]
-  {t_1,s \normalise t_1',s'}
-  {t_1 \Then e_2,s \normalise t_1' \Then e_2,s'}
+\newrule{S-ThenStay}[\Value(t_1',s') = \bot]
+  {t_1,s \stride t_1',s'}
+  {t_1 \Then e_2,s \stride t_1' \Then e_2,s'}
 
-\newrule{N-ThenFail}[\Value(t_1',s') = v_1 \land \Failing(t_2,s'')]
-  {t_1,s \normalise t_1',s' \\
+\newrule{S-ThenFail}[\Value(t_1',s') = v_1 \land \Failing(t_2,s'')]
+  {t_1,s \stride t_1',s' \\
    e_2\ v_1,s' \evaluate t_2,s''}
-  {t_1 \Then e_2,s \normalise t_1' \Then e_2,s'}
+  {t_1 \Then e_2,s \stride t_1' \Then e_2,s'}
 
-\newrule{N-ThenCont}[\Value(t_1',s') = v_1 \land \lnot\Failing(t_2,s'')]
-  {t_1,s \normalise t_1',s' \\
+\newrule{S-ThenCont}[\Value(t_1',s') = v_1 \land \lnot\Failing(t_2,s'')]
+  {t_1,s \stride t_1',s' \\
    e_2\ v_1,s' \evaluate t_2 ,s'' \\
-   t_2,s'' \normalise t_2',s'''}
-  {t_1 \Then e_2,s \normalise t_2',s'''}
+   t_2,s'' \stride t_2',s'''}
+  {t_1 \Then e_2,s \stride t_2',s'''}
 
-\newrule{N-Next}
-  {t_1,s \normalise t_1',s'}
-  {t_1 \Next e_2,s \normalise t_1' \Next e_2,s'}
-
-
-\newrule{N-And}
-  {t_1,s  \normalise t_1',s' \\
-   t_2,s' \normalise t_2',s''}
-  {t_1 \And t_2,s \normalise t_1' \And t_2',s''}
+\newrule{S-Next}
+  {t_1,s \stride t_1',s'}
+  {t_1 \Next e_2,s \stride t_1' \Next e_2,s'}
 
 
-\newrule{N-OrLeft}[\Value(t_1',s') = v_1]
-  {t_1,s  \normalise t_1',s'}
-  {t_1 \Or t_2,s \normalise t_1',s'}
-
-\newrule{N-OrRight}[\Value(t_1',s') = \bot \land \Value(t_2',s'') = v_2]
-  {t_1,s  \normalise t_1',s' \\
-   t_2,s' \normalise t_2',s''}
-  {t_1 \Or t_2,s \normalise t_2',s''}
-
-\newrule{N-OrNone}[\Value(t_1',s') = \bot \land \Value(t_2',s'') = \bot]
-  {t_1,s  \normalise t_1',s' \\
-   t_2,s' \normalise t_2',s''}
-  {t_1 \Or t_2,s \normalise t_1' \Or t_2',s''}
+\newrule{S-And}
+  {t_1,s  \stride t_1',s' \\
+   t_2,s' \stride t_2',s''}
+  {t_1 \And t_2,s \stride t_1' \And t_2',s''}
 
 
-\newrule{N-Xor}
+\newrule{S-OrLeft}[\Value(t_1',s') = v_1]
+  {t_1,s  \stride t_1',s'}
+  {t_1 \Or t_2,s \stride t_1',s'}
+
+\newrule{S-OrRight}[\Value(t_1',s') = \bot \land \Value(t_2',s'') = v_2]
+  {t_1,s  \stride t_1',s' \\
+   t_2,s' \stride t_2',s''}
+  {t_1 \Or t_2,s \stride t_2',s''}
+
+\newrule{S-OrNone}[\Value(t_1',s') = \bot \land \Value(t_2',s'') = \bot]
+  {t_1,s  \stride t_1',s' \\
+   t_2,s' \stride t_2',s''}
+  {t_1 \Or t_2,s \stride t_1' \Or t_2',s''}
+
+
+\newrule{S-Xor}
   { }
-  {e_1 \Xor e_2,s \normalise e_1 \Xor e_2,s}
+  {e_1 \Xor e_2,s \stride e_1 \Xor e_2,s}
 
-\newrule{N-Eval}[e \neq e']
+\newrule{S-Eval}[e \neq e']
     {e,s \evaluate e',s' \\
-     e',s' \normalise e'',s''}
-    {e,s \normalise e'',s''}
+     e',s' \stride e'',s''}
+    {e,s \stride e'',s''}
 
 
-\newrule{N-Appoint}
-  {t,s\normalise t',s'}
-  {u \At t,s\normalise u \At t',s'}
+\newrule{S-Appoint}
+  {t,s\stride t',s'}
+  {u \At t,s\stride u \At t',s'}
 
 
-% \newrule{N-Next}[t_1' = \Edit v]
-%   {t_1,\Sigma \normalise t_1'\st{'}   \\
+% \newrule{S-Next}[t_1' = \Edit v]
+%   {t_1,\Sigma \stride t_1'\st{'}   \\
 %    e\ v \evaluate t_2       \\
-%    t_2\st{'} \normalise t_2'\st{''} }
-%   {t_1 \Next e,\Sigma \normalise t_2'\st{''}}
+%    t_2\st{'} \stride t_2'\st{''} }
+%   {t_1 \Next e,\Sigma \stride t_2'\st{''}}
 
-% \newrule{N-NextEval}
-%   {e_1,\Sigma \normalise u_1\st{'}}
-%   {e_1 \Next e_2,\Sigma \normalise u_1 \Next e_2\st{'}}
+% \newrule{S-NextEval}
+%   {e_1,\Sigma \stride u_1\st{'}}
+%   {e_1 \Next e_2,\Sigma \stride u_1 \Next e_2\st{'}}
+
+
+
+
+%% Normalisation %%
+
+
+\newmacro{RelationN}
+  {e,s \normalise t,s'}
+
+
+\newrule{N-Done}[\Dirty(s,s'') \cap \Watching(t') = \nothing]
+    {e,s \evaluate t,s' \\
+     t,s' \stride t',s''}
+    {t,s \normalise t',s''}
+
+
+\newrule{N-Stride}[\Dirty(s,s'') \cap \Watching(t') \neq \nothing]
+    {e,s \evaluate t,s' \\
+     t,s' \stride t',s'' \\
+     t',s'' \normalise t'',s'''}
+    {e,s \normalise t'',s''}
 
 
 
@@ -365,7 +387,7 @@
   {t_1 \Next e_2,s \handle{i \neq \Continue} t_1' \Next e_2,s'}
 
 \newrule{H-Next}[\Value{(t_1,s)}\equiv v_1 \wedge \neg\Failing{(t_2,s')}]
-  {e_2 v_1,s\normalise t_2,s'}
+  {e_2 v_1,s\stride t_2,s'}
   {t_1 \Next e_2,s \handle{\Continue} t_2,s'}
 
 
@@ -405,7 +427,7 @@
 
 % \newrule{H-Next'}[\Value(t_1) = v]
 %   {e\ v \evaluate t_2    \\
-%    t_2,\Sigma \normalise t_2'\st{'} }
+%    t_2,\Sigma \stride t_2'\st{'} }
 %   {t_1 \Next e,\Sigma \handle{\Next} t_2'\st{'}}
 
 % \newrule{H-Stay}[\Value(t_1) = \bot]
@@ -428,7 +450,7 @@
 
 % \newrule{H-Pass}[i \neq \Execute \pi]
 %   {t_1,\Sigma \handle{i} t_1'\st{'}       \\
-%    t_1' \Then e\st{'} \normalise t_2\st{''} }
+%    t_1' \Then e\st{'} \stride t_2\st{''} }
 %   {t_1 \Then e,\Sigma \handle{i} t_2\st{''}}
 
 % \newrule{H-Fallback}
@@ -446,17 +468,5 @@
 
 \newrule{D-Handle}
   {t,s \handle{i} t',s' \\
-   t',s' \Normalise t'',s''}
+   t',s' \normalise t'',s''}
   {t,s \drive{i} t'',s''}
-
-
-\newrule{N-Done}[\Dirty(s,s'') \cap \Watching(t') = \nothing]
-    {e,s \evaluate t,s' \\
-     t,s' \normalise t',s''}
-    {t,s \Normalise t',s''}
-
-\newrule{N-Stride}[\Dirty(s,s'') \cap \Watching(t') \neq \nothing]
-    {e,s \evaluate t,s' \\
-     t,s' \normalise t',s'' \\
-     t',s'' \Normalise t'',s'''}
-    {e,s \Normalise t'',s''}

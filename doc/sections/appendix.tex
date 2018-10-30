@@ -130,56 +130,56 @@
 \begin{proof}
   We prove Theorem~\ref{thmpresnorm} by induction on $e$:\\
 
-  \noindent\textbf{Case} $\userule{N-Fail}$ Since this case does not alter the
+  \noindent\textbf{Case} $\userule{S-Fail}$ Since this case does not alter the
   expression, the theorem holds trivially.\\
 
-  \noindent\textbf{Case} $\userule{N-Xor}$ Since this case does not alter the
+  \noindent\textbf{Case} $\userule{S-Xor}$ Since this case does not alter the
   expression, the theorem holds trivially.\\
 
-  \noindent\textbf{Case} $\userule{N-Update}$ Since this case does not alter
+  \noindent\textbf{Case} $\userule{S-Update}$ Since this case does not alter
   the expression, the theorem holds trivially.\\
 
-  \noindent\textbf{Case} $\userule{N-Fill}$ Since this case does not alter the
+  \noindent\textbf{Case} $\userule{S-Fill}$ Since this case does not alter the
   expression, the theorem holds trivially.\\
 
-  \noindent\textbf{Case} $\userule{N-Edit}$ Since this case does not alter the
+  \noindent\textbf{Case} $\userule{S-Edit}$ Since this case does not alter the
   expression, the theorem holds trivially.\\
 
-  \noindent\textbf{Case} $\userule{N-And}$ Given that $t_1\And t_2:\Task(\tau_1\times\tau_2)$, by T-And we have $t_1:\tau_1$ and $t_2:\tau_2$. By the induction hypothesis, we also have $t_1':\tau_1$ and $t_2':\tau_2$. This gives us that $t_1'\And t_2':\Task(\tau_1\times\tau_2)$.\\
+  \noindent\textbf{Case} $\userule{S-And}$ Given that $t_1\And t_2:\Task(\tau_1\times\tau_2)$, by T-And we have $t_1:\tau_1$ and $t_2:\tau_2$. By the induction hypothesis, we also have $t_1':\tau_1$ and $t_2':\tau_2$. This gives us that $t_1'\And t_2':\Task(\tau_1\times\tau_2)$.\\
 
-  \noindent\textbf{Case} $\userule{N-Next}$ Given that $e_1\Next e_2:\Task \tau$, T-Then gives us that $t_1:\Task\tau_1$
+  \noindent\textbf{Case} $\userule{S-Next}$ Given that $e_1\Next e_2:\Task \tau$, T-Then gives us that $t_1:\Task\tau_1$
   and $e_2:\tau_1 \to \Task \tau$. By the induction hypothesis, we know that
-  $t_1\normalise t_1'$ preserves and thus $t_1':\Task\tau_1$. Therefore
+  $t_1\stride t_1'$ preserves and thus $t_1':\Task\tau_1$. Therefore
   $t_1'\Next e_2:\Task\tau$.\\\\
 
-  \noindent\textbf{Case} $\userule{N-OrLeft}$ Given that $t_1\Or t_2:\Task\tau$,
+  \noindent\textbf{Case} $\userule{S-OrLeft}$ Given that $t_1\Or t_2:\Task\tau$,
   by T-Or we have $t_1:\Task\tau$. By the induction hypothesis, we know that
-  $t_1\normalise t_1'$ preserves and thus $t_1':\Task\tau$.\\
+  $t_1\stride t_1'$ preserves and thus $t_1':\Task\tau$.\\
 
-  \noindent\textbf{Case} $\userule{N-OrRight}$ Given that $t_1\Or t_2:\Task\tau$,
+  \noindent\textbf{Case} $\userule{S-OrRight}$ Given that $t_1\Or t_2:\Task\tau$,
   by T-Or we have $t_2:\Task\tau$. By the induction hypothesis, we know that
-  $t_2\normalise t_2'$ preserves and thus $t_2':\Task\tau$. \todo{there might be
+  $t_2\stride t_2'$ preserves and thus $t_2':\Task\tau$. \todo{there might be
   more to be said here. t1 obviously can to stuff too, but we don't say anyting about this.}\\
 
-  \noindent\textbf{Case} $\userule{N-OrNone}$ Given that $t_1\Or t_2:\Task\tau$,
+  \noindent\textbf{Case} $\userule{S-OrNone}$ Given that $t_1\Or t_2:\Task\tau$,
   by T-Or we have $t_1:\Task\tau$ and $t_2:\Task\tau$. By the induction hypothesis,
-  we know that $t_1\normalise t_1'$ and $t_2\normalise t_2'$ preserve, and thus
+  we know that $t_1\stride t_1'$ and $t_2\stride t_2'$ preserve, and thus
   $t_1'\Or t_2':\Task\tau$.\\
 
-  \noindent\textbf{Case} $\userule{N-ThenStay}$ Given that $t_1\Then e_2:\Task\tau$,
+  \noindent\textbf{Case} $\userule{S-ThenStay}$ Given that $t_1\Then e_2:\Task\tau$,
   by T-Then we have $t_1:\Task\tau_1$ and $e_2:\tau_1\to\Task\tau$. By the induction
-  hypothesis, we know that $t_1\normalise t_1'$ preserves, and thus $t_1'\Then e_2:\Task\tau$.\\
+  hypothesis, we know that $t_1\stride t_1'$ preserves, and thus $t_1'\Then e_2:\Task\tau$.\\
 
-  \noindent\textbf{Case} $\userule{N-ThenFail}$ Given that $t_1\Then e_2:\Task\tau$,
+  \noindent\textbf{Case} $\userule{S-ThenFail}$ Given that $t_1\Then e_2:\Task\tau$,
   by T-Then we have $t_1:\Task\tau_1$ and $e_2:\tau_1\to\Task\tau$. By the induction
-  hypothesis, we know that $t_1\normalise t_1'$ preserves, and thus $t_1'\Then e_2:\Task\tau$.\\
+  hypothesis, we know that $t_1\stride t_1'$ preserves, and thus $t_1'\Then e_2:\Task\tau$.\\
 
-  \noindent\textbf{Case} $\userule{N-ThenCont}$Given that $t_1\Then e_2:\Task\tau$,
+  \noindent\textbf{Case} $\userule{S-ThenCont}$Given that $t_1\Then e_2:\Task\tau$,
   by T-Then we have $t_1:\Task\tau_1$ and $e_2:\tau_1\to\Task\tau$. By the induction
-  hypothesis, we know that $t_1\normalise t_1'$ preserves. By
+  hypothesis, we know that $t_1\stride t_1'$ preserves. By
   Lemma~\ref{lemmavaluepreserves}, we know that $\Value{(t_1')}=v_1$ preserves.
   By Theorem~\ref{thmpreseval} we know that $e_2 v_1\evaluate t_2$ preserves. And
-  finally by the induction hypothesis, we know that $t_2\normalise t_2'$ preserves.
+  finally by the induction hypothesis, we know that $t_2\stride t_2'$ preserves.
   Therefore $t_2':\Task\tau$.\\
 
 \end{proof}
@@ -229,34 +229,34 @@ This lemma follows immediately from definition.
 %
 % \begin{proof} We prove this Theorem by induction on $e$.\\
 %
-%   \noindent\textbf{Case} $\userule{N-Edit}$ Given that $\Gamma,\Sigma\infers \Edit v : \Task \tau$, let $e''=\Edit v'$, $s''=s$ and $i=v':\tau$. Then H-Edit gives $\Edit v,s\handle{v'}\Edit v',s$. \\
+%   \noindent\textbf{Case} $\userule{S-Edit}$ Given that $\Gamma,\Sigma\infers \Edit v : \Task \tau$, let $e''=\Edit v'$, $s''=s$ and $i=v':\tau$. Then H-Edit gives $\Edit v,s\handle{v'}\Edit v',s$. \\
 %
 %
-%   \noindent\textbf{Case} $\userule{N-Fill}$ Given that $\Gamma,\Sigma\infers \Enter \tau : \Task \tau$, let $e''=\Edit v$, $s''=s$ and $i=v:\tau$. Then H-Fill gives $\Enter \tau,s\handle{v}\Edit v,s$. \\
+%   \noindent\textbf{Case} $\userule{S-Fill}$ Given that $\Gamma,\Sigma\infers \Enter \tau : \Task \tau$, let $e''=\Edit v$, $s''=s$ and $i=v:\tau$. Then H-Fill gives $\Enter \tau,s\handle{v}\Edit v,s$. \\
 %
-%   \noindent\textbf{Case} $\userule{N-Update}$ Given that $\Gamma,\Sigma\infers \Update l : \Task \tau$, let $e''=\Update l$, $s''=s[l\mapsto v]$ and $i=v:\tau$. Then H-Update gives $\Update l ,s\handle{v}\Update l,s[l\mapsto v]$. \\
+%   \noindent\textbf{Case} $\userule{S-Update}$ Given that $\Gamma,\Sigma\infers \Update l : \Task \tau$, let $e''=\Update l$, $s''=s[l\mapsto v]$ and $i=v:\tau$. Then H-Update gives $\Update l ,s\handle{v}\Update l,s[l\mapsto v]$. \\
 %
-%   \noindent\textbf{Case} $\userule{N-Fail}$ Since $\Failing(\Fail)=\True$, the theorem holds in this case. \\
+%   \noindent\textbf{Case} $\userule{S-Fail}$ Since $\Failing(\Fail)=\True$, the theorem holds in this case. \\
 %
-%   \noindent\textbf{Case} $\userule{N-Xor}$ \todo{Here we have an issue with the defintion of $\Failing$ and the sideconditions of external choice. These definitions should concur, so we can finish the proof, but $\Failing$ is a static property}\\
+%   \noindent\textbf{Case} $\userule{S-Xor}$ \todo{Here we have an issue with the defintion of $\Failing$ and the sideconditions of external choice. These definitions should concur, so we can finish the proof, but $\Failing$ is a static property}\\
 %
-%   \noindent\textbf{Case} $\userule{N-Eval}$ By induction hypothesis we have that there exists an $e'''$, $s'''$ and $i$ such that $e'',s''\handle{i}e''',s'''$.\\
+%   \noindent\textbf{Case} $\userule{S-Eval}$ By induction hypothesis we have that there exists an $e'''$, $s'''$ and $i$ such that $e'',s''\handle{i}e''',s'''$.\\
 %
-%   \noindent\textbf{Case} $\userule{N-ThenStay}$ By the induction hyposthesis we have that there exists an $e''$, $s''$ and $i$ such that $t_1',s'\handle{i}e'',s''$. Then by H-Pass, we know that we can apply the same $i$ to obtain $t_1\Then e_2,s'\handle{i} e''\Then e,s''$.\\
+%   \noindent\textbf{Case} $\userule{S-ThenStay}$ By the induction hyposthesis we have that there exists an $e''$, $s''$ and $i$ such that $t_1',s'\handle{i}e'',s''$. Then by H-Pass, we know that we can apply the same $i$ to obtain $t_1\Then e_2,s'\handle{i} e''\Then e,s''$.\\
 %
-%   \noindent\textbf{Case} $\userule{N-ThenFail}$ By the induction hyposthesis we have that there exists an $e''$, $s''$ and $i$ such that $t_1',s'\handle{i}e'',s''$. Then by H-Pass, we know that we can apply the same $i$ to obtain $t_1\Then e_2,s'\handle{i} e''\Then e,s''$.\\
+%   \noindent\textbf{Case} $\userule{S-ThenFail}$ By the induction hyposthesis we have that there exists an $e''$, $s''$ and $i$ such that $t_1',s'\handle{i}e'',s''$. Then by H-Pass, we know that we can apply the same $i$ to obtain $t_1\Then e_2,s'\handle{i} e''\Then e,s''$.\\
 %
-%   \noindent\textbf{Case} $\userule{N-ThenCont}$ By the induction hypothesis, we have that there exists an $e''$, $s''''$ and $i$ such that $t_2',s''\handle{i}e'',s''''$.\\
+%   \noindent\textbf{Case} $\userule{S-ThenCont}$ By the induction hypothesis, we have that there exists an $e''$, $s''''$ and $i$ such that $t_2',s''\handle{i}e'',s''''$.\\
 %
-%   \noindent\textbf{Case} $\userule{N-OrLeft}$ By the induction hypothesis, we have that there exists an $e''$, $s'$ and $i$ such that $t_1',s\handle{i}e'',s''$.\\
+%   \noindent\textbf{Case} $\userule{S-OrLeft}$ By the induction hypothesis, we have that there exists an $e''$, $s'$ and $i$ such that $t_1',s\handle{i}e'',s''$.\\
 %
-%   \noindent\textbf{Case} $\userule{N-OrRight}$ By the induction hypothesis, we have that there exists an $e''$, $s'$ and $i$ such that $t_2',s\handle{i}e'',s''$.\\
+%   \noindent\textbf{Case} $\userule{S-OrRight}$ By the induction hypothesis, we have that there exists an $e''$, $s'$ and $i$ such that $t_2',s\handle{i}e'',s''$.\\
 %
-%   \noindent\textbf{Case} $\userule{N-OrNone}$ \todo{   }\\
+%   \noindent\textbf{Case} $\userule{S-OrNone}$ \todo{   }\\
 %
-%   \noindent\textbf{Case} $\userule{N-Next}$ By the induction hypothesis, we have that there exists an $e''$, $s'$ and $i$ such that $t_1',s'\handle{i}e'',s''$. Then by the H-PassNext rule, we know that we can apply the same $i$ to obtain $t_1'\Next e_2,s'\handle{i}e'',s''$.\\
+%   \noindent\textbf{Case} $\userule{S-Next}$ By the induction hypothesis, we have that there exists an $e''$, $s'$ and $i$ such that $t_1',s'\handle{i}e'',s''$. Then by the H-PassNext rule, we know that we can apply the same $i$ to obtain $t_1'\Next e_2,s'\handle{i}e'',s''$.\\
 %
-%   \noindent\textbf{Case} $\userule{N-And}$ By the induction hypothesis, we have that there exists an $e''$, $s'$ and $i$ such that $t_1',s'\handle{i}e'',s''$. Then by the H-FirstOr rule, we know that we can apply $\First i$ to obtain $t_1'\And t_2',s'\handle{\First i} t_1''\And t_2',s''$
+%   \noindent\textbf{Case} $\userule{S-And}$ By the induction hypothesis, we have that there exists an $e''$, $s'$ and $i$ such that $t_1',s'\handle{i}e'',s''$. Then by the H-FirstOr rule, we know that we can apply $\First i$ to obtain $t_1'\And t_2',s'\handle{\First i} t_1''\And t_2',s''$
 %
 % \end{proof}
 
@@ -270,33 +270,33 @@ This lemma follows immediately from definition.
 
   \noindent\textbf{Case} $\userule{N-Stride}$\\
 
-  \noindent\textbf{Case} $\userule{N-Fail}$ \\
+  \noindent\textbf{Case} $\userule{S-Fail}$ \\
 
-  \noindent\textbf{Case} $\userule{N-Xor}$ \\
+  \noindent\textbf{Case} $\userule{S-Xor}$ \\
 
-  \noindent\textbf{Case} $\userule{N-Update}$ \\
+  \noindent\textbf{Case} $\userule{S-Update}$ \\
 
-  \noindent\textbf{Case} $\userule{N-Fill}$ \\
+  \noindent\textbf{Case} $\userule{S-Fill}$ \\
 
-  \noindent\textbf{Case} $\userule{N-Edit}$ \\
+  \noindent\textbf{Case} $\userule{S-Edit}$ \\
 
-  \noindent\textbf{Case} $\userule{N-And}$ \\
+  \noindent\textbf{Case} $\userule{S-And}$ \\
 
-  \noindent\textbf{Case} $\userule{N-Next}$ \\
+  \noindent\textbf{Case} $\userule{S-Next}$ \\
 
-  \noindent\textbf{Case} $\userule{N-OrLeft}$ \\
+  \noindent\textbf{Case} $\userule{S-OrLeft}$ \\
 
-  \noindent\textbf{Case} $\userule{N-OrRight}$ \\
+  \noindent\textbf{Case} $\userule{S-OrRight}$ \\
 
-  \noindent\textbf{Case} $\userule{N-OrNone}$\\
+  \noindent\textbf{Case} $\userule{S-OrNone}$\\
 
-  \noindent\textbf{Case} $\userule{N-ThenStay}$\\
+  \noindent\textbf{Case} $\userule{S-ThenStay}$\\
 
-  \noindent\textbf{Case} $\userule{N-ThenFail}$\\
+  \noindent\textbf{Case} $\userule{S-ThenFail}$\\
 
-  \noindent\textbf{Case} $\userule{N-ThenCont}$\\
+  \noindent\textbf{Case} $\userule{S-ThenCont}$\\
 
-  \noindent\textbf{Case} $\userule{N-Assign}$
+  \noindent\textbf{Case} $\userule{S-Assign}$
 
 \end{proof}
 
@@ -318,7 +318,7 @@ We prove Theorem~\ref{thmfailing} by induction on $e'$.
 
   \noindent\textbf{Case} $e = t_1\Next e_2$ $\Failing(t_1\Next e_2)=\Failing(t_1)$. If there exitsts an $i$ for $t_1$, then this $i$ also applies to $t_1\Next e_2$. This case therefore holds by the induction hypothesis.\\
 
-  \noindent\textbf{Case} $e = e_1\Xor e_2$ We normalise the two expressions first, $e_1,s\normalise t_1,s'$, $e_2,s\normalise t_2,s'$ and we can then be in two situations. One, we can have that $\Failing(t_1,s')$ and $\Failing(t_2,s')$ are both true. If that is so, then by definiton, we have both $\Failing(e_1\Xor e_2,s)$ and no rule of the hanlding semantics applies, and therefore there exists no input for this case.\\
+  \noindent\textbf{Case} $e = e_1\Xor e_2$ We normalise the two expressions first, $e_1,s\stride t_1,s'$, $e_2,s\stride t_2,s'$ and we can then be in two situations. One, we can have that $\Failing(t_1,s')$ and $\Failing(t_2,s')$ are both true. If that is so, then by definiton, we have both $\Failing(e_1\Xor e_2,s)$ and no rule of the hanlding semantics applies, and therefore there exists no input for this case.\\
                                            Or we are in the situation where one or both of the two sub expressions does not fail. In that case, we know that $\Failing(e_1\Xor e_2,s)$ does not hold, and that at least one of the handling rules applies. Therefore, there must be an input $i$, namely $\Left$, $\Right$ or both.
 
   \noindent\textbf{Case} $e = t_1\And t_2$ We can again find ourselfs in one of two situations. In the first case, both sub expressions fail, $\Failing(t_1,s)$ and $\Failing(t_2,s)$. In that case, we know that $\Failing(t_1\And t_2,s)$ also fails by definition. By the induction hypothesis, we know that for both $t_1$ and $t_2$ there is no input that can be handled. Since the only two rules for $\And$ that handle input just pass this input on to one of the two expressions, we know that indeed no $i$ applies.\\
@@ -343,7 +343,7 @@ We prove Theorem~\ref{thmfailing} by induction on $e'$.
 
   \noindent\textbf{Case} $t_1\Then e_2$ By definition, $\Inputs{(t_1\Then e_2)}=\Inputs{(t_1)}$. By the induction hypothesis, we have that $i\in\Inputs{(t_1)}$, then $t_1\handle{i}t_1'$. Therefore, we also have $\userule{H-PassThen}$.\\
 
-  \noindent\textbf{Case} $t_1\Next e_2$ By definiton, $\Inputs(t_1 \Next e_2) = \Inputs(t_1) \cup \set{\Continue\mid \Value{(t_1)}\neq \bot \wedge \neg\Failing{(e_2 \Value{(t_1)}\normalise)}}$. If $i=\Continue$, then we know that $\Value{(t_1)}\neq \bot \wedge \neg\Failing{(e_2 \Value{(t_1)}\normalise)}$ holds, and therefore H-Next applies. Otherwise, we have by induction hypothesis that $i\in\Inputs{(t_1)}$, then $t_1\handle{i}t_1'$. Therefore, we also have $\userule{H-PassNext}$.\\
+  \noindent\textbf{Case} $t_1\Next e_2$ By definiton, $\Inputs(t_1 \Next e_2) = \Inputs(t_1) \cup \set{\Continue\mid \Value{(t_1)}\neq \bot \wedge \neg\Failing{(e_2 \Value{(t_1)}\stride)}}$. If $i=\Continue$, then we know that $\Value{(t_1)}\neq \bot \wedge \neg\Failing{(e_2 \Value{(t_1)}\stride)}$ holds, and therefore H-Next applies. Otherwise, we have by induction hypothesis that $i\in\Inputs{(t_1)}$, then $t_1\handle{i}t_1'$. Therefore, we also have $\userule{H-PassNext}$.\\
 
   \noindent\textbf{Case} $t_1\And t_2$ By definiiton, $\Inputs(t_1\And t_2) = \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)}$. By the induction hypothesis, we have both that if $i\in\Inputs(t_1)$ then $t_1\handle{i}t_1'$ and that if $i\in\Inputs(t_2)$ then $t_2\handle{i}t_2'$. Therefore, if $i\in\Inputs(t_1\And t_2)$, then either $\userule{H-FirstAnd}$ or $\userule{H-SecondAnd}$.\\
 

@@ -60,7 +60,7 @@ following Theorem holds.
 
 \begin{theorem}[preservation under normalisation]
     For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Sigma\infers s$\\
-    if   $e,s \normalise e',s'$ then $\Gamma,\Sigma\infers e':\tau$ and $\Sigma\infers s'$
+    if   $e,s \stride e',s'$ then $\Gamma,\Sigma\infers e':\tau$ and $\Sigma\infers s'$
     \label{thmpresnorm}
 \end{theorem}
 
@@ -96,7 +96,7 @@ We define what we mean with progress in Theorem~\ref{thmprogressnorm}.
 
 \begin{theorem}
   For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\Task\tau$ and $\Sigma\infers s$\\
-  if $e,s \bar{\normalise} e',s'$ then either $\Failing(e')$ or there exists an $e''$, $s''$ and $i$ such that $e',s'\handle{i}e'',s''$
+  if $e,s \bar{\stride} e',s'$ then either $\Failing(e')$ or there exists an $e''$, $s''$ and $i$ such that $e',s'\handle{i}e'',s''$
   \label{thmprogressnorm}
 \end{theorem}
 
@@ -112,7 +112,7 @@ example.
 
 $(\Update l \Then \lambda x:\Bool .\ \If{x}{e}{\Fail})\And (\Edit l:=\True)$ with $s=\{l\mapsto \False\}$
 
-When we apply N-And in order to normalise the expression above, we obtain
+When we apply S-And in order to normalise the expression above, we obtain
 $(\Update l \Then \lambda x:\Bool .\ \If{x}{e}{\Fail})\And (\Edit \unit)$ with $s'=\{l\mapsto \True\}$
 
 an expression which in fact is not normalised. The issue here lies in the fact
@@ -127,7 +127,7 @@ semantics, we show the following theorem to be true.
 
 \begin{theorem}
   For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Sigma\infers s$\\
-  if $e,s\bar{\normalise} e',s'$ and $e',s'\bar{\normalise} e'',s''$, then $e'\equiv e''$ and $s'\equiv s''$.
+  if $e,s\bar{\stride} e',s'$ and $e',s'\bar{\stride} e'',s''$, then $e'\equiv e''$ and $s'\equiv s''$.
   \label{thmnormisbigstep}
 \end{theorem}
 
@@ -137,7 +137,7 @@ We then show that the failing function $\Failing$ behaves as desired.
 
 \begin{theorem}[Failing means no interaction possible]
   For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\Task\tau$ and $\Sigma\infers s$\\
-  and $e,s\normalise e',s'$, then $\Failing(e',s')\equiv \True$, if and only if there is no $i$ such that $e',s'\handle{i}e'',s''$ for some $e''$ and $s''$.
+  and $e,s\stride e',s'$, then $\Failing(e',s')\equiv \True$, if and only if there is no $i$ such that $e',s'\handle{i}e'',s''$ for some $e''$ and $s''$.
   \label{thmfailing}
 \end{theorem}
 
@@ -151,7 +151,7 @@ We now have the ingredients to prove Theorem~\ref{thmprogressnorm}.
 
 \begin{proof}
   Given $\Gamma,\Sigma\infers e:\Task\tau$ and $\Sigma\infers s$ and after
-  normalisation $e,s \normalise e',s'$, we find ourselves in either one of the
+  normalisation $e,s \stride e',s'$, we find ourselves in either one of the
   following situations:\\
 
   There exists an $i$ such that $e',s'\handle{i}\_,\_$. \qed\\
