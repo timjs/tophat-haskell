@@ -289,5 +289,49 @@ Once the semaphore gets signalled, all steps become enabled.
 The first task to take the step again disables the step for all others.
 
 
-
 \subsubsection*{Cigarette smokers}
+
+The cigarette smokers problem \cite{books/Downey08LBOS} is a surprisingly tricky synchronization problem.
+It requires waiting for two conditions, waking up only if both conditions are satisfied.
+The problem goes as follows.
+In order to smoke a cigarette, three ingredients are required: tobacco, paper, and a match.
+There are three smokers, each having one of the ingredients and requiring the other two.
+There is an agent that randomly provides two of the ingredients.
+
+Downey models availability of the ingredients using a semaphore for each ingredient.
+The agent randomly signals two of the three semaphores.
+The problem is writing code for the smokers so that the smoker who requires the two signalled semaphores wakes up and proceeds with smoking.
+
+A na\"ive attempt where each smoker first waits for one and then the other semaphore can lead to deadlock.
+The following non-solution uses the semaphores developed in the previous section.
+Let \emph{paper}, \emph{tobac} and \emph{match} be semaphores, initialized to 0.
+\begin{equation*}
+\begin{array}{l @{\,} c @{\,} l}
+  \textit{tobacSmoker} & = & \textit{wait}\ \textit{match} \Then \textit{wait}\ \textit{paper} \Then \textit{smoke} \\
+  \textit{paperSmoker} & = & \textit{wait}\ \textit{tobac} \Then \textit{wait}\ \textit{match} \Then \textit{smoke} \\
+  \textit{matchSmoker} & = & \textit{wait}\ \textit{tobac} \Then \textit{wait}\ \textit{paper} \Then \textit{smoke} \\
+\end{array}
+\end{equation*}
+To see what can go wrong, imagine the three smokers running in parallel, while the agent signals the two semaphores \emph{tobac} and \emph{paper}.
+One of \emph{paperSmoker} and \emph{matchSmoker} can take their first step, but if \emph{paperSmoker} takes the step, the system deadlocks.
+
+The solution proposed by Downey involves an additional mutex, three additional semaphores, three additional threads called \emph{pushers}, and three regular Boolean variables.
+The job of the pushers is to record availability of their ingredient in their Boolean variable, and check availability of other resources, waking the correct smoker when appropriate.
+The details of the solution are not important here.
+
+What is important is that the serialization of what is essentially waiting for two semaphores requires a substantial amount of additional synchronization, together with non-trivial conditional statements.
+
+The non-solution can be expressed in CSP with the interleaving operator.
+We use actions directly to synchronized processes instead of semaphores.
+There are three actions \emph{match}, \emph{tobac}, and \emph{paper}, and we imagine an environment that engages in two of them.
+\begin{equation*}
+\begin{array}{l @{\,} c @{\,} l}
+  \textit{tobacSmoker} & = & \textit{match} \to \textit{paper} \to \textit{smoke} \to \text{STOP} \\
+  \textit{paperSmoker} & = & \textit{tobac} \to \textit{match} \to \textit{smoke} \to \text{STOP} \\
+  \textit{matchSmoker} & = & \textit{tobac} \to \textit{paper} \to \textit{smoke} \to \text{STOP} \\
+  \multicolumn{3}{l}{\textit{S} = \textit{tobacSmoker} \mathrel{|||} \textit{paperSmoker} \mathrel{|||} \textit{matchSmoker}} \\
+\end{array}
+\end{equation*}
+When the environment is willing to engage in the sequence $\textit{tobac} \to \textit{paper} \to \textit{smoke}$, and the \emph{paperSmoker} synchronizes with the action \emph{tobac}, the system deadlocks before anyone can smoke.
+
+A similar effort as in Downey's solution must be made in order to solve the problem with synchronized actions in CSP.
