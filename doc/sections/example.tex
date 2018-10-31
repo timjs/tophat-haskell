@@ -1,3 +1,19 @@
 % !TEX root=../pldi2019.tex
 
 \section{Example}
+
+In this section we develop a small example program.
+The example demonstrates that \tophat, which is a subset of TOP, has sufficient expressive power to model a useful application.
+
+The example is a flight booking system.
+It demonstrates communication with the environment, communication between parallel tasks, and synchronization and input validation via guarded steps.
+
+The application should fulfil the following requirements.
+\begin{itemize}
+\item Multiple users should be able to book tickets at the same time.
+\item A user first has to input a list of passengers for which to book tickets.
+\item At least one of the passengers has to be an adult.
+\item After a valid list of passengers has been input, the user has to pick a seat for each passenger.
+\item Only free seats may be picked.
+\item Every passenger must have exactly one seat.
+\end{itemize}
