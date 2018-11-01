@@ -38,7 +38,7 @@ data TaskT :: (Type -> Type) -> (Type -> Type) -> Type -> Type where
   -- | Editors, valued or unvalued
   Edit :: Basic r => Maybe r -> TaskT l m r
 
-  -- | Stores refering to some shared value of type `r`
+  -- | Stores referring to some shared value of type `r`
   Store :: ( MonadRef l m, Basic r ) => l r -> TaskT l m r
 
   -- | Composition of two tasks.
