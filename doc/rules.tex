@@ -337,13 +337,13 @@
   {e,s \normalise t,s'}
 
 
-\newrule{N-Done}[\Dirty(s,s'') \cap \Watching(t') = \nothing]
+\newrule{N-Done}[s=s'']
     {e,s \evaluate t,s' \\
      t,s' \stride t',s''}
-    {t,s \normalise t',s''}
+    {e,s \normalise t',s''}
 
 
-\newrule{N-Stride}[\Dirty(s,s'') \cap \Watching(t') \neq \nothing]
+\newrule{N-Stride}[s\neq s'']
     {e,s \evaluate t,s' \\
      t,s' \stride t',s'' \\
      t',s'' \normalise t'',s'''}
