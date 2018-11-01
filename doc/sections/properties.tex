@@ -39,7 +39,8 @@ We show that our failing function $\Failing$ indeed only indicates expressions
 that can not be normalised and that allow no further interaction.
 
 Finally we prove that the function to compute all possible inputs $\Inputs$ is sound and complete.
-\subsubsection{Preservation}
+
+\paragraph{Preservation}
 
 We show that the following three preservation Theorems hold.
 
@@ -104,7 +105,7 @@ If an expression $e$ and state $s$ are well-typed, then after normalisation, it
 either fails, or there exists some input $i$ that can be handled by it.
 In order to prove this Theorem to be true, we require two additional theorems.
 
-\subsubsection{Normalisation is Big-Step}
+\paragraph{Normalisation is Big-Step}
 
 The normalisation semantics is a big-step stemantics. This would be quite
 straight-forward, if we did not have to deal with state. Consider the following
@@ -139,7 +140,7 @@ An additional lemma is required.
   \label{lemmastridedoesnotevaluate}
 \end{lemma}
 
-\subsubsection{Failing}
+\paragraph{Failing}
 
 We then show that the failing function $\Failing$ behaves as desired.
 
@@ -153,7 +154,7 @@ The Theorem above states that an expression $e$ and state $s$ are failing, if,
 after normalisation, there exists no input that can be handled by it.
 We prove the theorem to be true by induction on $e'$.
 
-\subsubsection{Proof}
+\paragraph{Proof}
 
 We now have the ingredients to prove Theorem~\ref{thmprogressnorm}.
 
