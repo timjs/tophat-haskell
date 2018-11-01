@@ -126,10 +126,18 @@ To prove that this is true, and that therefore normalisation is a big-step
 semantics, we show the following theorem to be true.
 
 \begin{theorem}
-  For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Sigma\infers s$\\
-  if $e,s\bar{\stride} e',s'$ and $e',s'\bar{\stride} e'',s''$, then $e'\equiv e''$ and $s'\equiv s''$.
+  For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\Task\tau$ and $\Sigma\infers s$\\
+  if $e,s\normalise e',s'$ and $e',s'\normalise e'',s''$, then $e'= e''$ and $s'= s''$.
   \label{thmnormisbigstep}
 \end{theorem}
+
+An additional lemma is required.
+
+\begin{lemma}
+  For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\Task\tau$ and $\Sigma\infers s$\\
+  if $e,s\evaluate t,s'$, $t,s'\stride t',s''$, $s=s''$ and $t',s''\evaluate t'',s'''$, then $t'=t''$ and $s''=s'''$
+  \label{lemmastridedoesnotevaluate}
+\end{lemma}
 
 \subsubsection{Failing}
 

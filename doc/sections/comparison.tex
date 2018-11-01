@@ -37,7 +37,7 @@ As a matter of fact the primitives can certainly be expressed in terms of each o
 Instead, we point out how the systems emphasize certain points of view by choosing different basic building blocks.
 
 
-\subsubsection*{Communication with the environment}
+\subsubsection{Communication with the environment}
 
 In CSP, communication with the environment is represented by prefixing.
 The process $(a \to P)$ can engage in action $a$, after which it continues as process $P$.
@@ -75,7 +75,7 @@ In TOP, event values are typed to match the type of the receiving editor.
 In CSP, action names are essentially strings, subject to implicit restrictions.
 
 
-\subsubsection*{Communication between subsystems}
+\subsubsection{Communication between subsystems}
 
 Another important feature in both TOP and CSP is communication between subsystems, that is between tasks and between processes.
 
@@ -105,7 +105,7 @@ The semantics of TOP requires all updates to shared data and all enabled interna
 This introduces the possibility of diverging computations, where a cyclic dependency between shared data causes updates to enable steps, which cause more updates ad infinitum.
 
 
-\subsubsection*{Sequential composition}
+\subsubsection{Sequential composition}
 
 The intuition about sequential composition is to first do one thing, and once it is done, do some other thing.
 
@@ -125,7 +125,7 @@ In CSP, the first process initiates the step.
 In TOP, the step combinator initiates the step.
 
 
-\subsubsection*{Concurrency}
+\subsubsection{Concurrency}
 
 The intuition about concurrency is that two things are done at the same time.
 
@@ -149,7 +149,7 @@ Events to $t_1$ and $t_2$ must be prefixed by $\Left$ and $\Right$ respectively.
 This unambiguously renames the events, removing any source of nondeterminism.
 
 
-\subsubsection*{Synchronization}
+\subsubsection{Synchronization}
 
 Synchronization means that an agent has to pause execution until some condition is met.
 The need for synchronization arises quite naturally in countless variations in situations involving concurrency.
@@ -175,7 +175,7 @@ Programmers can encode arbitrary conditions in $cv$, which are evaluated atomica
 This allows a variety of synchronization problems to be solved in an intuitive and straight-forward manner.
 
 
-\subsubsection*{Nondeterminism}
+\subsubsection{Nondeterminism}
 
 Nondeterminism means that a system can react to the same input in different ways, the choice of which can not be influenced by the environment.
 
@@ -196,7 +196,8 @@ Input events for parallel tasks are disambiguated, internal steps have a well-de
 In this section we describe a couple of example problems, and show how they can be solved in both languages.
 
 
-\begin{example}(Vending machine)
+\subsubsection{Vending machine}
+
 The vending machine is an example often used as a hello-world program for process algebras.
 It demonstrates external communication and choice.
 It does not demonstrate concurrency.
@@ -221,15 +222,13 @@ This machine does not exhibit exactly the same behaviour as the one in CSP, nor 
 Instead, this machine demonstrates how the same choice of buying a small biscuit for one coin or a large biscuit for two coins is expressed in TOP.
 
 The machine asks the user to enter an amount of money.
-This editor stands for a module in the machine that freely accepts and returns coins.
+This editor stands for a coin slot in a real machine that freely accepts and returns coins.
 There is a continue button that is initially disabled.
 When the user has input exactly 1 or 2 coins, the continue button becomes enabled.
 When the user presses the continue button, the machine dispenses either a large or a small biscuit, depending on the amount of money.
 
-\end{example}
 
-
-\subsubsection*{Semaphores}
+\subsubsection{Semaphores}
 
 Semaphores are a synchronization mechanism on a medium level of abstraction.
 Their two operations \emph{signal} and \emph{wait} can be used in different ways to solve a variety of synchronization problems \cite{books/Downey08LBOS}.
@@ -289,5 +288,66 @@ Once the semaphore gets signalled, all steps become enabled.
 The first task to take the step again disables the step for all others.
 
 
+\subsubsection{Cigarette smokers}
 
-\subsubsection*{Cigarette smokers}
+The cigarette smokers problem \cite{books/Downey08LBOS} is a surprisingly tricky synchronization problem.
+It requires waiting for two conditions, waking up only if both conditions are satisfied.
+The problem is stated as follows.
+In order to smoke a cigarette, three ingredients are required: tobacco, paper, and a match.
+There are three smokers, each having one of the ingredients and requiring the other two.
+There is an agent that randomly provides two of the ingredients.
+
+Downey models availability of the ingredients using a semaphore for each ingredient.
+The agent randomly signals two of the three semaphores.
+The problem is writing code for the smokers so that the smoker who requires the two signalled semaphores wakes up and proceeds with smoking.
+
+A na\"ive attempt where each smoker first waits for one and then the other semaphore can lead to deadlock.
+The following non-solution uses the semaphores developed in the previous section.
+Let \emph{paper}, \emph{tobac} and \emph{match} be semaphores, initialized to 0.
+\begin{equation*}
+\begin{array}{l @{\,} c @{\,} l}
+  \textit{tobacSmoker} & = & \textit{wait}\ \textit{match} \Then \textit{wait}\ \textit{paper} \Then \textit{smoke} \\
+  \textit{paperSmoker} & = & \textit{wait}\ \textit{tobac} \Then \textit{wait}\ \textit{match} \Then \textit{smoke} \\
+  \textit{matchSmoker} & = & \textit{wait}\ \textit{tobac} \Then \textit{wait}\ \textit{paper} \Then \textit{smoke} \\
+\end{array}
+\end{equation*}
+To see what can go wrong, imagine the three smokers running in parallel.
+Let the agent signal the two semaphores \emph{tobac} and \emph{paper}.
+One of \emph{paperSmoker} and \emph{matchSmoker} can take their first step, but if \emph{paperSmoker} takes the step, the system deadlocks.
+
+The solution proposed by Downey involves an additional mutex, three additional semaphores, three additional threads called \emph{pushers}, and three regular Boolean variables.
+The job of the pushers is to record availability of their ingredient in their Boolean variable, and check availability of other resources, waking the correct smoker when appropriate.
+The details of the solution are not important here.
+
+What is important is that the implementation of what is essentially waiting for two semaphores requires a substantial amount of additional synchronization, together with non-trivial conditional statements.
+
+The non-solution can be expressed in CSP with the interleaving operator.
+We use actions directly to synchronized processes instead of semaphores.
+There are three actions \emph{match}, \emph{tobac}, and \emph{paper}, and we imagine an environment that engages in two of them.
+\begin{equation*}
+\begin{array}{l @{\,} c @{\,} l}
+  \textit{tobacSmoker} & = & \textit{match} \to \textit{paper} \to \textit{smoke} \to \text{STOP} \\
+  \textit{paperSmoker} & = & \textit{tobac} \to \textit{match} \to \textit{smoke} \to \text{STOP} \\
+  \textit{matchSmoker} & = & \textit{tobac} \to \textit{paper} \to \textit{smoke} \to \text{STOP} \\
+  \multicolumn{3}{l}{\textit{S} = \textit{tobacSmoker} \mathrel{|||} \textit{paperSmoker} \mathrel{|||} \textit{matchSmoker}} \\
+\end{array}
+\end{equation*}
+When the environment is willing to engage in the sequence $\textit{tobac} \to \textit{paper} \to \textit{smoke}$ with $S$, and the \emph{paperSmoker} synchronizes with the action \emph{tobac}, the system deadlocks before anyone can smoke.
+
+A similar effort as in Downey's solution must be made in order to solve the problem using synchronized actions in CSP.
+
+TOP allows a simple solution to this problem, using guarded steps.
+Steps can be guarded with arbitrary expressions, and the parallel combinator can be used to watch two shared data sources at the same time.
+Let \textit{match}, \textit{paper}, and \textit{tobac} be shared Booleans.
+The smokers are defined as follows.
+\begin{equation*}
+\begin{array}{l @{\,} c @{\,} l}
+  \textit{tobacSmoker} & = & (\Update \textit{match} \And \Update \textit{paper}) \Next \lambda \tuple{x,y}. \\
+    & & \quad \IF x \mathrel{\&\&} y \THEN \textit{smoke} \ELSE \Fail \\
+  \textit{paperSmoker} & = & (\Update \textit{tobac} \And \Update \textit{match}) \Next \lambda \tuple{x,y}. \\
+    & & \quad \IF x \mathrel{\&\&} y \THEN \textit{smoke} \ELSE \Fail \\
+  \textit{matchSmoker} & = & (\Update \textit{tobac} \And \Update \textit{paper}) \Next \lambda \tuple{x,y}. \\
+    & & \quad \IF x \mathrel{\&\&} y \THEN \textit{smoke} \ELSE \Fail \\
+\end{array}
+\end{equation*}
+When the agent supplies two of the ingredients by setting the respective shares to $\True$, only the step of the smoker that waits for those becomes enabled.
