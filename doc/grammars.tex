@@ -69,9 +69,9 @@
   \begin{grammar*}
     p ::= &                                              & Pretasks \\
     \mid  & \Edit e \Mid   \Enter \beta \Mid   \Update e & – editors: valued, unvalued, stored \\
-    \mid  & e_1 \Then e_2 \Mid   e_1 \Next e_2           & – steps: internal, external \\
+    \mid  & e_1 \Then e_2 \Mid   e_1 \Next e_2           & – steps: system, user \\
     \mid  & e_1 \And e_2                                 & – pairing \\
-    \mid  & e_1 \Or e_2 \Mid   e_1 \Xor e_2              & – choice: internal, external \\
+    \mid  & e_1 \Or e_2 \Mid   e_1 \Xor e_2              & – choice: system, user \\
     \mid  & u \At e \Mid   \Fail                         & – appoint, fail
   \end{grammar*}
 }
