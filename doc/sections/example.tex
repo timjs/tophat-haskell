@@ -18,13 +18,16 @@ The application works as follows.
 \item Every passenger must have exactly one seat.
 \end{itemize}
 For this example we assume that the host language has lists and two functions on them: intersect and difference.
+For brevity, we ommit the type annotations of variable bindings.
 
 We start by defining some type aliases.
-A passenger is a tuple with name and age.
-A seat is a tuple with a row number and a seat letter.
+A passenger is a pair with name and age.
+A seat is a pair with a row number and a seat letter.
+A booking contains a list of passengers and a list of seats.
 \begin{TASK}
   type Passenger = String * Int
   type Seat = Int * String
+  type Booking = List Passenger * List Seat
 \end{TASK}
 
 Choosing seats requires reading and updating shared information.
@@ -69,11 +72,12 @@ and run these tasks in parallel.
 \begin{figure}[h]
   \includegraphics[width=\columnwidth]{figures/flight-booking.png}
   \caption{
-    Running application of the flight booking example using a translation to the \ITASKS system.
+    Running web application of the flight booking example using a translation to \ITASKS,
+    a \TOP implementation.
     It shows two users booking a flight simultaneously.
     The first user already entered name and age,
     the second is entering details of two passengers.
-    The messagebubble shows the user is only allowed to enter an integer in the \TS{age} field.
+    The message bubble shows the user is only allowed to enter an integer in the \TS{age} field.
   }
   \label{fig:flight-booking}
 \end{figure}
