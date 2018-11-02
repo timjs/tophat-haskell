@@ -49,7 +49,7 @@
   \begin{grammar}
     Pretasks
       & p    &::= & \Edit e              & – valued editor \\
-      &      &\mid& \Enter \beta         & – unvalued editor \\
+      &      &\mid& \Enter \tau          & – unvalued editor \\
       &      &\mid& \Update e            & – stored editor \\
     \addlinespace
       &      &\mid& e_1 \Then e_2        & – step \\
@@ -68,7 +68,7 @@
 \newmacro{G-Pretasks-Compact}{
   \begin{grammar*}
     p ::= &                                              & Pretasks \\
-    \mid  & \Edit e \Mid   \Enter \beta \Mid   \Update e & – editors: valued, unvalued, stored \\
+    \mid  & \Edit e \Mid   \Enter \tau  \Mid   \Update e & – editors: valued, unvalued, stored \\
     \mid  & e_1 \Then e_2 \Mid   e_1 \Next e_2           & – steps: system, user \\
     \mid  & e_1 \And e_2                                 & – pairing \\
     \mid  & e_1 \Or e_2 \Mid   e_1 \Xor e_2              & – choice: system, user \\
@@ -115,15 +115,30 @@
       &      &\mid& t                    & – task \\
     Tasks
       & t    &::= & \Edit v              & – valued editor \\
-      &      &\mid& \Enter \beta         & – unvalued editor \\
+      &      &\mid& \Enter \tau          & – unvalued editor \\
       &      &\mid& \Update l            & – stored editor \\
       &      &\mid& \Fail                & – fail task \\
       &      &\mid& t_1 \Then e_2        & – step \\
       &      &\mid& t_1 \Next e_2        & – user step \\
       &      &\mid& t_1 \And t_2         & – composition \\
       &      &\mid& t_1 \Or t_2          & – choice \\
-      &      &\mid& t_1 \Xor t_2         & – user choice \\
+      &      &\mid& t_1 \Xor t_2         & – user choice
   \end{grammar}
+}
+
+\newmacro{G-Values-Compact}{
+  \begin{grammar*}
+    v ::= &                                          & Values \\
+      \mid& \lambda x:\tau.\ e                       & – abstraction \\
+      \mid& \tuple{v_1, v_2} \Mid \unit              & – pair value, unit \\
+      \mid& c \Mid l \Mid t                          & – constant, location, task \\
+    t ::= &                                          & Tasks \\
+      \mid& \Edit v \Mid \Enter \tau \Mid \Update l  & – editor tasks \\
+      \mid& \Fail                                    & – fail task \\
+      \mid& t_1 \Then e_2 \Mid t_1 \Next e_2         & – steps \\
+      \mid& t_1 \And t_2                             & – composition \\
+      \mid& t_1 \Or t_2 \Mid e_1 \Xor e_2            & – choices
+  \end{grammar*}
 }
 
 \newmacro{G-Inputs}{
