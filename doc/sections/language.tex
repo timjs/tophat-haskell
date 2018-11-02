@@ -5,35 +5,48 @@
 \section{Language}
 
 
+\subsection{Expressions}
 
-\subsection{Base language}
-
-Let us start by defining our host language.
-It is a simple $\lambda$-calculus.
+Let us start by defining our host language,
+which is a typed $\lambda$-calculus.
 Next to abstraction, application and variables,
-it contains constants for booleans, integers and strings
-and some basic operations on them.
-We will embed our task language \emph{into} this basic language.
-This means we can use all the power of the host language,
-such as arithmetic operations and (higher order) functions,
-in our task language.
-Because all the constructs in our host language are standard,
-we will not give typing rules and semantic rules here.
-For this we refer to standard work like \textcite{books/Pierce02TAPL} and \textcite{books/Harper16PFPL}.
+the grammar in \autoref{fig:language-grammar} shows some extensions.
+It contains constants for booleans, integers and strings,
+an $\If{}{}{}$ expression,
+pairs, unit,
+and some basic operations on them represented by $\star$.
+Also, it contains \ML-style references.
 
-Expressions are typed abstractions, applications, variables or constants.
-Constants can be booleans, integers or strings.
-The $\star$ represents a general notion of operators.
-With $\If{}{}{}$ one can do basic branching.
-The syntactic category of pretasks will be defined in the upcoming sections.
+\begin{figure}[h]
+  \small
+  \usemacro{G-Language-Compact}
+  \caption{Language grammar} \label{fig:language-grammar}
+\end{figure}
+
+We will embed our task language,
+the syntactic category $p$ of pretasks,
+into this basic language.
+It is further specified in \autoref{fig:task-grammar}.
 Pretasks $p$ are tasks \emph{in making},
 just as expressions are values in making.
-A \emph{task} will be introduced in \autoref{sec:evaluation}.
+\todo{Say something about embedding?}
+\todo{Say we're going to discuss each pretask in the next subsections.}
+
+% A \emph{task} will be introduced in \autoref{sec:evaluation}.
+% This means we can use all the power of the host language,
+% such as arithmetic operations and (higher order) functions,
+% in our task language.
+
+\begin{figure}[h]
+  \small
+  \usemacro{G-Pretasks-Compact}
+  \caption{Task grammar} \label{fig:task-grammar}
+\end{figure}
 
 We will use double quotation marks ($\str{}$) to denote strings.
 Integers are denoted by their decimal representation,
 and booleans are written $\True$ and $\False$.
-In the remaining of this report,
+In the remaining of this article,
 we will freely make use of the logic operators $\Not$, $\land$, and $\lor$,
 arithmetic operators $+$, $-$, $\times$,
 and the string append operator $\pp$.
@@ -41,35 +54,31 @@ Also, we will use the standard comparison operations $<$, $\le$, $\equiv$, $\not
 as builtins.
 Only when referring to operators in general we will use $\star$.
 
-\begin{figure}
-  \small
-  \usemacro{G-Language-Compact}
-  \caption{Language grammar} \label{fig:language-grammar}
-\end{figure}
-
-\begin{figure}
-  \small
-  \usemacro{G-Pretasks-Compact}
-  \caption{Task grammar} \label{fig:task-grammar}
-\end{figure}
 
 
 \subsection{Typing}
 
-Typing of our expressions $e$ is as to be expected,
-and won't be given in this document.
-There is one big difference with respect to standard work.
-This is the addition of a type for tasks $\Task \tau$.
-Typing rules are of the form $\Gamma \infers e : \tau$,
-which we read as \enquote{in environment $\Gamma$, expression $e$ has type $\tau$}.
+% Typing of our expressions $e$ is as to be expected.
+% and won't be given in this document.
+\Autoref{fig:type-grammar} shows the grammar of types used by \TOPHAT.
+It contains standard types like arrows, pairs, and unit,
+some basic types, and a type for references.
+The one difference with respect to standard work,
+is the addition of a type for tasks: $\Task \tau$.
 
-\begin{figure}
+\begin{figure}[h]
   \small
   \usemacro{G-Types-Compact}
   \caption{Type grammar} \label{fig:type-grammar}
 \end{figure}
 
-\begin{figure}
+Typing rules are of the form $\Gamma \infers e : \tau$,
+which we read as \enquote{in environment $\Gamma$, expression $e$ has type $\tau$}.
+The rules typing pretasks are given in \autoref{fig:typing-rules}.
+The remaining constructs in our host language are standard,
+therefore the typing rules for this part of our language are presented in the appendix.
+
+\begin{figure}[h]
   \small
   \begin{mathpar}
     \boxed{\RelationT} \\
@@ -82,7 +91,7 @@ which we read as \enquote{in environment $\Gamma$, expression $e$ has type $\tau
     \userule{T-Or} \\
     \userule{T-Xor}\\
     \userule{T-Appoint} \quad
-    \userule{T-Fail} \\
+    \userule{T-Fail}
   \end{mathpar}
   \caption{Typing rules} \label{fig:typing-rules}
 \end{figure}
@@ -93,7 +102,7 @@ which we read as \enquote{in environment $\Gamma$, expression $e$ has type $\tau
 
 In the introduction we claimed to create a language to model \emph{interactive} workflows.
 By interaction we mean \emph{communication with people using the developed system}.
-These \emph{end users} should be able to enter information into the system,
+These end users should be able to enter information into the system,
 change it, clear it, reenter it, etc.
 To do this, we introduce the concept of an \emph{editor}.
 
@@ -114,7 +123,7 @@ form fields on a webpage,
 or even sensors plugged into the system.
 Take for example an entry for text.
 Users can enter a string, change it, remove it, enter another string, and so on.
-With editors we try to capture this \emph{constantly changing} nature of user input.
+With editors we try to capture this \emph{constantly changing nature of user input}.
 Also, because editors are \emph{typed},
 they are only allowed to contain information of the right format.
 
@@ -123,16 +132,23 @@ This could be an input field for a string,
 a switch for a boolean,
 a spin box for an angle,
 or even a map with a pin for a location.
-\Autoref{fig:editor-examples} depicts these examples.
+% \Autoref{fig:editor-examples} depicts these examples.
+\todo{Add figure with widget examples or not?}
 In it's most banal form,
-an editor is a line of text entered at a terminal and parsed to match a string, boolean, angle or location value.
+an editor is a line of text entered at a terminal and parsed to match
+a string, boolean, angle or location value.
 
+
+
+\paragraph{Valued and unvalued editors}
+
+At the core,
+an editor is a container holding a value
+or holding nothing.
 Valued editors contain an expression $e$.
 Therefore they inherit the type of $e$,
 but embedded in the container type $\Task$.
-For now, we only accept expressions of a basic type $\beta$ as a value of an editor.
-This is expressed by the following typing rule for valued editors.
-\refrule{T-Edit}
+This is expressed by the typing rule for valued editors \refrule{T-Edit}.
 
 Unvalued editors do not have a value,
 and therefore do not wrap an expression.
@@ -152,36 +168,28 @@ Clearing the value results in an unvalued editor: $\Enter$.
 Now, are we allowed to enter a value of some other type?
 That is, can we now enter a string?
 This would change the type of the editor!
-
 Therefore,
 we need to keep track of the type of values that can be entered into an unvalued editor
 and we choose option (\ref{itm:annotate}).
-The typing rule becomes:
-\refrule{T-Fill}
+The typing rule for valued editors can be found in \refrule{T-Fill}.
 
-Some examples of editors expressible in our language:
-\begin{itemize}
-  \item $\Edit 2$ is a valued editor which contains the integer value $2$.
-  \item $\Enter \String$ is an unvalued editor,
-    waiting for users to enter some string.
-  \item $\Edit ((\lambda x . x)\ 5)$ is a valued editor which,
-    after evaluation, will contain the value $5$.
-    (We will discuss evaluation of editors in the next section.)
-\end{itemize}
-
-At the core,
-an editor is a container holding a value
-or holding nothing.
-For this purpose, we extend our task language with two constructs:
-a valued editor $\Edit e$ and an unvalued editor $\Enter \beta$.
+% Some examples of editors expressible in our language:
+% \begin{itemize}
+%   \item $\Edit 2$ is a valued editor which contains the integer value $2$.
+%   \item $\Enter \String$ is an unvalued editor,
+%     waiting for users to enter some string.
+%   \item $\Edit ((\lambda x . x)\ 5)$ is a valued editor which,
+%     after evaluation, will contain the value $5$.
+%     (We will discuss evaluation of editors in the next section.)
+% \end{itemize}
 
 
 
 \subsection{Steps}
 
-In the previous section we have set up our interaction model of inputs and actions,
-we defined our interactive component, the editor,
-and introduced the infinitely failing task.
+% In the previous section we have set up our interaction model of inputs and actions,
+% we defined our interactive component, the editor,
+% and introduced the infinitely failing task.
 Now that we have the core part of an interactive workflow,
 we can continue with ways to compose multiple tasks.
 Combining tasks can be done in two ways:
@@ -194,13 +202,13 @@ For parallel composition we distinguish two kinds:
   \item pairing two tasks (\emph{and}-parallel); and
   \item choosing between two tasks (\emph{or}-parallel).
 \end{enumerate*}
-In this section we start with sequential composition.
-The next two sections are about pairing and choosing.
+In this subsection we start with sequential composition.
+The next two subsections are about pairing and choosing.
 
 One might think that the best way to sequence tasks is by just following one task with another:
 do this, then do that, then that, etc.
 However, we like the continuation to depend on the value produced by the preceding task.
-\todo{Elaborate more about the reasons for this.}
+This way, we can use this information to precisely specify how to continue with work.
 This is done by a \emph{step}.
 We define a step from one task to another as
 \begin{quote}
