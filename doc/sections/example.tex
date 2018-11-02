@@ -30,13 +30,15 @@ A seat is a tuple with a row number and a seat letter.
 Choosing seats requires reading and updating shared information.
 The list of free seats is stored in a reference called \emph{freeSeats}.
 \begin{TASK}
-  let freeSeats = ref [] in
+  let freeSeats = ref [<<1,"A">>, <<1,"B">>, <<1,"C">>, ...] in
 \end{TASK}
 
-The flight booking task starts with entering a valid list of passengers.
+The flight booking task starts with entering a valid list of passengers,
+denoted by \TS{enter (List Passenger)}.
 A passenger is valid if the name is not empty and the age is at least 0.
 A list of passengers is valid if each passenger is valid, and at least one of the passengers is an adult.
-When the user has entered a valid list of passengers, the step becomes enabled, and the user can proceed to picking seats.
+When the user has entered a valid list of passengers, the step after \TS{>>?} becomes enabled,
+and the user can proceed to picking seats.
 \begin{TASK}
   let valid = \p. not (fst p == "") /\ snd p >= 0 in
   let adult = \p. snd p >= 18 in
@@ -44,21 +46,34 @@ When the user has entered a valid list of passengers, the step becomes enabled, 
   let bookFlight = enter (List Passenger) >>? \ps.
     if allValid ps then chooseSeats ps else fail in
 \end{TASK}
-A selection of seats is valid if every seat is free.
+A selection of seats is valid if every entered seat is free.
 \begin{TASK}
   let validSeats = \ss. intersect ss !freeSeats == ss in
   let chooseSeats = \ps. enter (List Seat) >>? \ss.
     if validSeats ss then confirmBooking ps ss else fail in
-  let confirmBooking = \ps. \ss.
-      freeSeats := difference !freeSeats ss;
-      edit <<ps, ss>> in
 \end{TASK}
-The function \TS{confirmBooking} removes the picked seats from the list of free seats, and displays the end result.
-It uses a function \TS{difference}, which removes all elements from the second list from the first list.
+The function \TS{confirmBooking} removes the picked seats from the shared list of free seats,
+and displays the end result using the \TS{edit}-construct.
+\begin{TASK}
+  let confirmBooking = \ps. \ss.
+    freeSeats := difference !freeSeats ss; edit <<ps, ss>> in
+\end{TASK}
+% It uses a function \TS{difference}, which removes all elements from the second list from the first list.
 
 The main task appoints the \TS{bookFlight} task to two different users \TS{u1} and \TS{u2},
 and run these tasks in parallel.
 \begin{TASK}
   u1 @ bookFlight <&> u2 @ bookFlight
 \end{TASK}
-\fixme{Add screenshot of running application.}
+
+\begin{figure}[h]
+  \includegraphics[width=\columnwidth]{figures/flight-booking.png}
+  \caption{
+    Running application of the flight booking example using a translation to the \ITASKS system.
+    It shows two users booking a flight simultaneously.
+    The first user already entered name and age,
+    the second is entering details of two passengers.
+    The messagebubble shows the user is only allowed to enter an integer in the \TS{age} field.
+  }
+  \label{fig:flight-booking}
+\end{figure}
