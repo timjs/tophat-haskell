@@ -13,6 +13,11 @@
   {\ifthenelse{\isundefined{#1}}
     {\GenericError{}{Rule `#1` is not defined}{}{}}
     {\textsc{#1}}}
+\newmacro{ontopof}[2]
+  {{
+    \begin{tabular}{C}
+      #1 \\ #2
+    \end{tabular}}}
 
 
 \newif\ifstateful
@@ -98,14 +103,16 @@
 
 
 \newrule{T-Then}
-  {\Gamma,\Sigma \infers e_1 : \Task \tau_1 \\
-   \Gamma,\Sigma \infers e_2 : \tau_1 \to \Task \tau_2}
+  {\ontopof
+    {\Gamma,\Sigma \infers e_1 : \Task \tau_1}
+    {\Gamma,\Sigma \infers e_2 : \tau_1 \to \Task \tau_2}}
   {\Gamma,\Sigma \infers e_1 \Then e_2 : \Task \tau_2}
 
 
 \newrule{T-Next}
-  {\Gamma,\Sigma \infers e_1 : \Task \tau_1 \\
-   \Gamma,\Sigma \infers e_2 : \tau_1 \to \Task \tau_2}
+  {\ontopof
+    {\Gamma,\Sigma \infers e_1 : \Task \tau_1}
+    {\Gamma,\Sigma \infers e_2 : \tau_1 \to \Task \tau_2}}
   {\Gamma,\Sigma \infers e_1 \Next e_2 : \Task \tau_2}
 
 
@@ -116,14 +123,16 @@
 
 
 \newrule{T-Or}
-  {\Gamma,\Sigma \infers e_1 : \Task \tau \\
-   \Gamma,\Sigma \infers e_2 : \Task \tau }
+  {\ontopof
+    {\Gamma,\Sigma \infers e_1 : \Task \tau}
+    {\Gamma,\Sigma \infers e_2 : \Task \tau}}
   {\Gamma,\Sigma \infers e_1 \Or e_2 : \Task \tau}
 
 
 \newrule{T-Xor}
-  {\Gamma,\Sigma \infers e_1 : \Task \tau \\
-   \Gamma,\Sigma \infers e_2 : \Task \tau }
+  {\ontopof
+    {\Gamma,\Sigma \infers e_1 : \Task \tau}
+    {\Gamma,\Sigma \infers e_2 : \Task \tau}}
   {\Gamma,\Sigma \infers e_1 \Xor e_2 : \Task \tau}
 
 
