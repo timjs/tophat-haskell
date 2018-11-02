@@ -14,6 +14,8 @@
       &      &\mid& e_1 \star e_2        & – operation \\
       &      &\mid& \If{e_1}{e_2}{e_3}   & – branch \\
       &      &\mid& \tuple{e_1, e_2}     & – pair \\
+      &      &\mid& \Fst e               & – first projection \\
+      &      &\mid& \Snd e               & – second projection \\
       &      &\mid& \unit                & – unit \\
     \addlinespace
       &      &\mid& \Ref e               & – reference \\
@@ -33,15 +35,15 @@
 
 \newmacro{G-Language-Compact}{
   \begin{grammar*}
-    e ::= &                                                  & Expressions \\
-    \mid  & \lambda x:\tau.\ e \Mid  e_1\ e_2                & – abstraction, application \\
-    \mid  & x \Mid  c                                        & – variable, constant \\
-    \mid  & \If{e_1}{e_2}{e_3}                               & – branch \\
-    \mid  & e_1 \star e_2 \Mid  \tuple{e_1, e_2} \Mid  \unit & – operation, pair, unit \\
-    \mid  & \Ref e \Mid  !e \Mid  e_1 := e_2 \Mid  l         & – references and locations \\
-    \mid  & p                                                & – pretask \\
-    c ::= &                                                  & Constants \\
-    \mid  & B \Mid  I \Mid  S                                & – booleans, integers, strings
+    e ::= &                                                     & Expressions \\
+    \mid  & \lambda x:\tau.\ e \Mid  e_1\ e_2                   & – abstraction, application \\
+    \mid  & x \Mid  c                                           & – variable, constant \\
+    \mid  & \If{e_1}{e_2}{e_3} \Mid e_1 \star e_2               & – branch, operation \\
+    \mid  & \tuple{e_1, e_2} \Mid \Fst e \Mid \Snd e \Mid \unit & – pair, projections, unit \\
+    \mid  & \Ref e \Mid  !e \Mid  e_1 := e_2 \Mid  l            & – references and locations \\
+    \mid  & p                                                   & – pretask \\
+    c ::= &                                                     & Constants \\
+    \mid  & B \Mid  I \Mid  S                                   & – booleans, integers, strings
   \end{grammar*}
 }
 
