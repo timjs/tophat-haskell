@@ -2,13 +2,12 @@
 
 \section{Example}
 
-In this section we develop a small example program.
-The example demonstrates that \TOPHAT, which is a subset of TOP, has sufficient expressive power to model a useful application.
+In this section we develop a small example program to demonstrate the capabilities of \TOPHAT.
 
-The example is a flight booking system.
-It demonstrates communication with the environment, communication between parallel tasks, and synchronisation and input validation via guarded steps.
+The example is a simple flight booking system.
+It demonstrates communication with the environment, communication between parallel tasks, synchronisation, and input validation.
 
-The application should fulfil the following requirements.
+The application works as follows.
 \begin{itemize}
 \item Multiple users should be able to book tickets at the same time.
 \item A user first has to input a list of passengers for which to book tickets.
@@ -17,3 +16,26 @@ The application should fulfil the following requirements.
 \item Only free seats may be picked.
 \item Every passenger must have exactly one seat.
 \end{itemize}
+For this example we assume that the host language has lists and some functions on them, like length, filter, et cetera.
+
+We start by defining some data types.
+A passenger is a tuple with name and age.
+A seat is a tuple with a row number and a seat letter.
+A booking is a list of passenger details and a list of seats.
+\begin{equation*}
+\begin{array}{l @{} l}
+  \text{type}\ \text{Passenger} =  \String \times \Int \\
+  \text{type}\ \text{Seat} =  \Int \times \String \\
+  \text{type}\ \text{Booking} =  [\text{Passenger}] \times [\text{Seat}] \\
+\end{array}
+\end{equation*}
+The flight booking task starts with entering a valid list of passengers.
+A passenger is valid if the name is not empty and the age is at least 0.
+A list of passengers is valid if each passenger is valid, and at least one of the passengers is an adult.
+When the user has entered a valid list of passengers, the step becomes enabled, and the user can proceed to picking seats.
+\begin{TASK}
+  valid <.name, age>. = not (name == "") && age >= 0
+  adult <.name, age>. = age >= 18
+  allValid ps = all valid ps && any adult ps
+  bookFlight = enter [Passenger] >>? \ps -> if allValid ps then chooseSeats ps else fail
+\end{TASK}
