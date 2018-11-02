@@ -7,40 +7,19 @@
 
 \subsection{Expressions}
 
-Let us start by defining our host language,
-which is a typed $\lambda$-calculus.
-Next to abstraction, application and variables,
-the grammar in \autoref{fig:language-grammar} shows some extensions.
-It contains constants for booleans, integers and strings,
+We take our host language to be a simply typed $\lambda$-calculus.
+The grammar in \autoref{fig:language-grammar} shows the basic language expressions,
+as well as some extensions.
+These are constants for booleans, integers and strings,
 an $\If{}{}{}$ expression,
 pairs, unit,
 and some basic operations on them represented by $\star$.
-Also, it contains \ML-style references.
+Also, we add \ML-style references.
 
 \begin{figure}[h]
   \small
   \usemacro{G-Language-Compact}
   \caption{Language grammar} \label{fig:language-grammar}
-\end{figure}
-
-We will embed our task language,
-the syntactic category $p$ of pretasks,
-into this basic language.
-It is further specified in \autoref{fig:task-grammar}.
-Pretasks $p$ are tasks \emph{in making},
-just as expressions are values in making.
-\todo{Say something about embedding?}
-\todo{Say we're going to discuss each pretask in the next subsections.}
-
-% A \emph{task} will be introduced in \autoref{sec:evaluation}.
-% This means we can use all the power of the host language,
-% such as arithmetic operations and (higher order) functions,
-% in our task language.
-
-\begin{figure}[h]
-  \small
-  \usemacro{G-Pretasks-Compact}
-  \caption{Task grammar} \label{fig:task-grammar}
 \end{figure}
 
 We will use double quotation marks ($\str{}$) to denote strings.
@@ -54,9 +33,27 @@ Also, we will use the standard comparison operations $<$, $\le$, $\equiv$, $\not
 as builtins.
 Only when referring to operators in general we will use $\star$.
 
+We will embed our task language into this basic language.
+\todo{Say something about embedding?}
+The syntactic category $p$ of \emph{pretasks},
+is further specified in \autoref{fig:task-grammar}.
+A pretask $p$ is a task \emph{in making},
+just as an expression is a value in making.
+In the next subsections we will discuss each category of pretasks:
+editors, steps and combinations.
 
+% A \emph{task} will be introduced in \autoref{sec:evaluation}.
+% This means we can use all the power of the host language,
+% such as arithmetic operations and (higher order) functions,
+% in our task language.
 
-\subsection{Typing}
+\begin{figure}[h]
+  \small
+  \usemacro{G-Pretasks-Compact}
+  \caption{Task grammar} \label{fig:task-grammar}
+\end{figure}
+
+\paragraph{Typing}
 
 % Typing of our expressions $e$ is as to be expected.
 % and won't be given in this document.
@@ -111,7 +108,7 @@ When an editor has a value, it can be \emph{changed} or it can be \emph{emptied}
 When it is empty, a value can be \emph{filled}.
 This is depicted as a state diagram in \autoref{fig:editor-state} below.
 
-\begin{figure}[h]
+\begin{figure}[b]
   \centering
   \includegraphics[width=0.6\columnwidth]{figures/drawings-crop.pdf}
   \caption{Possible states of an editor and its transitions.}
@@ -191,6 +188,7 @@ The typing rule for valued editors can be found in \refrule{T-Fill}.
 % we defined our interactive component, the editor,
 % and introduced the infinitely failing task.
 Now that we have the core part of an interactive workflow,
+namely editors,
 we can continue with ways to compose multiple tasks.
 Combining tasks can be done in two ways:
 \begin{enumerate*}
@@ -222,28 +220,36 @@ when evaluated, result in something of type $\Task$.
 Therefore,
 we extend our pretasks $p$ with a sequence construct $\Then$.
 
-The accompanied typing rule looks like
-\refrule{T-Then}
+The accompanied typing rule is \refrule{T-Then}.
 Note that typing ensures us that the left hand side $e_1$ will be a task delivering a value of type $\tau_1$.
 The right hand side $e_2$ then, will use this value of type $\tau_1$,
-and calculate a \emph{new} task holding a value of (possibly another) type $\tau_2$.
-
-Evaluation of a sequence is done by only evaluating the left hand side, $e_1$,
-as this expression is be something of type $\Task \tau_1$.
-As the right hand side, $e_2$, is a function,
-it does not matter if we evaluate $e_2$ right away or store it lazily.
-\refrule{E-Then}
-Consequentially, we extend our tasks $t$ with an evaluated sequence construct.
+and calculate a new task of type $\Task \tau_2$,
+holding a value of (possibly another) type $\tau_2$.
 
 
 
 \subsection{Composition}
 
+
+
 \paragraph{Parallel}
+
+\fixme{Write section on parallel}
+
+
 
 \paragraph{Choice}
 
-\paragraph{Appointing}
+\fixme{Write section on choice}
+
+
+
+\subsection{Appointing}
+
+\fixme{Write section on appointing users}
+
 
 
 \subsection{State}
+
+\fixme{Write section shared editors}

@@ -1,6 +1,5 @@
 % !TEX root=../pldi2019.tex
 
-
 \section{Semantics}
 
 
@@ -69,6 +68,14 @@ and normalises the task afterwards.
 \refrule{D-Handle}
 Note that again,
 the double arrow $\drive{h}$ uses the single arrow $\handle{h}$.
+
+\todo{Move}
+Evaluation of a sequence is done by only evaluating the left hand side, $e_1$,
+as this expression is be something of type $\Task \tau_1$.
+As the right hand side, $e_2$, is a function,
+it does not matter if we evaluate $e_2$ right away or store it lazily.
+\refrule{E-Then}
+Consequentially, we extend our tasks $t$ with an evaluated sequence construct.
 
 
 
