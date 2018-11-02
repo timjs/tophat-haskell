@@ -1,0 +1,59 @@
+Version: 1.4
+Global
+	ProjectRoot:	.
+	Target:	iTasks
+	Exec:	{Project}/main.exe
+	CodeGen
+		CheckStacks:	False
+		CheckIndexes:	True
+	Application
+		HeapSize:	209715200
+		StackSize:	512000
+		ExtraMemory:	8192
+		IntialHeapSize:	204800
+		HeapSizeMultiplier:	4096
+		ShowExecutionTime:	False
+		ShowGC:	False
+		ShowStackSize:	False
+		MarkingCollector:	False
+		DisableRTSFlags:	False
+		StandardRuntimeEnv:	True
+		Profile
+			Memory:	False
+			MemoryMinimumHeapSize:	0
+			Time:	False
+			Stack:	False
+			Dynamics:	True
+			DescExL:	False
+		Output
+			Output:	ShowConstructors
+			Font:	Monaco
+			FontSize:	9
+			WriteStdErr:	False
+	Link
+		LinkMethod:	Static
+		GenerateRelocations:	False
+		GenerateSymbolTable:	False
+		GenerateLinkMap:	False
+		LinkResources:	False
+		ResourceSource:
+		GenerateDLL:	False
+		ExportedNames:
+	Paths
+		Path:	{Project}
+	Precompile:
+	Postlink:
+MainModule
+	Name:	Main
+	Dir:	{Project}
+	Compiler
+		NeverMemoryProfile:	False
+		NeverTimeProfile:	False
+		StrictnessAnalysis:	True
+		ListTypes:	AllTypes
+		ListAttributes:	True
+		Warnings:	True
+		Verbose:	True
+		ReadableABC:	False
+		ReuseUniqueNodes:	True
+		Fusion:	False
