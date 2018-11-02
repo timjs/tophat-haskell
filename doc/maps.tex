@@ -36,16 +36,16 @@
   \begin{flalign*}
     \begin{array}{lcl}
       \multicolumn{3}{l}{\Inputs : \mathrm{Tasks} \to \powerset(\mathrm{Inputs})} \\
-      \Inputs(\Edit v:\Task\tau)   &=& \set{v':\tau, \Empty} \\
-      \Inputs(\Enter \tau)         &=& \set{v':\tau} \\
-      \Inputs(\Update l:\Task\tau) &=& \set{v':\tau} \\
-      \Inputs(\Fail)               &=& \nothing \\
-      \Inputs(t_1 \Then e_2)       &=& \Inputs(t_1) \\
-      \Inputs(t_1 \Next e_2)       &=& \Inputs(t_1) \cup \set{\Continue \mid \Value{(t_1)} = v_1 \land \lnot\Failing(e_2 v_1)} \\
-      \Inputs(t_1 \And t_2)        &=& \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)} \\
-      \Inputs(t_1 \Or t_2)         &=& \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)} \\
-      \Inputs(e_1 \Xor e_2)        &=& \set{\Left, \Right} \\
-      \Inputs(u_1 \At t)           &=& \set{u_2 \At i\mid u_2 \At i \in \Inputs(t)} \cup \set{u_1 \At i\mid i\in \Inputs(t)}
+      \Inputs(\Edit v:\Task\tau,s)   &=& \set{v':\tau, \Empty} \\
+      \Inputs(\Enter \tau,s)         &=& \set{v':\tau} \\
+      \Inputs(\Update l:\Task\tau,s) &=& \set{v':\tau} \\
+      \Inputs(\Fail,s)               &=& \nothing \\
+      \Inputs(t_1 \Then e_2,s)       &=& \Inputs(t_1,s) \\
+      \Inputs(t_1 \Next e_2,s)       &=& \Inputs(t_1,s) \cup \set{\Continue \mid \Value{(t_1,s)} = v_1 \land \lnot\Failing(e_2 v_1,s)} \\
+      \Inputs(t_1 \And t_2,s)        &=& \set{\First\ i \mid i \in \Inputs(t_1,s)} \cup \set{\Second\ i \mid i \in \Inputs(t_2,s)} \\
+      \Inputs(t_1 \Or t_2,s)         &=& \set{\First\ i \mid i \in \Inputs(t_1,s)} \cup \set{\Second\ i \mid i \in \Inputs(t_2,s)} \\
+      \Inputs(e_1 \Xor e_2,s)        &=& \set{\Left, \Right} \\
+      \Inputs(u_1 \At t,s)           &=& \set{u_2 \At i\mid u_2 \At i \in \Inputs(t,s)} \cup \set{u_1 \At i\mid i\in \Inputs(t,s)}
     \end{array} & &&
   \end{flalign*}
 }
