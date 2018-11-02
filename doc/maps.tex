@@ -6,28 +6,28 @@
 \newmacro{O-Value}{
   \begin{flalign*}
     \begin{array}{lcl}
-      \multicolumn{3}{l}{\Value : \mathrm{Tasks} \rightharpoonup \mathrm{Values}} \\
+      \multicolumn{3}{l}{\Value : \mathrm{Tasks} \times \mathrm{States} \rightharpoonup \mathrm{Values}} \\
       \Value(\Edit v, s)       &=& v \\
       \Value(\Enter \tau, s)   &=& \bot \\
-      \Value(\Update l, s)  &=& s(l) \\
+      \Value(\Update l, s)     &=& s(l) \\
       \Value(\Fail, s)         &=& \bot \\
       \Value(t_1 \Then e_2, s) &=& \bot \\
       \Value(t_1 \Next e_2, s) &=& \bot \\
       \Value(t_1 \And t_2, s)  &=& \left\{
         \begin{array}{ll}
-          \tuple{v_1, v_2}  & \when\ \Value(t_1, s) = v_1 \land \Value(t_2, s) = v_2 \\
-          \bot              & \otherwise
+          \tuple{v_1, v_2}     & \when\ \Value(t_1, s) = v_1 \land \Value(t_2, s) = v_2 \\
+          \bot                 & \otherwise
         \end{array}
       \right. \\
       \Value(t_1 \Or t_2, s)   &=& \left\{
         \begin{array}{ll}
-          v_1               & \when\ \Value(t_1, s) = v_1 \\
-          v_2               & \when\ \Value(t_1, s) = \bot \land \Value(t_2, s) = v_2 \\
-          \bot              & \otherwise
+          v_1                  & \when\ \Value(t_1, s) = v_1 \\
+          v_2                  & \when\ \Value(t_1, s) = \bot \land \Value(t_2, s) = v_2 \\
+          \bot                 & \otherwise
         \end{array}
       \right. \\
       \Value(t_1 \Xor t_2, s)  &=& \bot\\
-      \Value(u \At t, s)  &=& \Value(t,s)
+      \Value(u \At t, s)       &=& \Value(t,s)
     \end{array} & &&
   \end{flalign*}
 }
@@ -35,7 +35,7 @@
 \newmacro{O-Inputs}{
   \begin{flalign*}
     \begin{array}{lcl}
-      \multicolumn{3}{l}{\Inputs : \mathrm{Tasks} \to \powerset(\mathrm{Inputs})} \\
+      \multicolumn{3}{l}{\Inputs : \mathrm{Tasks} \times \mathrm{States} \to \powerset(\mathrm{Inputs})} \\
       \Inputs(\Edit v:\Task\tau,s)   &=& \set{v':\tau, \Empty} \\
       \Inputs(\Enter \tau,s)         &=& \set{v':\tau} \\
       \Inputs(\Update l:\Task\tau,s) &=& \set{v':\tau} \\
@@ -53,7 +53,7 @@
 \newmacro{O-Failing}{
   \begin{flalign*}
     \begin{array}{lcl}
-      \multicolumn{3}{l}{\Failing : \mathrm{Tasks} \to \mathrm{Booleans}} \\
+      \multicolumn{3}{l}{\Failing : \mathrm{Tasks} \times \mathrm{States} \to \mathrm{Booleans}} \\
       \Failing(\Edit v,s)       &=& \False \\
       \Failing(\Enter \tau,s)   &=& \False \\
       \Failing(\Update l,s)     &=& \False \\
@@ -63,7 +63,7 @@
       \Failing(t_1 \And t_2,s)  &=& \Failing(t_1,s) \land \Failing(t_2,s) \\
       \Failing(t_1 \Or t_2,s)   &=& \Failing(t_1,s) \land \Failing(t_2,s) \\
       \Failing(e_1 \Xor e_2,s)  &=& \Failing(t_1,s') \land \Failing(t_2,s') \\
-      \multicolumn{3}{l}{\qquad\where\ e_1,s\stride t_1,s' \quad e_2,s\stride t_2,s'} \\
+        \multicolumn{3}{l}{\qquad\where\ e_1,s\stride t_1,s' \mathbf{\ and\ } e_2,s\stride t_2,s'} \\
       \Failing(u \At t,s)       &=& \Failing(t,s)
     \end{array} & &&
   \end{flalign*}

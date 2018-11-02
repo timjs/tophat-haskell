@@ -194,12 +194,6 @@ Task observations are simple semantic functions looking at the syntax tree of a 
 
 \paragraph{Task value}
 
-\begin{figure}[h]
-  \small
-  \usemacro{O-Value}
-  \caption{Values} \label{fig:observation-value}
-\end{figure}
-
 The question remains what value we have to associate to a task sequence.
 The answer is: none!
 Imagine the task $t := \Edit \str{Hello} \Then \lambda s.\allowbreak\Edit (\Length s)$,
@@ -214,6 +208,12 @@ Therefore we define that a sequence of tasks \emph{does not} have a value.\footn
   We could choose that the value of a sequence equals the value of the left hand side.
   This will have fatal consequences for our stepping semantics however.
 }
+
+\begin{figure}[h]
+  \small
+  \usemacro{O-Value}
+  \caption{Values} \label{fig:observation-value}
+\end{figure}
 
 
 
@@ -249,6 +249,8 @@ a sequence $t_1 \Then e_2$ is succeeding iff its left hand side $t_1$ is succeed
 
 
 \paragraph{Inputs}
+
+\fixme{Add inputs description}
 
 \begin{figure}[h]
   \small
