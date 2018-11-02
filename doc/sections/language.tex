@@ -33,6 +33,13 @@ Also, we will use the standard comparison operations $<$, $\le$, $\equiv$, $\not
 as builtins.
 Only when referring to operators in general we will use $\star$.
 
+Also, we will use the notation $e_1; e_2$
+as an abbreviation for $(\lambda x. e_2)\ e_1$,
+and the notation $\Let x = e_1 \In e_2$
+as an abbreviation for $(\lambda x. e_2)\ e_1$.
+In both expressions $x$ is a fresh variable.
+
+
 We will embed our task language into this basic language.
 \todo{Say something about embedding?}
 The syntactic category $p$ of \emph{pretasks},
@@ -247,6 +254,8 @@ holding a value of (possibly another) type $\tau_2$.
 \subsection{Appointing}
 
 \fixme{Write section on appointing users}
+\todo{How to create users?}
+\todo{What is their type?}
 
 
 
