@@ -2,6 +2,8 @@
 
 \section{Example}
 
+\lstset{emph={p, ps, ss}}
+
 In this section we develop a small example program to demonstrate the capabilities of \TOPHAT.
 The example is a simple flight booking system.
 It demonstrates communication with the environment, communication between parallel tasks, synchronisation, and input validation.
@@ -15,40 +17,48 @@ The application works as follows.
 \item Only free seats may be picked.
 \item Every passenger must have exactly one seat.
 \end{itemize}
-For this example we assume that the host language has lists and some functions on them, like length, filter, intersect, et cetera.
+For this example we assume that the host language has lists and two functions on them: intersect and difference.
 
-We start by defining some data types.
+We start by defining some type aliases.
 A passenger is a tuple with name and age.
 A seat is a tuple with a row number and a seat letter.
-\begin{equation*}
-\begin{array}{l @{} l}
-  \text{type}\ \text{Passenger} =  \String \times \Int \\
-  \text{type}\ \text{Seat} =  \Int \times \String \\
-\end{array}
-\end{equation*}
+\begin{TASK}
+  type Passenger = String * Int
+  type Seat = Int * String
+\end{TASK}
+
+Choosing seats requires reading and updating shared information.
+The list of free seats is stored in a reference called \emph{freeSeats}.
+\begin{TASK}
+  let freeSeats = ref [] in
+\end{TASK}
+
 The flight booking task starts with entering a valid list of passengers.
 A passenger is valid if the name is not empty and the age is at least 0.
 A list of passengers is valid if each passenger is valid, and at least one of the passengers is an adult.
 When the user has entered a valid list of passengers, the step becomes enabled, and the user can proceed to picking seats.
 \begin{TASK}
-  valid <.name, age>. = not (name == "") && age >= 0
-  adult <.name, age>. = age >= 18
-  allValid ps = all valid ps && any adult ps
-  bookFlight = enter [Passenger] >>? \ps -> if allValid ps then chooseSeats ps else fail
+  let valid = \p. not (fst p == "") /\ snd p >= 0 in
+  let adult = \p. snd p >= 18 in
+  let allValid = \ps. all valid ps /\ any adult ps in
+  let bookFlight = enter (List Passenger) >>? \ps.
+    if allValid ps then chooseSeats ps else fail in
 \end{TASK}
-Choosing seats requires reading and updating shared data.
-The list of free seats is stored in a global share called \emph{freeSeats}.
 A selection of seats is valid if every seat is free.
 \begin{TASK}
-  validSeats pickedSeats =
-    intersect pickedSeats (!freeSeats) == pickedSeats
-  chooseSeats ps = enter [Seat] >>? \ss ->
-    if validSeats ss
-      then confirmBooking ps ss else fail
-  confirmBooking ps ss =
-      freeSeats := difference (!freeSeats) ss;
-      edit <.ps, ss>.
+  let validSeats = \ss. intersect ss !freeSeats == ss in
+  let chooseSeats = \ps. enter (List Seat) >>? \ss.
+    if validSeats ss then confirmBooking ps ss else fail in
+  let confirmBooking = \ps. \ss.
+      freeSeats := difference !freeSeats ss;
+      edit <<ps, ss>> in
 \end{TASK}
-The function \emph{confirmBooking} removes the picked seats from the list of free seats, and displays the end result.
-It uses a function \emph{difference}, which removes all elements from the second list from the first list.
+The function \TS{confirmBooking} removes the picked seats from the list of free seats, and displays the end result.
+It uses a function \TS{difference}, which removes all elements from the second list from the first list.
+
+The main task appoints the \TS{bookFlight} task to two different users \TS{u1} and \TS{u2},
+and run these tasks in parallel.
+\begin{TASK}
+  u1 @ bookFlight <&> u2 @ bookFlight
+\end{TASK}
 \fixme{Add screenshot of running application.}
