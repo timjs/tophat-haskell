@@ -6,9 +6,10 @@
 
 Graphically,
 we will have the semantic functions shown in \autoref{fig:semantic-functions}.
-Note that the double down arrow $\stride$ \emph{uses} the single down arrow $\evaluate$,
-a convention we also use with the single arrow pointing right,
-which uses the double arrow pointing right.
+Note that the double down arrow $\normalise$ \emph{uses} the single down arrow $\evaluate$,
+a convention we also use with the single arrow pointing right $\handle{}$,
+which uses the double arrow pointing right $\drive{}$.
+\todo{Make figure more compact.}
 
 \begin{figure}[h]
   \centering
@@ -169,8 +170,8 @@ and the functions $\Value(t)$ and $\Failing(t)$ from sections \autoref{sec:value
 
 % As evaluation,
 % normalisation is a \emph{big step} semantics.
-We write \refrule{RelationN} to describe that
-task $t$ strides to task $t'$.
+We write $\RelationN$ to describe that
+task $t$ normalises to task $t'$.
 % Note that, as handling,
 % normalisation \emph{only acts upon tasks}.
 It is a semantic relation that lives \emph{on the task level}.
@@ -199,15 +200,20 @@ Task observations are simple semantic functions looking at the syntax tree of a 
   \caption{Values} \label{fig:observation-value}
 \end{figure}
 
-
-
-\paragraph{Inputs}
-
-\begin{figure}[h]
-  \small
-  \usemacro{O-Inputs}
-  \caption{Inputs} \label{fig:observation-value}
-\end{figure}
+The question remains what value we have to associate to a task sequence.
+The answer is: none!
+Imagine the task $t := \Edit \str{Hello} \Then \lambda s.\allowbreak\Edit (\Length s)$,
+where a user entered a string and our task gives the length of the string as the result.
+Recall the definition of $\Value(t)$ from \autoref{sec:value}.
+The value of the left hand side of $t$ is the string $\str{Hello}$.
+After stepping to the right hand side,
+the value of $t$ should be $\Value(\Edit (\Length\str{Hello})) = \Value(\Edit 5) = 5$.
+This means the type of the value \emph{changed} after taking the step.
+\todo{Elaborate more about why this is not desirable.}
+Therefore we define that a sequence of tasks \emph{does not} have a value.\footnote{
+  We could choose that the value of a sequence equals the value of the left hand side.
+  This will have fatal consequences for our stepping semantics however.
+}
 
 
 
@@ -216,10 +222,38 @@ Task observations are simple semantic functions looking at the syntax tree of a 
 When an expression fails, it can not be normalised and there is no possible
 input that it will handle. The function $\Failing$ determines this property.
 
+% Almost there!
+We did not extend the functions $\Failing(t)$ and $\Value(t)$ for our new sequencing construct $\Then$.
+Intuitively,
+when we have a task $\Fail \Then e_2$ we are stuck.
+As in the case of just the task $\Fail$,
+users can send any event,
+but nothing will ever happen.
+$\Fail$ will never have a value
+and therefore $\Then$ will never make a step to $e_2$.\footnote{
+  This is a property called \emph{left absorption},
+  which tells us something about the interaction between $\Fail$ and $\Then$.
+  See also \autoref{sec:monad-laws}.
+}
+If the left hand side of $\Then$ is any other task,
+all will be well.
+Thus,
+a sequence $t_1 \Then e_2$ is succeeding iff its left hand side $t_1$ is succeeding.
+
 \begin{figure}[h]
   \small
   \usemacro{O-Failing}
   \caption{Failing} \label{fig:observation-failing}
+\end{figure}
+
+
+
+\paragraph{Inputs}
+
+\begin{figure}[h]
+  \small
+  \usemacro{O-Inputs}
+  \caption{Inputs} \label{fig:observation-value}
 \end{figure}
 
 
@@ -333,6 +367,7 @@ These conditions make sure the type of the entered value and the type of the edi
 \paragraph{Two principles of stepping}
 \label{sec:normalise-sequence}
 
+\fixme{Where to put this?}
 Above rules imply that we have three cases when normalising a sequence.
 First,
 it could be the case that the left hand side does not have a value after normalisation.
@@ -363,39 +398,6 @@ can be an interactive task, such as an editor.
 To reach this encapsulated interactive task,
 $\Then$ needs to pass inputs to the left.
 \refrule{H-PassThen}
-
-Almost there!
-We did not extend the functions $\Failing(t)$ and $\Value(t)$ for our new sequencing construct $\Then$.
-Intuitively,
-when we have a task $\Fail \Then e_2$ we are stuck.
-As in the case of just the task $\Fail$,
-users can send any event,
-but nothing will ever happen.
-$\Fail$ will never have a value
-and therefore $\Then$ will never make a step to $e_2$.\footnote{
-  This is a property called \emph{left absorption},
-  which tells us something about the interaction between $\Fail$ and $\Then$.
-  See also \autoref{sec:monad-laws}.
-}
-If the left hand side of $\Then$ is any other task,
-all will be well.
-Thus,
-a sequence $t_1 \Then e_2$ is succeeding iff its left hand side $t_1$ is succeeding.
-
-The question remains what value we have to associate to a task sequence.
-The answer is: none!
-Imagine the task $t := \Edit \str{Hello} \Then \lambda s.\allowbreak\Edit (\Length s)$,
-where a user entered a string and our task gives the length of the string as the result.
-Recall the definition of $\Value(t)$ from \autoref{sec:value}.
-The value of the left hand side of $t$ is the string $\str{Hello}$.
-After stepping to the right hand side,
-the value of $t$ should be $\Value(\Edit (\Length\str{Hello})) = \Value(\Edit 5) = 5$.
-This means the type of the value \emph{changed} after taking the step.
-\todo{Elaborate more about why this is not desirable.}
-Therefore we define that a sequence of tasks \emph{does not} have a value.\footnote{
-  We could choose that the value of a sequence equals the value of the left hand side.
-  This will have fatal consequences for our stepping semantics however.
-}
 
 
 
