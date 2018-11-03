@@ -1,6 +1,6 @@
 module Data.Basic
   ( Basic
-  , Somebasic, pack, unpack
+  , Somebasic, pack, unpack, unsafeUnpack
   ) where
 
 
@@ -36,6 +36,14 @@ unpack :: forall a. Basic a => Somebasic -> Maybe a
 unpack (Somebasic r x)
   | Just HRefl <- eqTypeRep r r' = Just x
   | otherwise = Nothing
+  where
+    r' = typeRep :: TypeRep a
+
+
+unsafeUnpack :: forall a. Basic a => Somebasic -> a
+unsafeUnpack (Somebasic r x)
+  | Just HRefl <- eqTypeRep r r' = x
+  | otherwise = panic $ "Data.Basic.unsafeUnpack: Types '" <> show r <> "' and '" <> show r' <> "' did not match"
   where
     r' = typeRep :: TypeRep a
 

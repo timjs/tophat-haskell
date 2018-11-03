@@ -43,7 +43,7 @@ ui :: MonadRef l m => TaskT l m a -> m Text
 ui (Edit (Just x)) = pure $ "□(" <> show x <> ")"
 ui (Edit Nothing)  = pure $ "□(_)"
 ui (Store l) = do
-  x <- readRef l
+  x <- deref l
   pure $ "■(" <> show x <> ")"
 ui (And left rght) = do
   l <- ui left
@@ -81,7 +81,7 @@ ui (Label l this) = do
 
 value :: MonadRef l m => TaskT l m a -> m (Maybe a)
 value (Edit val) = pure $ val
-value (Store loc) = Just <$> readRef loc
+value (Store loc) = Just <$> deref loc
 value (And left rght) = do
   l <- value left
   r <- value rght
@@ -230,12 +230,12 @@ handle (Edit val) (ToHere (Change val_new))
 handle (Store loc) (ToHere (Change val_ext))
   -- NOTE: As in the `Edit` case above, we check for type equality.
   -- Here, we can't annotate `Refl`, because we do not have acces to the type variable `b` inside `Store`.
-  -- We also do not have acces to the value stored in `loc` (we could read it first using `readRef`).
+  -- We also do not have acces to the value stored in `loc` (we could deref it first using `deref`).
   -- Therefore we use a proxy `Nothing` of the correct scoped type to mach against the type of `val_ext`.
   | Just Refl <- sameT (Nothing :: Maybe a) val_ext =
       case val_ext of
         Just val_new -> do
-          writeRef loc val_new
+          loc $= const val_new
           pure $ Store loc
         Nothing ->
           trace CouldNotChange $ Store loc
