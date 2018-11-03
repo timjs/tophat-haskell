@@ -1,5 +1,5 @@
 module Control.Monad.Mem
-  ( Memory, Heap, Locs
+  ( Heap
   , MemT, runMemT, execMemT, evalMemT
   , Mem, runMem, execMem, evalMem
   ) where
@@ -9,73 +9,52 @@ import Preload hiding (empty)
 
 import Control.Monad.Ref
 
+import Data.Basic
 import Data.Maybe (fromJust)
 import qualified Data.IntMap.Strict as IntMap
-
-import Unsafe.Coerce (unsafeCoerce)
-
-
-
--- Cells -----------------------------------------------------------------------
-
-
-data Cell :: Type where
-  Pack :: a -> Cell
-
-
-pack :: a -> Cell
-pack = Pack
-
-
-unpack :: Cell -> a
---XXX: unsafe things happen here...
-unpack (Pack x) = unsafeCoerce x
 
 
 
 -- Heap ------------------------------------------------------------------------
 
 
-data Memory
-  = Memory Locs Heap
+data Loc a
+  = Loc Int
 
-type Heap = IntMap Cell
-type Locs = List Cell
-
-data Loc a = Loc Int
+newtype Heap
+  = Heap (IntMap Somebasic)
+  deriving (Show, Eq)
 
 
 
 -- Helpers --
 
 
-empty :: Memory
-empty = Memory [] IntMap.empty
+empty :: Heap
+empty = Heap IntMap.empty
 
 
-insert :: forall a. a -> Memory -> ( Loc a, Memory )
-insert x (Memory ls vs) =
-  ( l, m' )
+--TODO: restrict scope of Loc
+insert :: forall a. Basic a => a -> Heap -> ( Loc a, Heap )
+insert x (Heap vs) =
+  ( l, Heap $ IntMap.insert n (pack x) vs )
   where
-    n = length ls
+    n = IntMap.size vs
     l = Loc n :: Loc a
-    m' = Memory
-      (pack l : ls)
-      (IntMap.insert n (pack x) vs)
 
 
-lookup :: forall a. Loc a -> Memory -> a
-lookup (Loc n) (Memory  _ vs) =
+lookup :: forall a. Basic a => Loc a -> Heap -> a
+lookup (Loc n) (Heap vs) =
   --XXX: unsafe things happen here...
-  fromJust $ unpack <$> IntMap.lookup n vs
+  fromJust $ unsafeUnpack <$> IntMap.lookup n vs
 
 
-adjust :: forall a. (a -> a) -> Loc a -> Memory -> Memory
-adjust f (Loc n) (Memory ls vs) =
-  Memory ls $ IntMap.adjust f' n vs
+adjust :: forall a. Basic a => (a -> a) -> Loc a -> Heap -> Heap
+adjust f (Loc n) (Heap vs) =
+  Heap $ IntMap.adjust f' n vs
   where
   --XXX: unsafe things happen here...
-    f' = unpack >> f >> pack
+    f' = unsafeUnpack >> f >> pack
 
 
 
@@ -83,35 +62,35 @@ adjust f (Loc n) (Memory ls vs) =
 
 
 newtype MemT m a
-  = MemT (StateT Memory m a)
+  = MemT (StateT Heap m a)
   deriving (Functor, Applicative, Monad)
 
-deriving instance Monad m => MonadState Memory (MemT m)
+deriving instance Monad m => MonadState Heap (MemT m)
 
 
 instance Monad m => MonadRef Loc (MemT m) where
 
-  newRef :: a -> MemT m (Loc a)
-  newRef x = do
+  ref :: Basic a => a -> MemT m (Loc a)
+  ref x = do
     m <- get
     let ( l, m' ) = insert x m
     put m'
     pure l
 
-  readRef :: Loc a -> MemT m a
-  readRef l = do
+  deref :: Basic a => Loc a -> MemT m a
+  deref l = do
     m <- get
     pure $ lookup l m
 
-  writeRef :: Loc a -> a -> MemT m ()
-  writeRef l x = do
+  assign :: Basic a => Loc a -> a -> MemT m ()
+  assign l x = do
     m <- get
     let m' = adjust (const x) l m
     put m'
 
 
 
-runMemT :: MemT m a -> m ( a, Memory )
+runMemT :: MemT m a -> m ( a, Heap )
 runMemT (MemT st) = runStateT st empty
 
 
@@ -119,14 +98,14 @@ evalMemT :: Monad m => MemT m a -> m a
 evalMemT mem = fst <$> runMemT mem
 
 
-execMemT :: Monad m => MemT m a -> m Memory
+execMemT :: Monad m => MemT m a -> m Heap
 execMemT mem = snd <$> runMemT mem
 
 
 type Mem = MemT Identity
 
 
-runMem :: Mem a -> ( a, Memory )
+runMem :: Mem a -> ( a, Heap )
 runMem (MemT st) = runIdentity $ runStateT st empty
 
 
@@ -134,5 +113,5 @@ evalMem :: Mem a -> a
 evalMem mem = fst $ runMem mem
 
 
-execMem :: Mem a -> Memory
+execMem :: Mem a -> Heap
 execMem mem = snd $ runMem mem
