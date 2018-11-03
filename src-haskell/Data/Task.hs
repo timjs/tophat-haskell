@@ -1,5 +1,6 @@
 module Data.Task
   ( TaskIO, TaskST, TaskT
+  , Task --, runTask, evalTask, execTask
   , NotApplicable
   , ui, value, failing, inputs
   , normalise, initialise, handle, drive
@@ -12,12 +13,14 @@ module Data.Task
   , Basic
   , MonadRef
   , MonadTrace
+  , module Control.Monad.Mem
   ) where
 
 
 import Preload
 
 import Control.Monad.Trace
+import Control.Monad.Mem
 
 import Data.IORef
 import Data.STRef
@@ -33,6 +36,21 @@ type TaskIO = TaskT IORef IO
 
 
 type TaskST s = TaskT (STRef s) (ST s)
+
+
+type Task = TaskT Loc Mem
+
+
+-- runTask :: Task a -> ( a, Heap )
+-- runTask = runMem
+
+
+-- evalTask :: Task a -> a
+-- evalTask = evalMem
+
+
+-- execTask :: Task a -> Heap
+-- execTask = execMem
 
 
 

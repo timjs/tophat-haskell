@@ -1,5 +1,5 @@
 module Control.Monad.Mem
-  ( Heap
+  ( Heap, Loc
   , MemT, runMemT, execMemT, evalMemT
   , Mem, runMem, execMem, evalMem
   ) where
