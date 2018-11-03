@@ -5,7 +5,7 @@
 %% For proofreading
 % \documentclass[sigplan,authordraft]{acmart}
 %% For final camera-ready submission
-\documentclass[sigplan]{acmart}
+\documentclass[10pt,sigplan]{acmart}
 %% For booklet
 % \documentclass[acmsmall]{acmart}
 
@@ -16,6 +16,8 @@
 \input{macros/abbreviations}
 \input{commands}
 \input{rules}
+\input{grammars}
+\input{maps}
 
 \acmConference[PLDI'19]
   {International Conference on Programming Language Design and Implementation}
@@ -56,7 +58,7 @@
 \begin{document}
 
 %% Title information
-\title{Top Hat: A Formal Foundation for Task-Oriented Programming}
+\title{Top Hat: A calculus for modular interactive workflows}
                                         %% [Short Title] is optional;
                                         %% when present, will be used in
                                         %% header instead of Full Title.
@@ -190,7 +192,7 @@
 
 \input{sections/introduction}
 \input{sections/example}
-\input{sections/system}
+\input{sections/language}
 \input{sections/semantics}
 \input{sections/properties}
 \input{sections/comparison}
@@ -211,6 +213,7 @@
 
 %% Bibliography
 \bibliography{bibliography}
+
 
 \pagebreak
 %% Appendix

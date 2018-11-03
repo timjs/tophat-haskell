@@ -1,0 +1,88 @@
+% !TEX root=pldi2019.tex
+
+
+%% Language %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newmacro{O-Value}{
+  \begin{flalign*}
+    \begin{array}{lcl}
+      \multicolumn{3}{l}{\Value : \mathrm{Tasks} \times \mathrm{States} \rightharpoonup \mathrm{Values}} \\
+      \Value(\Edit v, s)       &=& v \\
+      \Value(\Enter \tau, s)   &=& \bot \\
+      \Value(\Update l, s)     &=& s(l) \\
+      \Value(\Fail, s)         &=& \bot \\
+      \Value(t_1 \Then e_2, s) &=& \bot \\
+      \Value(t_1 \Next e_2, s) &=& \bot \\
+      \Value(t_1 \And t_2, s)  &=& \left\{
+        \begin{array}{ll}
+          \tuple{v_1, v_2}     & \when\ \Value(t_1, s) = v_1 \land \Value(t_2, s) = v_2 \\
+          \bot                 & \otherwise
+        \end{array}
+      \right. \\
+      \Value(t_1 \Or t_2, s)   &=& \left\{
+        \begin{array}{ll}
+          v_1                  & \when\ \Value(t_1, s) = v_1 \\
+          v_2                  & \when\ \Value(t_1, s) = \bot \land \Value(t_2, s) = v_2 \\
+          \bot                 & \otherwise
+        \end{array}
+      \right. \\
+      \Value(t_1 \Xor t_2, s)  &=& \bot\\
+      \Value(u \At t, s)       &=& \Value(t,s)
+    \end{array} & &&
+  \end{flalign*}
+}
+
+\newmacro{O-Inputs}{
+  \begin{flalign*}
+    \begin{array}{lcl}
+      \multicolumn{3}{l}{\Inputs : \mathrm{Tasks} \times \mathrm{States} \to \powerset(\mathrm{Inputs})} \\
+      \Inputs(\Edit v:\Task\tau,s)   &=& \set{v':\tau, \Empty} \\
+      \Inputs(\Enter \tau,s)         &=& \set{v':\tau} \\
+      \Inputs(\Update l:\Task\tau,s) &=& \set{v':\tau} \\
+      \Inputs(\Fail,s)               &=& \nothing \\
+      \Inputs(t_1 \Then e_2,s)       &=& \Inputs(t_1,s) \\
+      \Inputs(t_1 \Next e_2,s)       &=& \Inputs(t_1,s) \cup \set{\Continue \mid \Value{(t_1,s)} = v_1 \land \lnot\Failing(e_2 v_1,s)} \\
+      \Inputs(t_1 \And t_2,s)        &=& \set{\First\ i \mid i \in \Inputs(t_1,s)} \cup \set{\Second\ i \mid i \in \Inputs(t_2,s)} \\
+      \Inputs(t_1 \Or t_2,s)         &=& \set{\First\ i \mid i \in \Inputs(t_1,s)} \cup \set{\Second\ i \mid i \in \Inputs(t_2,s)} \\
+      \Inputs(e_1 \Xor e_2,s)        &=& \set{\Left, \Right} \\
+      \Inputs(u_1 \At t,s)           &=& \set{u_2 \At i\mid u_2 \At i \in \Inputs(t,s)} \cup \set{u_1 \At i\mid i\in \Inputs(t,s)}
+    \end{array} & &&
+  \end{flalign*}
+}
+
+\newmacro{O-Failing}{
+  \begin{flalign*}
+    \begin{array}{lcl}
+      \multicolumn{3}{l}{\Failing : \mathrm{Tasks} \times \mathrm{States} \to \mathrm{Booleans}} \\
+      \Failing(\Edit v,s)       &=& \False \\
+      \Failing(\Enter \tau,s)   &=& \False \\
+      \Failing(\Update l,s)     &=& \False \\
+      \Failing(\Fail,s)         &=& \True \\
+      \Failing(t_1 \Then e_2,s) &=& \Failing(t_1,s) \\
+      \Failing(t_1 \Next e_2,s) &=& \Failing(t_1,s) \\
+      \Failing(t_1 \And t_2,s)  &=& \Failing(t_1,s) \land \Failing(t_2,s) \\
+      \Failing(t_1 \Or t_2,s)   &=& \Failing(t_1,s) \land \Failing(t_2,s) \\
+      \Failing(e_1 \Xor e_2,s)  &=& \Failing(t_1,s') \land \Failing(t_2,s') \\
+        \multicolumn{3}{l}{\qquad\where\ e_1,s\stride t_1,s' \mathbf{\ and\ } e_2,s\stride t_2,s'} \\
+      \Failing(u \At t,s)       &=& \Failing(t,s)
+    \end{array} & &&
+  \end{flalign*}
+}
+
+\newmacro{O-Watching}{
+  \begin{flalign*}
+    \begin{array}{lcl}
+      \multicolumn{3}{l}{\Watching : \mathrm{Tasks} \to \powerset(\mathrm{Locations})} \\
+      \Watching(\Edit v)       &=& \nothing \\
+      \Watching(\Enter \tau)   &=& \nothing \\
+      \Watching(\Update l)     &=& \set{l} \\
+      \Watching(\Fail)         &=& \nothing\\
+      \Watching(t_1 \Then e_2) &=& \Watching(t_1) \\
+      \Watching(t_1 \Next e_2) &=& \Watching(t_1) \\
+      \Watching(t_1 \And t_2)  &=& \Watching(t_1) \cup \Watching(t_2) \\
+      \Watching(t_1 \Or t_2)   &=& \Watching(t_1) \cup \Watching(t_2) \\
+      \Watching(e_1 \Xor e_2)  &=& \nothing \\
+      \Watching(u \At t)       &=& \Watching(t)
+    \end{array} & &&
+  \end{flalign*}
+}

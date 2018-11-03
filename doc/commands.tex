@@ -63,6 +63,10 @@
 %% Object language %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
+\newmacro{TOPHAT}
+  {$\widehat{\text{\smallcaps{top}}}$\xspace}
+
+
 \let\And\relax
 \newoperator{Then}  {\blacktriangleright}
 \newoperator{Next}  {\vartriangleright}
@@ -75,6 +79,7 @@
 \newoperator{Update}{\blacksquare}
 \newoperator{Watch} {\overline{\blacksquare}}
 \newoperator{Fail}  {\lightning}
+\newoperator{At}    {@}
 
 \newoperator{AndOr} {\DEPRECATED}
 
@@ -103,8 +108,10 @@
 
 \newmathcommand{evaluate}[rel]
   {\;\downarrow\;}
-\newmathcommand{normalise}[rel]
+\newmathcommand{stride}[rel]
   % {\;\rightarrow\!\shortmid\;}
+  {\;\rightsquigarrow\;}
+\newmathcommand{normalise}[rel]
   {\;\Downarrow\;}
 \newmacro{handle}[1]
   {\mathrel{\;\xrightarrow{\;#1\;}\;}}
@@ -120,6 +127,10 @@
   {U}
 \newmathcommand{Failing}[cal]
   {F}
+\newmathcommand{Watching}[cal]
+  {W}
+\newmathcommand{Dirty}
+  {\Delta}
 
 
 

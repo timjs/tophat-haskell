@@ -93,7 +93,7 @@ and the functions $\Value(t)$ and $\Failing(t)$ from sections \autoref{sec:value
 
 Graphically,
 we now have the following semantic functions shown in \autoref{fig:semantic-functions}.
-Note that the double down arrow $\normalise$ \emph{uses} the single down arrow $\evaluate$,
+Note that the double down arrow $\stride$ \emph{uses} the single down arrow $\evaluate$,
 a convention we will use again later in this text.
 
 \begin{figure}
@@ -115,7 +115,7 @@ normalising tasks $t$ as much as possible,
 till the moment it needs an event to continue.
 For editors and the failing task normalisation is simple.
 \begin{equation*}
-  \userule{N-Edit} \qquad \userule{N-Fill} \qquad \userule{N-Fail}
+  \userule{S-Edit} \qquad \userule{S-Fill} \qquad \userule{S-Fail}
 \end{equation*}
 In the next subsection we will introduce rules to normalise a task sequence.
 
@@ -126,7 +126,7 @@ we introduce a fourth semantic relation to deal with this.
 The drive relation $\boxed{\RelationD}$ simply passes the event $h$ to the handle semantics
 and normalises the task afterwards.
 \begin{equation*}
-  \userule{D-Main}
+  \userule{D-Handle}
 \end{equation*}
 Note that again,
 the double arrow $\drive{h}$ uses the single arrow $\handle{h}$.
@@ -180,7 +180,7 @@ it could be the case that the left hand side does not have a value after normali
 This means we cannot pass a value to the right hand side
 and thus we cannot make the step.
 \begin{equation*}
-  \userule{N-ThenStay}
+  \userule{S-ThenStay}
 \end{equation*}
 
 \begin{margintext}{Aside: Sequencing in iTask}
@@ -191,7 +191,7 @@ and thus we cannot make the step.
 
   From the multiple options that we have,
   only \type{(>>=)}, \type{(>>-)} and \type{(>>\texttilde)} have the right type.
-  Normalisation rules \refrule{N-ThenStay}, \refrule{N-ThenFail} and \refrule{N-ThenCont} ensure stepping without any user interaction,
+  Normalisation rules \refrule{S-ThenStay}, \refrule{S-ThenFail} and \refrule{S-ThenCont} ensure stepping without any user interaction,
   i.e. users are not presented with a continue button.
   Therefore our $\Then$ constructor corresponds mostly to the iTasks \type{(>>-)} combinator.
 \end{margintext}
@@ -203,7 +203,7 @@ it leads to a failing task.
 We do not allow stepping to a failing task
 and thus we also cannot make a step.
 \begin{equation*}
-  \userule{N-ThenFail}
+  \userule{S-ThenFail}
 \end{equation*}
 Note we use the evaluation semantics of our host language
 to evaluate the function application $e_2\ v_1$ to a new task $t_2$.
@@ -213,7 +213,7 @@ the normalised left hand side has a value,
 and the evaluated right hand side is a succeeding task.
 Now we can make a step!
 \begin{equation*}
-  \userule{N-ThenCont}
+  \userule{S-ThenCont}
 \end{equation*}
 Note we normalise $t_2$ first before yielding our result.
 
@@ -312,8 +312,8 @@ which we read as \enquote{$t_1$ is \emph{normalised equal} to $t_2$} as follows.
 \todo{Only for well typed expressions, otherwise it makes $\Enter \beta$ and $\Fail$ equivalent, which is obvously not what we want.}
 \begin{equation*}
   \begin{array}{crc}
-    t_1 \approxeq t_2 &\text{if and only if}& t_1 \normalise t_1' \\
-                      &\text{and}           & t_2 \normalise t_2' \\
+    t_1 \approxeq t_2 &\text{if and only if}& t_1 \stride t_1' \\
+                      &\text{and}           & t_2 \stride t_2' \\
                       &\text{and}           & \Value(t_1') = \Value(t_2') \\
   \end{array}
 \end{equation*}
@@ -343,13 +343,13 @@ We have the following laws for \emph{type correct expressions}.
 
 Left identity follows quite naturally from the rules in \autoref{sec:normalise-sequence}.
 As $\Edit x$ has a value,
-\refrule{N-ThenCont} will step to the right hand side and evaluate $g\ x$.
+\refrule{S-ThenCont} will step to the right hand side and evaluate $g\ x$.
 
 Right identity is a bit harder to see at once.
 We have two cases.
 \begin{enumerate*}
   \item
-    When $\Value(t) = \bot$ we cannot make a step, by \refrule{N-ThenStay},
+    When $\Value(t) = \bot$ we cannot make a step, by \refrule{S-ThenStay},
     and $\Value(t \Then \lambda x. \Edit x)$ is also $\bot$.
   \item
     When $\Value(t) = v$ we can make a step.
@@ -393,7 +393,7 @@ only \refrule{H-Next} is new and specific for external stepping.
 \end{margintext}
 
 \begin{equation*}
-  \userule{N-Next}
+  \userule{S-Next}
 \end{equation*}
 
 \begin{equation*}

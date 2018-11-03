@@ -2,10 +2,10 @@
 
 \section{Comparison}
 
-In this section we compare TOP with Hoare's Communicating Sequential Processes (CSP).
+In this section we compare \TOP with Hoare's Communicating Sequential Processes (\CSP).
 The discussion here is based on the book by \citet{books/Hoare85CSP}.
-We chose CSP as an example to stand for the numerous process algebras in existence, which, as far as this section is concerned, are reasonably similar.
-Notions like communication with the environment and between subsystems, concurrency, and sequential composition can be found in both TOP and in process algebras.
+We chose \CSP as an example to stand for the numerous process algebras in existence, which, as far as this section is concerned, are reasonably similar.
+Notions like communication with the environment and between subsystems, concurrency, and sequential composition can be found in both \TOP and in process algebras.
 This raises the question of how these systems relate.
 
 We provide comparisons based on three aspects.
@@ -13,30 +13,33 @@ First, we compare the scope of the languages, as intended by the authors.
 Second, we show how similar features like concurrency or communication work.
 Third, we provide some example problems and illustrate how they can be solved in each language.
 
+
 \subsection{Scope}
 
-The central goal of CSP is to model the patters of behaviour of processes.
+The central goal of \CSP is to model the patters of behaviour of processes.
 These patterns of behaviour manifest themselves in sequences of actions that actors can perform.
 
-The central goal of TOP is to coordinate the collaboration between people who work together to reach a common goal.
+The central goal of \TOP is to coordinate the collaboration between people who work together to reach a common goal.
 
-CSP has a formal semantics that allows various kinds of correctness proofs, including equality of processes, and adherence to a specification.
+\CSP has a formal semantics that allows various kinds of correctness proofs, including equality of processes, and adherence to a specification.
 This allows applications in program correctness, proofs of deadlock freedom, liveness, or verification of protocols.
 
-TOP focuses less on formal correctness, and more on practical applicability.
+\TOP focuses less on formal correctness, and more on practical applicability.
 It wants to be a language with intuitive semantics that facilitates communication between programmers and domain experts.
-TOP programs are supposed to hide implementation details from domain experts while containing enough information to allow automatic generation of executable applications, including user interfaces.
+\TOP programs are supposed to hide implementation details from domain experts while containing enough information to allow automatic generation of executable applications, including user interfaces.
+
 
 \subsection{Features}
 
-In this section we focus on certain features common to TOP and CSP, and study their respective realization.
+In this section we focus on certain features common to \TOP and \CSP, and study their respective realization.
 When we point out differences, we do not argue that the different realizations are incompatible.
 As a matter of fact the primitives can certainly be expressed in terms of each other, with more or less effort.
 Instead, we point out how the systems emphasize certain points of view by choosing different basic building blocks.
 
-\subsubsection*{Communication with the environment}
 
-In CSP, communication with the environment is represented by prefixing.
+\paragraph{Communication with the environment}
+
+In \CSP, communication with the environment is represented by prefixing.
 The process $(a \to P)$ can engage in action $a$, after which it continues as process $P$.
 In general, if $B$ is a set of events and $P(x)$ is an expression that evaluates to a process for each $x \in B$, the process $(x:B \to P(x))$ can engage in any one of the actions in $B$, after which it continues as the process determined by $P(x)$.
 Hoare does not specify the language in which $P(x)$ is to be expressed.
@@ -55,7 +58,7 @@ The process $(x:B \to P(x))$ then reacts as if it receives the action \textit{in
 To send a value to this process, the environment has to provide an action with a concrete number, for example $\textit{in}.7$.
 Sending is therefore the willingness to engage in one concrete action of a given form, while receiving is the willingness to engage in any action of this form.
 
-In TOP, communication with the environment is represented by editors.
+In \TOP, communication with the environment is represented by editors.
 A task of the form $\Enter \tau$ can receive any change event with a value of type $\tau$.
 A task of the form $\Edit v$, where $v$ is of type $\tau$, can receive the same
 events, and additionally the special event $\Empty$ that empties the editor.
@@ -68,29 +71,283 @@ Editors can be used for both input and output.
 The interpretation of whether an editor represents input or output is left to the reader.
 An empty editor is most commonly interpreted as a prompt to input data, while a filled editor can be seen either as outputting its value, or as an input that comes with a default value.
 
-In TOP, event values are typed to match the type of the receiving editor.
-In CSP, action names are essentially strings, subject to implicit restrictions.
+In \TOP, event values are typed to match the type of the receiving editor.
+In \CSP, action names are essentially strings, subject to implicit restrictions.
 
 
-\subsubsection*{Communication between subsystems}
-Concealment vs. shared data and monadic bind
+\paragraph{Communication between subsystems}
 
-\subsubsection*{Sequential composition}
-Success vs. step
+Another important feature in both \TOP and \CSP is communication between subsystems, that is between tasks and between processes.
 
-\subsubsection*{Concurrency}
-Parallel composition
+\CSP uses the same method for internal and for external communication, that is prefixing.
+The intuitive idea is that parallel processes that all eventually are willing to engage in some action must wait for the others and then progress in one synchronized step.
+This step in its own is still visible to the environment, which means the processes can not engage in this action unless the environment is also willing to.
+Communication becomes internal by using \emph{concealment}.
 
-\subsubsection*{Synchronization}
-Synchronized actions vs. guarded transitions
+Concealment is an operator that hides a given set of actions from the environment, which changes the semantics of prefixing for the concealed actions.
+The process does not have to wait for the environment to be willing to engage in concealed actions, it can just step on its own.
+In fact, the process must take any concealed steps as soon as possible, before any further communication with the environment can take place.
+This means internal steps have priority over external communication.
+In other words, computation before communication.
+This introduces the possibility of diverging computations, that is processes which continuously take internal steps without ever being able to engage in external communication.
 
-\subsubsection*{Nondeterminism}
+To exchange values over internal communication, \CSP employs the same technique of decoding action names as described in the section about external communication.
+
+\TOP has two methods for internal communication, both different from its method for external communication.
+There is the step combinator and there is shared data.
+All tasks have values, and the step combinator in $t \Then c$ passes the value of $t$ to the continuation $c$.
+The step combinator represents data flow that follows control flow.
+
+Shared data on the other hand represents data flow across control flow.
+Shared data sources are assignable references, whose changes in value are immediately visible to all tasks interested in them.
+
+The semantics of \TOP requires all updates to shared data and all enabled internal steps to be processed before any further communication with the environment can take place.
+This introduces the possibility of diverging computations, where a cyclic dependency between shared data causes updates to enable steps, which cause more updates ad infinitum.
+
+
+\paragraph{Sequential composition}
+
+The intuition about sequential composition is to first do one thing, and once it is done, do some other thing.
+
+In \CSP, sequential composition is represented by the semicolon combinator together with the special action $\checkmark$, called \emph{success}.
+We require that if a process engages in $\checkmark$ at all, it must be its single last action.
+When that happens, we say the process terminates successfully.
+The process $P;Q$ behaves like $P$ until $P$ terminates successfully, after which it continues as $Q$.
+If $P$ never terminates successfully, neither does $P;Q$
+
+In \TOP, tasks never terminate.
+Nonetheless, the notion of sequential composition exists in two forms: the external and the internal step.
+The task $t \Then c$ acts like $t$ as long as the step is guarded.
+Once it becomes unguarded, the task continues as $cv$, where $v$ is the value of $t$.
+The task $t \Next c$ requires an input event $\Continue$ in addition to the step being unguarded in order to step.
+
+In \CSP, the first process initiates the step.
+In \TOP, the step combinator initiates the step.
+
+
+\paragraph{Concurrency}
+
+The intuition about concurrency is that two things are done at the same time.
+
+Both \TOP and \CSP are models of \emph{multiprogramming}, as opposed to true parallelism.
+This means that concurrent agents take their steps in an interleaving fashion.
+
+In \CSP, there are two different combinators for parallel composition: parallel and interleave.
+The parallel process $P || Q$ can take $P$-steps and $Q$-steps in arbitrary interleaving for actions unique to $P$ and $Q$.
+Actions in the alphabets of both $P$ and $Q$ must be taken in synchronization, so if one process wants to take such a step, it must wait until the other is ready to do so.
+Synchronized steps are the only occasion where two processes actually do something at the same time.
+
+The interleaving operator $P ||| Q$ does not synchronize any actions of $P$ and $Q$.
+All steps are arbitrarily interleaved.
+Actions that occur in both alphabets can be taken by either $P$ or $Q$.
+
+In \TOP, parallel composition of tasks $t_1 \And t_2$, stands for two independent tasks, carried out at the same time.
+For the system it does not matter if this is done by two people actually in parallel, or by one person who switches between the tasks.
+All events sent to the combined task are interleaved into a serial stream of inputs.
+No synchronization takes place.
+Events to $t_1$ and $t_2$ must be prefixed by $\Left$ and $\Right$ respectively.
+This unambiguously renames the events, removing any source of nondeterminism.
+
+
+\paragraph{Synchronization}
+
+Synchronization means that an agent has to pause execution until some condition is met.
+The need for synchronization arises quite naturally in countless variations in situations involving concurrency.
+For multiprogramming, synchronization always means that some of the possible interleavings are forbidden.
+
+For example, the mutual exclusion problem for two parallel processes $a_p \to b_p \to \text{STOP} $ and $a_q \to b_q \to \text{STOP}$ can be stated as:
+In no interleaving should there be two adjacent $a$'s.
+
+The mutual exclusion problem for two parallel tasks can be stated as follows.
+Let \textit{inc} and \textit{dec} be tasks that increment and decrement some shared counter.
+In $(\textit{inc} \Next \textit{dec}) \And (\textit{inc} \Next \textit{dec})$, the shared counter should at no point be greater than 1.
+Intuitively this means that in no interleaving should there be two adjacent \textit{inc}'s.
+
+The basic method for synchronization in \CSP is synchronized prefixing.
+If some action $a$ is in the alphabets of both $P$ and $Q$, then their parallel composition $P||Q$ can take an $a$-step only if both $P$ and $Q$ are ready to take an $a$-step, in which case they both take their $a$-step simultaneously.
+They both have to wait for the condition that the other process is ready to take the step.
+All synchronization problems in \CSP must be solved by employing synchronized steps in some form.
+
+The basic method for synchronization in \TOP is built into the step combinator.
+The task $t \Next c$ can only continue execution when two conditions are met:
+Task $t$ must have a value $v$, and $cv$ must not evaluate to $\Fail$.
+Programmers can encode arbitrary conditions in $cv$, which are evaluated atomically between interaction steps.
+This allows a variety of synchronization problems to be solved in an intuitive and straight-forward manner.
+
+
+\paragraph{Nondeterminism}
+
+Nondeterminism means that a system can react to the same input in different ways, the choice of which can not be influenced by the environment.
+
+\CSP has an operator to explicitly introduce nondeterminism.
+Furthermore, nondeterminism can arise from the combination of some other combinators, for example choice and concealment.
+If a process is willing to engage in two actions, and both are concealed, the choice which one the system takes is nondeterministic.
+
+Hoare states that nondeterminism is only useful for \emph{specifying} processes, never for \emph{implementing} them \cite{books/Hoare85CSP}.
+\CSP can be used for both.
+A process with nondeterministic behaviour must always be regarded as a specification, while a deterministic process can be seen as specification or implementation.
+
+\TOP is meant solely for implementation and does not have any form of nondeterminism.
+Input events for parallel tasks are disambiguated, internal steps have a well-defined evaluation order, and internal choice is left-biased.
 
 
 \subsection{Examples}
 
-\begin{itemize}
-\item Mutual exclusion
-\item Semaphores
-\item Cigarette smokers
-\end{itemize}
+In this section we describe a couple of example problems, and show how they can be solved in both languages.
+
+
+\paragraph{Vending machine}
+
+The vending machine is an example often used as a hello-world program for process algebras.
+It demonstrates external communication and choice.
+It does not demonstrate concurrency.
+
+The following \CSP program models a vending machine that dispenses a small biscuit for one coin and a large biscuit for two coins. $$V = \textit{coin} \to (\textit{small} \to \text{STOP} \mid \textit{coin} \to \textit{large} \to \text{STOP})$$
+Intuitively, we see coins as inputs and products as outputs.
+\CSP does not distinguish between inputs and outputs.
+After inserting a coin, the machine can either output a small biscuit or take another coin as input.
+For \CSP, it only matters in which of the actions the environment is willing to engage in.
+
+In order to actually dispense a small biscuit, we have to put the machine into an environment that is willing to engage in this behaviour. $$\text{Customer} = \textit{coin} \to \textit{small} \to \text{STOP}$$
+
+A vending machine in \TOP that is close in spirit to the one above looks as follows.
+\begin{equation*}
+  \begin{array}{l @{} l}
+    \Enter \Int \Next \lambda n. &
+          \IF n \equiv 1 \THEN \Edit \str{small} \ELSE \\
+        & \IF n \equiv 2 \THEN \Edit \str{large} \ELSE \Fail
+  \end{array}
+\end{equation*}
+This machine does not exhibit exactly the same behaviour as the one in \CSP, nor is it intended to.
+Instead, this machine demonstrates how the same choice of buying a small biscuit for one coin or a large biscuit for two coins is expressed in \TOP.
+
+The machine asks the user to enter an amount of money.
+This editor stands for a coin slot in a real machine that freely accepts and returns coins.
+There is a continue button that is initially disabled.
+When the user has input exactly 1 or 2 coins, the continue button becomes enabled.
+When the user presses the continue button, the machine dispenses either a large or a small biscuit, depending on the amount of money.
+
+
+\paragraph{Semaphores}
+
+Semaphores are a synchronization mechanism on a medium level of abstraction.
+Their two operations \emph{signal} and \emph{wait} can be used in different ways to solve a variety of synchronization problems \cite{books/Downey08LBOS}.
+To make semaphores available in a system, they must be implemented using the system's primitive synchronization features, such as atomic test-and-set instructions, synchronized actions, or guarded transitions.
+
+Semaphores are supposed to be shared among agents.
+Semaphores have an internal counter and two methods \emph{signal} and \emph{wait}.
+The counter can be initialized once, but subsequently not accessed directly.
+When an agent invokes \emph{wait} and the counter is greater than zero, the semaphore decreases the counter and the agent continues.
+When an agent invokes \emph{wait} while the counter is zero, the agent blocks and has to wait until the counter increases.
+When an agent invokes \emph{signal}, the counter is increased.
+If there are any agents waiting for the semaphore, one of them is woken up.
+
+In \CSP, a semaphore is a process that runs in parallel with all processes it is supposed to coordinate.
+For the sake of this example, we study a semaphore with maximum counter of 2, initialized to 1, that coordinates two processes $A$ and $B$.
+The example can be generalized to an arbitrary counter and arbitrary many processes.
+
+\begin{equation*}
+  \begin{array}{rcl}
+  Sem & = & C_1 \\
+  C_2 & = & (wait_A \to C_1 \mid wait_B \to C_1) \\
+  C_1 & = & (wait_A \to C_0 \mid wait_B \to C_0 \\
+      &   & \mid signal_A \to C_2 \mid signal_B \to C_2) \\
+  C_0 & = & (signal_A \to C_1 \mid signal_B \to C_1)
+  \end{array}
+\end{equation*}
+
+The semaphore starts in state $C_1$, which represents a counter of 1.
+Every process has its own actions \emph{signal} and \emph{wait}, because we want these actions to be synchronized only between semaphore and process, not directly between the processes.
+In state $C_1$, the semaphore can engage in \emph{wait} and \emph{signal} actions for both processes.
+\emph{wait} decreases the counter, \emph{signal} increases the counter.
+In state $C_0$, which represents a counter of 0, only \emph{signal} actions are possible.
+A thread willing to engage in \emph{wait} while the semaphore is in $C_0$ must wait until the other process has engaged in \emph{signal} with the semaphore.
+
+
+In \TOP, a semaphore is a shared integer, together with two tasks \emph{signal} and \emph{wait}.
+\begin{equation*}
+  \begin{array}{l}
+  \text{type}\ \text{Semaphore} = \Reference \Int \\
+  \textit{signal} :: \text{Semaphore} \to \Task \Unit \\
+  \textit{wait}   :: \text{Semaphore} \to \Task \Unit
+  \end{array}
+\end{equation*}
+\emph{signal} simply increments the shared counter.
+\emph{wait} watches the counter and has a guarded step that is enabled if and only if the counter is greater than zero.
+The editor $\Update s$ should be regarded as read-only.
+\begin{equation*}
+  \begin{array}{r @{\,} c @{\,} l}
+    \textit{signal}\ s & = & s := {!s} + 1; \Edit \tuple{} \\
+    \textit{wait}\ s   & = & \Update s \Next \lambda c. \IF c > 0 \THEN s := c - 1; \Edit \tuple{} \ELSE \Fail
+  \end{array}
+\end{equation*}
+When the step in \emph{wait} is enabled and receives a continue event, it decrements the counter.
+Decrementing the counter happens in the normalization semantics, and is therefore atomic with respect to event handling.
+When this causes the counter to become zero, all tasks that happen to wait for the semaphore have their step disabled simultaneously.
+Once the semaphore gets signalled, all steps become enabled.
+The first task to take the step again disables the step for all others.
+
+
+\paragraph{Cigarette smokers}
+
+The cigarette smokers problem \cite{books/Downey08LBOS} is a surprisingly tricky synchronization problem.
+It requires waiting for two conditions, waking up only if both conditions are satisfied.
+The problem is stated as follows.
+In order to smoke a cigarette, three ingredients are required: tobacco, paper, and a match.
+There are three smokers, each having one of the ingredients and requiring the other two.
+There is an agent that randomly provides two of the ingredients.
+
+Downey models availability of the ingredients using a semaphore for each ingredient.
+The agent randomly signals two of the three semaphores.
+The problem is writing code for the smokers so that the smoker who requires the two signalled semaphores wakes up and proceeds with smoking.
+
+A na\"ive attempt where each smoker first waits for one and then the other semaphore can lead to deadlock.
+The following non-solution uses the semaphores developed in the previous section.
+Let \emph{paper}, \emph{tobac} and \emph{match} be semaphores, initialized to 0.
+\begin{equation*}
+\begin{array}{l @{\,} c @{\,} l}
+  \textit{tobacSmoker} & = & \textit{wait}\ \textit{match} \Then \textit{wait}\ \textit{paper} \Then \textit{smoke} \\
+  \textit{paperSmoker} & = & \textit{wait}\ \textit{tobac} \Then \textit{wait}\ \textit{match} \Then \textit{smoke} \\
+  \textit{matchSmoker} & = & \textit{wait}\ \textit{tobac} \Then \textit{wait}\ \textit{paper} \Then \textit{smoke} \\
+\end{array}
+\end{equation*}
+To see what can go wrong, imagine the three smokers running in parallel.
+Let the agent signal the two semaphores \emph{tobac} and \emph{paper}.
+One of \emph{paperSmoker} and \emph{matchSmoker} can take their first step, but if \emph{paperSmoker} takes the step, the system deadlocks.
+
+The solution proposed by Downey involves an additional mutex, three additional semaphores, three additional threads called \emph{pushers}, and three regular Boolean variables.
+The job of the pushers is to record availability of their ingredient in their Boolean variable, and check availability of other resources, waking the correct smoker when appropriate.
+The details of the solution are not important here.
+
+What is important is that the implementation of what is essentially waiting for two semaphores requires a substantial amount of additional synchronization, together with non-trivial conditional statements.
+
+The non-solution can be expressed in \CSP with the interleaving operator.
+We use actions directly to synchronized processes instead of semaphores.
+There are three actions \emph{match}, \emph{tobac}, and \emph{paper}, and we imagine an environment that engages in two of them.
+\begin{equation*}
+\begin{array}{l @{\,} c @{\,} l}
+  \textit{tobacSmoker} & = & \textit{match} \to \textit{paper} \to \textit{smoke} \to \text{STOP} \\
+  \textit{paperSmoker} & = & \textit{tobac} \to \textit{match} \to \textit{smoke} \to \text{STOP} \\
+  \textit{matchSmoker} & = & \textit{tobac} \to \textit{paper} \to \textit{smoke} \to \text{STOP} \\
+  \multicolumn{3}{l}{\textit{S} = \textit{tobacSmoker} \mathrel{|||} \textit{paperSmoker} \mathrel{|||} \textit{matchSmoker}} \\
+\end{array}
+\end{equation*}
+When the environment is willing to engage in the sequence $\textit{tobac} \to \textit{paper} \to \textit{smoke}$ with $S$, and the \emph{paperSmoker} synchronizes with the action \emph{tobac}, the system deadlocks before anyone can smoke.
+
+A similar effort as in Downey's solution must be made in order to solve the problem using synchronized actions in \CSP.
+
+\TOP allows a simple solution to this problem, using guarded steps.
+Steps can be guarded with arbitrary expressions, and the parallel combinator can be used to watch two shared data sources at the same time.
+Let \textit{match}, \textit{paper}, and \textit{tobac} be shared Booleans.
+The smokers are defined as follows.
+\begin{equation*}
+\begin{array}{l @{\,} c @{\,} l}
+  \textit{tobacSmoker} & = & (\Update \textit{match} \And \Update \textit{paper}) \Next \lambda \tuple{x,y}. \\
+    & & \quad \IF x \mathrel{\&\&} y \THEN \textit{smoke} \ELSE \Fail \\
+  \textit{paperSmoker} & = & (\Update \textit{tobac} \And \Update \textit{match}) \Next \lambda \tuple{x,y}. \\
+    & & \quad \IF x \mathrel{\&\&} y \THEN \textit{smoke} \ELSE \Fail \\
+  \textit{matchSmoker} & = & (\Update \textit{tobac} \And \Update \textit{paper}) \Next \lambda \tuple{x,y}. \\
+    & & \quad \IF x \mathrel{\&\&} y \THEN \textit{smoke} \ELSE \Fail \\
+\end{array}
+\end{equation*}
+When the agent supplies two of the ingredients by setting the respective shares to $\True$, only the step of the smoker that waits for those becomes enabled.

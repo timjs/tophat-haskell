@@ -1,0 +1,173 @@
+% !TEX root=pldi2019.tex
+
+
+%% Language %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newmacro{G-Language}{
+  \begin{grammar}
+    Expressions
+      & e    &::= & \lambda x:\tau.\ e   & – abstraction \\
+      &      &\mid& e_1\ e_2             & – application \\
+      &      &\mid& x                    & – variable \\
+      &      &\mid& c                    & – constant \\
+    \addlinespace
+      &      &\mid& e_1 \star e_2        & – operation \\
+      &      &\mid& \If{e_1}{e_2}{e_3}   & – branch \\
+      &      &\mid& \tuple{e_1, e_2}     & – pair \\
+      &      &\mid& \Fst e               & – first projection \\
+      &      &\mid& \Snd e               & – second projection \\
+      &      &\mid& \unit                & – unit \\
+    \addlinespace
+      &      &\mid& \Ref e               & – reference \\
+      &      &\mid& !e                   & – dereference \\
+      &      &\mid& e_1 := e_2           & – assignment \\
+      % &      &\mid& e_1; e_2             & – sequence \\
+      &      &\mid& l                    & – location \\
+    \addlinespace
+      &      &\mid& p                    & – pretask \\
+    \addlinespace
+    Constants
+      & c    &::= & B                    & – boolean \\
+      &      &\mid& I                    & – integer \\
+      &      &\mid& S                    & – string
+  \end{grammar}
+}
+
+\newmacro{G-Language-Compact}{
+  \begin{grammar*}
+    e ::= &                                                     & Expressions \\
+    \mid  & \lambda x:\tau.\ e \Mid  e_1\ e_2                   & – abstraction, application \\
+    \mid  & x \Mid  c                                           & – variable, constant \\
+    \mid  & \If{e_1}{e_2}{e_3} \Mid e_1 \star e_2               & – branch, operation \\
+    \mid  & \tuple{e_1, e_2} \Mid \Fst e \Mid \Snd e \Mid \unit & – pair, projections, unit \\
+    \mid  & \Ref e \Mid  !e \Mid  e_1 := e_2 \Mid  l            & – references and locations \\
+    \mid  & p                                                   & – pretask \\
+    c ::= &                                                     & Constants \\
+    \mid  & B \Mid  I \Mid  S                                   & – booleans, integers, strings
+  \end{grammar*}
+}
+
+\newmacro{G-Pretasks}{
+  \begin{grammar}
+    Pretasks
+      & p    &::= & \Edit e              & – valued editor \\
+      &      &\mid& \Enter \tau          & – unvalued editor \\
+      &      &\mid& \Update e            & – stored editor \\
+    \addlinespace
+      &      &\mid& e_1 \Then e_2        & – step \\
+      &      &\mid& e_1 \Next e_2        & – user step \\
+    \addlinespace
+      &      &\mid& e_1 \And e_2         & – composition \\
+    \addlinespace
+      &      &\mid& e_1 \Or e_2          & – choice \\
+      &      &\mid& e_1 \Xor e_2         & – user choice \\
+    \addlinespace
+      &      &\mid& u \At e              & – appoint \\
+      &      &\mid& \Fail                & – fail task
+  \end{grammar}
+}
+
+\newmacro{G-Pretasks-Compact}{
+  \begin{grammar*}
+    p ::= &                                              & Pretasks \\
+    \mid  & \Edit e \Mid   \Enter \tau  \Mid   \Update e & – editors: valued, unvalued, stored \\
+    \mid  & e_1 \Then e_2 \Mid   e_1 \Next e_2           & – steps: system, user \\
+    \mid  & e_1 \And e_2                                 & – pairing \\
+    \mid  & e_1 \Or e_2 \Mid   e_1 \Xor e_2              & – choice: system, user \\
+    \mid  & u \At e \Mid   \Fail                         & – appoint, fail
+  \end{grammar*}
+}
+
+\newmacro{G-Types}{
+  \begin{grammar}
+    Types
+      & \tau &::= & \tau_1 \to \tau_2    & – function type \\
+      &      &\mid& \tau_1 \times \tau_2 & – product type \\
+      &      &\mid& \Unit                & – unit type \\
+      &      &\mid& \Reference \tau      & – reference type \\
+      &      &\mid& \Task \tau           & – task type \\
+      &      &\mid& \beta                & – basic type \\
+      % &      &\mid& \alpha               & – universal type \\
+    Basic types
+      &\beta &::= & \Bool                & – boolean type \\
+      &      &\mid& \Int                 & – integer type \\
+      &      &\mid& \String              & – string type \\
+  \end{grammar}
+}
+
+\newmacro{G-Types-Compact}{
+  \begin{grammar*}
+    \tau ::=  &                                               & Types \\
+    \mid      & \tau_1 \to \tau_2 \Mid   \tau_1 \times \tau_2 & – function type, product type \\
+    \mid      & \Unit \Mid   \Reference \tau                  & – unit type, reference type \\
+    \mid      & \Task \tau \Mid   \beta                       & – task type, basic type \\
+    \beta ::= &                                               & Basic types \\
+    \mid      & \Bool \Mid   \Int \Mid   \String              & – boolean, integer, string
+  \end{grammar*}
+}
+
+\newmacro{G-Values}{
+  \begin{grammar}
+    Values
+      & v    &::= & \lambda x:\tau.\ e   & – abstraction \\
+      &      &\mid& \tuple{v_1, v_2}     & – pair value \\
+      &      &\mid& \unit                & – unit \\
+      &      &\mid& c                    & – constant \\
+      &      &\mid& l                    & – location \\
+      &      &\mid& t                    & – task \\
+    Tasks
+      & t    &::= & \Edit v              & – valued editor \\
+      &      &\mid& \Enter \tau          & – unvalued editor \\
+      &      &\mid& \Update l            & – stored editor \\
+      &      &\mid& \Fail                & – fail task \\
+      &      &\mid& t_1 \Then e_2        & – step \\
+      &      &\mid& t_1 \Next e_2        & – user step \\
+      &      &\mid& t_1 \And t_2         & – composition \\
+      &      &\mid& t_1 \Or t_2          & – choice \\
+      &      &\mid& t_1 \Xor t_2         & – user choice
+  \end{grammar}
+}
+
+\newmacro{G-Values-Compact}{
+  \begin{grammar*}
+    v ::= &                                          & Values \\
+      \mid& \lambda x:\tau.\ e                       & – abstraction \\
+      \mid& \tuple{v_1, v_2} \Mid \unit              & – pair value, unit \\
+      \mid& c \Mid l \Mid t                          & – constant, location, task \\
+    t ::= &                                          & Tasks \\
+      \mid& \Edit v \Mid \Enter \tau \Mid \Update l  & – editor tasks \\
+      \mid& \Fail                                    & – fail task \\
+      \mid& t_1 \Then e_2 \Mid t_1 \Next e_2         & – steps \\
+      \mid& t_1 \And t_2                             & – composition \\
+      \mid& t_1 \Or t_2 \Mid e_1 \Xor e_2            & – choices
+  \end{grammar*}
+}
+
+\newmacro{G-Inputs}{
+  \begin{grammar}
+    Inputs
+      & i    & ::=& a                    & – action \\
+      &      &\mid& \First i             & – pass to first \\
+      &      &\mid& \Second i            & – pass to second \\
+    Actions
+      & a    & ::=& v                    & – change editor to value \\
+      &      &\mid& \Empty               & – empty an editor \\
+      &      &\mid& \Continue            & – continue with next task \\
+      &      &\mid& \Pick                & – pick route \\
+    Routes
+      & r    & ::=& \Left                & – go left \\
+      &      &\mid& \Right               & – go right \\
+  \end{grammar}
+}
+
+\newmacro{G-Inputs-Compact}{
+  \begin{grammar*}
+    i ::= &                                 & Inputs \\
+    \mid  & a \Mid \First i \Mid \Second i  & – action, pass to first or second \\
+    a ::= &                                 & Actions \\
+    \mid  & v \Mid \Empty                   & – change to value, empty editor \\
+    \mid  & \Continue \Mid \Pick r          & – continue, pick route \\
+    r ::= &                                 & Routes \\
+    \mid  &\Left \Mid \Right                & – go left or right \\
+  \end{grammar*}
+}

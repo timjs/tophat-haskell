@@ -1,19 +1,74 @@
 % !TEX root=../pldi2019.tex
 
+
+
 \section{Introduction}
 
-Task-Oriented Programming (TOP) is a programming paradigm aimed at writing interactive multi-user applications in a declarative way \cite{conf/ppdp/PlasmeijerLMAK12}.
-TOP has two aspects.
-Firstly, TOP defines the primitive building blocks that are useful for high-level descriptions of how users collaborate with each other and with applications.
+
+\fixme{Restructure and extend introduction.}
+Interactive modular workflows
+\begin{itemize*}
+  \item Modular: abstraction, higher order.
+  \item Interactive: driven by user input.
+  \item Workflows: model work, information flowing through, compose work, apoint tasks to users.
+\end{itemize*}
+
+We will call interactive workflows \emph{tasks}.
+Tasks model real world work, appointable to users,
+can combined in a couple of elementary ways:
+\begin{itemize*}
+  \item sequantially
+  \item and-parallel
+  \item or-parallel
+\end{itemize*}
+Information flows through tasks in two different ways:
+\begin{enumerate*}
+  \item Locally: pass information from one task to another.
+  \item Globally: shared information by multiple tasks.
+\end{enumerate*}
+Information is entered into the system by users by sending \emph{inputs}.
+Therefore we say that these workflows are \emph{driven} by user inputs.
+We call defining modular interactive workflows Task Oriented Programming (\TOP).
+
+\paragraph{Contributions}
+\begin{itemize*}
+  \item A calculus to model workflows, which can be used in a modular way and are driven by user inputs.
+  \item Embed this calculus in a simply typed $\lambda$-calculus.
+  \item Its operational semantics, presented and defined in a layered way.
+  \item Semantic observations on the calculus which can be used to:
+  \begin{itemize*}
+    \item calculate stuck configurations,
+    \item associate a value with a task,
+    \item draw a user interface (\UI) for a task,
+    \item calculate input possibilities for the user.
+  \end{itemize*}
+  \item A clear separation between \TOP principles and general purpose programming constructs.
+\end{itemize*}
+
+
+\paragraph{Motivations}
+\begin{itemize*}
+  \item Formal basis needed for research.
+  \item Prove properties of interactive workflows.
+  \item Clearly specify the basic concepts needed to model workflows
+    and separate these from general purpose programming concepts.
+  \item Compare \TOP with processes and process algebra's like \CSP and \CCS.
+\end{itemize*}
+
+
+\paragraph{Background}
+Task-Oriented Programming (\TOP) is a programming paradigm aimed at writing interactive multi-user applications in a declarative way \cite{conf/ppdp/PlasmeijerLMAK12}.
+\TOP has two aspects.
+Firstly, \TOP defines the primitive building blocks that are useful for high-level descriptions of how users collaborate with each other and with applications.
 These building blocks are \emph{editors}, \emph{combinators}, and \emph{shared data sources}.
-Secondly, TOP defines a type-driven way to derive applications, including graphical user interfaces, from workflows modelled with said building blocks.
+Secondly, \TOP defines a type-driven way to derive applications, including graphical user interfaces, from workflows modelled with said building blocks.
 
 Editors represent end points where users directly interact with applications.
 In derived applications, editors can take many forms, like input fields, selection boxes, or map widgets.
 Combinators represent control flow and stand for the ways work can be coordinated in a collaborative environment.
 The three most important combinators are sequential composition, parallel composition, and choice.
 
-iTasks is an implementation of TOP, in the form of an embedded domain-specific language in the lazy functional programming language Clean.
+iTasks is an implementation of \TOP, in the form of an embedded domain-specific language in the lazy functional programming language Clean.
 It comes in the form of a library that provides editors and monadic combinators.
 iTasks uses the generic programming facilities of Clean to derive web applications from workflow models.
 
@@ -23,11 +78,11 @@ Furthermore it has been used numerous times to prototype ideas for Command and C
 iTasks has many features, and its basic combinators are versatile and powerful.
 Simpler combinators are implemented by restricting the powerful ones.
 This is useful for everyday programming, where having lots of functionality at one's fingertips is convenient and efficient.
-This approach does not lend itself well to formal treatment however, as it obscures what the essential features of TOP are, and how they interact.
+This approach does not lend itself well to formal treatment however, as it obscures what the essential features of \TOP are, and how they interact.
 
-The goal of this paper is to develop a calculus that serves as a formal foundation for TOP.
-The calculus is called Top Hat, written \tophat.
+The goal of this paper is to develop a calculus that serves as a formal foundation for \TOP.
+The calculus is called Top Hat, written \TOPHAT.
 Starting with combinators that have a single responsibility, we show how more complicated combinators can be expressed in terms of those.
-\tophat models a subset of iTasks, striking a balance between covering the features of the actual implementation and being suitable for formal treatment.
-In this way we identify the essential basic features of TOP and study them in isolation.
+\TOPHAT models a subset of iTasks, striking a balance between covering the features of the actual implementation and being suitable for formal treatment.
+In this way we identify the essential basic features of \TOP and study them in isolation.
 This approach makes the process algebra-like flavour of iTasks precise, and allows comparison with other works in the field.
