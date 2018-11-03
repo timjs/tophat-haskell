@@ -62,7 +62,7 @@ data TaskT :: (Type -> Type) -> (Type -> Type) -> Type -> Type where
   -- | Labeled tasks.
   Label :: Label -> TaskT l m r -> TaskT l m r
 
-
+  --FIXME: add lift and program some examples
 
 -- Instances -------------------------------------------------------------------
 
