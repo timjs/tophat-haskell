@@ -11,7 +11,7 @@ module Preload
   ) where
 
 
-import Protolude hiding ((<&>), (<&&>), (.), (>>), trace, handle, lift)
+import Protolude hiding ((<&>), (<&&>), (.), (>>), trace, handle, lift, TypeRep, typeRep)
 
 import Data.Bitraversable
 
