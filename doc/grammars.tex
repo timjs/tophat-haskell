@@ -39,8 +39,8 @@
     \mid  & \lambda x:\tau.\ e \Mid  e_1\ e_2                   & – abstraction, application \\
     \mid  & x \Mid  c                                           & – variable, constant \\
     \mid  & \If{e_1}{e_2}{e_3} \Mid e_1 \star e_2               & – branch, operation \\
-    \mid  & \tuple{e_1, e_2} \Mid \Fst e \Mid \Snd e \Mid \unit & – pair, projections, unit \\
-    \mid  & \Ref e \Mid  !e \Mid  e_1 := e_2 \Mid  l            & – references and locations \\
+    \mid  & \tuple{e_1, e_2} \Mid \Fst e \Mid \Snd e            & – pair, projections \\
+    \mid  & \Ref e \Mid  !e \Mid  e_1 := e_2 \Mid  l \Mid \unit & – references, location, unit \\
     \mid  & p                                                   & – pretask \\
     c ::= &                                                     & Constants \\
     \mid  & B \Mid  I \Mid  S                                   & – booleans, integers, strings
@@ -130,16 +130,15 @@
 
 \newmacro{G-Values-Compact}{
   \begin{grammar*}
-    v ::= &                                          & Values \\
-      \mid& \lambda x:\tau.\ e                       & – abstraction \\
-      \mid& \tuple{v_1, v_2} \Mid \unit              & – pair value, unit \\
-      \mid& c \Mid l \Mid t                          & – constant, location, task \\
-    t ::= &                                          & Tasks \\
-      \mid& \Edit v \Mid \Enter \tau \Mid \Update l  & – editor tasks \\
-      \mid& \Fail                                    & – fail task \\
-      \mid& t_1 \Then e_2 \Mid t_1 \Next e_2         & – steps \\
-      \mid& t_1 \And t_2                             & – composition \\
-      \mid& t_1 \Or t_2 \Mid e_1 \Xor e_2            & – choices
+    v ::= &                                                     & Values \\
+      \mid& \lambda x:\tau.\ e \Mid \tuple{v_1, v_2} \Mid \unit & – abstraction, pair, unit \\
+      \mid& c \Mid l \Mid t                                     & – constant, location, task \\
+    t ::= &                                                     & Tasks \\
+      \mid& \Edit v \Mid \Enter \tau \Mid \Update l             & – editors \\
+      \mid& t_1 \Then e_2 \Mid t_1 \Next e_2                    & – steps \\
+      \mid& t_1 \And t_2                                        & – composition \\
+      \mid& t_1 \Or t_2 \Mid e_1 \Xor e_2                       & – choices \\
+      \mid& u @ t \Mid \Fail                                    & – appoint, fail
   \end{grammar*}
 }
 
@@ -162,12 +161,11 @@
 
 \newmacro{G-Inputs-Compact}{
   \begin{grammar*}
-    i ::= &                                 & Inputs \\
-    \mid  & a \Mid \First i \Mid \Second i  & – action, pass to first or second \\
-    a ::= &                                 & Actions \\
-    \mid  & v \Mid \Empty                   & – change to value, empty editor \\
-    \mid  & \Continue \Mid \Pick r          & – continue, pick route \\
-    r ::= &                                 & Routes \\
-    \mid  &\Left \Mid \Right                & – go left or right \\
+    i ::= &                                           & Inputs \\
+    \mid  & a \Mid \First i \Mid \Second i            & – action, pass to first, pass to second \\
+    a ::= &                                           & Actions \\
+    \mid  & v \Mid \Empty \Mid \Continue \Mid \Pick r & – change, empty, continue, pick route \\
+    r ::= &                                           & Routes \\
+    \mid  &\Left \Mid \Right                          & – go left, go right
   \end{grammar*}
 }
