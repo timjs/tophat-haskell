@@ -9,16 +9,16 @@ The example is a simple flight booking system.
 It demonstrates communication with the environment, communication between parallel tasks, synchronisation, and input validation.
 
 The application works as follows.
-\begin{itemize}
-\item Multiple users should be able to book tickets at the same time.
-\item A user first has to input a list of passengers for which to book tickets.
-\item At least one of the passengers has to be an adult.
-\item After a valid list of passengers has been input, the user has to pick a seat for each passenger.
-\item Only free seats may be picked.
-\item Every passenger must have exactly one seat.
-\end{itemize}
+\begin{enumerate*}
+  \item A user has to input a list of passengers for which to book tickets.
+  \item At least one of these passengers has to be an adult.
+  \item After a valid list of passengers has been input, the user has to pick seats.
+  \item Only free seats may be picked.
+  \item Every passenger must have exactly one seat.
+  \item Multiple users should be able to book tickets at the same time.
+\end{enumerate*}
 For this example we assume that the host language has lists and two functions on them: intersect and difference.
-For brevity, we ommit the type annotations of variable bindings.
+For brevity, we omit the type annotations of variable bindings.
 
 We start by defining some type aliases.
 A passenger is a pair with name and age.
@@ -31,7 +31,7 @@ A booking contains a list of passengers and a list of seats.
 \end{TASK}
 
 Choosing seats requires reading and updating shared information.
-The list of free seats is stored in a reference called \emph{freeSeats}.
+The list of free seats is stored in a reference called \TS{freeSeats}.
 \begin{TASK}
   let freeSeats = ref [<<1,"A">>, <<1,"B">>, <<1,"C">>, ...] in
 \end{TASK}
@@ -49,11 +49,12 @@ and the user can proceed to picking seats.
   let bookFlight = enter (List Passenger) >>? \ps.
     if allValid ps then chooseSeats ps else fail in
 \end{TASK}
-A selection of seats is valid if every entered seat is free.
+A selection of seats is correct if every entered seat is free.
 \begin{TASK}
-  let validSeats = \ss. intersect ss !freeSeats == ss in
+  let correct = \ss. intersect ss !freeSeats == ss in
   let chooseSeats = \ps. enter (List Seat) >>? \ss.
-    if validSeats ss then confirmBooking ps ss else fail in
+    if correct ss /\ length ps == length ss
+      then confirmBooking ps ss else fail in
 \end{TASK}
 The function \TS{confirmBooking} removes the picked seats from the shared list of free seats,
 and displays the end result using the \TS{edit}-construct.
@@ -63,10 +64,10 @@ and displays the end result using the \TS{edit}-construct.
 \end{TASK}
 % It uses a function \TS{difference}, which removes all elements from the second list from the first list.
 
-The main task appoints the \TS{bookFlight} task to two different users \TS{u1} and \TS{u2},
+The main task appoints the \TS{bookFlight} task to three different users: \TS{u1}, \TS{u2}, and \TS{u3},
 and run these tasks in parallel.
 \begin{TASK}
-  u1 @ bookFlight <&> u2 @ bookFlight
+  u1 @ bookFlight <&> u2 @ bookFlight <&> u3 @ bookFlight
 \end{TASK}
 
 \begin{figure}[h]
@@ -74,10 +75,13 @@ and run these tasks in parallel.
   \caption{
     Running web application of the flight booking example using a translation to \ITASKS,
     a \TOP implementation.
-    It shows two users booking a flight simultaneously.
-    The first user already entered name and age,
-    the second is entering details of two passengers.
-    The message bubble shows the user is only allowed to enter an integer in the \TS{age} field.
+    It shows three users booking a flight simultaneously.
+    The first user entered name and age and continued to picking seats.
+    The second is entering details of two passengers.
+    The ages are not filled in, and therefore the \TS{Continue} button is disabled.
+    The third user finished a booking.
+    Note the first user can't pick seats \smallcaps{1b} and \smallcaps{1c} any more.
+    Also, the message bubble shows it is only allowed to enter an integer in the \TS{age} field.
   }
   \label{fig:flight-booking}
 \end{figure}

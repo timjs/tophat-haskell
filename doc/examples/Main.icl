@@ -67,8 +67,8 @@ adult p = p.age >= 18
 
 
 enterPassengers :: String -> Task [Passenger]
-enterPassengers title =
-  enterInformation (title, "Passenger details") [] >>?
+enterPassengers username =
+  enterInformation ( username, "Passenger details" ) [] >>?
     [ ( "Continue"
       , \passengers -> all valid passengers && any adult passengers && not (isEmpty passengers)
       , return
@@ -77,8 +77,8 @@ enterPassengers title =
 
 
 chooseSeats :: String (Shared [Seat]) Int -> Task [Seat]
-chooseSeats title freeSeats n =
-  enterMultipleChoiceWithShared (title, "Pick a seat") [] freeSeats >>?
+chooseSeats username freeSeats n =
+  enterMultipleChoiceWithShared ( username, "Pick a seat" ) [] freeSeats >>?
     [ ( "Pick"
       , \seats -> length seats == n
       , \seats ->
@@ -89,16 +89,21 @@ chooseSeats title freeSeats n =
 
 
 makeBooking :: String (Shared [Seat]) -> Task Booking
-makeBooking title freeSeats =
-  enterPassengers title >>- \passengers ->
-  chooseSeats title freeSeats (length passengers) >>- \seats ->
-  viewInformation ("User", "Booking") [] { passengers = passengers, seats = seats }
+makeBooking username freeSeats =
+  enterPassengers username >>- \passengers ->
+  chooseSeats username freeSeats (length passengers) >>- \seats ->
+  viewInformation ( the username, "Booking" ) [] { passengers = passengers, seats = seats }
+  where
+    // Make sure the argument is a String
+    the :: String -> String
+    the x = x
 
 
-main :: Task ( Booking, Booking )
+main :: Task ( Booking, ( Booking, Booking ) )
 main =
   withShared initSeats (\freeSeats ->
-    ((makeBooking "User 1" freeSeats -&&- makeBooking "User 2" freeSeats) <<@ ArrangeHorizontal)
+    (makeBooking "User 1" freeSeats -&&- (makeBooking "User 2" freeSeats -&&- makeBooking "User 3" freeSeats
+      <<@ ArrangeHorizontal) <<@ ArrangeHorizontal)
   )
 
 
