@@ -1,32 +1,12 @@
 % !TEX root=../pldi2019.tex
 
+
+
 \section{Properties}
 
-\subsection{Equality}
 
-\fixme{Add this or leave it out?}
-% The intuitive idea of task equality is that of observational equivalence.
-% We consider two tasks equal if the user can do essentially the same things with them.
-% The notion of \emph{essentially the same things} is made precise in the following definition.
 
-% \begin{definition}
-% Two events are \emph{essentially the same}, written $h_1 \approx h_2$ if they are syntactically equivalent after stripping Ls and Rs. \qed
-% \end{definition}
-
-% \begin{definition}
-% (Bisimulation) A binary relation $R$ is a bisimulation relation between tasks iff the following conditions hold for all $t_1 \mathrel{R} t_2$.
-% \begin{itemize}
-% \item $\mathcal{V}(t_1) = \mathcal{V}(t_2)$
-% \item $\forall h_1 . \exists h_2 . h_1 \approx h_2 \wedge t_1 \implies t_1' \wedge t_2 \implies t_2' \wedge t_1' \mathrel{R} t_2'$
-% \item $\forall h_2 . \exists h_1 . h_1 \approx h_2 \wedge t_1 \implies t_1' \wedge t_2 \implies t_2' \wedge t_1' \mathrel{R} t_2'$ \qed
-% \end{itemize}
-% \end{definition}
-
-% \begin{definition}
-% (Task equality) Two tasks are equal iff there exists a bisimulation relation containing them. \qed
-% \end{definition}
-
-\subsection{Safety}
+% \subsection{Safety}
 
 In order to validate our semantics, we show that our evaluation, normalisation
 and handling semantics is type preserving. We additionally prove a progress
@@ -41,7 +21,9 @@ that can not be normalised and that allow no further interaction.
 
 Finally we prove that the function to compute all possible inputs $\Inputs$ is sound and complete.
 
-\paragraph{Preservation}
+
+
+\subsection{Preservation}
 
 We show that the following three preservation Theorems hold.
 
@@ -69,7 +51,7 @@ following Theorem holds.
 Since this semantics makes use of the value function $\Value$, we first need to
 show that this function also preserves types.
 
-\begin{lemma}[Task value preserves]
+\begin{lemma}[task value preserves]
   For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\Task\tau$ and $\Sigma\infers s$\\
   if $\Value{(e,s)}=v$ then $v:\tau$
   \label{lemmavaluepreserves}
@@ -89,6 +71,8 @@ This brings us finally to the type preservation property of the handling semanti
 
 And again, this is proven by induction over $e$.
 
+
+
 \subsection{Progress}
 
 Furthermore, a well-typed term of a task type is guaranteed to progress after
@@ -106,7 +90,7 @@ If an expression $e$ and state $s$ are well-typed, then after normalisation, it
 either fails, or there exists some input $i$ that can be handled by it.
 In order to prove this Theorem to be true, we require two additional theorems.
 
-\paragraph{Normalisation is Big-Step}
+% \paragraph{Normalisation is Big-Step}
 
 The normalisation semantics is a big-step stemantics. This would be quite
 straight-forward, if we did not have to deal with state. Consider the following
@@ -141,7 +125,7 @@ An additional lemma is required.
   \label{lemmastridedoesnotevaluate}
 \end{lemma}
 
-\paragraph{Failing}
+% \paragraph{Failing}
 
 We then show that the failing function $\Failing$ behaves as desired.
 
@@ -155,7 +139,7 @@ The Theorem above states that an expression $e$ and state $s$ are failing, if,
 after normalisation, there exists no input that can be handled by it.
 We prove the theorem to be true by induction on $e'$.
 
-\paragraph{Proof}
+% \paragraph{Proof}
 
 We now have the ingredients to prove Theorem~\ref{thmprogressnorm}.
 
@@ -174,8 +158,6 @@ We now have the ingredients to prove Theorem~\ref{thmprogressnorm}.
 
 
 
-
-
 \subsection{Safety of Inputs function}
 
 \begin{theorem}
@@ -189,4 +171,3 @@ We now have the ingredients to prove Theorem~\ref{thmprogressnorm}.
   if $e,s\handle{i}e',s'$ then  $i\in\Inputs{(e)}$
   \label{thmsafetyi2}
 \end{theorem}
-\subsection{Laws}
