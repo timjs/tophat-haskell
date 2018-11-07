@@ -161,13 +161,7 @@ We now have the ingredients to prove Theorem~\ref{thmprogressnorm}.
 \subsection{Safety of Inputs function}
 
 \begin{theorem}
-  For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Sigma\infers s$\\
-  if $i\in\Inputs{(e)}$ then $e,s\handle{i}e',s'$
-  \label{thmsafetyi1}
-\end{theorem}
-
-\begin{theorem}
   For all $e$, $s$ and $i$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Sigma\infers s$\\
-  if $e,s\handle{i}e',s'$ then  $i\in\Inputs{(e)}$
-  \label{thmsafetyi2}
+  then $i\in\Inputs{(e)}$ if and only if $e,s\handle{i}e',s'$
+  \label{thmsafetyi}
 \end{theorem}

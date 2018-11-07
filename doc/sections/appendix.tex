@@ -350,30 +350,7 @@ We prove Theorem~\ref{thmfailing} by induction on $e'$.
   \noindent\textbf{Case} $e = u \At t$ This case follows directly from applying the induction hypothesis, since $\Failing(u \At t,s)=\Failing(t,s)$ and any input that applies to $t$ also applies to $u \At t$.\\
 \end{proof}
 
-\subsubsection{Theorem~\ref{thmsafetyi1}}
-
-\begin{proof}
-  \noindent\textbf{Case} $\Edit v:\Task\tau$ By definition, $\Inputs{(\Edit v)}=\{v',\Empty\}$. For $i=v'$, we have that $\userule{H-Change}$ handles the input, and for $i=\Empty$, we have $\userule{H-Empty}$.\\
-
-  \noindent\textbf{Case} $\Enter \tau$ By definition, $\Inputs{(\Enter \tau)}=\{v':\tau\}$. For $i=v'$, we have that $\userule{H-Fill}$ handles the input.\\
-
-  \noindent\textbf{Case} $\Update l:\Task\tau$ By definition, $\Inputs{(\Update\tau)}=\{v'\}$. For $i=v'$, we have that $\userule{H-Update}$ handles the input.\\
-
-  \noindent\textbf{Case} $\Fail$ By definition, $\Inputs{(\Fail)}=\{\}$. The theorem holds trivially.\\
-
-  \noindent\textbf{Case} $t_1\Then e_2$ By definition, $\Inputs{(t_1\Then e_2)}=\Inputs{(t_1)}$. By the induction hypothesis, we have that $i\in\Inputs{(t_1)}$, then $t_1\handle{i}t_1'$. Therefore, we also have $\userule{H-PassThen}$.\\
-
-  \noindent\textbf{Case} $t_1\Next e_2$ By definiton, $\Inputs(t_1 \Next e_2) = \Inputs(t_1) \cup \set{\Continue\mid \Value{(t_1)}\neq \bot \wedge \neg\Failing{(e_2 \Value{(t_1)}\stride)}}$. If $i=\Continue$, then we know that $\Value{(t_1)}\neq \bot \wedge \neg\Failing{(e_2 \Value{(t_1)}\stride)}$ holds, and therefore H-Next applies. Otherwise, we have by induction hypothesis that $i\in\Inputs{(t_1)}$, then $t_1\handle{i}t_1'$. Therefore, we also have $\userule{H-PassNext}$.\\
-
-  \noindent\textbf{Case} $t_1\And t_2$ By definiiton, $\Inputs(t_1\And t_2) = \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)}$. By the induction hypothesis, we have both that if $i\in\Inputs(t_1)$ then $t_1\handle{i}t_1'$ and that if $i\in\Inputs(t_2)$ then $t_2\handle{i}t_2'$. Therefore, if $i\in\Inputs(t_1\And t_2)$, then either $\userule{H-FirstAnd}$ or $\userule{H-SecondAnd}$.\\
-
-  \noindent\textbf{Case} $t_1\Or t_2$ By definition, $\Inputs(t_1\Or t_2) = \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)}$. By the induction hypothesis, we have both that if $i\in\Inputs(t_1)$ then $t_1\handle{i}t_1'$ and that if $i\in\Inputs(t_2)$ then $t_2\handle{i}t_2'$. Therefore, if $i\in\Inputs(t_1\Or t_2)$, then either $\userule{H-FirstOr}$ or $\userule{H-SecondOr}$.\\
-
-  \noindent\textbf{Case} $t_1\Xor t_2$ By definition, $\Inputs(t_1\Xor t_2) = \set{\Pick \Left, \Pick \Right}$. In case $i=\Pick\Left$, H-PickLeft applies, in case $i=\Pick\Right$, H-PickRight applies.
-
-\end{proof}
-
-\subsubsection{Theorem~\ref{thmsafetyi2}}
+\subsubsection{Theorem~\ref{thmsafetyi}}
 \begin{proof}
 
   \noindent\textbf{Case} $e=\Edit v:\Task\tau, i= v':\tau$ Given that $\userule{H-Change}$, we have by definition that $\Inputs(\Edit v:\Task\tau) = \set{v':\tau,\Empty}$, which includes $v':\tau$.\\
