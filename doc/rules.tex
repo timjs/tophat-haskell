@@ -90,7 +90,7 @@
   {\Gamma,\Sigma \infers e : \tau}
   {\Gamma,\Sigma \infers \Edit e : \Task \tau}
 
-\newrule{T-Fill}
+\newrule{T-Enter}
   {\ }
   {\Gamma,\Sigma \infers \Enter \tau : \Task \tau}
 
@@ -202,7 +202,7 @@
   {e,s \evaluate v,s'}
   {\Edit e , s\evaluate \Edit v,s'}
 
-\newrule{E-Fill}
+\newrule{E-Enter}
   {\ }
   {\Enter \tau,s \evaluate \Enter \tau,s}
 

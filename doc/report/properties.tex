@@ -64,7 +64,7 @@
       hypothesis gives us that $e\evaluate v$ also preserves, and thus $v:\tau$.
       Therefore $\Edit v:\Task\tau$.\\
 
-  \noindent\textbf{Case} $\userule{E-Fill}$
+  \noindent\textbf{Case} $\userule{E-Enter}$
       Evaluation does not alter the expression, therefore this case holds tivially.\\
 
   \noindent\textbf{Case} $\userule{E-Update}$
@@ -198,7 +198,7 @@ Before we can show that normalisation also preserves, we need to show that the f
 
   \noindent\textbf{Case} $\userule{H-Change}$ Given that $\Edit v:\Task\beta$ and $v,v':\beta$, we have that $\Edit v':\Task\beta$\\
 
-  \noindent\textbf{Case} $\userule{H-Empty}$ Given that $\Edit v:\Task\beta$, then by T-Fill we have $\Enter \beta:\Task\beta$ \\
+  \noindent\textbf{Case} $\userule{H-Empty}$ Given that $\Edit v:\Task\beta$, then by T-Enter we have $\Enter \beta:\Task\beta$ \\
 
   \noindent\textbf{Case} $\userule{H-Fill}$ \\
 

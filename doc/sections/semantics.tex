@@ -57,7 +57,7 @@ Coming from one to the other is done by the evaluation rules given in \autoref{f
   \begin{mathpar}
     \boxed{\RelationE} \\
     \userule{E-Edit} \quad
-    \userule{E-Fill} \quad
+    \userule{E-Enter} \quad
     \userule{E-Update} \\
     \userule{E-Then} \quad
     \userule{E-Next} \\
@@ -72,7 +72,7 @@ Coming from one to the other is done by the evaluation rules given in \autoref{f
 
 The rule \refrule{E-Edit} uses the big step semantics from our base language ($\evaluate$)
 to evaluate the wrapped expression $e$ to a value $v$ and rewraps it in an editor.
-Rule \refrule{E-Fill} has nothing to evaluate and just keeps the unvalued editor as is.
+Rule \refrule{E-Enter} has nothing to evaluate and just keeps the unvalued editor as is.
 
 Evaluation of a sequence is done by only evaluating the left hand side, $e_1$.
 This expression is something of type $\Task \tau_1$.

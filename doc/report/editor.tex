@@ -149,7 +149,7 @@ we need to keep track of the type of values that can be entered into an unvalued
 and we choose option (\ref{itm:annotate}).
 The typing rule becomes:
 \begin{equation*}
-  \userule{T-Fill}
+  \userule{T-Enter}
 \end{equation*}
 
 Some examples of editors expressible in our language:
@@ -185,11 +185,11 @@ Coming from one to the other is done by the evaluation relation we introduced in
 There are two rules we need to add for this semantic arrow to accomplish this:
 one for valued and one for unvalued editors.
 \begin{equation*}
-  \userule{E-Edit} \qquad \userule{E-Fill}
+  \userule{E-Edit} \qquad \userule{E-Enter}
 \end{equation*}
 Rule \refrule{E-Edit} uses the big step semantics from our base language ($\evaluate$)
 to evaluate the wrapped expression $e$ to a value $v$ and rewraps it in an editor.
-Rule \refrule{E-Fill} has nothing to evaluate and just keeps the unvalued editor as is.
+Rule \refrule{E-Enter} has nothing to evaluate and just keeps the unvalued editor as is.
 
 Summarising, pretask $p$ allow us to syntactically write down arbitrary expressions inside a valued editor,
 or any other pretask we will define in the future.
