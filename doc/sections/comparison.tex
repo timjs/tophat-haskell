@@ -91,13 +91,11 @@ The vending machine is an example that demonstrates external communication and c
 The following \CSP program models a vending machine that dispenses a small biscuit for one coin and a large biscuit for two coins. $$V = \textit{coin} \to (\textit{small} \to \text{STOP} \mid \textit{coin} \to \textit{large} \to \text{STOP})$$
 
 A vending machine in \TOP that is close in spirit to the one above looks as follows.
-\begin{equation*}
-  \begin{array}{l @{} l}
-    \Enter \Int \Next \lambda n. &
-          \IF n \equiv 1 \THEN \Edit \str{small} \ELSE \\
-        & \IF n \equiv 2 \THEN \Edit \str{large} \ELSE \Fail
-  \end{array}
-\end{equation*}
+\begin{TASK}
+  enter Int >>= \n .
+    if n == 1 then edit "small" else
+    if n == 2 then edit "large" else fail
+\end{TASK}
 This machine does not exhibit exactly the same behaviour as the one in \CSP, nor is it intended to.
 Instead, this machine demonstrates how the same choice of buying a small biscuit for one coin or a large biscuit for two coins is expressed in \TOP.
 
