@@ -4,7 +4,7 @@
 
 This section gives an overview over the essential concepts of \TOP and how they are represented in \TOPHAT.
 These concepts are: communication with the environment, communication between subsystems, sequential composition, concurrency, and synchronization.
-It turns out that many of these concepts are similar in nature to what is commonly found in process algebras.
+Many of these concepts are similar in nature to what is commonly found in process algebras.
 This raises the question how \TOP and process algebras relate.
 The similarities only go so far however, so we point out similarities as well as differences.
 We compare \TOP with Hoare's Communicating Sequential Processes (\CSP).
@@ -13,15 +13,17 @@ We chose \CSP as an example to stand for the numerous process algebras in existe
 
 We provide comparisons based on two aspects.
 First, we compare the scope of the languages, as intended by the authors.
-Second, we show how similar features like concurrency or communication work.
+Second, we show how similar features like concurrency and communication work.
 
 
-\subsection{Scope}
+\paragraph{Scope}
 
-The central goal of \CSP is to model the patters of behaviour of processes.
-These patterns of behaviour manifest themselves in sequences of actions that actors can perform.
+The central objective of \TOP is to coordinate the collaboration between people who work together to reach a common goal.
+It is a language to specify workflows.
 
-The central goal of \TOP is to coordinate the collaboration between people who work together to reach a common goal.
+The central objective of \CSP is to model the patters of behaviour of processes.
+These patterns of behaviour manifest themselves in sequences of actions that processes can engage in.
+It is a language to specify synchronization patterns.
 
 \CSP has a formal semantics that allows various kinds of correctness proofs, including equality of processes, and adherence to a specification.
 This allows applications in program correctness, proofs of deadlock freedom, liveness, or verification of protocols.
@@ -30,36 +32,27 @@ This allows applications in program correctness, proofs of deadlock freedom, liv
 It wants to be a language with intuitive semantics that facilitates communication between programmers and domain experts.
 \TOP programs are supposed to hide implementation details from domain experts while containing enough information to allow automatic generation of executable applications, including user interfaces.
 
+The big difference between \CSP and \TOP is the intended level of abstraction.
+While \CSP is used to explicitly model low-level details about communication, \TOP wants to hide details and provide high-level communication mechanisms to the programmer.
 
-\subsection{Features}
+Despite the different origins, \TOP and \CSP feature concepts that serve similar purposes.
 
-In this section we focus on certain features common to \TOP and \CSP, and study their respective realization.
+
+\paragraph{Features}
+
+In the rest of this section we focus on features common to \TOP and \CSP, and study their respective realization.
 When we point out differences, we do not argue that the different realizations are incompatible.
-As a matter of fact the primitives can certainly be expressed in terms of each other, with more or less effort.
-Instead, we point out how the systems emphasize certain points of view by choosing different basic building blocks.
+As a matter of fact the primitives can certainly be expressed in terms of each other.
+Instead, we point out how the systems emphasize certain points of view by choosing different building blocks to achieve the same effect.
 
+
+\subsection{Communication}
+
+Both \TOP and \CSP have two sorts of communication: with the environment, and between subsystems.
+In both languages, communication with the environment represents input and output, and blocks evaluation of programs until the environment sends or receives events.
+In both languages, communication between subsystems does not block, but evaluates programs as far as possible until further external input is required.
 
 \paragraph{Communication with the environment}
-
-In \CSP, communication with the environment is represented by prefixing.
-The process $(a \to P)$ can engage in action $a$, after which it continues as process $P$.
-In general, if $B$ is a set of events and $P(x)$ is an expression that evaluates to a process for each $x \in B$, the process $(x:B \to P(x))$ can engage in any one of the actions in $B$, after which it continues as the process determined by $P(x)$.
-Hoare does not specify the language in which $P(x)$ is to be expressed.
-He seems to permit any kind of mathematical formula, or any programming language.
-
-Prefixing has no direction of sending and receiving.
-Hoare uses the neutral phrase \emph{engaging in an action}.
-The interpretation of whether an action stands for input or output is left to the reader.
-For example, a vending machine $P = (\textit{coin} \to \textit{choc} \to P)$ is to be interpreted as taking a coin as input and producing chocolate as output.
-
-Sending and receiving of values is modelled by giving additional structure to the names of actions.
-For example, an action name could be of the form $\textit{in}.5$.
-Let $B$ be the set of all actions $\textit{in}.n$ for all $n \in \mathbb{N}$.
-Let $P(x)$ be an expression that for a given action of this form employs a parser that extracts the number after the dot.
-The process $(x:B \to P(x))$ then reacts as if it receives the action \textit{in}, parameterized with a number.
-To send a value to this process, the environment has to provide an action with a concrete number, for example $\textit{in}.7$.
-Sending is therefore the willingness to engage in one concrete action of a given form, while receiving is the willingness to engage in any action of this form.
-
 In \TOP, communication with the environment is represented by editors.
 A task of the form $\Enter \tau$ can receive any change event with a value of type $\tau$.
 A task of the form $\Edit v$, where $v$ is of type $\tau$, can receive the same
@@ -73,13 +66,47 @@ Editors can be used for both input and output.
 The interpretation of whether an editor represents input or output is left to the reader.
 An empty editor is most commonly interpreted as a prompt to input data, while a filled editor can be seen either as outputting its value, or as an input that comes with a default value.
 
+In \CSP, communication with the environment is represented by prefixing.
+The process $(a \to P)$ can engage in action $a$, after which it continues as process $P$.
+In general, if $B$ is a set of events and $P(x)$ is an expression that evaluates to a process for each $x \in B$, the process $(x:B \to P(x))$ can engage in any one of the actions in $B$, after which it continues as the process determined by $P(x)$.
+Hoare does not specify the language in which $P(x)$ is to be expressed.
+He seems to permit any kind of mathematical formula, or any programming language.
+
+Prefixing has no direction of sending and receiving.
+Hoare uses the neutral phrase \emph{engaging in an action}.
+The interpretation of whether an action stands for input or output is left to the reader.
+For example, a vending machine $P = (\textit{coin} \to \textit{choc} \to P)$ is to be interpreted as taking a coin as input and producing chocolate as output.
+
+Sending and receiving of values is modelled by giving additional structure to the names of actions.
+For example, an action name could be $\textit{in}.5$, which can be interpreted as inputting the value 5.
+
 In \TOP, event values are typed to match the type of the receiving editor.
 In \CSP, action names are essentially strings, subject to implicit restrictions.
 
 
-\paragraph{Communication between subsystems}
+\paragraph{Example: vending machine}
 
-Another important feature in both \TOP and \CSP is communication between subsystems, that is between tasks and between processes.
+The vending machine is an example that demonstrates external communication and choice.
+
+The following \CSP program models a vending machine that dispenses a small biscuit for one coin and a large biscuit for two coins. $$V = \textit{coin} \to (\textit{small} \to \text{STOP} \mid \textit{coin} \to \textit{large} \to \text{STOP})$$
+
+A vending machine in \TOP that is close in spirit to the one above looks as follows.
+\begin{TASK}
+  enter Int >>= \n .
+    if n == 1 then edit "small" else
+    if n == 2 then edit "large" else fail
+\end{TASK}
+This machine does not exhibit exactly the same behaviour as the one in \CSP, nor is it intended to.
+Instead, this machine demonstrates how the same choice of buying a small biscuit for one coin or a large biscuit for two coins is expressed in \TOP.
+
+The machine asks the user to enter an amount of money.
+This editor stands for a coin slot in a real machine that freely accepts and returns coins.
+There is a continue button that is initially disabled.
+When the user has input exactly 1 or 2 coins, the continue button becomes enabled.
+When the user presses the continue button, the machine dispenses either a large or a small biscuit, depending on the amount of money.
+
+
+\paragraph{Communication between subsystems}
 
 \CSP uses the same method for internal and for external communication, that is prefixing.
 The intuitive idea is that parallel processes that all eventually are willing to engage in some action must wait for the others and then progress in one synchronized step.
@@ -198,36 +225,6 @@ Input events for parallel tasks are disambiguated, internal steps have a well-de
 In this section we describe a couple of example problems, and show how they can be solved in both languages.
 
 
-\paragraph{Vending machine}
-
-The vending machine is an example often used as a hello-world program for process algebras.
-It demonstrates external communication and choice.
-It does not demonstrate concurrency.
-
-The following \CSP program models a vending machine that dispenses a small biscuit for one coin and a large biscuit for two coins. $$V = \textit{coin} \to (\textit{small} \to \text{STOP} \mid \textit{coin} \to \textit{large} \to \text{STOP})$$
-Intuitively, we see coins as inputs and products as outputs.
-\CSP does not distinguish between inputs and outputs.
-After inserting a coin, the machine can either output a small biscuit or take another coin as input.
-For \CSP, it only matters in which of the actions the environment is willing to engage in.
-
-In order to actually dispense a small biscuit, we have to put the machine into an environment that is willing to engage in this behaviour. $$\text{Customer} = \textit{coin} \to \textit{small} \to \text{STOP}$$
-
-A vending machine in \TOP that is close in spirit to the one above looks as follows.
-\begin{equation*}
-  \begin{array}{l @{} l}
-    \Enter \Int \Next \lambda n. &
-          \IF n \equiv 1 \THEN \Edit \str{small} \ELSE \\
-        & \IF n \equiv 2 \THEN \Edit \str{large} \ELSE \Fail
-  \end{array}
-\end{equation*}
-This machine does not exhibit exactly the same behaviour as the one in \CSP, nor is it intended to.
-Instead, this machine demonstrates how the same choice of buying a small biscuit for one coin or a large biscuit for two coins is expressed in \TOP.
-
-The machine asks the user to enter an amount of money.
-This editor stands for a coin slot in a real machine that freely accepts and returns coins.
-There is a continue button that is initially disabled.
-When the user has input exactly 1 or 2 coins, the continue button becomes enabled.
-When the user presses the continue button, the machine dispenses either a large or a small biscuit, depending on the amount of money.
 
 
 \paragraph{Semaphores}
