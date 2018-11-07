@@ -92,7 +92,7 @@ The following \CSP program models a vending machine that dispenses a small biscu
 
 A vending machine in \TOP that is close in spirit to the one above looks as follows.
 \begin{TASK}
-  enter Int >>= \n .
+  enter Int >>? \n.
     if n == 1 then edit "small" else
     if n == 2 then edit "large" else fail
 \end{TASK}
