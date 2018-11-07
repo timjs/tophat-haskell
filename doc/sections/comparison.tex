@@ -1,17 +1,19 @@
 % !TEX root=../pldi2019.tex
 
-\section{Comparison}
+\section{Intuition}
 
-In this section we compare \TOP with Hoare's Communicating Sequential Processes (\CSP).
+This section gives an overview over the essential concepts of \TOP and how they are represented in \TOPHAT.
+These concepts are: communication with the environment, communication between subsystems, sequential composition, concurrency, and synchronization.
+It turns out that many of these concepts are similar in nature to what is commonly found in process algebras.
+This raises the question how \TOP and process algebras relate.
+The similarities only go so far however, so we point out similarities as well as differences.
+We compare \TOP with Hoare's Communicating Sequential Processes (\CSP).
 The discussion here is based on the book by \citet{books/Hoare85CSP}.
 We chose \CSP as an example to stand for the numerous process algebras in existence, which, as far as this section is concerned, are reasonably similar.
-Notions like communication with the environment and between subsystems, concurrency, and sequential composition can be found in both \TOP and in process algebras.
-This raises the question of how these systems relate.
 
-We provide comparisons based on three aspects.
+We provide comparisons based on two aspects.
 First, we compare the scope of the languages, as intended by the authors.
 Second, we show how similar features like concurrency or communication work.
-Third, we provide some example problems and illustrate how they can be solved in each language.
 
 
 \subsection{Scope}
