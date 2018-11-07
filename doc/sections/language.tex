@@ -3,10 +3,12 @@
 
 
 \section{Language}
+\label{sec:language}
 
 
 \subsection{Expressions}
 
+\label{sub:expressions}
 We take our host language to be a simply typed $\lambda$-calculus
 extended with some basic types and \ML-style references.
 The grammar in \autoref{fig:language-grammar} defines our language expressions.
@@ -32,6 +34,7 @@ The unit value will be used as the result of an assignment.
   \caption{Language grammar} \label{fig:language-grammar}
 \end{figure}
 
+\label{sub:notation}
 We will use double quotation marks ($\str{}$) to denote strings.
 Integers are denoted by their decimal representation,
 and booleans are written $\True$ and $\False$.
@@ -42,10 +45,11 @@ Also, we will use the standard comparison operations $<$, $\le$, $\equiv$, $\not
 as builtins.
 Only when referring to operators in general we will use $\star$,
 like in evaluation rules.
+\label{sub:abbreviations}
 Also, we will use the notation $e_1; e_2$
-as an abbreviation for $(\lambda x:\Unit. e_2)\ e_1$,
+as an abbreviation for $(\lambda x:\Unit.\ e_2)\ e_1$,
 and the notation $\Let x:\tau = e_1 \In e_2$
-as an abbreviation for $(\lambda x:\tau. e_2)\ e_1$.
+as an abbreviation for $(\lambda x:\tau.\ e_2)\ e_1$.
 In both expressions $x$ is a fresh variable.
 
 We will embed our task language into this basic language.
@@ -53,6 +57,7 @@ This means we can use all the power of the host language,
 such as arithmetic operations and (higher order) functions,
 in our task language.
 
+\label{sub:pretasks}
 The syntactic category $p$ of \emph{pretasks},
 is further specified in \autoref{fig:task-grammar}.
 A pretask $p$ is a task \emph{in making},
@@ -128,8 +133,11 @@ This is depicted as a state diagram in \autoref{fig:editor-state} below.
 
 \begin{figure}[h]
   \centering
-  \includegraphics[width=0.6\columnwidth]{figures/drawings-crop.pdf}
-  \caption{Possible states of an editor and its transitions.}
+  \includegraphics[width=\columnwidth,page=3]{figures/drawings-crop.pdf}
+  \caption{
+    Possible states of an editor and its transitions.
+    Note that shared editors cannot be cleared.
+  }
   \label{fig:editor-state}
 \end{figure}
 
@@ -155,7 +163,7 @@ a string, boolean, angle or location value.
 
 
 
-\paragraph{Valued and unvalued editors}
+\paragraph{Valued and unvalued editors $(\Edit e, \Enter \tau)$}
 
 At the core,
 an editor is a container holding a value
@@ -182,7 +190,8 @@ for example to five: $\Edit 5$.
 Clearing the value results in an unvalued editor: $\Enter$.
 Now, are we allowed to enter a value of some other type?
 That is, can we now enter a string?
-This would change the type of the editor!
+This would change the type of the editor
+and violate the preservation theorem proved in \autoref{sub:preservation}!
 Therefore,
 we need to keep track of the type of values that can be entered into an unvalued editor
 and we choose option (\ref{itm:annotate}).
@@ -199,8 +208,16 @@ The typing rule for valued editors can be found in \refrule{T-Enter}.
 % \end{itemize}
 
 
+\paragraph{Shared editors $(\Update e)$}
 
-\subsection{Steps}
+
+
+\paragraph{Fail $(\Fail)$}
+
+
+
+\subsection{Composition}
+
 
 % In the previous section we have set up our interaction model of inputs and actions,
 % we defined our interactive component, the editor,
@@ -220,6 +237,10 @@ For parallel composition we distinguish two kinds:
 \end{enumerate*}
 In this subsection we start with sequential composition.
 The next two subsections are about pairing and choosing.
+
+
+
+\paragraph{Sequential $(e_1 \Then e_2, e_1 \Next e_2)$}
 
 One might think that the best way to sequence tasks is by just following one task with another:
 do this, then do that, then that, etc.
@@ -246,30 +267,24 @@ holding a value of (possibly another) type $\tau_2$.
 
 
 
-\subsection{Composition}
-
-
-
-\paragraph{Parallel}
+\paragraph{Parallel $(e_1 \And e_2)$}
 
 \fixme{Write section on parallel}
 
 
 
-\paragraph{Choice}
+\paragraph{Choice $(e_1 \Or e_2, e_1 \Xor e_2)$}
 
 \fixme{Write section on choice}
 
 
 
-\subsection{Appointing}
+\subsection{Users}
+
+\paragraph{Appoint $(u \At e)$}
 
 \fixme{Write section on appointing users}
-\todo{How to create users?}
-\todo{What is their type?}
-
-
-
-\subsection{State}
-
-\fixme{Write section shared editors}
+\begin{itemize*}
+  \item How to create users?
+  \item What is their type?
+\end{itemize*}
