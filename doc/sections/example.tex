@@ -27,7 +27,6 @@ A booking contains a list of passengers and a list of seats.
 \begin{TASK}
   type Passenger = String * Int
   type Seat = Int * String
-  type Booking = List Passenger * List Seat
 \end{TASK}
 
 Choosing seats requires reading and updating shared information.
@@ -66,6 +65,7 @@ and displays the end result using the \TS{edit}-construct.
 
 The main task appoints the \TS{bookFlight} task to three different users: \TS{u1}, \TS{u2}, and \TS{u3},
 and run these tasks in parallel.
+%%NOTE: parentheses make the line to long...
 \begin{TASK}
   u1 @ bookFlight <&> u2 @ bookFlight <&> u3 @ bookFlight
 \end{TASK}

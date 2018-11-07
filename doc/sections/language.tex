@@ -3,18 +3,30 @@
 
 
 \section{Language}
+\label{sec:language}
 
 
 \subsection{Expressions}
 
-We take our host language to be a simply typed $\lambda$-calculus.
-The grammar in \autoref{fig:language-grammar} shows the basic language expressions,
-as well as some extensions.
-These are constants for booleans, integers and strings,
-an $\If{}{}{}$ expression,
-pairs, unit,
-and some basic operations on them represented by $\star$.
-Also, we add \ML-style references.
+\label{sub:expressions}
+We take our host language to be a simply typed $\lambda$-calculus
+extended with some basic types and \ML-style references.
+The grammar in \autoref{fig:language-grammar} defines our language expressions.
+Next to abstraction, application and variables,
+we add constants for booleans, integers and strings.
+We represent binary operations on these types by a $\star$.
+
+The used extensions are \fixme{indicated} by the way we model tasks.
+For the result of parallel tasks,
+we need pairs.
+An $\If{}{}{}$ expression comes in hand when defining guards.
+To implement shared editors,
+we will make use of references.
+Creating a reference using the keyword $\Ref$ will result in a location $l$.
+Locations are internal to the language and not intended to be directly manipulated by the programmer.
+Dereferencing is done by using a bang,
+for assigned one can use the $:=$ operator.
+The unit value will be used as the result of an assignment.
 
 \begin{figure}[h]
   \small
@@ -22,37 +34,39 @@ Also, we add \ML-style references.
   \caption{Language grammar} \label{fig:language-grammar}
 \end{figure}
 
+\label{sub:notation}
 We will use double quotation marks ($\str{}$) to denote strings.
 Integers are denoted by their decimal representation,
 and booleans are written $\True$ and $\False$.
-In the remaining of this article,
-we will freely make use of the logic operators $\Not$, $\land$, and $\lor$,
+We will freely make use of the logic operators $\Not$, $\land$, and $\lor$,
 arithmetic operators $+$, $-$, $\times$,
 and the string append operator $\pp$.
 Also, we will use the standard comparison operations $<$, $\le$, $\equiv$, $\not\equiv$, $\ge$, and $>$
 as builtins.
-Only when referring to operators in general we will use $\star$.
-
+Only when referring to operators in general we will use $\star$,
+like in evaluation rules.
+\label{sub:abbreviations}
 Also, we will use the notation $e_1; e_2$
-as an abbreviation for $(\lambda x:\Unit. e_2)\ e_1$,
+as an abbreviation for $(\lambda x:\Unit.\ e_2)\ e_1$,
 and the notation $\Let x:\tau = e_1 \In e_2$
-as an abbreviation for $(\lambda x:\tau. e_2)\ e_1$.
+as an abbreviation for $(\lambda x:\tau.\ e_2)\ e_1$.
 In both expressions $x$ is a fresh variable.
 
-
 We will embed our task language into this basic language.
-\todo{Say something about embedding?}
+This means we can use all the power of the host language,
+such as arithmetic operations and (higher order) functions,
+in our task language.
+
+\label{sub:pretasks}
 The syntactic category $p$ of \emph{pretasks},
 is further specified in \autoref{fig:task-grammar}.
 A pretask $p$ is a task \emph{in making},
 just as an expression is a value in making.
 In the next subsections we will discuss each category of pretasks:
 editors, steps and combinations.
-
-% A \emph{task} will be introduced in \autoref{sec:evaluation}.
-% This means we can use all the power of the host language,
-% such as arithmetic operations and (higher order) functions,
-% in our task language.
+As a general rule of thumb,
+we will use open symbols ($\Edit, \Enter, \Next, \Xor$) where user input is required,
+and closed symbols ($\Update, \Then, \Or$) where language constructs itself can make decisions.
 
 \begin{figure}[h]
   \small
@@ -60,12 +74,14 @@ editors, steps and combinations.
   \caption{Task grammar} \label{fig:task-grammar}
 \end{figure}
 
+
+
 \paragraph{Typing}
 
 % Typing of our expressions $e$ is as to be expected.
 % and won't be given in this document.
 \Autoref{fig:type-grammar} shows the grammar of types used by \TOPHAT.
-It contains standard types like arrows, pairs, and unit,
+It contains standard types like functions, pairs, and unit,
 some basic types, and a type for references.
 The one difference with respect to standard work,
 is the addition of a type for tasks: $\Task \tau$.
@@ -76,10 +92,10 @@ is the addition of a type for tasks: $\Task \tau$.
   \caption{Type grammar} \label{fig:type-grammar}
 \end{figure}
 
-Typing rules are of the form $\Gamma \infers e : \tau$,
-which we read as \enquote{in environment $\Gamma$, expression $e$ has type $\tau$}.
+Typing rules are of the form $\RelationT$,
+which we read as \enquote{in environment $\Gamma$ and store typings $\Sigma$, expression $e$ has type $\tau$}.
 The rules typing pretasks are given in \autoref{fig:typing-rules}.
-The remaining constructs in our host language are standard,
+The remaining constructs of our host language are standard,
 therefore the typing rules for this part of our language are presented in the appendix.
 
 \begin{figure}[h]
@@ -87,7 +103,7 @@ therefore the typing rules for this part of our language are presented in the ap
   \begin{mathpar}
     \boxed{\RelationT} \\
     \userule{T-Edit} \quad
-    \userule{T-Fill} \quad
+    \userule{T-Enter} \quad
     \userule{T-Update} \\
     \userule{T-Then} \quad
     \userule{T-Next} \\
@@ -115,10 +131,13 @@ When an editor has a value, it can be \emph{changed} or it can be \emph{emptied}
 When it is empty, a value can be \emph{filled}.
 This is depicted as a state diagram in \autoref{fig:editor-state} below.
 
-\begin{figure}[b]
+\begin{figure}[h]
   \centering
-  \includegraphics[width=0.6\columnwidth]{figures/drawings-crop.pdf}
-  \caption{Possible states of an editor and its transitions.}
+  \includegraphics[width=\columnwidth,page=3]{figures/drawings-crop.pdf}
+  \caption{
+    Possible states of an editor and its transitions.
+    Note that shared editors cannot be cleared.
+  }
   \label{fig:editor-state}
 \end{figure}
 
@@ -144,7 +163,7 @@ a string, boolean, angle or location value.
 
 
 
-\paragraph{Valued and unvalued editors}
+\paragraph{Valued and unvalued editors $(\Edit e, \Enter \tau)$}
 
 At the core,
 an editor is a container holding a value
@@ -171,11 +190,12 @@ for example to five: $\Edit 5$.
 Clearing the value results in an unvalued editor: $\Enter$.
 Now, are we allowed to enter a value of some other type?
 That is, can we now enter a string?
-This would change the type of the editor!
+This would change the type of the editor
+and violate the preservation theorem proved in \autoref{sub:preservation}!
 Therefore,
 we need to keep track of the type of values that can be entered into an unvalued editor
 and we choose option (\ref{itm:annotate}).
-The typing rule for valued editors can be found in \refrule{T-Fill}.
+The typing rule for valued editors can be found in \refrule{T-Enter}.
 
 % Some examples of editors expressible in our language:
 % \begin{itemize}
@@ -188,8 +208,16 @@ The typing rule for valued editors can be found in \refrule{T-Fill}.
 % \end{itemize}
 
 
+\paragraph{Shared editors $(\Update e)$}
 
-\subsection{Steps}
+
+
+\paragraph{Fail $(\Fail)$}
+
+
+
+\subsection{Composition}
+
 
 % In the previous section we have set up our interaction model of inputs and actions,
 % we defined our interactive component, the editor,
@@ -209,6 +237,10 @@ For parallel composition we distinguish two kinds:
 \end{enumerate*}
 In this subsection we start with sequential composition.
 The next two subsections are about pairing and choosing.
+
+
+
+\paragraph{Sequential $(e_1 \Then e_2, e_1 \Next e_2)$}
 
 One might think that the best way to sequence tasks is by just following one task with another:
 do this, then do that, then that, etc.
@@ -235,30 +267,24 @@ holding a value of (possibly another) type $\tau_2$.
 
 
 
-\subsection{Composition}
-
-
-
-\paragraph{Parallel}
+\paragraph{Parallel $(e_1 \And e_2)$}
 
 \fixme{Write section on parallel}
 
 
 
-\paragraph{Choice}
+\paragraph{Choice $(e_1 \Or e_2, e_1 \Xor e_2)$}
 
 \fixme{Write section on choice}
 
 
 
-\subsection{Appointing}
+\subsection{Users}
+
+\paragraph{Appoint $(u \At e)$}
 
 \fixme{Write section on appointing users}
-\todo{How to create users?}
-\todo{What is their type?}
-
-
-
-\subsection{State}
-
-\fixme{Write section shared editors}
+\begin{itemize*}
+  \item How to create users?
+  \item What is their type?
+\end{itemize*}

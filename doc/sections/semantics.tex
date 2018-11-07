@@ -9,11 +9,10 @@ we will have the semantic functions shown in \autoref{fig:semantic-functions}.
 Note that the double down arrow $\normalise$ \emph{uses} the single down arrow $\evaluate$,
 a convention we also use with the single arrow pointing right $\handle{}$,
 which uses the double arrow pointing right $\drive{}$.
-\todo{Make figure more compact.}
 
 \begin{figure}[h]
   \centering
-  \includegraphics[width=0.7\columnwidth,page=4]{figures/drawings-crop.pdf}
+  \includegraphics[width=\columnwidth,page=5]{figures/drawings-crop.pdf}
   \caption{
     Semantic functions defined in this report and their relation.
   }
@@ -57,7 +56,7 @@ Coming from one to the other is done by the evaluation rules given in \autoref{f
   \begin{mathpar}
     \boxed{\RelationE} \\
     \userule{E-Edit} \quad
-    \userule{E-Fill} \quad
+    \userule{E-Enter} \quad
     \userule{E-Update} \\
     \userule{E-Then} \quad
     \userule{E-Next} \\
@@ -72,7 +71,7 @@ Coming from one to the other is done by the evaluation rules given in \autoref{f
 
 The rule \refrule{E-Edit} uses the big step semantics from our base language ($\evaluate$)
 to evaluate the wrapped expression $e$ to a value $v$ and rewraps it in an editor.
-Rule \refrule{E-Fill} has nothing to evaluate and just keeps the unvalued editor as is.
+Rule \refrule{E-Enter} has nothing to evaluate and just keeps the unvalued editor as is.
 
 Evaluation of a sequence is done by only evaluating the left hand side, $e_1$.
 This expression is something of type $\Task \tau_1$.

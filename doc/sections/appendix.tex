@@ -47,7 +47,7 @@
       $e,s\evaluate v,s'$ also preserves, and thus $\Gamma,\Sigma\infers v:\tau$
       and $\Sigma\infers s'$. Therefore $\Gamma,\Sigma\infers\Edit v:\Task\tau$.\\
 
-  \noindent\textbf{Case} $\userule{E-Fill}$
+  \noindent\textbf{Case} $\userule{E-Enter}$
       Evaluation does not alter $e$ and $s$, therefore this case holds tivially.\\
 
   \noindent\textbf{Case} $\userule{E-Update}$
@@ -199,9 +199,9 @@ This lemma follows immediately from definition.
 
   \noindent\textbf{Case} $\userule{H-Change}$ Given that $\Gamma,\Sigma\infers\Edit v:\Task\tau$ and $\Sigma\infers s$, the H-Change rule additionally gives us that $v,v':\tau$. Therefore by T-Edit we have that $\Gamma,\Sigma\infers\Edit v':\Task\tau$\\
 
-  \noindent\textbf{Case} $\userule{H-Empty}$ Given that $\Gamma,\Sigma\infers\Edit v:\Task\beta$ and $\Sigma\infers s$, the H-Empty rule additionally gives us that $v:\tau$. Then by T-Fill we have $\Gamma,\Sigma\infers\Enter \tau:\Task\tau$ \\
+  \noindent\textbf{Case} $\userule{H-Empty}$ Given that $\Gamma,\Sigma\infers\Edit v:\Task\beta$ and $\Sigma\infers s$, the H-Empty rule additionally gives us that $v:\tau$. Then by T-Enter we have $\Gamma,\Sigma\infers\Enter \tau:\Task\tau$ \\
 
-  \noindent\textbf{Case} $\userule{H-Fill}$ Given that $\Gamma,\Sigma\infers\Enter\tau$ and $\Sigma\infers s$, the H-Fill rule additionally gives us that $v':\tau$. Then by T-Fill we have $\Gamma,\Sigma\infers \Edit v':\Task\tau$.\\
+  \noindent\textbf{Case} $\userule{H-Fill}$ Given that $\Gamma,\Sigma\infers\Enter\tau$ and $\Sigma\infers s$, the H-Fill rule additionally gives us that $v':\tau$. Then by T-Enter we have $\Gamma,\Sigma\infers \Edit v':\Task\tau$.\\
 
   \noindent\textbf{Case} $\userule{H-Update}$ Given that $\Gamma,\Sigma\infers\Update l:\Task\tau$ and $\Sigma\infers s$. This gives us that $\Sigma(l)=\tau$, and we additionally obtain $s(l),v':\tau$ by H-Update. By application of Lemma~\ref{lemmasigmaconsistent} this case holds.\\
 
