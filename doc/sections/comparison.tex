@@ -104,30 +104,25 @@ When the user presses the continue button, the machine dispenses either a large 
 
 \paragraph{Communication between subsystems}
 
-\CSP uses the same method for internal and for external communication, that is prefixing.
-The intuitive idea is that parallel processes that all eventually are willing to engage in some action must wait for the others and then progress in one synchronized step.
-This step in its own is still visible to the environment, which means the processes can not engage in this action unless the environment is also willing to.
-Communication becomes internal by using \emph{concealment}.
+\TOP has two methods for internal communication, both different from its meth\-od for external communication.
+The step combinator represents data flow that follows control flow, and shared data represents data flow across control flow.
 
-Concealment is an operator that hides a given set of actions from the environment, which changes the semantics of prefixing for the concealed actions.
-The process does not have to wait for the environment to be willing to engage in concealed actions, it can just step on its own.
-In fact, the process must take any concealed steps as soon as possible, before any further communication with the environment can take place.
-This means internal steps have priority over external communication.
-In other words, computation before communication.
-This introduces the possibility of diverging computations, that is processes which continuously take internal steps without ever being able to engage in external communication.
-
-To exchange values over internal communication, \CSP employs the same technique of decoding action names as described in the section about external communication.
-
-\TOP has two methods for internal communication, both different from its method for external communication.
-There is the step combinator and there is shared data.
-All tasks have values, and the step combinator in $t \Then c$ passes the value of $t$ to the continuation $c$.
-The step combinator represents data flow that follows control flow.
-
-Shared data on the other hand represents data flow across control flow.
+The step combinator in $t \Then c$ passes the value of $t$ to the continuation $c$.
 Shared data sources are assignable references, whose changes in value are immediately visible to all tasks interested in them.
 
 The semantics of \TOP requires all updates to shared data and all enabled internal steps to be processed before any further communication with the environment can take place.
-This introduces the possibility of diverging computations, where a cyclic dependency between shared data causes updates to enable steps, which cause more updates ad infinitum.
+This introduces the possibility of diverging computations, where a cyclic dependency between shared data causes internal steps to be taken continuously without ever being able to engage in external communication.
+
+\CSP uses prefixing for both internal and external communication.
+Parallel processes that all eventually are willing to engage in some action must wait for the others and then progress in one synchronized step.
+This step is still visible to the environment, which means the processes can not engage in this action unless the environment is also willing to.
+Communication becomes internal by using \emph{concealment}.
+
+Concealment is an operator that hides a given set of actions from the environment, which changes the semantics of prefixing for the concealed actions.
+Processes do not have to wait for the environment, they can just step on their own.
+In fact, processes must take any concealed steps as soon as possible, before any further communication with the environment can take place.
+This means internal steps have priority over external communication.
+This introduces the possibility of diverging computations, that is processes which continuously take internal steps without ever being able to engage in external communication.
 
 
 \paragraph{Sequential composition}
