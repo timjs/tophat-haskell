@@ -6,8 +6,7 @@ This section gives an overview over the essential concepts of \TOP and how they 
 These concepts are: communication with the environment, communication between subsystems, sequential composition, concurrency, and synchronization.
 Many of these concepts are similar in nature to what is commonly found in process algebras.
 This raises the question how \TOP and process algebras relate.
-The similarities only go so far however, so we point out similarities as well as differences.
-We compare \TOP with Hoare's Communicating Sequential Processes (\CSP).
+While introducing the concepts, we compare them with Hoare's Communicating Sequential Processes (\CSP).
 The discussion here is based on the book by \citet{books/Hoare85CSP}.
 We chose \CSP as an example to stand for the numerous process algebras in existence, which, as far as this section is concerned, are reasonably similar.
 
@@ -19,11 +18,11 @@ Second, we show how similar features like concurrency and communication work.
 \paragraph{Scope}
 
 The central objective of \TOP is to coordinate the collaboration between people who work together to reach a common goal.
-It is a language to specify workflows.
+\TOP is a language to specify workflows.
 
 The central objective of \CSP is to model the patters of behaviour of processes.
 These patterns of behaviour manifest themselves in sequences of actions that processes can engage in.
-It is a language to specify synchronization patterns.
+\CSP is a language to specify synchronization patterns.
 
 \CSP has a formal semantics that allows various kinds of correctness proofs, including equality of processes, and adherence to a specification.
 This allows applications in program correctness, proofs of deadlock freedom, liveness, or verification of protocols.
