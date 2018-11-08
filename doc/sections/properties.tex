@@ -28,46 +28,56 @@ Finally we prove that the function to compute all possible inputs $\Inputs$ is s
 
 We show that the following three preservation Theorems hold.
 
-\begin{theorem}[preservation under evaluation]
-      For all $e$ and $s$ such that
-      $\Gamma,\Sigma\infers e:\tau$ and $\Gamma\St{}\infers s$\\
-      if $e,s\evaluate e',s'$
-      then $\Gamma,\Sigma\infers e':\tau$ and $\Sigma\infers s'$
-      \label{thmpreseval}
+\begin{theorem}[Preservation under evaluation]
+  % For all well typed expressions $e$ and states $s$,
+  For all expressions $e$ and states $s$
+  such that $\Gamma,\Sigma \infers e:\tau$ and $\Gamma,\Sigma \infers s$,
+  if $e,s \evaluate e',s'$,
+  then $\Gamma,\Sigma \infers e':\tau$ and $\Sigma \infers s'$.
+  \label{thm:pres-eval}
 \end{theorem}
 
-Theorem~\ref{thmpreseval} is shown to be correct by induction over $e$. The full
+Theorem~\ref{thm:pres-eval} is shown to be correct by induction over $e$. The full
 proof can be found in the appendix.
 
 
 Moving on, we show that normalisation also preserves, by showing that the
 following Theorem holds.
 
-\begin{theorem}[preservation under normalisation]
-    For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Sigma\infers s$\\
-    if   $e,s \stride e',s'$ then $\Gamma,\Sigma\infers e':\tau$ and $\Sigma\infers s'$
-    \label{thmpresnorm}
+\begin{theorem}[Preservation under normalisation]
+  % For all well typed expressions $e$ and states $s$,
+  For all expressions $e$ and states $s$
+  such that $\Gamma,\Sigma \infers e:\tau$ and $\Sigma \infers s$,
+  if $e,s \stride e',s'$,
+  then $\Gamma,\Sigma \infers e':\tau$ and $\Sigma \infers s'$.
+  \label{thm:pres-norm}
 \end{theorem}
 
 Since this semantics makes use of the value function $\Value$, we first need to
 show that this function also preserves types.
 
-\begin{lemma}[task value preserves]
-  For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\Task\tau$ and $\Sigma\infers s$\\
-  if $\Value{(e,s)}=v$ then $v:\tau$
-  \label{lemmavaluepreserves}
+\begin{lemma}[Task value preserves]
+  % For all well typed expressions $e$ and states $s$,
+  For all expressions $e$ and states $s$
+  such that $\Gamma,\Sigma \infers e:\Task\tau$ and $\Sigma \infers s$,
+  if $\Value{(e,s)}=v$,
+  then $v:\tau$.
+  \label{lem:presvalue}
 \end{lemma}
 
-Lemma~\ref{lemmavaluepreserves} states exactly this poperty, and is proven in the
-appendix by induction over $e$. This subseqently allows us to prove
-Theorem~\ref{thmpresnorm}, again by induction over $e$.
+Lemma~\ref{lem:presvalue} states exactly this property, and is proven in the
+appendix by induction over $e$. This subsequently allows us to prove
+Theorem~\ref{thm:pres-norm}, again by induction over $e$.
 
 This brings us finally to the type preservation property of the handling semantics.
 
-\begin{theorem}[preservation under handling]
-  For all $e$, $s$ and $i$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Sigma\infers s$\\
-  if $ e,s \handle{i} e's'$ then $\Gamma,\Sigma\infers e':\tau$ and $\Sigma\infers s'$
-   \label{thmpreshandle}
+\begin{theorem}[Preservation under handling]
+  % For all well typed expressions $e$, states $s$, and inputs $i$,
+  For all $e$, $s$ and $i$
+  such that $\Gamma,\Sigma\infers e:\tau$ and $\Sigma\infers s$\\
+  if $ e,s \handle{i} e's'$,
+  then $\Gamma,\Sigma\infers e':\tau$ and $\Sigma\infers s'$.
+  \label{thm:pres-handle}
 \end{theorem}
 
 And again, this is proven by induction over $e$.
@@ -79,12 +89,15 @@ And again, this is proven by induction over $e$.
 Furthermore, a well-typed term of a task type is guaranteed to progress after
 normalisation, unless it is failing.
 
-We define what we mean with progress in Theorem~\ref{thmprogressnorm}.
-
-\begin{theorem}
-  For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\Task\tau$ and $\Sigma\infers s$\\
-  if $e,s \bar{\stride} e',s'$ then either $\Failing(e')$ or there exists an $e''$, $s''$ and $i$ such that $e',s'\handle{i}e'',s''$
-  \label{thmprogressnorm}
+We define what we mean with progress in Theorem~\ref{thm:prog-norm}.
+\begin{theorem}[Progress under handling]
+  For all well typed expressions $e$ and states $s$,
+  % For all expressions $e$ and states $s$
+  % such that $\Gamma,\Sigma \infers e:\Task\tau$ and $\Sigma \infers s$,
+  if $e,s \normalise e',s'$,
+  then either $\Failing(e', s')$
+  or there exist $e''$, $s''$, and $i$ such that $e',s'\handle{i} e'',s''$.
+  \label{thm:prog-norm}
 \end{theorem}
 
 If an expression $e$ and state $s$ are well-typed, then after normalisation, it
@@ -93,37 +106,40 @@ In order to prove this Theorem to be true, we require two additional theorems.
 
 % \paragraph{Normalisation is Big-Step}
 
-The normalisation semantics is a big-step stemantics. This would be quite
+The normalisation semantics is a big-step semantics. This would be quite
 straight-forward, if we did not have to deal with state. Consider the following
-example.
-
-$(\Update l \Then \lambda x:\Bool .\ \If{x}{e}{\Fail})\And (\Edit l:=\True)$ with $s=\{l\mapsto \False\}$
-
-When we apply S-And in order to normalise the expression above, we obtain
-$(\Update l \Then \lambda x:\Bool .\ \If{x}{e}{\Fail})\And (\Edit \unit)$ with $s'=\{l\mapsto \True\}$
-
+example:
+$(\Update l \Then \lambda x:\Bool.\allowbreak \If{x}{e}{\Fail}) \And (l:=\True; \Edit \unit)$ with $s=\set{l\mapsto\False}$.
+When we apply \refrule{S-And} in order to normalise the expression above, we obtain
+$(\Update l \Then \lambda x:\Bool .\ \If{x}{e}{\Fail})\And (\Edit \unit)$ with $s'=\set{l\mapsto\True}$,
 an expression which in fact is not normalised. The issue here lies in the fact
 that $s$ gets updated, and allows the first component of $\And$ to be further
-normalised, in this case to $e$. To overcome this problem, the N-Done and
-N-Stride rules have been added. They ensure that normalisation is applied untill
+normalised, in this case to $e$. To overcome this problem, the \refrule{N-Done} and
+\refrule{N-Stride} rules have been added. They ensure that normalisation is applied until
 the shared memory $s$ has become stable and no further normalisation can be
 applied.
 
 To prove that this is true, and that therefore normalisation is a big-step
 semantics, we show the following theorem to be true.
 
-\begin{theorem}
-  For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\Task\tau$ and $\Sigma\infers s$\\
-  if $e,s\normalise e',s'$ and $e',s'\normalise e'',s''$, then $e'= e''$ and $s'= s''$.
-  \label{thmnormisbigstep}
+\begin{theorem}[Normalisation is big step]
+  For all well typed expressions $e$ and states $s$,
+  % For all expressions $e$ and states $s$
+  % such that $\Gamma,\Sigma \infers e:\Task\tau$ and $\Sigma\infers s$,
+  if $e,s \normalise e',s'$ and $e',s' \normalise e'',s''$,
+  then $e'= e''$ and $s'= s''$.
+  \label{thm:norm-is-bigstep}
 \end{theorem}
 
 An additional lemma is required.
 
-\begin{lemma}
-  For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\Task\tau$ and $\Sigma\infers s$\\
-  if $e,s\evaluate t,s'$, $t,s'\stride t',s''$, $s=s''$ and $t',s''\evaluate t'',s'''$, then $t'=t''$ and $s''=s'''$
-  \label{lemmastridedoesnotevaluate}
+\begin{lemma}[]
+  For all well typed expressions $e$ and states $s$,
+  % For all expressions $e$ and states $s$
+  % such that $\Gamma,\Sigma \infers e:\Task\tau$ and $\Sigma \infers s$,
+  if $e,s \evaluate t,s'$, $t,s' \stride t',s''$, $s=s''$ and $t',s'' \evaluate t'',s'''$,
+  then $t'=t''$ and $s''=s'''$.
+  \label{lem:stride-does-not-eval}
 \end{lemma}
 
 % \paragraph{Failing}
@@ -131,9 +147,14 @@ An additional lemma is required.
 We then show that the failing function $\Failing$ behaves as desired.
 
 \begin{theorem}[Failing means no interaction possible]
-  For all $e$ and $s$ such that $\Gamma,\Sigma\infers e:\Task\tau$ and $\Sigma\infers s$\\
-  and $e,s\stride e',s'$, then $\Failing(e',s')\equiv \True$, if and only if there is no $i$ such that $e',s'\handle{i}e'',s''$ for some $e''$ and $s''$.
-  \label{thmfailing}
+  For all well typed expressions $e$ and states $s$,
+  % For all expressions $e$ and states $s$
+  % such that $\Gamma,\Sigma \infers e:\Task\tau$ and $\Sigma \infers s$,
+  and $e,s \stride e',s'$,
+  we have that $\Failing(e',s') = \True$,
+  if and only if there is no input $i$
+  such that $e',s'\handle{i} e'',s''$ for some $e''$ and $s''$.
+  \label{thm:failing}
 \end{theorem}
 
 The Theorem above states that an expression $e$ and state $s$ are failing, if,
@@ -142,27 +163,30 @@ We prove the theorem to be true by induction on $e'$.
 
 % \paragraph{Proof}
 
-We now have the ingredients to prove Theorem~\ref{thmprogressnorm}.
+We now have the ingredients to prove Theorem~\ref{thm:prog-norm}.
 
 \begin{proof}
   Given $\Gamma,\Sigma\infers e:\Task\tau$ and $\Sigma\infers s$ and after
   normalisation $e,s \stride e',s'$, we find ourselves in either one of the
-  following situations:\\
+  following situations:
 
-  There exists an $i$ such that $e',s'\handle{i}\_,\_$. \qed\\
+  There exists an $i$ such that $e',s'\handle{i}\_,\_$.
 
   There does not exist an $i$ such that $e',s'\handle{i}\_,\_$. In this case, we
-  know that $\Failing(e',s')$ must be true, since Theorem~\ref{thmnormisbigstep}
+  know that $\Failing(e',s')$ must be true, since Theorem~\ref{thm:norm-is-bigstep}
   gives us that $e',s'$ can not be normalised further and we assumed that there
   is no possible input that can be handled.
 \end{proof}
 
 
 
-\subsection{Safety of Inputs function}
+\subsection{Completeness of inputs}
 
-\begin{theorem}
-  For all $e$, $s$ and $i$ such that $\Gamma,\Sigma\infers e:\tau$ and $\Sigma\infers s$\\
-  then $i\in\Inputs{(e)}$ if and only if $e,s\handle{i}e',s'$
-  \label{thmsafetyi}
+\begin{theorem}[Inputs are complete]
+  \todo{Is this a correct title?}
+  For all well typed expressions $e$, states $s$, and inputs $i$,
+  % For all expressions $e$, states $s$, and inputs $i$
+  % such that $\Gamma,\Sigma \infers e:\tau$ and $\Sigma \infers s$,
+  we have that $i \in \Inputs{(e)}$ if and only if $e,s \handle{i} e',s'$.
+  \label{thm:safety-i}
 \end{theorem}

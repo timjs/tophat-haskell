@@ -134,16 +134,16 @@
 \newmacro{newkeyword}[2][1]
   %%FIXME: this is to complicated: {\newoperator{\ifthenelse{\isempty{#1}}{#2}{#1}}{\text{\sffamily\bfseries #2}}}
   {\ifthenelse{\isempty{#1}}
-    {\newoperator{#2}{\text{\sffamily\bfseries #2}}}
-    {\newoperator{#1}{\text{\sffamily\bfseries #2}}}}
+    {\newoperator{#2}{\text{\normalfont\sffamily\bfseries #2}}}
+    {\newoperator{#1}{\text{\normalfont\sffamily\bfseries #2}}}}
 \newmacro{newvalue}[2][1]
   {\ifthenelse{\isempty{#1}}
-    {\newoperator{#2}{\text{\sffamily #2}}}
-    {\newoperator{#1}{\text{\sffamily #2}}}}
+    {\newoperator{#2}{\text{\normalfont\sffamily #2}}}
+    {\newoperator{#1}{\text{\normalfont\sffamily #2}}}}
 \newmacro{newtype}[2][1]
   {\ifthenelse{\isempty{#1}}
-    {\newoperator{#2}{\text{\sffamily\scshape #2}}}
-    {\newoperator{#1}{\text{\sffamily\scshape #2}}}}
+    {\newoperator{#2}{\text{\normalfont\sffamily\scshape #2}}}
+    {\newoperator{#1}{\text{\normalfont\sffamily\scshape #2}}}}
 
 
 %% Math %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -247,6 +247,7 @@
 
 %% Theorems %%
 
+
 \theoremstyle{acmplain}
 
 \newtheorem{theorem}{Theorem}[section]
@@ -254,5 +255,9 @@
 \newtheorem{proposition}[theorem]{Proposition}
 \newtheorem{lemma}[theorem]{Lemma}
 \newtheorem{corollary}[theorem]{Corollary}
+
+
+\theoremstyle{acmdefinition}
+
 \newtheorem{example}[theorem]{Example}
 \newtheorem{definition}[theorem]{Definition}
