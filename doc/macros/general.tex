@@ -234,6 +234,14 @@
   {\begin{marginfigure}[#1]\equation\nonumber}
   {\endequation\end{marginfigure}}
 
+
+\newenvironment*{function}
+  {\begin{tabular}{@{}LCL}}
+  {\end{tabular}}
+\newmacro{signature}[1]
+  {\multicolumn{3}{@{}L}{#1}}
+
+
 \newenvironment*{grammar}
   %%NOTE: the `@{}` suppreses `\tabcolsep` before the first column
   {\begin{block}\begin{tabular}{@{}rRCLl}}
