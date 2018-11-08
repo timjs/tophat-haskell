@@ -183,18 +183,18 @@ In no interleaving should there be two adjacent $a$'s.
 The mutual exclusion problem for two parallel tasks can be stated as follows.
 Let \textit{inc} and \textit{dec} be tasks that increment and decrement some shared counter.
 In $(\textit{inc} \Next \textit{dec}) \And (\textit{inc} \Next \textit{dec})$, the shared counter should at no point be greater than 1.
-Intuitively this means that in no interleaving should there be two adjacent \textit{inc}'s.
-
-The basic method for synchronization in \CSP is synchronized prefixing.
-If some action $a$ is in the alphabets of both $P$ and $Q$, then their parallel composition $P||Q$ can take an $a$-step only if both $P$ and $Q$ are ready to take an $a$-step, in which case they both take their $a$-step simultaneously.
-They both have to wait for the condition that the other process is ready to take the step.
-All synchronization problems in \CSP must be solved by employing synchronized steps in some form.
+This means that in no interleaving should there be two adjacent \textit{inc}'s.
 
 The basic method for synchronization in \TOP is built into the step combinator.
 The task $t \Next c$ can only continue execution when two conditions are met:
 Task $t$ must have a value $v$, and $cv$ must not evaluate to $\Fail$.
 Programmers can encode arbitrary conditions in $cv$, which are evaluated atomically between interaction steps.
 This allows a variety of synchronization problems to be solved in an intuitive and straight-forward manner.
+
+The basic method for synchronization in \CSP is synchronized prefixing.
+If some action $a$ is in the alphabets of both $P$ and $Q$, then their parallel composition $P||Q$ can take an $a$-step only if both $P$ and $Q$ are ready to take an $a$-step, in which case they both take their $a$-step simultaneously.
+They both have to wait for the condition that the other process is ready to take the step.
+All synchronization problems in \CSP must be solved by employing synchronized steps in some form.
 
 
 \paragraph{Nondeterminism}
