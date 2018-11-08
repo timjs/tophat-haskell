@@ -197,6 +197,54 @@ They both have to wait for the condition that the other process is ready to take
 All synchronization problems in \CSP must be solved by employing synchronized steps in some form.
 
 
+\paragraph{Example: Cigarette smokers}
+
+The cigarette smokers problem \cite{books/Downey08LBOS} is a surprisingly tricky synchronization problem.
+We study it here because it demonstrates the capabilities of guarded steps.
+The problem requires waiting for two conditions, waking up only if both conditions are satisfied.
+The problem is stated as follows.
+In order to smoke a cigarette, three ingredients are required: tobacco, paper, and a match.
+There are three smokers, each having one of the ingredients and requiring the other two.
+There is an agent that randomly provides two of the ingredients.
+
+Downey models availability of the ingredients using a semaphore for each ingredient.
+The agent randomly signals two of the three semaphores.
+The problem asks writing code for the smokers so that the smoker who requires the two signalled semaphores wakes up and proceeds with smoking.
+
+A na\"ive attempt where each smoker first waits for one and then the other semaphore can lead to deadlock.
+The following pseudo-code is a non-solution.
+Let \emph{paper}, \emph{tobac} and \emph{match} be semaphores, initialized to 0.
+\begin{TASK}
+  tobacSmoker = wait(match); wait(paper); smoke();
+  paperSmoker = wait(tobac); wait(match); smoke();
+  matchSmoker = wait(tobac); wait(paper); smoke();
+\end{TASK}
+To see what can go wrong, imagine the three smokers running in parallel.
+Let the agent signal the two semaphores \emph{tobac} and \emph{paper}.
+One of \emph{paperSmoker} and \emph{matchSmoker} can take their first step, but if \emph{paperSmoker} takes the step, the system deadlocks.
+
+The solution proposed by Downey involves an additional mutex, three additional semaphores, three additional threads called \emph{pushers}, and three regular Boolean variables.
+The job of the pushers is to record availability of their ingredient in their Boolean variable, and check availability of other resources, waking the correct smoker when appropriate.
+The details of the solution are not important here.
+
+What is important is that the implementation of what is essentially waiting for two semaphores requires a substantial amount of additional synchronization, together with non-trivial conditional statements.
+
+A similar effort as in Downey's solution must be made in order to solve the problem using synchronized actions in \CSP.
+This is because in \CSP, processes can only synchronize on one action at a time.
+
+\TOP allows a simple solution to this problem, using guarded steps.
+Steps can be guarded with arbitrary expressions, and the parallel combinator can be used to watch two shared data sources at the same time.
+Let \textit{match}, \textit{paper}, and \textit{tobac} be shared Booleans.
+The smokers are defined as follows.
+\begin{TASK}
+  tobacSmoker = (update match <&> update paper) >>? continue
+  paperSmoker = (update tobac <&> update match) >>? continue
+  matchSmoker = (update tobac <&> update paper) >>? continue
+  continue = \<<x,y>>. if x && y then smoke else fail
+\end{TASK}
+When the agent supplies two of the ingredients by setting the respective shares to $\True$, only the step of the smoker that waits for those becomes enabled.
+
+
 \paragraph{Nondeterminism}
 
 Nondeterminism means that a system can react to the same input in different ways, the choice of which can not be influenced by the environment.
@@ -210,135 +258,3 @@ A process with nondeterministic behaviour must always be regarded as a specifica
 
 \TOP is meant solely for implementation and does not have any form of nondeterminism.
 Input events for parallel tasks are disambiguated, internal steps have a well-defined evaluation order, and internal choice is left-biased.
-
-
-\subsection{Examples}
-
-In this section we describe a couple of example problems, and show how they can be solved in both languages.
-
-
-
-
-\paragraph{Semaphores}
-
-Semaphores are a synchronization mechanism on a medium level of abstraction.
-Their two operations \emph{signal} and \emph{wait} can be used in different ways to solve a variety of synchronization problems \cite{books/Downey08LBOS}.
-To make semaphores available in a system, they must be implemented using the system's primitive synchronization features, such as atomic test-and-set instructions, synchronized actions, or guarded transitions.
-
-Semaphores are supposed to be shared among agents.
-Semaphores have an internal counter and two methods \emph{signal} and \emph{wait}.
-The counter can be initialized once, but subsequently not accessed directly.
-When an agent invokes \emph{wait} and the counter is greater than zero, the semaphore decreases the counter and the agent continues.
-When an agent invokes \emph{wait} while the counter is zero, the agent blocks and has to wait until the counter increases.
-When an agent invokes \emph{signal}, the counter is increased.
-If there are any agents waiting for the semaphore, one of them is woken up.
-
-In \CSP, a semaphore is a process that runs in parallel with all processes it is supposed to coordinate.
-For the sake of this example, we study a semaphore with maximum counter of 2, initialized to 1, that coordinates two processes $A$ and $B$.
-The example can be generalized to an arbitrary counter and arbitrary many processes.
-
-\begin{equation*}
-  \begin{array}{rcl}
-  Sem & = & C_1 \\
-  C_2 & = & (wait_A \to C_1 \mid wait_B \to C_1) \\
-  C_1 & = & (wait_A \to C_0 \mid wait_B \to C_0 \\
-      &   & \mid signal_A \to C_2 \mid signal_B \to C_2) \\
-  C_0 & = & (signal_A \to C_1 \mid signal_B \to C_1)
-  \end{array}
-\end{equation*}
-
-The semaphore starts in state $C_1$, which represents a counter of 1.
-Every process has its own actions \emph{signal} and \emph{wait}, because we want these actions to be synchronized only between semaphore and process, not directly between the processes.
-In state $C_1$, the semaphore can engage in \emph{wait} and \emph{signal} actions for both processes.
-\emph{wait} decreases the counter, \emph{signal} increases the counter.
-In state $C_0$, which represents a counter of 0, only \emph{signal} actions are possible.
-A thread willing to engage in \emph{wait} while the semaphore is in $C_0$ must wait until the other process has engaged in \emph{signal} with the semaphore.
-
-
-In \TOP, a semaphore is a shared integer, together with two tasks \emph{signal} and \emph{wait}.
-\begin{equation*}
-  \begin{array}{l}
-  \text{type}\ \text{Semaphore} = \Reference \Int \\
-  \textit{signal} :: \text{Semaphore} \to \Task \Unit \\
-  \textit{wait}   :: \text{Semaphore} \to \Task \Unit
-  \end{array}
-\end{equation*}
-\emph{signal} simply increments the shared counter.
-\emph{wait} watches the counter and has a guarded step that is enabled if and only if the counter is greater than zero.
-The editor $\Update s$ should be regarded as read-only.
-\begin{equation*}
-  \begin{array}{r @{\,} c @{\,} l}
-    \textit{signal}\ s & = & s := {!s} + 1; \Edit \tuple{} \\
-    \textit{wait}\ s   & = & \Update s \Next \lambda c. \IF c > 0 \THEN s := c - 1; \Edit \tuple{} \ELSE \Fail
-  \end{array}
-\end{equation*}
-When the step in \emph{wait} is enabled and receives a continue event, it decrements the counter.
-Decrementing the counter happens in the normalization semantics, and is therefore atomic with respect to event handling.
-When this causes the counter to become zero, all tasks that happen to wait for the semaphore have their step disabled simultaneously.
-Once the semaphore gets signalled, all steps become enabled.
-The first task to take the step again disables the step for all others.
-
-
-\paragraph{Cigarette smokers}
-
-The cigarette smokers problem \cite{books/Downey08LBOS} is a surprisingly tricky synchronization problem.
-It requires waiting for two conditions, waking up only if both conditions are satisfied.
-The problem is stated as follows.
-In order to smoke a cigarette, three ingredients are required: tobacco, paper, and a match.
-There are three smokers, each having one of the ingredients and requiring the other two.
-There is an agent that randomly provides two of the ingredients.
-
-Downey models availability of the ingredients using a semaphore for each ingredient.
-The agent randomly signals two of the three semaphores.
-The problem is writing code for the smokers so that the smoker who requires the two signalled semaphores wakes up and proceeds with smoking.
-
-A na\"ive attempt where each smoker first waits for one and then the other semaphore can lead to deadlock.
-The following non-solution uses the semaphores developed in the previous section.
-Let \emph{paper}, \emph{tobac} and \emph{match} be semaphores, initialized to 0.
-\begin{equation*}
-\begin{array}{l @{\,} c @{\,} l}
-  \textit{tobacSmoker} & = & \textit{wait}\ \textit{match} \Then \textit{wait}\ \textit{paper} \Then \textit{smoke} \\
-  \textit{paperSmoker} & = & \textit{wait}\ \textit{tobac} \Then \textit{wait}\ \textit{match} \Then \textit{smoke} \\
-  \textit{matchSmoker} & = & \textit{wait}\ \textit{tobac} \Then \textit{wait}\ \textit{paper} \Then \textit{smoke} \\
-\end{array}
-\end{equation*}
-To see what can go wrong, imagine the three smokers running in parallel.
-Let the agent signal the two semaphores \emph{tobac} and \emph{paper}.
-One of \emph{paperSmoker} and \emph{matchSmoker} can take their first step, but if \emph{paperSmoker} takes the step, the system deadlocks.
-
-The solution proposed by Downey involves an additional mutex, three additional semaphores, three additional threads called \emph{pushers}, and three regular Boolean variables.
-The job of the pushers is to record availability of their ingredient in their Boolean variable, and check availability of other resources, waking the correct smoker when appropriate.
-The details of the solution are not important here.
-
-What is important is that the implementation of what is essentially waiting for two semaphores requires a substantial amount of additional synchronization, together with non-trivial conditional statements.
-
-The non-solution can be expressed in \CSP with the interleaving operator.
-We use actions directly to synchronized processes instead of semaphores.
-There are three actions \emph{match}, \emph{tobac}, and \emph{paper}, and we imagine an environment that engages in two of them.
-\begin{equation*}
-\begin{array}{l @{\,} c @{\,} l}
-  \textit{tobacSmoker} & = & \textit{match} \to \textit{paper} \to \textit{smoke} \to \text{STOP} \\
-  \textit{paperSmoker} & = & \textit{tobac} \to \textit{match} \to \textit{smoke} \to \text{STOP} \\
-  \textit{matchSmoker} & = & \textit{tobac} \to \textit{paper} \to \textit{smoke} \to \text{STOP} \\
-  \multicolumn{3}{l}{\textit{S} = \textit{tobacSmoker} \mathrel{|||} \textit{paperSmoker} \mathrel{|||} \textit{matchSmoker}} \\
-\end{array}
-\end{equation*}
-When the environment is willing to engage in the sequence $\textit{tobac} \to \textit{paper} \to \textit{smoke}$ with $S$, and the \emph{paperSmoker} synchronizes with the action \emph{tobac}, the system deadlocks before anyone can smoke.
-
-A similar effort as in Downey's solution must be made in order to solve the problem using synchronized actions in \CSP.
-
-\TOP allows a simple solution to this problem, using guarded steps.
-Steps can be guarded with arbitrary expressions, and the parallel combinator can be used to watch two shared data sources at the same time.
-Let \textit{match}, \textit{paper}, and \textit{tobac} be shared Booleans.
-The smokers are defined as follows.
-\begin{equation*}
-\begin{array}{l @{\,} c @{\,} l}
-  \textit{tobacSmoker} & = & (\Update \textit{match} \And \Update \textit{paper}) \Next \lambda \tuple{x,y}. \\
-    & & \quad \IF x \mathrel{\&\&} y \THEN \textit{smoke} \ELSE \Fail \\
-  \textit{paperSmoker} & = & (\Update \textit{tobac} \And \Update \textit{match}) \Next \lambda \tuple{x,y}. \\
-    & & \quad \IF x \mathrel{\&\&} y \THEN \textit{smoke} \ELSE \Fail \\
-  \textit{matchSmoker} & = & (\Update \textit{tobac} \And \Update \textit{paper}) \Next \lambda \tuple{x,y}. \\
-    & & \quad \IF x \mathrel{\&\&} y \THEN \textit{smoke} \ELSE \Fail \\
-\end{array}
-\end{equation*}
-When the agent supplies two of the ingredients by setting the respective shares to $\True$, only the step of the smoker that waits for those becomes enabled.
