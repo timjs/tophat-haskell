@@ -129,21 +129,19 @@ This introduces the possibility of diverging computations, that is processes whi
 
 The intuition about sequential composition is to first do one thing, and once it is done, do some other thing.
 
-In \CSP, sequential composition is represented by the semicolon combinator together with the special action $\checkmark$, called \emph{success}.
-We require that if a process engages in $\checkmark$ at all, it must be its single last action.
-When that happens, we say the process terminates successfully.
-The process $P;Q$ behaves like $P$ until $P$ terminates successfully, after which it continues as $Q$.
-If $P$ never terminates successfully, neither does $P;Q$
-
 In \TOP, tasks never terminate.
 Nonetheless, the notion of sequential composition exists in two forms: the external and the internal step.
 The task $t \Then c$ acts like $t$ as long as the step is guarded.
 Once it becomes unguarded, the task continues as $cv$, where $v$ is the value of $t$.
 The task $t \Next c$ requires an input event $\Continue$ in addition to the step being unguarded in order to step.
 
-In \CSP, the first process initiates the step.
-In \TOP, the step combinator initiates the step.
+In \CSP, sequential composition is represented by the semicolon combinator together with the special action $\checkmark$, called \emph{success}.
+We require that if a process engages in $\checkmark$ at all, it must be its single last action.
+When that happens, we say the process terminates successfully.
+The process $P;Q$ behaves like $P$ until $P$ terminates successfully, after which it continues as $Q$.
+If $P$ never terminates successfully, neither does $P;Q$
 
+\CSP's semicolon is like an internal step $t \Then c$ in \TOP where $t$ uses $\Unit$ to signal when it is done, and $c$ never fails.
 
 \paragraph{Concurrency}
 
