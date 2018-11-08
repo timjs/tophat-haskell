@@ -131,7 +131,7 @@ When an editor has a value, it can be \emph{changed} or it can be \emph{emptied}
 When it is empty, a value can be \emph{filled}.
 This is depicted as a state diagram in \autoref{fig:editor-state} below.
 
-\begin{figure}[h]
+\begin{figure}[b]
   \centering
   \includegraphics[width=\columnwidth,page=3]{figures/drawings-crop.pdf}
   \caption{
@@ -210,10 +210,12 @@ The typing rule for valued editors can be found in \refrule{T-Enter}.
 
 \paragraph{Shared editors $(\Update e)$}
 
+\fixme{Write section on shared editors}
 
 
 \paragraph{Fail $(\Fail)$}
 
+\fixme{Write section on fail}
 
 
 \subsection{Composition}
@@ -240,7 +242,7 @@ The next two subsections are about pairing and choosing.
 
 
 
-\paragraph{Sequential $(e_1 \Then e_2, e_1 \Next e_2)$}
+\paragraph{System and user step $(e_1 \Then e_2, e_1 \Next e_2)$}
 
 One might think that the best way to sequence tasks is by just following one task with another:
 do this, then do that, then that, etc.
@@ -273,7 +275,7 @@ holding a value of (possibly another) type $\tau_2$.
 
 
 
-\paragraph{Choice $(e_1 \Or e_2, e_1 \Xor e_2)$}
+\paragraph{System and user choice $(e_1 \Or e_2, e_1 \Xor e_2)$}
 
 \fixme{Write section on choice}
 
