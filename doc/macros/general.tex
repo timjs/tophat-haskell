@@ -148,6 +148,13 @@
 
 %% Math %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%% Boxes %%
+
+\newmacro{obox}[2]
+  {\makebox[0pt][l]{\ensuremath{#2}}\phantom{\ensuremath{#1}}}
+
+
+
 %% Symbols %%
 
 %% NOTE: change this to \emptyset when using a font that includes a nice standard emptyset
@@ -236,10 +243,12 @@
 
 
 \newenvironment*{function}
-  {\begin{tabular}{@{}LCL}}
+  {\begin{tabular}{@{}L@{\ \ }C@{\ \ }L@{}}}
   {\end{tabular}}
 \newmacro{signature}[1]
-  {\multicolumn{3}{@{}L}{#1}}
+  {\multicolumn{3}{@{}L@{}}{#1}}
+\newmacro{inset}[1]
+  {\multicolumn{3}{L}{\quad #1}}
 
 
 \newenvironment*{grammar}

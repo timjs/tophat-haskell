@@ -6,47 +6,120 @@
 \newmacro{O-Value}{
   \begin{function}
     \signature{\Value : \mathrm{Tasks} \times \mathrm{States} \rightharpoonup \mathrm{Values}} \\
+    \Value(\Edit v, s)                &=& v \\
+    \Value(\Enter \tau, s)            &=& \bot \\
+    \Value(\Update l, s)              &=& s(l) \\
+    \Value(\Fail, s)                  &=& \bot \\
+    \Value(t_1 \Then e_2, s)          &=& \bot \\
+    \Value(t_1 \Next e_2, s)          &=& \bot \\
+    \Value(t_1 \And t_2, s)           &=& \left\{
+      \begin{array}{l@{}l}
+        \tuple{v_1, v_2}              & \ \when\ \Value(t_1, s) = v_1 \land \Value(t_2, s) = v_2 \\
+        \bot                          & \ \otherwise
+      \end{array}
+    \right. \\
+    \Value(t_1 \Or t_2, s)            &=& \left\{
+      \begin{array}{l@{}l}
+        v_1                           & \ \when\ \Value(t_1, s) = v_1 \\
+        v_2                           & \ \when\ \Value(t_1, s) = \bot \land \Value(t_2, s) = v_2 \\
+        \obox{\tuple{v_1, v_2}}{\bot} & \ \otherwise
+      \end{array}
+    \right. \\
+    \Value(t_1 \Xor t_2, s)           &=& \bot \\
+    \Value(u \At t, s)                &=& \Value(t,s)
+  \end{function}
+}
+
+\newmacro{O-Value-Compact}{
+  \begin{function}
+    \signature{\Value : \mathrm{Tasks} \times \mathrm{States} \rightharpoonup \mathrm{Values}} \\
+    \Value(\Edit v, s)                &=& v \\
+    \Value(\Enter \tau, s)            &=& \bot \\
+    \Value(\Update l, s)              &=& s(l) \\
+    \Value(\Fail, s)                  &=& \bot \\
+    \Value(t_1 \Then e_2, s)          &=& \bot \\
+    \Value(t_1 \Next e_2, s)          &=& \bot \\
+    \Value(t_1 \And t_2, s)           &=& \left\{
+      \begin{array}{@{}l@{\  }l@{}}
+        \tuple{v_1, v_2}              & \when\ \Value(t_1, s) = v_1 \\
+                                      & \multicolumn{1}{r@{}}{\mathbf{and\ } \Value(t_2, s) = v_2} \\
+        \bot                          & \otherwise
+      \end{array}
+    \right. \\
+    \Value(t_1 \Or t_2, s)            &=& \left\{
+      \begin{array}{@{}l@{\  }l@{}}
+        v_1                           & \when\ \Value(t_1, s) = v_1 \\
+        v_2                           & \when\ \Value(t_1, s) = \bot \\
+                                      & \multicolumn{1}{r@{}}{\mathbf{and\ } \Value(t_2, s) = v_2} \\
+        \obox{\tuple{v_1, v_2}}{\bot} & \otherwise
+      \end{array}
+    \right. \\
+    \Value(t_1 \Xor t_2, s)           &=& \bot \\
+    \Value(u \At t, s)                &=& \Value(t,s)
+  \end{function}
+}
+
+\newmacro{O-Value-Compact-Old}{
+  \begin{function}
+    \signature{\Value : \mathrm{Tasks} \times \mathrm{States} \rightharpoonup \mathrm{Values}} \\
     \Value(\Edit v, s)       &=& v \\
     \Value(\Enter \tau, s)   &=& \bot \\
     \Value(\Update l, s)     &=& s(l) \\
     \Value(\Fail, s)         &=& \bot \\
     \Value(t_1 \Then e_2, s) &=& \bot \\
     \Value(t_1 \Next e_2, s) &=& \bot \\
-    \Value(t_1 \And t_2, s)  &=& \left\{
-      \begin{array}{ll}
-        \tuple{v_1, v_2}     & \when\ \Value(t_1, s) = v_1 \land \Value(t_2, s) = v_2 \\
-        \bot                 & \otherwise
-      \end{array}
-    \right. \\
-    \Value(t_1 \Or t_2, s)   &=& \left\{
-      \begin{array}{ll}
-        v_1                  & \when\ \Value(t_1, s) = v_1 \\
-        v_2                  & \when\ \Value(t_1, s) = \bot \land \Value(t_2, s) = v_2 \\
-        \bot                 & \otherwise
-      \end{array}
-    \right. \\
-    \Value(t_1 \Xor t_2, s)  &=& \bot\\
+    \Value(t_1 \And t_2, s)  &=& \tuple{v_1, v_2} \\
+      \inset{\when\ \Value(t_1, s) = v_1 \land \Value(t_2, s) = v_2} \\
+                             &=& \bot \quad \otherwise \\
+    \Value(t_1 \Or t_2, s)   &=& v_1 \quad \when\ \Value(t_1, s) = v_1 \\
+                             &=& v_2 \\
+      \inset{\when\ \Value(t_1, s) = \bot \land \Value(t_2, s) = v_2} \\
+                             &=& \bot \quad \otherwise \\
+    \Value(t_1 \Xor t_2, s)  &=& \bot \\
     \Value(u \At t, s)       &=& \Value(t,s)
   \end{function}
 }
 
+
 \newmacro{O-Inputs}{
   \begin{function}
     \signature{\Inputs : \mathrm{Tasks} \times \mathrm{States} \to \powerset(\mathrm{Inputs})} \\
-    \Inputs(\Edit v,s)             &=& \set{v':\tau, \Empty} \hfill\where\ \Edit v : \Task\tau \\
+    \Inputs(\Edit v,s)             &=& \set{v':\tau, \Empty}                       \quad\where\ \Edit v : \Task\tau \\
     \Inputs(\Enter \tau,s)         &=& \set{v':\tau} \\
-    \Inputs(\Update l,s)           &=& \set{v':\tau} \hfill\where\ \Update l : \Task\tau \\
+    \Inputs(\Update l,s)           &=& \obox{\set{v':\tau, \Empty}}{\set{v':\tau}} \quad\where\ \Update l : \Task\tau \\
     \Inputs(\Fail,s)               &=& \nothing \\
     \Inputs(t_1 \Then e_2,s)       &=& \Inputs(t_1,s) \\
-    \Inputs(t_1 \Next e_2,s)       &=& \Inputs(t_1,s) \cup \phantom{}\\
-                                   & & \set{\Continue \mid \Value(t_1, s) = v_1 \land e_2\ v_1, s \normalise t_2, s' \land \lnot\Failing(t_2, s')} \\
+    \Inputs(t_1 \Next e_2,s)       &=& \Inputs(t_1,s) \cup \{\Continue \mid \Value(t_1, s) = v_1 \land \phantom{} \\
+                                   & & \quad e_2\ v_1, s \normalise t_2, s' \land \lnot\Failing(t_2, s')\} \\
     \Inputs(t_1 \And t_2,s)        &=& \set{\First\ i \mid i \in \Inputs(t_1,s)} \cup \set{\Second\ i \mid i \in \Inputs(t_2,s)} \\
     \Inputs(t_1 \Or t_2,s)         &=& \set{\First\ i \mid i \in \Inputs(t_1,s)} \cup \set{\Second\ i \mid i \in \Inputs(t_2,s)} \\
-    \Inputs(e_1 \Xor e_2,s)        &=& \set{\Pick \phantom{\Right}\makebox[0pt][r]{$\Left$} \mid e_1, s \normalise t_1, s' \land \lnot\Failing(t_1, s')} \cup \phantom{} \\
+    \Inputs(e_1 \Xor e_2,s)        &=& \set{\Pick \obox{\Right}{\Left} \mid e_1, s \normalise t_1, s' \land \lnot\Failing(t_1, s')} \cup \phantom{} \\
                                    & & \set{\Pick \Right \mid e_2, s \normalise t_2, s' \land \lnot\Failing(t_2, s')} \\
     \Inputs(u_1 \At t,s)           &=& \set{u_2 \At i\mid u_2 \At i \in \Inputs(t,s)} \cup \set{u_1 \At i\mid i\in \Inputs(t,s)}
   \end{function}
 }
+
+\newmacro{O-Inputs-Compact}{
+  \begin{function}
+    \signature{\Inputs : \mathrm{Tasks} \times \mathrm{States} \to \powerset(\mathrm{Inputs})} \\
+    \Inputs(\Edit v,s)             &=& \set{v':\tau, \Empty}                       \quad\where\ \Edit v : \Task\tau \\
+    \Inputs(\Enter \tau,s)         &=& \set{v':\tau} \\
+    \Inputs(\Update l,s)           &=& \obox{\set{v':\tau, \Empty}}{\set{v':\tau}} \quad\where\ \Update l : \Task\tau \\
+    \Inputs(\Fail,s)               &=& \nothing \\
+    \Inputs(t_1 \Then e_2,s)       &=& \Inputs(t_1,s) \\
+    \Inputs(t_1 \Next e_2,s)       &=& \Inputs(t_1,s) \cup \{\Continue \mid \Value(t_1, s) = v_1 \land \phantom{} \\
+                                   & & \quad e_2\ v_1, s \normalise t_2, s' \land \lnot\Failing(t_2, s')\} \\
+    \Inputs(t_1 \And t_2,s)        &=& \set{\First\ i \mid i \in \Inputs(t_1,s)} \\
+                                &\cup& \set{\Second\ i \mid i \in \Inputs(t_2,s)} \\
+    \Inputs(t_1 \Or t_2,s)         &=& \set{\First\ i \mid i \in \Inputs(t_1,s)} \\
+                                &\cup& \set{\Second\ i \mid i \in \Inputs(t_2,s)} \\
+    \Inputs(e_1 \Xor e_2,s)        &=& \set{\Pick \obox{\Right}{\Left} \mid e_1, s \normalise t_1, s' \land \lnot\Failing(t_1, s')} \\
+                                &\cup& \set{\Pick \Right \mid e_2, s \normalise t_2, s' \land \lnot\Failing(t_2, s')} \\
+    \Inputs(u_1 \At t,s)           &=& \set{u_2 \At i\mid u_2 \At i \in \Inputs(t,s)} \\
+                                &\cup& \set{u_1 \At i\mid i\in \Inputs(t,s)}
+  \end{function}
+}
+
 
 \newmacro{O-Failing}{
   \begin{function}
@@ -60,10 +133,33 @@
     \Failing(t_1 \And t_2,s)  &=& \Failing(t_1,s) \land \Failing(t_2,s) \\
     \Failing(t_1 \Or t_2,s)   &=& \Failing(t_1,s) \land \Failing(t_2,s) \\
     \Failing(e_1 \Xor e_2,s)  &=& \Failing(t_1,s_1') \land \Failing(t_2,s_2') \\
+      % \inset{\where\ e_1,s \normalise t_1,s_1' \mathbf{\ and\ } e_2,s \normalise t_2,s_2'} \\
                               & & \quad\where\ e_1,s \normalise t_1,s_1' \mathbf{\ and\ } e_2,s \normalise t_2,s_2' \\
     \Failing(u \At t,s)       &=& \Failing(t,s)
   \end{function}
 }
+
+\newmacro{O-Failing-Compact}{
+  \begin{function}
+    \signature{\Failing : \mathrm{Tasks} \times \mathrm{States} \to \mathrm{Booleans}} \\
+    \Failing(\Edit v,s)       &=& \False \\
+    \Failing(\Enter \tau,s)   &=& \False \\
+    \Failing(\Update l,s)     &=& \False \\
+    \Failing(\Fail,s)         &=& \True \\
+    \Failing(t_1 \Then e_2,s) &=& \Failing(t_1,s) \\
+    \Failing(t_1 \Next e_2,s) &=& \Failing(t_1,s) \\
+    \Failing(t_1 \And t_2,s)  &=& \Failing(t_1,s) \land \Failing(t_2,s) \\
+    \Failing(t_1 \Or t_2,s)   &=& \Failing(t_1,s) \land \Failing(t_2,s) \\
+    \Failing(e_1 \Xor e_2,s)  &=& \Failing(t_1,s_1') \land \Failing(t_2,s_2') \\
+                              \multicolumn{3}{R@{}}{\where\ e_1,s \normalise t_1,s_1'} \\
+                              \multicolumn{3}{R@{}}{\mathbf{and\ } e_2,s \normalise t_2,s_2'} \\
+    \Failing(u \At t,s)       &=& \Failing(t,s) \\
+                              & & \\
+                              & & \\
+                              & & \\
+  \end{function}
+}
+
 
 \newmacro{O-Watching}{
   \begin{function}
