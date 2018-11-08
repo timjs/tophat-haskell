@@ -100,10 +100,7 @@ With other words:
 
 Stepping from one task to another using the sequence construct $\Then$ is done by the system itself,
 not by the user.
-We will call this an \emph{internal step} or \emph{system step}.\footnote{
-  This implies there will also be an \emph{external step} or \emph{user step} performed on users' request.
-  This is indeed the case and we will discuss it in \autoref{sec:external-step}.
-}
+We will call this an \emph{internal step} or \emph{system step}.
 As there is no explicit user input needed to perform an internal step,
 % we cannot use our event handling semantics $\handle{h}$,
 % described in \autoref{sec:handling},
@@ -229,11 +226,7 @@ As in the case of just the task $\Fail$,
 users can send any event,
 but nothing will ever happen.
 $\Fail$ will never have a value
-and therefore $\Then$ will never make a step to $e_2$.\footnote{
-  This is a property called \emph{left absorption},
-  which tells us something about the interaction between $\Fail$ and $\Then$.
-  See also \autoref{sec:monad-laws}.
-}
+and therefore $\Then$ will never make a step to $e_2$.
 If the left hand side of $\Then$ is any other task,
 all will be well.
 Thus,
