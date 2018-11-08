@@ -396,7 +396,7 @@
   {t_1 \Next e_2,s \handle{i \neq \Continue} t_1' \Next e_2,s'}
 
 \newrule{H-Next}[\Value{(t_1,s)} = v_1 \wedge \neg\Failing{(t_2,s')}]
-  {e_2 v_1,s\stride t_2,s'}
+  {e_2 v_1,s \normalise t_2,s'}
   {t_1 \Next e_2,s \handle{\Continue} t_2,s'}
 
 
@@ -418,13 +418,13 @@
   {t_1 \Or t_2,s \handle{\Second i} t_1 \Or t_2',s'}
 
 
-\newrule{H-PickLeft}[e_1,s\evaluate t_1,s'\wedge \neg\Failing(t_1,s')]
-  { }
-  {e_1 \Xor e_2,s \handle{\Left} e_1,s}
+\newrule{H-PickLeft}[\neg\Failing(t_1,s')]
+  {e_1,s \normalise t_1,s'}
+  {e_1 \Xor e_2,s \handle{\Pick \Left} t_1,s'}
 
-\newrule{H-PickRight}[e_2,s\evaluate t_2,s'\wedge \neg\Failing(t_2,s')]
-  { }
-  {e_1 \Xor e_2,s \handle{\Right} e_2,s}
+\newrule{H-PickRight}[\neg\Failing(t_2,s')]
+  {e_2,s \normalise t_2,s'}
+  {e_1 \Xor e_2,s \handle{\Pick \Right} t_2,s'}
 
 
 \newrule{H-Appoint}
