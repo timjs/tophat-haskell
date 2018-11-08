@@ -53,9 +53,7 @@ In both languages, communication between subsystems does not block, but evaluate
 
 \paragraph{Communication with the environment}
 In \TOP, communication with the environment is represented by editors.
-A task of the form $\Enter \tau$ can receive any change event with a value of type $\tau$.
-A task of the form $\Edit v$, where $v$ is of type $\tau$, can receive the same
-events, and additionally the special event $\Empty$ that empties the editor.
+A task of the form $\Edit v$, where $v$ is of type $\tau$, can receive any change event with a value of type $\tau$ and additionally the special event $\Empty$ that empties the editor.
 The environment can always inspect the current value of an editor.
 
 Editors have no notion of continuation.
