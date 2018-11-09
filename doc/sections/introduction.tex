@@ -11,23 +11,15 @@ Workflows because task-oriented programs coordinate collaboration between people
 Interactive because progress of task-oriented programs is driven by user input.
 Modular because the embedding in a strongly-typed functional language allows powerful abstractions using type-driven techniques and higher-order functions.
 
-
-We will call interactive workflows \emph{tasks}.
-Tasks model real world work, appointable to users,
-can combined in a couple of elementary ways:
-\begin{itemize*}
-  \item sequantially
-  \item and-parallel
-  \item or-parallel
-\end{itemize*}
-Information flows through tasks in two different ways:
-\begin{enumerate*}
-  \item Locally: pass information from one task to another.
-  \item Globally: shared information by multiple tasks.
-\end{enumerate*}
-Information is entered into the system by users by sending \emph{inputs}.
-Therefore we say that these workflows are \emph{driven} by user inputs.
-We call defining modular interactive workflows Task Oriented Programming (\TOP).
+Interactive workflows are called \emph{tasks}.
+Tasks stand for units of work in the real world, assigned to people.
+People can work together in a number of ways, and this is reflected in the language by task combinators.
+There is sequential composition, parallel composition, and choice.
+People need to communicate in order to engage in these forms of collaboration.
+This is reflected in the language by three kinds of communication mechanisms.
+There is data flow alongside control flow, where the result of a task is passed onto the next.
+There is data flow across control flow, where information is shared between multiple tasks.
+Finally, there is communication is with the outside world, where information is entered into the system via input events.
 
 
 \paragraph{Motivations}
