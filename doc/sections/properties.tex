@@ -48,7 +48,7 @@ following Theorem holds.
   % For all well typed expressions $e$ and states $s$,
   For all expressions $e$ and states $s$
   such that $\Gamma,\Sigma \infers e:\tau$ and $\Sigma \infers s$,
-  if $e,s \stride e',s'$,
+  if $e,s \normalise e',s'$,
   then $\Gamma,\Sigma \infers e':\tau$ and $\Sigma \infers s'$.
   \label{thm:pres-norm}
 \end{theorem}
@@ -73,8 +73,8 @@ This brings us finally to the type preservation property of the handling semanti
 
 \begin{theorem}[Preservation under handling]
   % For all well typed expressions $e$, states $s$, and inputs $i$,
-  For all $e$, $s$ and $i$
-  such that $\Gamma,\Sigma\infers e:\tau$ and $\Sigma\infers s$\\
+  For all expressions $e$, states $s$ and inputs $i$
+  such that $\Gamma,\Sigma \infers e:\tau$ and $\Sigma \infers s$,
   if $ e,s \handle{i} e's'$,
   then $\Gamma,\Sigma\infers e':\tau$ and $\Sigma\infers s'$.
   \label{thm:pres-handle}
@@ -150,7 +150,7 @@ We then show that the failing function $\Failing$ behaves as desired.
   For all well typed expressions $e$ and states $s$,
   % For all expressions $e$ and states $s$
   % such that $\Gamma,\Sigma \infers e:\Task\tau$ and $\Sigma \infers s$,
-  and $e,s \stride e',s'$,
+  and $e,s \normalise e',s'$,
   we have that $\Failing(e',s') = \True$,
   if and only if there is no input $i$
   such that $e',s'\handle{i} e'',s''$ for some $e''$ and $s''$.
@@ -167,7 +167,7 @@ We now have the ingredients to prove Theorem~\ref{thm:prog-norm}.
 
 \begin{proof}
   Given $\Gamma,\Sigma\infers e:\Task\tau$ and $\Sigma\infers s$ and after
-  normalisation $e,s \stride e',s'$, we find ourselves in either one of the
+  normalisation $e,s \normalise e',s'$, we find ourselves in either one of the
   following situations:
 
   There exists an $i$ such that $e',s'\handle{i}\_,\_$.
