@@ -212,8 +212,40 @@ The typing rule for valued editors can be found in \refrule{T-Enter}.
 
 \paragraph{Shared editors $(\Update e)$}
 
-\fixme{Write section on shared editors}
+Shared editors are a generalisation of normal editors discussed above.
+Instead of \fixme{keeping} a value locally,
+they watch a reference location.
+Typing rule \refrule{T-Update} therefore states that,
+for $\Update e$ to be a $\Task \tau$,
+$e$ should be of type $\Reference \tau$.
+Because \ML-style references always have a value,
+shared editors cannot be cleared.
+The value of the reference,
+and thus the value of the stored editor,
+can only be changed.
+This is depicted in the second state diagram in \autoref{fig:editor-state}.
 
+The consequence is that two completely different users can watch the same shared value
+and get notified by changes the other makes.
+Lets say Marco and Christopher both watch a shared editor of a coordinate.
+We can visualise editors of this type by an input entry,
+like we did in \autoref{exm:flight-booking},
+but we could also choose to show a map with a pin.
+When Marco moves this pin,
+he will update the value of the shared editor,
+and thus the value of the reference containing the coordinate.
+This will be immediately reflected on Christopher's screen:
+the pin will change its position on the map.
+This way, Marco and Christopher can work together editing the same information.
+
+Another important use case for shared editors is sensors.
+Sensors can be modelled by users updating the value of a shred editor once in a while.
+Take for example the task to view the current time: \TS{update time}
+which is a shared editor of type \TS{Task Int}.
+% which is stored as a value of type $\Reference \Int$.
+Every second, a clock sends a change event to the system.
+Each shared editor watching the same location will be updated accordingly.
+The value of a sensor is thus exposed through a shared editor.
 
 
 
