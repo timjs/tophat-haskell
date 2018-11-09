@@ -66,7 +66,7 @@ In the next subsections we will discuss each category of pretasks:
 editors, steps and combinations.
 As a general rule of thumb,
 we will use open symbols ($\Edit, \Enter, \Next, \Xor$) where user input is required,
-and closed symbols ($\Update, \Then, \Or$) where language constructs itself can make decisions.
+and closed symbols ($\Update, \Then, \Or$) where language constructs themself can make decisions.
 
 \begin{figure}[h]
   \small
@@ -144,11 +144,13 @@ This is depicted as a state diagram in \autoref{fig:editor-state} below.
 One can consider editors as an abstraction over widgets in a \GUI,
 form fields on a webpage,
 or even sensors plugged into the system.
-Take for example an entry for text.
-Users can enter a string, change it, remove it, enter another string, and so on.
+Take for example the input entry for age,
+from \autoref{exm:flight-booking}.
+Users can enter an integer, change it, remove it, enter another integer, and so on.
 With editors we try to capture this \emph{constantly changing nature of user input}.
 Also, because editors are \emph{typed},
-they are only allowed to contain information of the right format.
+they are only allowed to contain information of the right format,
+as we have seen in \autoref{fig:flight-booking}.
 
 How exactly information is entered is not of great importance.
 This could be an input field for a string,
@@ -213,12 +215,9 @@ The typing rule for valued editors can be found in \refrule{T-Enter}.
 \fixme{Write section on shared editors}
 
 
-\paragraph{Fail $(\Fail)$}
-
-\fixme{Write section on fail}
 
 
-\subsection{Composition}
+\subsection{Steps}
 
 
 % In the previous section we have set up our interaction model of inputs and actions,
@@ -238,11 +237,11 @@ For parallel composition we distinguish two kinds:
   \item choosing between two tasks (\emph{or}-parallel).
 \end{enumerate*}
 In this subsection we start with sequential composition.
-The next two subsections are about pairing and choosing.
+The next subsection is about pairing and choosing.
 
 
 
-\paragraph{System and user step $(e_1 \Then e_2, e_1 \Next e_2)$}
+\paragraph{Internal and external step $(e_1 \Then e_2, e_1 \Next e_2)$}
 
 One might think that the best way to sequence tasks is by just following one task with another:
 do this, then do that, then that, etc.
@@ -261,11 +260,21 @@ when evaluated, result in something of type $\Task$.
 Therefore,
 we extend our pretasks $p$ with a sequence construct $\Then$.
 
-The accompanied typing rule is \refrule{T-Then}.
+The accompanied typing rules are \refrule{T-Then} and \refrule{T-Next}.
 Note that typing ensures us that the left hand side $e_1$ will be a task delivering a value of type $\tau_1$.
 The right hand side $e_2$ then, will use this value of type $\tau_1$,
 and calculate a new task of type $\Task \tau_2$,
 holding a value of (possibly another) type $\tau_2$.
+
+
+
+\paragraph{Fail $(\Fail)$}
+
+\fixme{Write section on fail}
+
+
+
+\subsection{Side-by-side}
 
 
 
@@ -275,13 +284,13 @@ holding a value of (possibly another) type $\tau_2$.
 
 
 
-\paragraph{System and user choice $(e_1 \Or e_2, e_1 \Xor e_2)$}
+\paragraph{Internal and external choice $(e_1 \Or e_2, e_1 \Xor e_2)$}
 
 \fixme{Write section on choice}
 
 
 
-\subsection{Users}
+\subsection{Annotations}
 
 \paragraph{Appoint $(u \At e)$}
 
