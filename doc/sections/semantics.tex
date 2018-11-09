@@ -177,6 +177,20 @@ till the moment it needs an event to continue.
 For editors and the failing task normalisation is simple.
 % In the next subsection we will introduce rules to normalise a task sequence.
 
+\begin{example}[Delay]
+
+An implementation for the \TS{delay} task used in \autoref{exm:timeout} could be defined as shown below.
+\begin{TASK}[emph={asked,start,now}]
+  let delay : Int -> Task Unit = \asked : Int.
+    update time >>= \start : Int.
+    update time >>= \now : Int.
+      if now >= start + asked then edit <<>> else fail
+\end{TASK}
+So only when the current time is bigger or equal to the start time plus the asked delay,
+the last step will be taken and the task returns the unit value.
+
+\end{example}
+
 
 
 \subsection{Observations on tasks}
