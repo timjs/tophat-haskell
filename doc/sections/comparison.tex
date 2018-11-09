@@ -1,5 +1,7 @@
 % !TEX root=../pldi2019.tex
 
+
+
 \section{Intuition}
 
 This section gives an overview over the essential concepts of \TOP and how they are represented in \TOPHAT.
@@ -17,11 +19,12 @@ As a matter of fact the primitives can certainly be expressed in terms of each o
 Instead, we point out how the systems emphasize certain points of view by choosing different building blocks to achieve the same effect.
 
 
+
 \paragraph{Scope}
 
 The central objective of \TOP is to coordinate the collaboration between people who work together to reach a common goal.
 \TOP is a language to specify workflows.
-\TOP focuses on collaboration, and has combinators to express ways in which people can work together. 
+\TOP focuses on collaboration, and has combinators to express ways in which people can work together.
 Tasks can be executed after each other, at the same time, or conditionally.
 This motivates the task combinators for internal and external steps, parallel \emph{and} and \emph{or}, and choice.
 To employ these patterns of collaboration, users need to communicate.
@@ -84,7 +87,8 @@ In \TOP, event values are typed to match the type of the receiving editor.
 In \CSP, action names are essentially strings, subject to implicit restrictions.
 
 
-\paragraph{Example: vending machine}
+
+\begin{example}[Vending machine]
 
 This example demonstrates external communication and choice.
 
@@ -103,6 +107,9 @@ This editor stands for a coin slot in a real machine that freely accepts and ret
 There is a continue button that is initially disabled.
 When the user has input exactly 1 or 2 coins, the continue button becomes enabled.
 When the user presses the continue button, the machine dispenses either a large or a small biscuit, depending on the amount of money.
+
+\end{example}
+
 
 
 \paragraph{Communication between subsystems}
@@ -128,6 +135,7 @@ This means internal steps have priority over external communication.
 This introduces the possibility of diverging computations, that is processes which continuously take internal steps without ever being able to engage in external communication.
 
 
+
 \paragraph{Sequential composition}
 
 The intuition about sequential composition is to first do one thing, and once it is done, do some other thing.
@@ -145,6 +153,7 @@ The process $P;Q$ behaves like $P$ until $P$ terminates successfully, after whic
 If $P$ never terminates successfully, neither does $P;Q$
 
 \CSP's semicolon is like an internal step $t \Then c$ in \TOP where $t$ uses $\Unit$ to signal when it is done, and $c$ never fails.
+
 
 
 \subsection{Multiprogramming}
@@ -174,6 +183,7 @@ All interleavings are permitted.
 Actions that occur in both alphabets are nondeterministically taken by either $P$ or $Q$.
 
 
+
 \paragraph{Synchronization}
 
 Synchronization means that an agent has to pause execution until some condition is met.
@@ -200,7 +210,8 @@ They both have to wait for the condition that the other process is ready to take
 All synchronization problems in \CSP must be solved by employing synchronized steps in some form.
 
 
-\paragraph{Example: Cigarette smokers}
+
+\begin{example}[Cigarette smokers]
 
 The cigarette smokers problem \cite{books/Downey08LBOS} is a surprisingly tricky synchronization problem.
 We study it here because it demonstrates the capabilities of guarded steps.
@@ -246,6 +257,9 @@ The smokers are defined as follows.
   continue = \<<x,y>>. if x && y then smoke else fail
 \end{TASK}
 When the agent supplies two of the ingredients by setting the respective shares to $\True$, only the step of the smoker that waits for those becomes enabled.
+
+\end{example}
+
 
 
 \paragraph{Nondeterminism}

@@ -20,6 +20,10 @@ The application works as follows.
 For this example we assume that the host language has lists and two functions on them: intersect and difference.
 For brevity, we omit the type annotations of variable bindings.
 
+
+
+\begin{example}[Flight booking]
+
 We start by defining some type aliases.
 A passenger is a pair with name and age.
 A seat is a pair with a row number and a seat letter.
@@ -69,6 +73,10 @@ and run these tasks in parallel.
 \begin{TASK}
   u1 @ bookFlight <&> u2 @ bookFlight <&> u3 @ bookFlight
 \end{TASK}
+
+\end{example}
+
+
 
 \begin{figure}[h]
   \includegraphics[width=\columnwidth]{figures/flight-booking.png}
