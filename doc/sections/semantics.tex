@@ -95,6 +95,78 @@ With other words:
 
 
 
+\subsection{Observations on tasks}
+
+\fixme{Extend section}
+Task observations are simple semantic functions looking at the syntax tree of a task.
+
+% \begin{figure*}[t]
+%   \small
+%   \usemacro{O-Failing-Compact} \hfill \usemacro{O-Value-Compact} \hfill \usemacro{O-Inputs-Compact}
+%   \caption{Observations on tasks}
+%   \label{fig:observations}
+% \end{figure*}
+
+
+
+\paragraph{Task value}
+
+The question remains what value we have to associate to a task sequence.
+The answer is: none!
+Imagine the task $t := \Edit \str{Hello} \Then \lambda s.\allowbreak\Edit (\Length s)$,
+where a user entered a string and our task gives the length of the string as the result.
+Recall the definition of $\Value(t)$ from \autoref{sec:value}.
+The value of the left hand side of $t$ is the string $\str{Hello}$.
+After stepping to the right hand side,
+the value of $t$ should be $\Value(\Edit (\Length\str{Hello})) = \Value(\Edit 5) = 5$.
+This means the type of the value \emph{changed} after taking the step.
+\todo{Elaborate more about why this is not desirable.}
+Therefore we define that a sequence of tasks \emph{does not} have a value.\footnote{
+  We could choose that the value of a sequence equals the value of the left hand side.
+  This will have fatal consequences for our stepping semantics however.
+}
+
+\begin{figure}[h]
+  \small
+  \usemacro{O-Value}
+  \caption{Values} \label{fig:observation-value}
+\end{figure}
+
+
+
+\paragraph{Failing}
+
+When an expression fails, it can not be normalised and there is no possible
+input that it will handle. The function $\Failing$ determines this property.
+
+% Almost there!
+We did not extend the functions $\Failing(t)$ and $\Value(t)$ for our new sequencing construct $\Then$.
+Intuitively,
+when we have a task $\Fail \Then e_2$ we are stuck.
+As in the case of just the task $\Fail$,
+users can send any event,
+but nothing will ever happen.
+$\Fail$ will never have a value
+and therefore $\Then$ will never make a step to $e_2$.
+If the left hand side of $\Then$ is any other task,
+all will be well.
+Thus,
+a sequence $t_1 \Then e_2$ is succeeding iff its left hand side $t_1$ is succeeding.
+
+\begin{figure}[h]
+  \small
+  \usemacro{O-Failing}
+  \caption{Failing} \label{fig:observation-failing}
+\end{figure}
+
+
+
+\paragraph{User Interface}
+
+\fixme{Add \UI observation or not?}
+
+
+
 \subsection{Stepping from one task to another}
 \label{sec:normalise}
 
@@ -179,87 +251,48 @@ For editors and the failing task normalisation is simple.
 
 
 
-\subsection{Observations on tasks}
+\paragraph{Two principles of stepping}
+\label{sec:stepping-principles}
 
-\fixme{Extend section}
-Task observations are simple semantic functions looking at the syntax tree of a task.
+\fixme{Add principles}
 
-% \begin{figure*}[t]
-%   \small
-%   \usemacro{O-Failing-Compact} \hfill \usemacro{O-Value-Compact} \hfill \usemacro{O-Inputs-Compact}
-%   \caption{Observations on tasks}
-%   \label{fig:observations}
-% \end{figure*}
+Above rules imply that we have three cases when normalising a sequence.
+First,
+it could be the case that the left hand side does not have a value after normalisation.
+This means we cannot pass a value to the right hand side
+and thus we cannot make the step.
+\refrule{S-ThenStay}
 
+Second,
+the normalised left hand side has a value,
+but when evaluating the right hand side,
+it leads to a failing task.
+We do not allow stepping to a failing task
+and thus we also cannot make a step.
+\refrule{S-ThenFail}
+Note we use the evaluation semantics of our host language
+to evaluate the function application $e_2\ v_1$ to a new task $t_2$.
 
+Third,
+the normalised left hand side has a value,
+and the evaluated right hand side is a succeeding task.
+Now we can make a step!
+\refrule{S-ThenCont}
+Note we normalise $t_2$ first before yielding our result.
 
-\paragraph{Task value}
-
-The question remains what value we have to associate to a task sequence.
-The answer is: none!
-Imagine the task $t := \Edit \str{Hello} \Then \lambda s.\allowbreak\Edit (\Length s)$,
-where a user entered a string and our task gives the length of the string as the result.
-Recall the definition of $\Value(t)$ from \autoref{sec:value}.
-The value of the left hand side of $t$ is the string $\str{Hello}$.
-After stepping to the right hand side,
-the value of $t$ should be $\Value(\Edit (\Length\str{Hello})) = \Value(\Edit 5) = 5$.
-This means the type of the value \emph{changed} after taking the step.
-\todo{Elaborate more about why this is not desirable.}
-Therefore we define that a sequence of tasks \emph{does not} have a value.\footnote{
-  We could choose that the value of a sequence equals the value of the left hand side.
-  This will have fatal consequences for our stepping semantics however.
-}
-
-\begin{figure}[h]
-  \small
-  \usemacro{O-Value}
-  \caption{Values} \label{fig:observation-value}
-\end{figure}
-
+The sequence construct itself does not handle any user input.
+The left hand side however,
+can be an interactive task, such as an editor.
+To reach this encapsulated interactive task,
+$\Then$ needs to pass inputs to the left.
+\refrule{H-PassThen}
 
 
-\paragraph{Failing}
+\paragraph{Three principles of choosing}
+\label{sec:choosing-principles}
 
-When an expression fails, it can not be normalised and there is no possible
-input that it will handle. The function $\Failing$ determines this property.
+\fixme{Add principles}
 
-% Almost there!
-We did not extend the functions $\Failing(t)$ and $\Value(t)$ for our new sequencing construct $\Then$.
-Intuitively,
-when we have a task $\Fail \Then e_2$ we are stuck.
-As in the case of just the task $\Fail$,
-users can send any event,
-but nothing will ever happen.
-$\Fail$ will never have a value
-and therefore $\Then$ will never make a step to $e_2$.
-If the left hand side of $\Then$ is any other task,
-all will be well.
-Thus,
-a sequence $t_1 \Then e_2$ is succeeding iff its left hand side $t_1$ is succeeding.
-
-\begin{figure}[h]
-  \small
-  \usemacro{O-Failing}
-  \caption{Failing} \label{fig:observation-failing}
-\end{figure}
-
-
-
-\paragraph{Inputs}
-
-\fixme{Add inputs description}
-
-\begin{figure}[h]
-  \small
-  \usemacro{O-Inputs}
-  \caption{Inputs} \label{fig:observation-value}
-\end{figure}
-
-
-
-\paragraph{User Interface}
-
-\fixme{Add \UI observation}
 
 
 
@@ -363,40 +396,17 @@ These conditions make sure the type of the entered value and the type of the edi
 
 
 
-\paragraph{Two principles of stepping}
-\label{sec:normalise-sequence}
+\paragraph{Inputs}
 
-\fixme{Where to put this?}
-Above rules imply that we have three cases when normalising a sequence.
-First,
-it could be the case that the left hand side does not have a value after normalisation.
-This means we cannot pass a value to the right hand side
-and thus we cannot make the step.
-\refrule{S-ThenStay}
+\fixme{Add inputs description}
 
-Second,
-the normalised left hand side has a value,
-but when evaluating the right hand side,
-it leads to a failing task.
-We do not allow stepping to a failing task
-and thus we also cannot make a step.
-\refrule{S-ThenFail}
-Note we use the evaluation semantics of our host language
-to evaluate the function application $e_2\ v_1$ to a new task $t_2$.
+\begin{figure}[h]
+  \small
+  \usemacro{O-Inputs}
+  \caption{Inputs} \label{fig:observation-value}
+\end{figure}
 
-Third,
-the normalised left hand side has a value,
-and the evaluated right hand side is a succeeding task.
-Now we can make a step!
-\refrule{S-ThenCont}
-Note we normalise $t_2$ first before yielding our result.
 
-The sequence construct itself does not handle any user input.
-The left hand side however,
-can be an interactive task, such as an editor.
-To reach this encapsulated interactive task,
-$\Then$ needs to pass inputs to the left.
-\refrule{H-PassThen}
 
 
 
