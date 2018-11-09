@@ -307,12 +307,13 @@ External steps are performed upon user's request.
 Only when users decide to continue with the next task,
 a step is taken.
 Both internal and external steps can be guarded by using an $\If{}{}{}$ expression,
+\todo{Change guarded to conditional}
 as we will see in the next example.
 
 
 
-\begin{example}[Guarded stepping]
-\label{exm:guards}
+\begin{example}[Conditional stepping]
+\label{exm:conditions}
 
 Take this little task.
 \begin{TASK}
@@ -353,7 +354,7 @@ the failing task does not.
 
 \begin{example}[Failing guards]
 
-Let us slightly change the guarded step from \autoref{exm:guards}:
+Let us slightly change the guarded step from \autoref{exm:conditions}:
 \begin{TASK}
   enter Int >>= \n. if n == 42 then edit "Correct" else fail
 \end{TASK}
@@ -365,6 +366,21 @@ possibly clearing it in between.
 At the moment the value of the left hand side is $42$,
 the right hand side will evaluate to the sensible task \TS{edit "Correct"},
 and the step will be made.
+
+\end{example}
+
+\begin{example}[Delay]
+
+\todo{Which example where?}
+An implementation for the \TS{delay} task used in \autoref{exm:timeout} could be defined as shown below.
+\begin{TASK}[emph={asked,start,now}]
+  let delay : Int -> Task Unit = \asked : Int.
+    update time >>= \start : Int.
+    update time >>= \now : Int.
+      if now >= start + asked then edit <<>> else fail
+\end{TASK}
+So only when the current time is bigger or equal to the start time plus the asked delay,
+the last step will be taken and the task returns the unit value.
 
 \end{example}
 
@@ -383,6 +399,7 @@ and the step will be made.
 \paragraph{Internal and external choice $(e_1 \Or e_2, e_1 \Xor e_2)$}
 
 \fixme{Write section on choice}
+\todo{Add timeout example somewhere here.}
 
 
 
@@ -398,7 +415,7 @@ which is common in workflow modelling.
 
 \paragraph{Appoint $(u \At e)$}
 
-\fixme{Write section on appointing users}
+\fixme{Write section on users}
 \begin{itemize*}
   \item How to create users?
   \item What is their type?
