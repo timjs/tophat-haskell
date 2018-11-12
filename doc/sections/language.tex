@@ -423,7 +423,7 @@ we will make user of the \TS{wait}-task from \autoref{exm:wait}.
   let cancel : Task Unit = edit <<>> in
   let delay : Int -> Task Unit -> Task Unit =
     \n : Int. \proceed : Task Unit.
-    (proceed <?> cancel) <|> (wait n >>= \<<>>. proceed)
+    (proceed <?> cancel) <|> (wait n >>= \u : Unit. proceed)
 \end{TASK}
 Note this task is higher-order:
 it is a task which takes another task as a parameter.
