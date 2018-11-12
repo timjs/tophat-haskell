@@ -40,40 +40,16 @@ Simpler combinators are implemented by restricting the powerful ones.
 This is useful for everyday programming, where having lots of functionality at one's fingertips is convenient and efficient.
 This approach does not lend itself well to formal treatment however, as it obscures what the essential features of \TOP are, and how they interact.
 
-
-
-\paragraph{Motivations}
-\begin{itemize*}
-  \item Formal basis needed for research.
-  \item Prove properties of interactive workflows.
-  \item Clearly specify the basic concepts needed to model workflows
-    and separate these from general purpose programming concepts.
-  \item Compare \TOP with processes and process algebra's like \CSP and \CCS.
-\end{itemize*}
-
+In this paper, we set out to develop a formal basis for \TOP, with the goal of specifying the basic building blocks of declarative workflows.
+We clearly separate them from general purpose programming concepts.
+This allows us to prove properties like progress and type preservation.
 
 \paragraph{Contributions}
-\begin{itemize*}
-  \item A calculus to model workflows, which can be used in a modular way and are driven by user inputs.
-  \item Embed this calculus in a simply typed $\lambda$-calculus.
-  \item Its operational semantics, presented and defined in a layered way.
-  \item Semantic observations on the calculus which can be used to:
-  \begin{itemize*}
-    \item calculate stuck configurations,
-    \item associate a value with a task,
-    \item draw a user interface (\UI) for a task,
-    \item calculate input possibilities for the user.
-  \end{itemize*}
-  \item A clear separation between \TOP principles and general purpose programming constructs.
-\end{itemize*}
+We present a task calculus for modeling declarative workflows, embedded in a simply typed lambda-calculus.
+We develop an operational semantics that is driven by user inputs.
+The semantics of the task language is clearly separated from the semantics of the underlying host language.
+Furthermore, we present the following semantic observations on tasks: the current value, the current user interface, the accepted inputs, and whether a term is stuck.
+All these observations exist in iTasks, albeit combined into one big type.
+By separating them in the style of a deep embedding \cite{conf/cefp/Gibbons13}, we make explicit where, and where not, they depend on each other.
 
-
-\paragraph{Background}
-
-
-The goal of this paper is to develop a calculus that serves as a formal foundation for \TOP.
-The calculus is called Top Hat, written \TOPHAT.
-Starting with combinators that have a single responsibility, we show how more complicated combinators can be expressed in terms of those.
-\TOPHAT models a subset of iTasks, striking a balance between covering the features of the actual implementation and being suitable for formal treatment.
-In this way we identify the essential basic features of \TOP and study them in isolation.
-This approach makes the process algebra-like flavour of iTasks precise, and allows comparison with other works in the field.
+Furthermore we compare our calculus with the process algebra \CSP, to show how their concepts like communication, and sequential and parallel composition relate.
