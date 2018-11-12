@@ -53,8 +53,8 @@ following Theorem holds.
   \label{thm:pres-norm}
 \end{theorem}
 
-Since this semantics makes use of the value function $\Value$, we first need to
-show that this function also preserves types.
+Since this semantics makes use of the value function $\Value$ and the striding semantics $\stride$. We first need to
+show that preservation also holds for these two semantics.
 
 \begin{lemma}[Task value preserves]
   % For all well typed expressions $e$ and states $s$,
@@ -63,6 +63,14 @@ show that this function also preserves types.
   if $\Value{(e,s)}=v$,
   then $v:\tau$.
   \label{lem:presvalue}
+\end{lemma}
+
+\begin{lemma}[Striding preserves]
+  For all expressions $e$ and states $s$
+  such that $\Gamma,\Sigma \infers e:\Task\tau$ and $\Sigma \infers s$,
+  if $e,s \stride e',s'$,
+  then $\Gamma,\Sigma \infers e':\tau$ and $\Sigma \infers s'$.
+  \label{thm:pres-stride}
 \end{lemma}
 
 Lemma~\ref{lem:presvalue} states exactly this property, and is proven in the
