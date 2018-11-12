@@ -92,15 +92,14 @@ The typing rules for pretasks are given in \autoref{fig:typing-rules}.
 
 \subsection{Editors}
 
-In the introduction we claimed to create a language to model \emph{interactive} workflows.
-By interaction we mean \emph{communication with people using the developed system}.
-These end users should be able to enter information into the system,
-change it, clear it, reenter it, etc.
-To do this, we introduce the concept of an \emph{editor}.
+Programs in \TOPHAT model \emph{interactive} workflows.
+Interaction means communication with end users.
+End users should be able to enter information into the system, change it, clear it, reenter it, and so on.
+To do this, we introduce the concept of \emph{editors}.
 
-Editors may or may not contain a current value.
-When an editor has a value, it can be \emph{changed} or it can be \emph{emptied}.
-When it is empty, a value can be \emph{filled}.
+Editors either have a current value or are empty.
+Editors that have a value can be \emph{changed} or \emph{emptied}.
+Empty editors can be \emph{filled}.
 This is depicted as a state diagram in \autoref{fig:editor-state} below.
 
 \begin{figure}[h]
@@ -108,7 +107,7 @@ This is depicted as a state diagram in \autoref{fig:editor-state} below.
   \includegraphics[width=\columnwidth,page=3]{figures/drawings-crop.pdf}
   \caption{
     Possible states of an editor and its transitions.
-    Note that shared editors cannot be cleared.
+    Shared editors cannot be cleared.
   }
   \label{fig:editor-state}
 \end{figure}
