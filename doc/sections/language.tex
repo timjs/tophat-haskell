@@ -12,14 +12,14 @@
 The host language is a simply typed lambda calculus, extended with some basic types and \ML-style references.
 The grammar in \autoref{fig:language-grammar} defines the syntax of the host language.
 It has abstractions, applications, variables, and constants for booleans, integers and strings.
-The symbol $(\star)$ stands for binary operators.
+The symbol $\star$ stands for binary operators.
 For the result of parallel tasks we need pairs.
 Conditionals come in handy for defining guards.
 References will be used to implement shared editors.
 Our treatment of references closely follows the one by \citet{books/Pierce02TAPL}.
 Creating a reference using the keyword $\Ref$ yields a location $l$.
 Locations are not intended to be directly manipulated by the programmer.
-The symbols (!) and $(:=)$ stand for dereferencing and assignment.
+The symbols ! and $:=$ stand for dereferencing and assignment.
 The unit value will be used as the result of assignments.
 
 \begin{figure}[h]
@@ -29,27 +29,15 @@ The unit value will be used as the result of assignments.
 \end{figure}
 
 \label{sub:notation}
-We will use double quotation marks ($\str{}$) to denote strings.
-Integers are denoted by their decimal representation,
-and booleans are written $\True$ and $\False$.
-We will freely make use of the logic operators $\Not$, $\land$, and $\lor$,
-arithmetic operators $+$, $-$, $\times$,
-and the string append operator $\pp$.
-Also, we will use the standard comparison operations $<$, $\le$, $\equiv$, $\not\equiv$, $\ge$, and $>$
-as builtins.
-Only when referring to operators in general we will use $\star$,
-like in evaluation rules.
-\label{sub:abbreviations}
-Also, we will use the notation $e_1; e_2$
-as an abbreviation for $(\lambda x:\Unit.\ e_2)\ e_1$,
-and the notation $\Let x:\tau = e_1 \In e_2$
-as an abbreviation for $(\lambda x:\tau.\ e_2)\ e_1$.
-In both expressions $x$ is a fresh variable.
+We use double quotation marks to denote strings.
+Integers are denoted by their decimal representation, and booleans are written $\True$ and $\False$.
+We freely make use of the logic operators $\Not$, $\land$, and $\lor$, arithmetic operators $+$, $-$, $\times$, and the string append operator $\pp$.
+Furthermore, we use standard comparison operations $<$, $\le$, $\equiv$, $\not\equiv$, $\ge$, and $>$.
+The symbol $\star$ stands for any of those.
 
-We will embed our task language into this basic language.
-This means we can use all the power of the host language,
-such as arithmetic operations and (higher order) functions,
-in our task language.
+\label{sub:abbreviations}
+The notation $e_1; e_2$ is an abbreviation for $(\lambda x:\Unit.\ e_2)\ e_1$, where $x$ is a fresh variable.
+The notation $\Let x:\tau = e_1 \In e_2$ is an abbreviation for $(\lambda x:\tau.\ e_2)\ e_1$.
 
 \label{sub:pretasks}
 The syntactic category $p$ of \emph{pretasks},
