@@ -112,28 +112,16 @@ This is depicted as a state diagram in \autoref{fig:editor-state} below.
   \label{fig:editor-state}
 \end{figure}
 
-One can consider editors as an abstraction over widgets in a \GUI,
-form fields on a webpage,
-or even sensors plugged into the system.
-Take for example the input entry for age,
-from \autoref{exm:flight-booking}.
-Users can enter an integer, change it, remove it, enter another integer, and so on.
-With editors we try to capture this \emph{constantly changing nature of user input}.
-Also, because editors are \emph{typed},
-they are only allowed to contain information of the right format,
-as we have seen in \autoref{fig:flight-booking}.
+Editors stand for various forms of input and output, for example widgets in a \GUI, form fields on a webpage, sensors, or network connections.
 
-How exactly information is entered is not of great importance.
-This could be an input field for a string,
-a switch for a boolean,
-a spin box for an angle,
-or even a map with a pin for a location.
-% \Autoref{fig:editor-examples} depicts these examples.
-\todo{Add figure with widget examples or not?}
-In it's most banal form,
-an editor is a line of text entered at a terminal and parsed to match
-a string, boolean, angle or location value.
+Take for example the editor for a person's age from \autoref{exm:flight-booking}.
+Users can enter an integer, change it, clear it, until they are satisfied with it.
+Editors are meant capture this constantly changing nature of user input.
+Editors are \emph{typed}, and therefore only capable of containing information of the right format.
 
+The user interface of an editor depends on its type.
+This could be an input field for strings, a toggle switch for booleans, or even a map with a pin for locations.
+It could also be a parser that tries to parse a line of text to match the type of the editor.
 
 
 \paragraph{Valued and unvalued editors $(\Edit e, \Enter \tau)$}
