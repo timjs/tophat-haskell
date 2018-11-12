@@ -238,6 +238,7 @@ This will be immediately reflected on Christopher's screen:
 the pin will change its position on the map.
 This way, Marco and Christopher can work together editing the same information.
 
+\label{sub:time}
 Another important use case for shared editors is sensors.
 Sensors can be modelled by users updating the value of a shred editor once in a while.
 Take for example the task to view the current time: \TS{update time}
@@ -369,18 +370,26 @@ and the step will be made.
 
 \end{example}
 
-\begin{example}[Delay]
 
-\todo{Which example where?}
-An implementation for the \TS{delay} task used in \autoref{exm:timeout} could be defined as shown below.
-\begin{TASK}[emph={asked,start,now}]
-  let delay : Int -> Task Unit = \asked : Int.
+
+\begin{example}[Wait]\label{exm:wait}
+
+\lstset{emph={amount,start,now}}
+Combining the language constructs we presented till now,
+we can create a task that is idle for a requested amount of time.
+To do this,
+we make use of a shared editor holding the current time (see \autoref{sub:time}),
+and a guarded internal step.
+\begin{TASK}
+  let wait : Int -> Task Unit = \amount : Int.
     update time >>= \start : Int.
     update time >>= \now : Int.
-      if now >= start + asked then edit <<>> else fail
+      if now >= start + amount then edit <<>> else fail
 \end{TASK}
-So only when the current time is bigger or equal to the start time plus the asked delay,
-the last step will be taken and the task returns the unit value.
+The first step is immediately taken.
+It will result in \TS{start} to be the time at the moment \TS{wait} is executed.
+Only when the current time \TS{now} is bigger or equal to the start time plus the asked delay,
+the second step will be taken and we will continue with an editor holding the unit value.
 
 \end{example}
 
@@ -399,7 +408,27 @@ the last step will be taken and the task returns the unit value.
 \paragraph{Internal and external choice $(e_1 \Or e_2, e_1 \Xor e_2)$}
 
 \fixme{Write section on choice}
-\todo{Add timeout example somewhere here.}
+
+\begin{example}[Delay]
+
+\lstset{emph={n,proceed}}
+
+To illustrate the usage of internal and external choices,
+we will create an example which will ask users explicitly to proceed with a task or to cancel.
+When users do not make a choice within a given amount of time,
+we will automatically proceed.
+To do this,
+we will make user of the \TS{wait}-task from \autoref{exm:wait}.
+\begin{TASK}
+  let cancel : Task Unit = edit <<>> in
+  let delay : Int -> Task Unit -> Task Unit =
+    \n : Int. \proceed : Task Unit.
+    (proceed <?> cancel) <|> (wait n >>= \<<>>. proceed)
+\end{TASK}
+Note this task is higher-order:
+it is a task which takes another task as a parameter.
+
+\end{example}
 
 
 
