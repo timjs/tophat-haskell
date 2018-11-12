@@ -1,14 +1,36 @@
 % !TEX root=../pldi2019.tex
 
+
+
 \section{Semantics}
 
-\fixme{Introduce the layered semantics}
+In the previous section we introduced our workflow calculus,
+and described semantics of each construct intuitively.
+In this section we will formalise this intuition.
+To do this,
+we need to take into account the way our calculus is structured.
+Firstly,
+we have seen our workflow calculus is embedded into a simply typed $\lambda$-calculus.
+This requires us to specify how the host language \emph{evaluates} its expressions,
+and how it handles our domain language.
+Secondly,
+the previous sections describe two ways to decide how to proceed from one task to another:
+internally by the system itself, or externally by the user.
+This means we need two additional semantics:
+one to specify the internal \emph{normalisation} of tasks,
+and another to define the \emph{interaction} with the end user.
 
-Graphically,
-we will have the semantic functions shown in \autoref{fig:semantic-functions}.
-Note that the double down arrow $\normalise$ \emph{uses} the single down arrow $\evaluate$,
-a convention we also use with the single arrow pointing right $\handle{}$,
-which uses the double arrow pointing right $\drive{}$.
+The reader may accurately point out that evaluation and normalisation could be merged.
+We do not choose to do so,
+because we would pollute the host language semantics with workflow specific semantics.
+By lifting normalisation to an additional layer,
+tasks will be ordinary values for the host language.
+
+Thus the three main layers of semantics we need to discuss are evaluation, normalisation, and interaction.
+\Autoref{fig:semantic-functions} shows the relation between these semantics.
+It also shows that we will make use of two \emph{helper semantics}.
+Normalisation will make use of \emph{striding} semantics,
+and interaction makes use of \emph{handling} semantics.
 
 \begin{figure}[h]
   \centering
@@ -18,6 +40,12 @@ which uses the double arrow pointing right $\drive{}$.
   }
   \label{fig:semantic-functions}
 \end{figure}
+
+To aid the reader,
+we use the convention that downward arrows represent big-step semantics,
+and rightward arrows are small-step semantics.
+Also, double arrows make use of single arrows,
+for example, the double down arrow $\normalise$ \emph{uses} the single down arrow $\evaluate$.
 
 
 
@@ -95,10 +123,8 @@ With other words:
 
 
 
-\subsection{Observations on tasks}
-
-\fixme{Extend section}
-Task observations are simple semantic functions looking at the syntax tree of a task.
+% \fixme{Extend section}
+% Task observations are simple semantic functions looking at the syntax tree of a task.
 
 % \begin{figure*}[t]
 %   \small
@@ -167,7 +193,7 @@ a sequence $t_1 \Then e_2$ is succeeding iff its left hand side $t_1$ is succeed
 
 
 
-\subsection{Stepping from one task to another}
+\subsection{Normalising tasks}
 \label{sec:normalise}
 
 Stepping from one task to another using the sequence construct $\Then$ is done by the system itself,
@@ -296,7 +322,7 @@ $\Then$ needs to pass inputs to the left.
 
 
 
-\subsection{Handling inputs}
+\subsection{Handling user inputs}
 \label{sec:handling}
 
 To change values in an editor,
