@@ -9,24 +9,18 @@
 \subsection{Expressions}
 
 \label{sub:expressions}
-We take our host language to be a simply typed $\lambda$-calculus
-extended with some basic types and \ML-style references.
-The grammar in \autoref{fig:language-grammar} defines our language expressions.
-Next to abstraction, application and variables,
-we add constants for booleans, integers and strings.
-We represent binary operations on these types by a $\star$.
-
-The used extensions are \fixme{indicated} by the way we model tasks.
-For the result of parallel tasks,
-we need pairs.
-An $\If{}{}{}$ expression comes in hand when defining guards.
-To implement shared editors,
-we will make use of references.
-Creating a reference using the keyword $\Ref$ will result in a location $l$.
-Locations are internal to the language and not intended to be directly manipulated by the programmer.
-Dereferencing is done by using a bang,
-for assigned one can use the $:=$ operator.
-The unit value will be used as the result of an assignment.
+The host language is a simply typed lambda calculus, extended with some basic types and \ML-style references.
+The grammar in \autoref{fig:language-grammar} defines the syntax of the host language.
+It has abstractions, applications, variables, and constants for booleans, integers and strings.
+The symbol $(\star)$ stands for binary operators.
+For the result of parallel tasks we need pairs.
+Conditionals come in handy for defining guards.
+References will be used to implement shared editors.
+Our treatment of references closely follows the one by \citet{books/Pierce02TAPL}.
+Creating a reference using the keyword $\Ref$ yields a location $l$.
+Locations are not intended to be directly manipulated by the programmer.
+The symbols (!) and $(:=)$ stand for dereferencing and assignment.
+The unit value will be used as the result of assignments.
 
 \begin{figure}[h]
   \small
