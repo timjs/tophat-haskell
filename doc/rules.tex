@@ -350,13 +350,13 @@
   {e,s \normalise t,s'}
 
 
-\newrule{N-Done}[s=s'']
+\newrule{N-Done}[s'=s'']
     {e,s \evaluate t,s'  \Quad
      t,s' \stride t',s''}
     {e,s \normalise t',s''}
 
 
-\newrule{N-Stride}[s\neq s'']
+\newrule{N-Stride}[s'\neq s'']
     {e,s \evaluate t,s'  \Quad
      t,s' \stride t',s''  \Quad
      t',s'' \normalise t'',s'''}
