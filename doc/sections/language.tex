@@ -40,15 +40,10 @@ The notation $e_1; e_2$ is an abbreviation for $(\lambda x:\Unit.\ e_2)\ e_1$, w
 The notation $\Let x:\tau = e_1 \In e_2$ is an abbreviation for $(\lambda x:\tau.\ e_2)\ e_1$.
 
 \label{sub:pretasks}
-The syntactic category $p$ of \emph{pretasks},
-is further specified in \autoref{fig:task-grammar}.
-A pretask $p$ is a task \emph{in making},
-just as an expression is a value in making.
-In the next subsections we will discuss each category of pretasks:
-editors, steps and combinations.
-As a general rule of thumb,
-we will use open symbols ($\Edit, \Enter, \Next, \Xor$) where user input is required,
-and closed symbols ($\Update, \Then, \Or$) where language constructs themself can make decisions.
+The grammar in \autoref{fig:task-grammar} specifies the syntactic category of \emph{pretasks}.
+Pretasks are tasks that have unevaluated subexpressions.
+Pretasks are discussed in more detail in the following sections.
+We use open symbols ($\Edit, \Enter, \Next, \Xor$) for tasks that require user input, and closed symbols ($\Update, \Then, \Or$) for tasks that can be evaluated without user input.
 
 \begin{figure}[h]
   \small
