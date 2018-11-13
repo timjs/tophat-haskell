@@ -17,7 +17,7 @@ import qualified GHC.Show as Show
 -- Class -----------------------------------------------------------------------
 
 
-type Basic a = ( Show a, Eq a, Typeable a, Arbitrary a ) -- Coarbitrary a )
+type Basic a = ( Show a, Read a, Eq a, Typeable a, Arbitrary a ) -- Coarbitrary a )
 
 
 
