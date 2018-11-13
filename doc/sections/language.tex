@@ -92,12 +92,12 @@ The typing rules for pretasks are given in \autoref{fig:typing-rules}.
 
 \subsection{Editors}
 
-Programs in \TOPHAT model \emph{interactive} workflows.
+Programs in \TOPHAT model interactive workflows.
 Interaction means communication with end users.
 End users should be able to enter information into the system, change it, clear it, reenter it, and so on.
-To do this, we introduce the concept of \emph{editors}.
+To do this, we introduce the concept of editors.
 
-Editors either have a current value or are empty.
+Editors are typed containers that either hold a value or are empty.
 Editors that have a value can be \emph{changed} or \emph{emptied}.
 Empty editors can be \emph{filled}.
 This is depicted as a state diagram in \autoref{fig:editor-state} below.
@@ -114,10 +114,9 @@ This is depicted as a state diagram in \autoref{fig:editor-state} below.
 
 Editors stand for various forms of input and output, for example widgets in a \GUI, form fields on a webpage, sensors, or network connections.
 
-Take for example the editor for a person's age from \autoref{exm:flight-booking}.
-Users can enter an integer, change it, clear it, until they are satisfied with it.
+Consider the editor for a person's age from \autoref{exm:flight-booking}.
+Users can change the value until they are satisfied with it.
 Editors are meant capture this constantly changing nature of user input.
-Editors are \emph{typed}, and therefore only capable of containing information of the right format.
 
 The user interface of an editor depends on its type.
 This could be an input field for strings, a toggle switch for booleans, or even a map with a pin for locations.
@@ -126,48 +125,9 @@ It could also be a parser that tries to parse a line of text to match the type o
 
 \paragraph{Valued and unvalued editors $(\Edit e, \Enter \tau)$}
 
-At the core,
-an editor is a container holding a value
-or holding nothing.
-Valued editors contain an expression $e$.
-Therefore they inherit the type of $e$,
-but embedded in the container type $\Task$.
-This is expressed by the typing rule for valued editors \refrule{T-Edit}.
-
-Unvalued editors do not have a value,
-and therefore do not wrap an expression.
-Because we strive to a fully typed system,
-we have two options to type unvalued editors:
-\begin{enumerate*}
-  \item let the unvalued editor have a polymorphic type;
-  \item annotate unvalued editors with a type and use that. \label{itm:annotate}
-\end{enumerate*}
-
-The first option sounds appealing.
-However, consider the following use case.
-We start with an editor containing the value two: $\Edit 2$.
-The user can change this value, as long as it is an integer,
-for example to five: $\Edit 5$.
-Clearing the value results in an unvalued editor: $\Enter$.
-Now, are we allowed to enter a value of some other type?
-That is, can we now enter a string?
-This would change the type of the editor
-and violate the preservation theorem proved in \autoref{sub:preservation}!
-Therefore,
-we need to keep track of the type of values that can be entered into an unvalued editor
-and we choose option (\ref{itm:annotate}).
-The typing rule for valued editors can be found in \refrule{T-Enter}.
-
-% Some examples of editors expressible in our language:
-% \begin{itemize}
-%   \item $\Edit 2$ is a valued editor which contains the integer value $2$.
-%   \item $\Enter \String$ is an unvalued editor,
-%     waiting for users to enter some string.
-%   \item $\Edit ((\lambda x . x)\ 5)$ is a valued editor which,
-%     after evaluation, will contain the value $5$.
-%     (We will discuss evaluation of editors in the next section.)
-% \end{itemize}
-
+Editors that hold an expression $e : \tau$ have type $\Task \tau$.
+Empty editors are annotated with a type in order to ensure type safety.
+Without that it would be possible to change the type of a task.
 
 \paragraph{Shared editors $(\Update e)$}
 
