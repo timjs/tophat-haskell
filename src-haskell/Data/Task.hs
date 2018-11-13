@@ -122,13 +122,15 @@ failing (Next this _)   = failing this
 failing (Label _ this)  = failing this
 
 
-inputs :: forall l m a. MonadZero m => MonadRef l m => TaskT l m a -> m (List (Input Dummy))
+inputs :: forall s l m a. Eq s => MonadZero m => MonadState s m => MonadRef l m => TaskT l m a -> m (List (Input Dummy))
 inputs (Edit _) =
   pure $ [ ToHere (AChange tau), ToHere AEmpty ]
-  where tau = Proxy :: Proxy a
+  where
+    tau = Proxy :: Proxy a
 inputs (Store _) =
   pure $ [ ToHere (AChange tau) ]
-  where tau = Proxy :: Proxy a
+  where
+    tau = Proxy :: Proxy a
 inputs (And left rght) = do
   l <- inputs left
   r <- inputs rght
@@ -160,57 +162,68 @@ inputs (Label _ this) =
 -- Normalisation ---------------------------------------------------------------
 
 
-normalise :: MonadRef l m => TaskT l m a -> m (TaskT l m a)
+stride :: MonadRef l m => TaskT l m a -> m (TaskT l m a)
 
 -- Step --
-normalise (Then this cont) = do
-  this_new <- normalise this
+stride (Then this cont) = do
+  this_new <- stride this
   val <- value this_new
   case val of
     Nothing -> pure $ Then this_new cont
     Just v  ->
-      --FIXME: should we use normalise here instead of just eval?
+      --FIXME: should we use stride here instead of just eval?
       let next = cont v in
       if failing next then
         pure $ Then this_new cont
       else
-        normalise next
+        stride next
 
 -- Evaluate --
-normalise (And left rght) = do
-  left_new <- normalise left
-  rght_new <- normalise rght
+stride (And left rght) = do
+  left_new <- stride left
+  rght_new <- stride rght
   pure $ And left_new rght_new
 
-normalise (Or left rght) = do
-  left_new <- normalise left
+stride (Or left rght) = do
+  left_new <- stride left
   val_left <- value left_new
   case val_left of
     Just _  -> pure $ left_new
     Nothing -> do
-      rght_new <- normalise rght
+      rght_new <- stride rght
       val_rght <- value rght_new
       case val_rght of
         Just _  -> pure $ rght_new
         Nothing -> pure $ Or left_new rght_new
 
-normalise (Next this cont) = do
-  this_new <- normalise this
+stride (Next this cont) = do
+  this_new <- stride this
   pure $ Next this_new cont
 
 -- Label --
-normalise (Label l this)
-  | keeper this = normalise this
+stride (Label l this)
+  | keeper this = stride this
   | otherwise = do
-      this_new <- normalise this
+      this_new <- stride this
       pure $ Label l this_new
 
 -- Values --
-normalise task = do
+stride task = do
   pure $ task
 
 
-initialise :: MonadRef l m => TaskT l m a -> m (TaskT l m a)
+normalise :: Eq s => MonadState s m => MonadRef l m => TaskT l m a -> m (TaskT l m a)
+normalise task = do
+  state_old <- get
+  task_new <- stride task
+  state_new <- get
+  if state_old == state_new then
+    pure task_new
+  else
+    normalise task_new
+
+
+initialise :: Eq s => MonadState s m => MonadRef l m => TaskT l m a -> m (TaskT l m a)
 initialise = normalise
 
 
@@ -331,6 +344,6 @@ handle task _ =
   trace CouldNotHandle task
 
 
-drive :: MonadTrace NotApplicable m => MonadRef l m => TaskT l m a -> Input Action -> m (TaskT l m a)
+drive :: Eq s => MonadTrace NotApplicable m => MonadState s m => MonadRef l m => TaskT l m a -> Input Action -> m (TaskT l m a)
 drive task input =
   handle task input >>= normalise
