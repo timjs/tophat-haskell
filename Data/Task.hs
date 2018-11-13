@@ -55,7 +55,9 @@ type Task = TaskT Mem
 -- Observations ----------------------------------------------------------------
 
 
-ui :: MonadRef l m => TaskT m a -> m Text
+ui ::
+  MonadRef l m =>
+  TaskT m a -> m Text
 ui (Edit (Just x)) = pure $ "□(" <> show x <> ")"
 ui (Edit Nothing)  = pure $ "□(_)"
 ui (Store l) = do
@@ -95,7 +97,9 @@ ui (Label l this) = do
   pure $ l <> ":\n\t" <> t
 
 
-value :: MonadRef l m => TaskT m a -> m (Maybe a)
+value ::
+  MonadRef l m =>
+  TaskT m a -> m (Maybe a)
 value (Edit val)      = pure $ val
 value (Store loc)     = Just <$> deref loc
 value (And left rght) = (<&>) <$> value left <*> value rght
@@ -120,7 +124,9 @@ failing (Next this _)   = failing this
 failing (Label _ this)  = failing this
 
 
-inputs :: forall s l m a. Eq s => MonadZero m => MonadState s m => MonadRef l m => TaskT m a -> m (List (Input Dummy))
+inputs :: forall s l m a.
+  Eq s => MonadZero m => MonadState s m => MonadRef l m =>
+  TaskT m a -> m (List (Input Dummy))
 inputs (Edit _) =
   pure $ [ ToHere (AChange tau), ToHere AEmpty ]
   where
@@ -160,7 +166,9 @@ inputs (Label _ this) =
 -- Normalisation ---------------------------------------------------------------
 
 
-stride :: MonadRef l m => TaskT m a -> m (TaskT m a)
+stride ::
+  MonadRef l m =>
+  TaskT m a -> m (TaskT m a)
 
 -- Step --
 stride (Then this cont) = do
@@ -210,7 +218,9 @@ stride task = do
   pure $ task
 
 
-normalise :: Eq s => MonadState s m => MonadRef l m => TaskT m a -> m (TaskT m a)
+normalise ::
+  Eq s => MonadState s m => MonadRef l m =>
+  TaskT m a -> m (TaskT m a)
 normalise task = do
   state_old <- get
   task_new <- stride task
@@ -221,7 +231,9 @@ normalise task = do
     normalise task_new
 
 
-initialise :: Eq s => MonadState s m => MonadRef l m => TaskT m a -> m (TaskT m a)
+initialise ::
+  Eq s => MonadState s m => MonadRef l m =>
+  TaskT m a -> m (TaskT m a)
 initialise = normalise
 
 
@@ -236,7 +248,9 @@ data NotApplicable
   | CouldNotHandle
 
 
-handle :: forall l m a. MonadTrace NotApplicable m => MonadRef l m => TaskT m a -> Input Action -> m (TaskT m a)
+handle :: forall l m a.
+  MonadTrace NotApplicable m => MonadRef l m =>
+  TaskT m a -> Input Action -> m (TaskT m a)
 
 -- Edit --
 handle (Edit _) (ToHere Empty) =
@@ -342,6 +356,8 @@ handle task _ =
   trace CouldNotHandle task
 
 
-drive :: Eq s => MonadTrace NotApplicable m => MonadState s m => MonadRef l m => TaskT m a -> Input Action -> m (TaskT m a)
+drive ::
+  Eq s => MonadTrace NotApplicable m => MonadState s m => MonadRef l m =>
+  TaskT m a -> Input Action -> m (TaskT m a)
 drive task input =
   handle task input >>= normalise
