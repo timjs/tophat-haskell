@@ -131,31 +131,16 @@ Without that it would be possible to change the type of an editor, by clearing i
 
 \paragraph{Shared editors $(\Update e)$}
 
-Shared editors are a generalisation of normal editors discussed above.
-Instead of \fixme{keeping} a value locally,
-they watch a reference location.
-Typing rule \refrule{T-Update} therefore states that,
-for $\Update e$ to be a $\Task \tau$,
-$e$ should be of type $\Reference \tau$.
-Because \ML-style references always have a value,
-shared editors cannot be cleared.
-The value of the reference,
-and thus the value of the stored editor,
-can only be changed.
-This is depicted in the second state diagram in \autoref{fig:editor-state}.
+Shared editors watch references, lifting their value into the task domain.
+If $e$ is a reference $\Reference \tau$, then $\Update e$ is of type $\Task \tau$.
+Shared editors cannot be cleared, only changed.
 
-The consequence is that two completely different users can watch the same shared value
-and get notified by changes the other makes.
-Lets say Marco and Christopher both watch a shared editor of a coordinate.
-We can visualise editors of this type by an input entry,
-like we did in \autoref{exm:flight-booking},
-but we could also choose to show a map with a pin.
-When Marco moves this pin,
-he will update the value of the shared editor,
-and thus the value of the reference containing the coordinate.
-This will be immediately reflected on Christopher's screen:
-the pin will change its position on the map.
-This way, Marco and Christopher can work together editing the same information.
+Changes to a shared editor are immediately visible to all shared editors watching the same reference.
+Imagine two users, Marco and Christopher, both watching shared editors of the same coordinate.
+The editors are visualized as a map with a pin.
+When Marco moves this pin, he updates the value of the shared editor, thereby changing the value of the reference.
+This change is immediately reflected on Christopher's screen: The pin changes its position on his map.
+This way Marco and Christopher can work together to edit the same information.
 
 \label{sub:time}
 Another important use case for shared editors is sensors.
