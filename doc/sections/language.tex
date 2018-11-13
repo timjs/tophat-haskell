@@ -127,7 +127,7 @@ It could also be a parser that tries to parse a line of text to match the type o
 
 Editors that hold an expression $e : \tau$ have type $\Task \tau$.
 Empty editors are annotated with a type in order to ensure type safety.
-Without that it would be possible to change the type of a task.
+Without that it would be possible to change the type of an editor, by clearing it and filling it with a value of different type.
 
 \paragraph{Shared editors $(\Update e)$}
 
