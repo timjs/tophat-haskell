@@ -1,5 +1,6 @@
 module Preload
   ( module Protolude
+  , module Control.Monad.Zero
   , module Data.Bitraversable
   , List
   , (<<), (>>)
@@ -12,6 +13,8 @@ module Preload
 
 
 import Protolude hiding ((<&>), (<&&>), (.), (>>), trace, handle, lift, TypeRep, typeRep)
+
+import Control.Monad.Zero
 
 import Data.Bitraversable
 
