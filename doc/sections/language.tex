@@ -160,55 +160,28 @@ Parallel composition comes in two variants: pairing two tasks (\emph{and}-parall
 We study sequential composition first, and after that pairing and choosing.
 
 
-\paragraph{Internal and external step $(e_1 \Then e_2, e_1 \Next e_2)$}
+\paragraph{Internal and external step $(e \Then c, e \Next c)$}
 
-One might think that the best way to sequence tasks is by just following one task with another:
-do this, then do that, then that, etc.
-However, we like the continuation to depend on the value produced by the preceding task.
-This way, we can use this information to precisely specify how to continue with work.
-This is done by a \emph{step}.
-We define a step from one task to another as
-\begin{quote}
-  a calculation which returns the next task to proceed with.
-\end{quote}
+Sequential composition has a task $e$ on the left hand side and a continuation $c$ on the right.
+The accompanying typing rules are \refrule{T-Then} and \refrule{T-Next}.
+According to these rules, the left hand side must be a task $e : \Task \tau_1$, and the right hand side $c : \tau_1 \to \Task \tau_2$ must be a function that, given the task value of $e$, calculates the task with which to continue.
 
-To accomplish this,
-we take continuations to be \emph{functions}.
-These are just normal functions from our host language which,
-when evaluated, result in something of type $\Task$.
-
-The accompanied typing rules are \refrule{T-Then} and \refrule{T-Next}.
-Note that typing ensures us that the left hand side $e_1$ will be a task delivering a value of type $\tau_1$.
-The right hand side $e_2$ then, will use this value of type $\tau_1$,
-and calculate a new task of type $\Task \tau_2$,
-holding a value of (possibly another) type $\tau_2$.
-
-There are two ways the decision can be made to step from one task to another:
-% by the system or by the user.
-internal or external.
-% We call steps made by the system \emph{internal steps} ($\Then$).
-% and \emph{external step} ($\Next$).
-Internal steps are made by the system.
-That is, the system decides when to proceed with the next task by rules specified by the programmer.
-External steps are performed upon user's request.
-Only when users decide to continue with the next task,
-a step is taken.
-Both internal and external steps can be guarded by using an $\If{}{}{}$ expression,
-\todo{Change guarded to conditional}
-as we will see in the next example.
-
+Steps are guarded, which means that the step combinator can only proceed when the following conditions are met.
+The left hand side must have a value, only then can the right hand side calculate the successor task.
+The successor task must not be $\Fail$, introduced below.
+The internal step can proceed immediately when these conditions are met.
+The external step must additionally receive a continue event $\Continue$.
 
 
 \begin{example}[Conditional stepping]
 \label{exm:conditions}
 
-Take this little task.
+Consider the following program.
 \begin{TASK}
-  enter Int >>= \n. if n == 42 then edit "Correct" else edit "Bad"
+  enter Int >>= \n. if n == 42 then edit "Good" else edit "Bad"
 \end{TASK}
-It asks users to enter an integer.
-Only when the integer equals $42$, the next task will be a valued editor containing the string "Correct".
-Otherwise, it will be an editor containing the string "Bad".
+Initially the step is guarded because the editor doesn't have a value.
+When the user enters an integer, the program continues immediately with either \TS|edit "Good"| or \TS|edit "Bad"|, depending on the input.
 
 \end{example}
 
