@@ -98,21 +98,15 @@ ui (Label l this) = do
 
 
 value :: MonadRef l m => TaskT l m a -> m (Maybe a)
-value (Edit val) = pure $ val
-value (Store loc) = Just <$> deref loc
-value (And left rght) = do
-  l <- value left
-  r <- value rght
-  pure $ l <&> r
-value (Or left rght) = do
-  l <- value left
-  r <- value rght
-  pure $ l <|> r
-value (Xor _ _) = pure $ Nothing
-value (Fail) = pure $ Nothing
-value (Then _ _) = pure $ Nothing
-value (Next _ _) = pure $ Nothing
-value (Label _ this) = value this
+value (Edit val)      = pure $ val
+value (Store loc)     = Just <$> deref loc
+value (And left rght) = (<&>) <$> value left <*> value rght
+value (Or left rght)  = (<|>) <$> value left <*> value rght
+value (Xor _ _)       = pure $ Nothing
+value (Fail)          = pure $ Nothing
+value (Then _ _)      = pure $ Nothing
+value (Next _ _)      = pure $ Nothing
+value (Label _ this)  = value this
 
 
 failing :: TaskT l m a -> Bool
