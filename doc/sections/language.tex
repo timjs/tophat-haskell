@@ -131,117 +131,57 @@ Without that it would be possible to change the type of an editor, by clearing i
 
 \paragraph{Shared editors $(\Update e)$}
 
-Shared editors are a generalisation of normal editors discussed above.
-Instead of \fixme{keeping} a value locally,
-they watch a reference location.
-Typing rule \refrule{T-Update} therefore states that,
-for $\Update e$ to be a $\Task \tau$,
-$e$ should be of type $\Reference \tau$.
-Because \ML-style references always have a value,
-shared editors cannot be cleared.
-The value of the reference,
-and thus the value of the stored editor,
-can only be changed.
-This is depicted in the second state diagram in \autoref{fig:editor-state}.
+Shared editors watch references, lifting their value into the task domain.
+If $e$ is a reference $\Reference \tau$, then $\Update e$ is of type $\Task \tau$.
+Shared editors cannot be cleared, only changed.
 
-The consequence is that two completely different users can watch the same shared value
-and get notified by changes the other makes.
-Lets say Marco and Christopher both watch a shared editor of a coordinate.
-We can visualise editors of this type by an input entry,
-like we did in \autoref{exm:flight-booking},
-but we could also choose to show a map with a pin.
-When Marco moves this pin,
-he will update the value of the shared editor,
-and thus the value of the reference containing the coordinate.
-This will be immediately reflected on Christopher's screen:
-the pin will change its position on the map.
-This way, Marco and Christopher can work together editing the same information.
+Changes to a shared editor are immediately visible to all shared editors watching the same reference.
+Imagine two users, Marco and Christopher, both watching shared editors of the same coordinate.
+The editors are visualized as a map with a pin.
+When Marco moves his pin, he updates the value of the shared editor, thereby changing the value of the reference.
+This change is immediately reflected on Christopher's screen: The pin changes its position on his map.
+This way Marco and Christopher can work together to edit the same information.
 
 \label{sub:time}
-Another important use case for shared editors is sensors.
-Sensors can be modelled by users updating the value of a shred editor once in a while.
-Take for example the task to view the current time: \TS{update time}
-which is a shared editor of type \TS{Task Int}.
-% which is stored as a value of type $\Reference \Int$.
-Every second, a clock sends a change event to the system.
-Each shared editor watching the same location will be updated accordingly.
-The value of a sensor is thus exposed through a shared editor.
-
+Two other important use cases for shared editors are sensors and time.
+Sensors can be represented as external entities that periodically update a shared editor with their current sensor value.
+Similarly, the current time can be stored in a shared editor which is periodically updated by a clock.
+The actual sensor and the clock are not modelled in \TOPHAT.
+We assume that they exist as external users that send update events to the system.
+This allows programmers to write tasks that react to sensor values or timeouts.
 
 
 \subsection{Steps}
 
-
-% In the previous section we have set up our interaction model of inputs and actions,
-% we defined our interactive component, the editor,
-% and introduced the infinitely failing task.
-Now that we have the core part of an interactive workflow,
-namely editors,
-we can continue with ways to compose multiple tasks.
-Combining tasks can be done in two ways:
-\begin{enumerate*}
-  \item sequential or
-  \item parallel.
-\end{enumerate*}
-For parallel composition we distinguish two kinds:
-\begin{enumerate*}[(a)]
-  \item pairing two tasks (\emph{and}-parallel); and
-  \item choosing between two tasks (\emph{or}-parallel).
-\end{enumerate*}
-In this subsection we start with sequential composition.
-The next subsection is about pairing and choosing.
+Editors represent atomic units of work.
+In this section we look at ways to combine smaller tasks into bigger ones.
+Combining tasks can be done in two ways, sequential and parallel.
+Parallel composition comes in two variants: pairing two tasks (\emph{and}-parallel) and choosing between two tasks (\emph{or}-parallel).
+We study sequential composition first, and after that pairing and choosing.
 
 
+\paragraph{Internal and external step $(e \Then c, e \Next c)$}
 
-\paragraph{Internal and external step $(e_1 \Then e_2, e_1 \Next e_2)$}
+Sequential composition has a task $e$ on the left hand side and a continuation $c$ on the right.
+The accompanying typing rules are \refrule{T-Then} and \refrule{T-Next}.
+According to these rules, the left hand side must be a task $e : \Task \tau_1$, and the right hand side $c : \tau_1 \to \Task \tau_2$ must be a function that, given the task value of $e$, calculates the task with which to continue.
 
-One might think that the best way to sequence tasks is by just following one task with another:
-do this, then do that, then that, etc.
-However, we like the continuation to depend on the value produced by the preceding task.
-This way, we can use this information to precisely specify how to continue with work.
-This is done by a \emph{step}.
-We define a step from one task to another as
-\begin{quote}
-  a calculation which returns the next task to proceed with.
-\end{quote}
-
-To accomplish this,
-we take continuations to be \emph{functions}.
-These are just normal functions from our host language which,
-when evaluated, result in something of type $\Task$.
-
-The accompanied typing rules are \refrule{T-Then} and \refrule{T-Next}.
-Note that typing ensures us that the left hand side $e_1$ will be a task delivering a value of type $\tau_1$.
-The right hand side $e_2$ then, will use this value of type $\tau_1$,
-and calculate a new task of type $\Task \tau_2$,
-holding a value of (possibly another) type $\tau_2$.
-
-There are two ways the decision can be made to step from one task to another:
-% by the system or by the user.
-internal or external.
-% We call steps made by the system \emph{internal steps} ($\Then$).
-% and \emph{external step} ($\Next$).
-Internal steps are made by the system.
-That is, the system decides when to proceed with the next task by rules specified by the programmer.
-External steps are performed upon user's request.
-Only when users decide to continue with the next task,
-a step is taken.
-Both internal and external steps can be guarded by using an $\If{}{}{}$ expression,
-\todo{Change guarded to conditional}
-as we will see in the next example.
-
+Steps are guarded, which means that the step combinators can only proceed when the following conditions are met.
+The left hand side must have a value, only then can the right hand side calculate the successor task.
+The successor task must not be $\Fail$, introduced below.
+The internal step can proceed immediately when these conditions are met.
+The external step must additionally receive a continue event $\Continue$.
 
 
 \begin{example}[Conditional stepping]
 \label{exm:conditions}
 
-Take this little task.
+Consider the following program.
 \begin{TASK}
-  enter Int >>= \n. if n == 42 then edit "Correct" else edit "Bad"
+  enter Int >>= \n. if n == 42 then edit "Good" else edit "Bad"
 \end{TASK}
-It asks users to enter an integer.
-Only when the integer equals $42$, the next task will be a valued editor containing the string "Correct".
-Otherwise, it will be an editor containing the string "Bad".
+Initially the step is guarded because the editor doesn't have a value.
+When the user enters an integer, the program continues immediately with either \TS|edit "Good"| or \TS|edit "Bad"|, depending on the input.
 
 \end{example}
 
@@ -250,42 +190,19 @@ Otherwise, it will be an editor containing the string "Bad".
 
 \paragraph{Fail $(\Fail)$}
 
-The fail task has a special role in our language and semantics.
-Conceptually, it is a task that \emph{never has a value} and \emph{never accepts user input}.
-Like all other tasks, it also \emph{never ends}.
-Because $\Fail$ will not produce a result,
-it does not matter in which context we use this expression.
-Therefore \refrule{T-Fail} states that it has type $\Task \tau$ for any type $\tau$.
+Fail is a task that never has a value and never accepts input.
+The typing rule \refrule{T-Fail} states that it has type $\Task \tau$ for any type $\tau$.
+Programmers can use $\Fail$ to tell steps that no sensible successor task can be determined.
 
-The usage of $\Fail$ is to signal the failure to produce a sensible task to proceed with,
-and, therefore, we have to continue with the current task.
-One could think of it as the error value \CL{Nothing} from Haskell's \CL{Maybe} data type,
-or \CL{None} from \ML's \CL{option}.
-Note the difference between $\Fail$, $\Enter \tau$, and $\Edit \unit$.
-The first is the failing task, which does not accept any input.
-The second is an unvalued editor,
-waiting for users to enter some information of type $\tau$ into the system.
-The third is a valued editor containing the unit value.
-This value can be cleared or reentered by users.
-Both editors clearly have a future of user interaction,
-the failing task does not.
+\begin{example}[Guarded stepping]
 
-
-
-\begin{example}[Failing guards]
-
-Let us slightly change the guarded step from \autoref{exm:conditions}:
+Consider the following program.
 \begin{TASK}
-  enter Int >>= \n. if n == 42 then edit "Correct" else fail
+  enter Int >>= \n. if n == 42 then edit "Good" else fail
 \end{TASK}
-In place of of the task \TS{edit "Bad"} we use \TS{fail}.
-This has the following consequence.
-As long as the right hand side of $\Then$ does evaluate to $\Fail$,
-users can indefinitely change the value of the editor to different integers,
-possibly clearing it in between.
-At the moment the value of the left hand side is $42$,
-the right hand side will evaluate to the sensible task \TS{edit "Correct"},
-and the step will be made.
+The user is asked to enter an integer.
+As long as the right hand side of $\Then$ evaluates to $\Fail$, the step cannot proceed, and the user can keep editing the integer.
+As soon as the value of the left hand side is $42$, the right hand side evaluates to something other than $\Fail$, and the step proceeds to \TS{edit "Good"}.
 
 \end{example}
 

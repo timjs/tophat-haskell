@@ -126,7 +126,7 @@ $(\Update l \Then \lambda x:\Bool .\ \If{x}{e}{\Fail})\And (\Edit \unit)$ with $
 an expression which in fact is not normalised. The issue here lies in the fact
 that $s$ gets updated, and allows the first component of $\And$ to be further
 normalised, in this case to $e$. To overcome this problem, the \refrule{N-Done} and
-\refrule{N-Stride} rules have been added. They ensure that normalisation is applied until
+\refrule{N-Repeat} rules have been added. They ensure that normalisation is applied until
 the shared memory $s$ has become stable and no further normalisation can be
 applied.
 
