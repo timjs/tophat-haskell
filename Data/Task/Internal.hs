@@ -130,7 +130,7 @@ enter = Edit Nothing
 
 
 update :: MonadRef l m => Basic a => l a -> TaskT m a
-update r = Store r
+update = Store
 
 
 (-&&-) :: TaskT m a -> TaskT m b -> TaskT m ( a, b )
