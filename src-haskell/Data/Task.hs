@@ -6,7 +6,7 @@ module Data.Task
   , normalise, initialise, handle, drive
   -- ** Constructors
   , edit, enter, update
-  , lift, (-&&-), (&&-), (-&&), (-||-), (-??-), fail, (>>-), (>>?)
+  , lift, (-&&-), (&&-), (-&&), (-||-), (-??-), failure, (>>-), (>>?)
   , label, delabel, keeper
   -- ** Reexports
   , Label
@@ -114,6 +114,7 @@ failing (Edit _)        = False
 failing (Store _)       = False
 failing (And left rght) = failing left && failing rght
 failing (Or  left rght) = failing left && failing rght
+--TODO: fix to peek in future
 failing (Xor left rght) = failing left && failing rght
 failing (Fail)          = True
 failing (Then this _)   = failing this

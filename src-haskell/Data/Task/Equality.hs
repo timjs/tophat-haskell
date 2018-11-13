@@ -160,12 +160,12 @@ type Choose = Task Int -> Task Int -> Task Int
 
 prop_choose_left_identity :: Choose -> Task Int -> Bool
 prop_choose_left_identity (-?-) t =
-  fail -?- t === t
+  failure -?- t === t
 
 
 prop_choose_right_identity :: Choose -> Task Int -> Bool
 prop_choose_right_identity (-?-) t =
-  t -?- fail === t
+  t -?- failure === t
 
 
 prop_choose_associativity ::
@@ -221,12 +221,12 @@ prop_step_assocaitivity (>-) r s t =
 
 prop_step_left_anihilation :: Bind -> Task Int -> Bool
 prop_step_left_anihilation (>-) t =
-  fail >- (\_ -> t) === fail
+  failure >- (\_ -> t) === failure
 
 
 prop_step_left_absorption :: Bind -> Task Int -> Bool
 prop_step_left_absorption (>-) t =
-  fail >- (\_ -> t) === fail
+  failure >- (\_ -> t) === failure
 
 
 
