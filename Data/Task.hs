@@ -122,11 +122,13 @@ failing (Next this _)   = failing this
 failing (Label _ this)  = failing this
 
 
-inputs :: forall l m a. MonadRef l m => TaskT l m a -> m (List (Input Dummy))
+inputs :: forall l m a. MonadZero m => MonadRef l m => TaskT l m a -> m (List (Input Dummy))
 inputs (Edit _) =
-  pure $ [ ToHere (AChange (Proxy :: Proxy a)), ToHere AEmpty ]
+  pure $ [ ToHere (AChange tau), ToHere AEmpty ]
+  where tau = Proxy :: Proxy a
 inputs (Store _) =
-  pure $ [ ToHere (AChange (Proxy :: Proxy a)) ]
+  pure $ [ ToHere (AChange tau) ]
+  where tau = Proxy :: Proxy a
 inputs (And left rght) = do
   l <- inputs left
   r <- inputs rght
@@ -148,12 +150,8 @@ inputs (Fail) =
   pure $ []
 inputs (Then this _) =
   inputs this
-inputs (Next this next) = do
-  available <- inputs this
-  val <- value this
-  pure $ maybe [] cont val ++ available
-  where
-    cont v = if failing (next v) then [] else [ ToHere AContinue ]
+inputs (Next this next) =
+  (++) <$> inputs this <*> [ [ToHere AContinue] | Just v <- value this, cont <- normalise (next v), not $ failing cont ]
 inputs (Label _ this) =
   inputs this
 
