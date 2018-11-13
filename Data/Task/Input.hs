@@ -1,6 +1,7 @@
 module Data.Task.Input
   ( Path(..), Action(..), Dummy(..), Input(..)
   , dummyfy, reify, strip, fill
+  , usage, parse
   ) where
 
 
@@ -18,13 +19,12 @@ import Data.Task.Internal
 data Path
   = GoLeft
   | GoRight
-  deriving (Eq)
+  deriving (Eq, Show)
 
 
 instance Pretty Path where
   pretty GoLeft  = "l"
   pretty GoRight = "r"
-
 
 
 -- Inputs ----------------------------------------------------------------------
@@ -58,6 +58,22 @@ instance Pretty Action where
   pretty (Continue) = "cont"
 
 
+instance Show Action where
+  showsPrec d (Change x) =
+    showParen (d > p) (showString "Change " <<
+    showParen (d > pred p) (showsPrec p x << showString " :: " << showsPrec p (typeOf x)))
+      where p = 10
+  showsPrec d (Empty) =
+    showParen (d > p) $ showString "Empty"
+      where p = 10
+  showsPrec d (Pick x) =
+    showParen (d > p) $ showString "Pick " << showsPrec (succ p) x
+      where p = 10
+  showsPrec d (Continue) =
+    showParen (d > p) $ showString "Continue"
+      where p = 10
+
+
 
 -- Dummy actions --
 
@@ -89,6 +105,21 @@ instance Pretty Dummy where
   pretty (AContinue) = "cont"
 
 
+instance Show Dummy where
+  showsPrec d (AChange x) =
+    showParen (d > p) $ showString "AChange " << showsPrec (succ p) x
+      where p = 10
+  showsPrec d (AEmpty) =
+    showParen (d > p) $ showString "AEmpty"
+      where p = 10
+  showsPrec d (APick x) =
+    showParen (d > p) $ showString "APick " << showsPrec (succ p) x
+      where p = 10
+  showsPrec d (AContinue) =
+    showParen (d > p) $ showString "AContinue"
+      where p = 10
+
+
 
 -- Inputs --
 
@@ -97,7 +128,7 @@ data Input a
   = ToLeft (Input a)
   | ToHere a
   | ToRight (Input a)
-  deriving (Eq, Functor, Foldable, Traversable)
+  deriving (Eq, Show, Functor, Foldable, Traversable)
 
 
 instance Pretty a => Pretty (Input a) where
@@ -129,3 +160,66 @@ strip = map dummyfy
 
 fill :: Input Dummy -> Gen (List (Input Action))
 fill = map sequence << sequence << map reify
+
+
+
+-- Parsing ---------------------------------------------------------------------
+
+
+usage :: Text
+usage = unlines
+  [ ":: Possible events are:"
+  , "    change <value> : change current editor to <value> "
+  , "    empty          : empty current editor"
+  , "    pick <path>    : pick amongst the possible options"
+  , "    pick <label>   : pick the option labeld with <label>"
+  , "    cont           : continue with the next task"
+  , "    cont <label>   : continue with the task labeld <label>"
+  , "    l <event>      : send <event> to the left task"
+  , "    r <event>      : send <event> to the right task"
+  , "    help           : show this message"
+  , ""
+  , "where values can be:"
+  , "    ()          : Unit"
+  , "    True, False : Booleans"
+  , "    1, 32, -42  : Integers"
+  , "    \"Hello\"   : Strings"
+  , ""
+  , "paths are of the form:"
+  , "   l <path>? : go left"
+  , "   r <path>? : go right"
+  , ""
+  , "and labels always start with a Capital letter"
+  ]
+
+parse :: List Text -> Either Text (Input Action)
+parse [ "change", val ]
+  | Just v <- read val :: Maybe Int  = ok $ ToHere $ Change v
+  | Just v <- read val :: Maybe Bool = ok $ ToHere $ Change v
+  | Just v <- read val :: Maybe Text = ok $ ToHere $ Change v
+parse other = throw $ "!! `" <> unwords other <> "` is not a valid command, type `help` for more info"
+
+
+{-
+parse [ "change", val ] with (Universe.parse val)
+  | Nothing              = throw $ "!! Error parsing value `" ++ val ++ "`"
+  -- NOTE: `c` is the type of `v` in our universe, which is automatically used by implicit of the `Change` constructor.
+  | Just (c ** v)        = ok $ ToHere $ Change (Exactly v)
+parse [ "empty" ]        = ok $ ToHere $ Empty
+-- parse [ "pick", next ]   =
+--   if isLabel next then
+--     ok $ ToHere $ PickWith next
+--   else
+--     map (ToHere . Pick) $ Path.parse [ next ]
+parse ("pick" : rest)    = map (ToHere . Pick) $ Path.parse rest
+parse [ "cont" ]         = ok $ ToHere $ Continue
+-- parse [ "cont", next ]   =
+--   if isLabel next then
+--     ok $ ToHere $ ContinueWith next
+--   else
+--     throw $ "!! Could not parse `" ++ next ++ "` as a label, type `help` for more info"
+parse ("l" : rest)       = map ToLeft $ parse rest
+parse ("r" : rest)       = map ToRight $ parse rest
+parse [ "help" ]         = throw usage
+parse other              = throw $ "!! `" ++ unwords other ++ "` is not a valid command, type `help` for more info"
+-}
