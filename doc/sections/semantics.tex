@@ -225,7 +225,8 @@ we choose to introduce another semantic relation which we will call \emph{normal
   \small
 
   \begin{mathpar}
-    \boxed{\RelationS}
+    \boxed{\RelationN}
+    % \boxed{\RelationS}
   \end{mathpar}
 
   \paragraph{Step}
@@ -256,17 +257,19 @@ we choose to introduce another semantic relation which we will call \emph{normal
   %   % \userule{S-Eval}
   % \end{mathpar}
 
-  \caption{Striding semantics} \label{fig:normalisation-semantics}
-\end{figure}
+%   \caption{Striding semantics} \label{fig:normalisation-semantics}
+% \end{figure}
 
-\begin{figure}[h]
-  \small
+% \begin{figure}[h]
+  % \small
+
+  \paragraph{Normalise}
   \begin{mathpar}
-    \boxed{\RelationN} \\
     \userule{N-Done} \\
-    \userule{N-Stride}
+    \userule{N-Repeat}
   \end{mathpar}
   \caption{Normalisation semantics} \label{fig:memory-semantics}
+
 \end{figure}
 
 When considering our semantic relations as a hierarchy,
