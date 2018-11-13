@@ -275,43 +275,43 @@
 
 
 \newrule{S-ThenStay}[\Value(t_1',s') = \bot]
-  {t_1,s \stride t_1',s'}
+  {t_1,s \normalise t_1',s'}
   {t_1 \Then e_2,s \stride t_1' \Then e_2,s'}
 
 \newrule{S-ThenFail}[\Value(t_1',s') = v_1 \land \Failing(t_2,s'')]
-  {t_1,s \stride t_1',s'  \Quad
+  {t_1,s \normalise t_1',s'  \Quad
    e_2\ v_1,s' \evaluate t_2,s''}
   {t_1 \Then e_2,s \stride t_1' \Then e_2,s'}
 
 \newrule{S-ThenCont}[\ontopof{L}{\Value(t_1',s') = v_1}{\land \lnot\Failing(t_2,s'')}]
-  {t_1,s \stride t_1',s'  \Quad
+  {t_1,s \normalise t_1',s'  \Quad
    e_2\ v_1,s' \evaluate t_2 ,s''  \Quad
-   t_2,s'' \stride t_2',s'''}
+   t_2,s'' \normalise t_2',s'''}
   {t_1 \Then e_2,s \stride t_2',s'''}
 
 \newrule{S-Next}
-  {t_1,s \stride t_1',s'}
+  {t_1,s \normalise t_1',s'}
   {t_1 \Next e_2,s \stride t_1' \Next e_2,s'}
 
 
 \newrule{S-And}
-  {t_1,s  \stride t_1',s'  \Quad
-   t_2,s' \stride t_2',s''}
+  {t_1,s  \normalise t_1',s'  \Quad
+   t_2,s' \normalise t_2',s''}
   {t_1 \And t_2,s \stride t_1' \And t_2',s''}
 
 
 \newrule{S-OrLeft}[\Value(t_1',s') = v_1]
-  {t_1,s  \stride t_1',s'}
+  {t_1,s  \normalise t_1',s'}
   {t_1 \Or t_2,s \stride t_1',s'}
 
 \newrule{S-OrRight}[\Value(t_1',s') = \bot \land \Value(t_2',s'') = v_2]
-  {t_1,s  \stride t_1',s'  \Quad
-   t_2,s' \stride t_2',s''}
+  {t_1,s  \normalise t_1',s'  \Quad
+   t_2,s' \normalise t_2',s''}
   {t_1 \Or t_2,s \stride t_2',s''}
 
 \newrule{S-OrNone}[\Value(t_1',s') = \bot \land \Value(t_2',s'') = \bot]
-  {t_1,s  \stride t_1',s'  \Quad
-   t_2,s' \stride t_2',s''}
+  {t_1,s  \normalise t_1',s'  \Quad
+   t_2,s' \normalise t_2',s''}
   {t_1 \Or t_2,s \stride t_1' \Or t_2',s''}
 
 
@@ -321,12 +321,12 @@
 
 \newrule{S-Eval}[e \neq e']
     {e,s \evaluate e',s'  \Quad
-     e',s' \stride e'',s''}
+     e',s' \normalise e'',s''}
     {e,s \stride e'',s''}
 
 
 \newrule{S-Appoint}
-  {t,s\stride t',s'}
+  {t,s\normalise t',s'}
   {u \At t,s\stride u \At t',s'}
 
 
