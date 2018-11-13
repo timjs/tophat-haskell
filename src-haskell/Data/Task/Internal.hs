@@ -1,9 +1,9 @@
 module Data.Task.Internal
   ( TaskT(..)
   , Label
-  , edit, enter, update
+  , edit, enter, view, update, watch
   , lift, (-&&-), (&&-), (-&&), (-||-), (-??-), failure, (>>-), (>>?)
-  , label, delabel, keeper
+  , label, (-#-), delabel, keeper
   , module Control.Monad.Ref
   , module Data.Basic
   ) where
@@ -19,9 +19,8 @@ import Control.Monad.Ref
 
 import Data.Basic (Basic)
 
-import GHC.Show (Show(showsPrec), ShowS, showString, showParen)
 
-
+infixr 6 -#-
 infixl 5 -&&-, -&&, &&-
 infixl 3 -||-, -??-
 infixl 2 >>-, >>?
@@ -105,10 +104,6 @@ instance Show (TaskT m a) where
       where p = 9
 
 
-showText :: Text -> ShowS
-showText = showString << toS
-
-
 
 -- Functor --
 
@@ -129,8 +124,16 @@ enter :: Basic a => TaskT m a
 enter = Edit Nothing
 
 
+view :: Basic a => a -> TaskT m a
+view = edit
+
+
 update :: MonadRef l m => Basic a => l a -> TaskT m a
 update = Store
+
+
+watch :: MonadRef l m => Basic a => l a -> TaskT m a
+watch = update
 
 
 (-&&-) :: TaskT m a -> TaskT m b -> TaskT m ( a, b )
@@ -175,6 +178,13 @@ failure = Fail
 
 (>>?) :: TaskT m a -> (a -> TaskT m b) -> TaskT m b
 (>>?) = Next
+
+
+-- Labeling --
+
+
+(-#-) :: Text -> TaskT m a -> TaskT m a
+(-#-) = Label
 
 
 
