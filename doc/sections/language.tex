@@ -153,26 +153,11 @@ This allows programmers to write tasks that react to sensor values or timeouts.
 
 \subsection{Steps}
 
-
-% In the previous section we have set up our interaction model of inputs and actions,
-% we defined our interactive component, the editor,
-% and introduced the infinitely failing task.
-Now that we have the core part of an interactive workflow,
-namely editors,
-we can continue with ways to compose multiple tasks.
-Combining tasks can be done in two ways:
-\begin{enumerate*}
-  \item sequential or
-  \item parallel.
-\end{enumerate*}
-For parallel composition we distinguish two kinds:
-\begin{enumerate*}[(a)]
-  \item pairing two tasks (\emph{and}-parallel); and
-  \item choosing between two tasks (\emph{or}-parallel).
-\end{enumerate*}
-In this subsection we start with sequential composition.
-The next subsection is about pairing and choosing.
-
+Editors represent atomic units of work.
+In this section we look at ways to combine smaller tasks into bigger ones.
+Combining tasks can be done in two ways, sequential and parallel.
+Parallel composition comes in two variants: pairing two tasks (\emph{and}-parallel) and choosing between two tasks (\emph{or}-parallel).
+We study sequential composition first, and after that pairing and choosing.
 
 
 \paragraph{Internal and external step $(e_1 \Then e_2, e_1 \Next e_2)$}
