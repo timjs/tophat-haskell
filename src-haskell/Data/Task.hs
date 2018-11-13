@@ -22,8 +22,6 @@ import Preload
 import Control.Monad.Trace
 import Control.Monad.Mem
 
-import Data.IORef
-import Data.STRef
 import Data.Task.Input
 import Data.Task.Internal
 
@@ -32,13 +30,13 @@ import Data.Task.Internal
 -- Aliases ---------------------------------------------------------------------
 
 
-type TaskIO = TaskT IORef IO
+type TaskIO = TaskT IO
 
 
-type TaskST s = TaskT (STRef s) (ST s)
+type TaskST s = TaskT (ST s)
 
 
-type Task = TaskT Loc Mem
+type Task = TaskT Mem
 
 
 -- runTask :: Task a -> ( a, Heap )
@@ -57,7 +55,7 @@ type Task = TaskT Loc Mem
 -- Observations ----------------------------------------------------------------
 
 
-ui :: MonadRef l m => TaskT l m a -> m Text
+ui :: MonadRef l m => TaskT m a -> m Text
 ui (Edit (Just x)) = pure $ "□(" <> show x <> ")"
 ui (Edit Nothing)  = pure $ "□(_)"
 ui (Store l) = do
@@ -97,7 +95,7 @@ ui (Label l this) = do
   pure $ l <> ":\n\t" <> t
 
 
-value :: MonadRef l m => TaskT l m a -> m (Maybe a)
+value :: MonadRef l m => TaskT m a -> m (Maybe a)
 value (Edit val)      = pure $ val
 value (Store loc)     = Just <$> deref loc
 value (And left rght) = (<&>) <$> value left <*> value rght
@@ -109,7 +107,7 @@ value (Next _ _)      = pure $ Nothing
 value (Label _ this)  = value this
 
 
-failing :: TaskT l m a -> Bool
+failing :: TaskT m a -> Bool
 failing (Edit _)        = False
 failing (Store _)       = False
 failing (And left rght) = failing left && failing rght
@@ -122,7 +120,7 @@ failing (Next this _)   = failing this
 failing (Label _ this)  = failing this
 
 
-inputs :: forall s l m a. Eq s => MonadZero m => MonadState s m => MonadRef l m => TaskT l m a -> m (List (Input Dummy))
+inputs :: forall s l m a. Eq s => MonadZero m => MonadState s m => MonadRef l m => TaskT m a -> m (List (Input Dummy))
 inputs (Edit _) =
   pure $ [ ToHere (AChange tau), ToHere AEmpty ]
   where
@@ -162,7 +160,7 @@ inputs (Label _ this) =
 -- Normalisation ---------------------------------------------------------------
 
 
-stride :: MonadRef l m => TaskT l m a -> m (TaskT l m a)
+stride :: MonadRef l m => TaskT m a -> m (TaskT m a)
 
 -- Step --
 stride (Then this cont) = do
@@ -212,7 +210,7 @@ stride task = do
   pure $ task
 
 
-normalise :: Eq s => MonadState s m => MonadRef l m => TaskT l m a -> m (TaskT l m a)
+normalise :: Eq s => MonadState s m => MonadRef l m => TaskT m a -> m (TaskT m a)
 normalise task = do
   state_old <- get
   task_new <- stride task
@@ -223,7 +221,7 @@ normalise task = do
     normalise task_new
 
 
-initialise :: Eq s => MonadState s m => MonadRef l m => TaskT l m a -> m (TaskT l m a)
+initialise :: Eq s => MonadState s m => MonadRef l m => TaskT m a -> m (TaskT m a)
 initialise = normalise
 
 
@@ -238,7 +236,7 @@ data NotApplicable
   | CouldNotHandle
 
 
-handle :: forall l m a. MonadTrace NotApplicable m => MonadRef l m => TaskT l m a -> Input Action -> m (TaskT l m a)
+handle :: forall l m a. MonadTrace NotApplicable m => MonadRef l m => TaskT m a -> Input Action -> m (TaskT m a)
 
 -- Edit --
 handle (Edit _) (ToHere Empty) =
@@ -344,6 +342,6 @@ handle task _ =
   trace CouldNotHandle task
 
 
-drive :: Eq s => MonadTrace NotApplicable m => MonadState s m => MonadRef l m => TaskT l m a -> Input Action -> m (TaskT l m a)
+drive :: Eq s => MonadTrace NotApplicable m => MonadState s m => MonadRef l m => TaskT m a -> Input Action -> m (TaskT m a)
 drive task input =
   handle task input >>= normalise
