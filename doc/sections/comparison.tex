@@ -8,7 +8,7 @@ This section gives an overview over the essential concepts of \TOP and how they 
 These concepts are: communication with the environment, communication between subsystems, sequential composition, concurrency, and synchronization.
 These concepts can also be found in process algebras, which raises the question how \TOP and process algebras relate.
 While introducing the concepts, we compare them with Hoare's Communicating Sequential Processes (\CSP).
-The comparison is based on the book by \citet{books/Hoare85CSP}.
+The comparison is based on Hoare's book \cite{books/Hoare85CSP}.
 We chose \CSP as an example to stand for the numerous process algebras in existence, which, as far as this section is concerned, are reasonably similar.
 
 We provide comparisons based on two aspects.
@@ -16,7 +16,7 @@ First, we compare the scope of the languages, as intended by the authors.
 Second, we focus on features common to \TOP and \CSP, and study their respective realization.
 When we point out differences, we do not argue that the different realizations are incompatible.
 As a matter of fact the primitives can certainly be expressed in terms of each other.
-Instead, we point out how the systems emphasize certain points of view by choosing different building blocks to achieve the same effect.
+Instead, we point out how the systems emphasize certain points of view by choosing different building blocks to express the same concepts.
 
 
 
@@ -54,7 +54,7 @@ Despite the different origins, \TOP and \CSP feature concepts that serve similar
 \subsection{Communication}
 
 Both \TOP and \CSP have two sorts of communication: with the environment, and between subsystems.
-In both languages, communication with the environment represents input and output, and blocks evaluation of programs until the environment sends or receives events.
+In both languages, communication with the environment is input and output, and blocks evaluation of programs until the environment sends or receives events.
 In both languages, communication between subsystems does not block, but evaluates programs as far as possible until further external input is required.
 
 \paragraph{Communication with the environment}
@@ -142,7 +142,7 @@ The intuition about sequential composition is to first do one thing, and once it
 
 In \TOP, tasks never terminate.
 Nonetheless, the notion of sequential composition exists in two forms: the external and the internal step.
-The task $t \Then c$ acts like $t$ as long as the step is guarded.
+The task $t \Then c$ acts like $t$ as long as the step is guarded, as described in \autoref{sub:steps}.
 Once it becomes unguarded, the task continues as $cv$, where $v$ is the value of $t$.
 The task $t \Next c$ requires an input event $\Continue$ in addition to the step being unguarded in order to step.
 
