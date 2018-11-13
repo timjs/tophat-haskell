@@ -38,7 +38,7 @@ We show that the following three preservation Theorems hold.
 \end{theorem}
 
 Where $\Sigma \infers s$ means that for all $l\in s$, it holds that
-$\Sigma(l)=\Gamma,\Sigma\infers s(l)$. 
+$\Sigma(l)=\Gamma,\Sigma\infers s(l)$.
 
 Theorem~\ref{thm:pres-eval} is shown to be correct by induction over $e$. The full
 proof can be found in the appendix.
@@ -148,7 +148,7 @@ An additional lemma is required.
   For all well typed expressions $e$ and states $s$,
   % For all expressions $e$ and states $s$
   % such that $\Gamma,\Sigma \infers e:\Task\tau$ and $\Sigma \infers s$,
-  if $e,s \evaluate t,s'$, $t,s' \stride t',s''$, $s=s''$ and $t',s'' \evaluate t'',s'''$,
+  if $e,s \evaluate t,s'$, $t,s' \stride t',s''$, $s'=s''$ and $t',s'' \evaluate t'',s'''$,
   then $t'=t''$ and $s''=s'''$.
   \label{lem:stride-does-not-eval}
 \end{lemma}
