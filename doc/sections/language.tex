@@ -166,7 +166,7 @@ Sequential composition has a task $e$ on the left hand side and a continuation $
 The accompanying typing rules are \refrule{T-Then} and \refrule{T-Next}.
 According to these rules, the left hand side must be a task $e : \Task \tau_1$, and the right hand side $c : \tau_1 \to \Task \tau_2$ must be a function that, given the task value of $e$, calculates the task with which to continue.
 
-Steps are guarded, which means that the step combinator can only proceed when the following conditions are met.
+Steps are guarded, which means that the step combinators can only proceed when the following conditions are met.
 The left hand side must have a value, only then can the right hand side calculate the successor task.
 The successor task must not be $\Fail$, introduced below.
 The internal step can proceed immediately when these conditions are met.
