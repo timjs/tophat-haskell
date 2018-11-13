@@ -190,42 +190,19 @@ When the user enters an integer, the program continues immediately with either \
 
 \paragraph{Fail $(\Fail)$}
 
-The fail task has a special role in our language and semantics.
-Conceptually, it is a task that \emph{never has a value} and \emph{never accepts user input}.
-Like all other tasks, it also \emph{never ends}.
-Because $\Fail$ will not produce a result,
-it does not matter in which context we use this expression.
-Therefore \refrule{T-Fail} states that it has type $\Task \tau$ for any type $\tau$.
+Fail is a task that never has a value and never accepts input.
+The typing rule \refrule{T-Fail} states that it has type $\Task \tau$ for any type $\tau$.
+Programmers can use $\Fail$ to tell steps that no sensible successor task can be determined.
 
-The usage of $\Fail$ is to signal the failure to produce a sensible task to proceed with,
-and, therefore, we have to continue with the current task.
-One could think of it as the error value \CL{Nothing} from Haskell's \CL{Maybe} data type,
-or \CL{None} from \ML's \CL{option}.
-Note the difference between $\Fail$, $\Enter \tau$, and $\Edit \unit$.
-The first is the failing task, which does not accept any input.
-The second is an unvalued editor,
-waiting for users to enter some information of type $\tau$ into the system.
-The third is a valued editor containing the unit value.
-This value can be cleared or reentered by users.
-Both editors clearly have a future of user interaction,
-the failing task does not.
+\begin{example}[Guarded stepping]
 
-
-
-\begin{example}[Failing guards]
-
-Let us slightly change the guarded step from \autoref{exm:conditions}:
+Consider the following program.
 \begin{TASK}
-  enter Int >>= \n. if n == 42 then edit "Correct" else fail
+  enter Int >>= \n. if n == 42 then edit "Good" else fail
 \end{TASK}
-In place of of the task \TS{edit "Bad"} we use \TS{fail}.
-This has the following consequence.
-As long as the right hand side of $\Then$ does evaluate to $\Fail$,
-users can indefinitely change the value of the editor to different integers,
-possibly clearing it in between.
-At the moment the value of the left hand side is $42$,
-the right hand side will evaluate to the sensible task \TS{edit "Correct"},
-and the step will be made.
+The user is asked to enter an integer.
+As long as the right hand side of $\Then$ evaluates to $\Fail$, the step cannot proceed, and the user can keep editing the integer.
+As soon as the value of the left hand side is $42$, the right hand side evaluates to something other than $\Fail$, and the step proceeds to \TS{edit "Good"}.
 
 \end{example}
 
