@@ -58,8 +58,6 @@ we use the big step semantics of our host language.
 Turning an expression $e$ in state $s$ into a value $v$ in state $s'$ is denoted by $\RelationE$.
 To ease reasoning about references,
 we choose our host language to be \emph{eagerly} evaluated.
-The rules to evaluate expressions $e$ do not differ from standard work,
-except for the newly introduced pretasks.
 
 \Autoref{fig:value-grammar} shows values with respect to the evaluation semantics.
 % Regarding our base language, lambda abstractions are values, as are all constants.
@@ -76,26 +74,28 @@ Only external choice ($\Xor$) stores its expressions lazily.
   \caption{Value grammar} \label{fig:value-grammar}
 \end{figure}
 
+The rules to evaluate expressions $e$ do not differ from standard work,
+except for the newly introduced pretasks.
 One can deduce the evaluation rules from the value grammar.
-For completeness they are also given in the appendix.
+For completeness they are given in the appendix.
 
-% \begin{figure}[h]
-%   \small
-%   \begin{mathpar}
-%     \boxed{\RelationE} \\
-%     \userule{E-Edit} \quad
-%     \userule{E-Enter} \quad
-%     \userule{E-Update} \\
-%     \userule{E-Then} \quad
-%     \userule{E-Next} \\
-%     \userule{E-And} \quad
-%     \userule{E-Or} \\
-%     \userule{E-Xor} \quad
-%     \userule{E-Appoint} \quad
-%     \userule{E-Fail}
-%   \end{mathpar}
-%   \caption{Evaluation semantics} \label{fig:evaluation-semantics}
-% \end{figure}
+\begin{figure}[h]
+  \small
+  \begin{mathpar}
+    \boxed{\RelationE} \\
+    \userule{E-Edit} \quad
+    \userule{E-Enter} \quad
+    \userule{E-Update} \\
+    \userule{E-Then} \quad
+    \userule{E-Next} \\
+    \userule{E-And} \quad
+    \userule{E-Or} \\
+    \userule{E-Xor} \quad
+    \userule{E-Appoint} \quad
+    \userule{E-Fail}
+  \end{mathpar}
+  \caption{Evaluation semantics} \label{fig:evaluation-semantics}
+\end{figure}
 
 % The difference between \emph{pretasks} and \emph{tasks} is subtile.
 % Note for example the change from $\Edit e$ to $\Edit v$ in the valued editor.
