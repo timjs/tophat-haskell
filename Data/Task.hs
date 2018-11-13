@@ -5,9 +5,9 @@ module Data.Task
   , ui, value, failing, inputs
   , normalise, initialise, handle, drive
   -- ** Constructors
-  , edit, enter, update
+  , edit, enter, view, update, watch
   , lift, (-&&-), (&&-), (-&&), (-||-), (-??-), failure, (>>-), (>>?)
-  , label, delabel, keeper
+  , label, (-#-), delabel, keeper
   -- ** Reexports
   , Label
   , Basic
