@@ -208,24 +208,21 @@ As soon as the value of the left hand side is $42$, the right hand side evaluate
 
 
 
-\begin{example}[Wait]\label{exm:wait}
+\begin{example}[Waiting]\label{exm:wait}
 
-\lstset{emph={amount,start,now}}
-Combining the language constructs we presented till now,
-we can create a task that is idle for a requested amount of time.
+\lstset{emph={delay,start,now}}
+With the language constructs seen so far it is possible to create a task that delays execution for a specified delay of time.
 To do this,
 we make use of a shared editor holding the current time (see \autoref{sub:time}),
 and a guarded internal step.
 \begin{TASK}
-  let wait : Int -> Task Unit = \amount : Int.
+  let wait : Int -> Task Unit = \delay : Int.
     update time >>= \start : Int.
     update time >>= \now : Int.
-      if now >= start + amount then edit <<>> else fail
+      if now >= start + delay then edit <<>> else fail
 \end{TASK}
-The first step is immediately taken.
-It will result in \TS{start} to be the time at the moment \TS{wait} is executed.
-Only when the current time \TS{now} is bigger or equal to the start time plus the asked delay,
-the second step will be taken and we will continue with an editor holding the unit value.
+The first step is immediately taken, resulting in \TS{start} to be the time at the moment \TS{wait} is executed.
+The second step is guarded until the current time is greater or equal to the start time plus the requested delay.
 
 \end{example}
 
