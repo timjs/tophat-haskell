@@ -80,23 +80,23 @@ except for the newly introduced pretasks.
 One can deduce the evaluation rules from the value grammar.
 For completeness they are given in the appendix.
 
-\begin{figure}[h]
-  \small
-  \begin{mathpar}
-    \boxed{\RelationE} \\
-    \userule{E-Edit} \quad
-    \userule{E-Enter} \quad
-    \userule{E-Update} \\
-    \userule{E-Then} \quad
-    \userule{E-Next} \\
-    \userule{E-And} \quad
-    \userule{E-Or} \\
-    \userule{E-Xor} \quad
-    \userule{E-Appoint} \quad
-    \userule{E-Fail}
-  \end{mathpar}
-  \caption{Evaluation semantics} \label{fig:evaluation-semantics}
-\end{figure}
+% \begin{figure}[h]
+%   \small
+%   \begin{mathpar}
+%     \boxed{\RelationE} \\
+%     \userule{E-Edit} \quad
+%     \userule{E-Enter} \quad
+%     \userule{E-Update} \\
+%     \userule{E-Then} \quad
+%     \userule{E-Next} \\
+%     \userule{E-And} \quad
+%     \userule{E-Or} \\
+%     \userule{E-Xor} \quad
+%     \userule{E-Appoint} \quad
+%     \userule{E-Fail}
+%   \end{mathpar}
+%   \caption{Evaluation semantics} \label{fig:evaluation-semantics}
+% \end{figure}
 
 % The difference between \emph{pretasks} and \emph{tasks} is subtile.
 % Note for example the change from $\Edit e$ to $\Edit v$ in the valued editor.
@@ -130,16 +130,17 @@ For completeness they are given in the appendix.
 
 \subsection{Task observations}
 
-\todo{Incorporate into next section or not?}
+In the specification of the normalisation and interaction semantics, we will make use of two observations on tasks.
+% Before we can discuss task normalisation,
+% we need to introduce some helpers.
+% These helpers are observations on the task syntax tree.
+Observations are simple semantic functions on the syntax tree of tasks.
+Goals are to formalise observable values for tasks and when tasks is equivalent to the fail task.
+Observations can also be used to create a graphical or textual user interface.
 
-% In the specification of the normalisation and interaction semantics,
-% we will make use of two \emph{observations} on tasks.
-% Observations are simple semantic functions looking at the syntax tree of tasks.
-% I.e.,
-
-% Our goal is to formalise the intuition of the \emph{value} of a task
-% and when a task is equivallent to $\Fail$,
-% i.e., when
+% First, we specify what it means for a task to have an observable value.
+% Next, we show how to observe if a task is equivalent to the failing task.
+% Lastly, observations can also be used to create a graphical or textual user interface.
 
 % \begin{figure*}[b]
 %   \small
@@ -150,22 +151,16 @@ For completeness they are given in the appendix.
 
 
 
-\paragraph{Task value}
+\paragraph{Observable values $(\Value)$}
 
-The question remains what value we have to associate to a task sequence.
-The answer is: none!
-Imagine the task $t := \Edit \str{Hello} \Then \lambda s.\allowbreak\Edit (\Length s)$,
-where a user entered a string and our task gives the length of the string as the result.
-Recall the definition of $\Value(t)$ from \autoref{sec:value}.
-The value of the left hand side of $t$ is the string $\str{Hello}$.
-After stepping to the right hand side,
-the value of $t$ should be $\Value(\Edit (\Length\str{Hello})) = \Value(\Edit 5) = 5$.
-This means the type of the value \emph{changed} after taking the step.
-\todo{Elaborate more about why this is not desirable.}
-Therefore we define that a sequence of tasks \emph{does not} have a value.\footnote{
-  We could choose that the value of a sequence equals the value of the left hand side.
-  This will have fatal consequences for our stepping semantics however.
-}
+Intuitively, a valued editor is a task which holds a value.
+The same applies to to shared editors.
+This value can be used by steps to calculate continuations.
+However, unvalued editors clearly do not hold a value,
+neither does the fail task.
+To make this intuition more precise,
+the partial function $\Value$ associates a value $v$ to tasks $t$ where possible.
+It's definition is given in \autoref{fig:observation-value}.
 
 \begin{figure}[h]
   \small
@@ -173,26 +168,37 @@ Therefore we define that a sequence of tasks \emph{does not} have a value.\footn
   \caption{Values} \label{fig:observation-value}
 \end{figure}
 
+Internal and external steps do not have an observable value because performing a step may change it's type (see \autoref{sub:typing}).
+% We could choose that the value of a sequence equals the value of the left hand side.
+% This will have fatal consequences for our stepping semantics however.
+Parallel composition only has a value when both branches have values.
+These values are then paired.
+Internal choice has a value when one of the branches has a value.
+When both branches have a value, we choose the left over the right.
+External choice does not have a value, because it waits for user input.
 
 
-\paragraph{Failing}
 
-When an expression fails, it can not be normalised and there is no possible
-input that it will handle. The function $\Failing$ determines this property.
+\paragraph{Failing $(\Failing)$}
 
-% Almost there!
-We did not extend the functions $\Failing(t)$ and $\Value(t)$ for our new sequencing construct $\Then$.
-Intuitively,
-when we have a task $\Fail \Then e_2$ we are stuck.
-As in the case of just the task $\Fail$,
-users can send any event,
-but nothing will ever happen.
-$\Fail$ will never have a value
-and therefore $\Then$ will never make a step to $e_2$.
-If the left hand side of $\Then$ is any other task,
-all will be well.
-Thus,
-a sequence $t_1 \Then e_2$ is succeeding iff its left hand side $t_1$ is succeeding.
+In \autoref{sec:fail} we introduced $\Fail$ to signal a senseless continuation of work.
+However, not only the fail task itself represents failure:
+combinations of tasks could also yield senseless continuations.
+Take for example the parallel composition of two fail tasks ($\Fail \And \Fail$).
+This expression is in some way equivalent to $\Fail$ itself.
+% it cannot be normalised and cannot handle any input.
+
+This intuition is formalised by the function $\Failing$ in \autoref{fig:observation-failing}.
+% It specifies which tasks are equivalent to $\Fail$.
+It determines the property that a task
+% \begin{enumerate*}
+% will not normalise any further,
+will never produce a value, and
+cannot handle any input.
+% \end{enumerate*}
+Such tasks we call \emph{failing}.
+% If a task is failing or not is determined by function $\Failing$.
+% This is one of the properties we will prove in \autoref{sec:properties}.
 
 \begin{figure}[h]
   \small
@@ -200,27 +206,49 @@ a sequence $t_1 \Then e_2$ is succeeding iff its left hand side $t_1$ is succeed
   \caption{Failing} \label{fig:observation-failing}
 \end{figure}
 
+% Failing tasks will never produce a value.
+Steps which left hand side are failing will never proceed because of the lack of an observable value.
+Therefore they are itself failing.
+Like with parallel, the internal choice of two failing tasks is failing itself.
+External choices are somewhat special.
+They let the user enter a choice and only then evaluate one of its two subexpressions.
+So, to determine if an external choice itself is failing or not,
+we will need to peek into the future to check if both subexpressions result in a failing task.
+This is done by normalising both expressions first.
+Annotations are failing only if the inner task is failing.
+% We will discuss normalisation in the next subsection.
 
 
-\paragraph{User Interface}
 
-\fixme{Add \UI observation or not?}
+\paragraph{User interface}
+
+\TOPHAT is designed in such a way that an observation on a tasks' syntax tree can be used to generate an user interface.
+A graphical user interface is shown in \autoref{fig:flight-booking}.
+Editors are rendered as \HTML input entries,
+external choices are represented by two buttons,
+and parallel composition is rendered side by side.
+Steps will only show the interface of their left hand side.
+In case of an external step they will be accompanied with a button.
+To reflect if a continuation is failing, this button can be temporary disabled.
+
+A textual user interface is part of the implementation of this semantics.
+It prompts users to explicitly type in values and other inputs,
+which then get parsed and processed.
 
 
 
 \subsection{Normalising tasks}
 \label{sec:normalise}
 
-Stepping from one task to another using the sequence construct $\Then$ is done by the system itself,
-not by the user.
-We will call this an \emph{internal step} or \emph{system step}.
-As there is no explicit user input needed to perform an internal step,
-% we cannot use our event handling semantics $\handle{h}$,
-% described in \autoref{sec:handling},
-to specify stepping from one task to the next (calculated) one.
-Because using our evaluation semantics to do so,
-would pollute the semantics our our host language with rules specific for the task layer,
-we choose to introduce another semantic relation which we will call \emph{normalisation}.
+Normalisation makes use of evaluation of the underlying host language
+As evaluation, normalisation is big step.
+We write $\RelationN$ to describe that
+an expression $e$ in state $s$ normalises to task $t$ in state $s'$.
+It is a semantic relation that acts on the task level.
+Intuitively, normalisation prepares tasks to handle any given input by the end user.
+
+Normalisation rules are given in \autoref{fig:normalisation-semantics} in a two step fashion.
+\todo{How are we going to do this?}
 
 \begin{figure}[h]
   \small
@@ -244,19 +272,19 @@ we choose to introduce another semantic relation which we will call \emph{normal
     \userule{S-OrNone}
   \end{mathpar}
 
-  % \paragraph{Ready}
-  % \begin{mathpar}
-  %   \userule{S-Edit} \quad \userule{S-Fill} \qquad \userule{S-Update} \\
-  %   \userule{S-Fail} \quad \userule{S-Xor}
-  % \end{mathpar}
+  \paragraph{Ready}
+  \begin{mathpar}
+    \userule{S-Edit} \quad \userule{S-Fill} \qquad \userule{S-Update} \\
+    \userule{S-Fail} \quad \userule{S-Xor}
+  \end{mathpar}
 
-  % \paragraph{Congruence}
-  % \begin{mathpar}
-  %   \userule{S-Next} \quad
-  %   \userule{S-And} \\
-  %   \userule{S-Appoint}
-  %   % \userule{S-Eval}
-  % \end{mathpar}
+  \paragraph{Congruence}
+  \begin{mathpar}
+    \userule{S-Next} \quad
+    \userule{S-And} \\
+    \userule{S-Appoint}
+    % \userule{S-Eval}
+  \end{mathpar}
 
 %   \caption{Striding semantics} \label{fig:normalisation-semantics}
 % \end{figure}
@@ -269,29 +297,9 @@ we choose to introduce another semantic relation which we will call \emph{normal
     \userule{N-Done} \\
     \userule{N-Repeat}
   \end{mathpar}
-  \caption{Normalisation semantics} \label{fig:memory-semantics}
+  \caption{Normalisation semantics} \label{fig:normalisation-semantics}
 
 \end{figure}
-
-When considering our semantic relations as a hierarchy,
-normalisation conceptually lies just below evaluation.
-Normalisation will make use of evaluation of our underlying host language and,
-as we will see later on,
-handling will make use of normalisation
-and the functions $\Value(t)$ and $\Failing(t)$ from sections \autoref{sec:value} and \autoref{sec:failing}.
-
-% As evaluation,
-% normalisation is a \emph{big step} semantics.
-We write $\RelationN$ to describe that
-task $t$ normalises to task $t'$.
-% Note that, as handling,
-% normalisation \emph{only acts upon tasks}.
-It is a semantic relation that lives \emph{on the task level}.
-We can think of normalisation as a \enquote{medium step} semantics,
-normalising tasks $t$ as much as possible,
-till the moment it needs an event to continue.
-For editors and the failing task normalisation is simple.
-% In the next subsection we will introduce rules to normalise a task sequence.
 
 
 
