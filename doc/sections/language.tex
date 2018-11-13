@@ -278,13 +278,10 @@ which is common in workflow modelling.
 
 \paragraph{Appoint $(u \At e)$}
 
-Users are identified by a name $u$, and can be appointed tasks by means of the
-$\At$ combinator. The sole purpose of this labeling is to be able to tell users
-which inputs are expected of them.
-In section~\ref{sec:handling}, a function is described to calculate which users
-can take what actions. Other than this function, the appointment of tasks has no
-influence on the semantics; \refrule{E-Appoint}, \refrule{S-Appoint} and
-\refrule{H-Appoint} simply continue with their operations as if the label was
-not there.
-
-\fixme{we still have to fix the type of $\Inputs$ and state the type of $u$}
+Users are identified by a name $u$ which is a string.
+They can be appointed tasks by means of the $\At$ combinator.
+The sole purpose of this labeling is to be able to tell users which inputs are expected of them.
+In \autoref{sec:handling}, a function is described to calculate which users can take what actions.
+Other than this function, the appointment of tasks has no influence on the semantics.
+All semantic rules in \autoref{sec:semantics} simply continue with their operations as if the label was not there.
+\todo{we still have to fix the type of $\Inputs$ and state the type of $u$}
