@@ -143,15 +143,12 @@ This change is immediately reflected on Christopher's screen: The pin changes it
 This way Marco and Christopher can work together to edit the same information.
 
 \label{sub:time}
-Another important use case for shared editors is sensors.
-Sensors can be modelled by users updating the value of a shred editor once in a while.
-Take for example the task to view the current time: \TS{update time}
-which is a shared editor of type \TS{Task Int}.
-% which is stored as a value of type $\Reference \Int$.
-Every second, a clock sends a change event to the system.
-Each shared editor watching the same location will be updated accordingly.
-The value of a sensor is thus exposed through a shared editor.
-
+Two other important use cases for shared editors are sensors and time.
+Sensors can be represented as external entities that periodically update a shared editor with their current sensor value.
+Similarly, the current time can be stored in a shared editor which is periodically updated by a clock.
+The actual sensor and the clock are not modelled in \TOPHAT.
+We assume that they exist as external users that send update events to the system.
+This allows programmers to write tasks that react to sensor values or timeouts.
 
 
 \subsection{Steps}
