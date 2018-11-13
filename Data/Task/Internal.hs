@@ -2,7 +2,7 @@ module Data.Task.Internal
   ( TaskT(..)
   , Label
   , edit, enter, update
-  , lift, (-&&-), (&&-), (-&&), (-||-), (-??-), fail, (>>-), (>>?)
+  , lift, (-&&-), (&&-), (-&&), (-||-), (-??-), failure, (>>-), (>>?)
   , label, delabel, keeper
   , module Control.Monad.Ref
   , module Data.Basic
@@ -153,8 +153,8 @@ x &&- y = lift snd $ x -&&- y
 -- Alternative --
 
 
-fail :: TaskT l m a
-fail = Fail
+failure :: TaskT l m a
+failure = Fail
 
 
 (-||-) :: TaskT l m a -> TaskT l m a -> TaskT l m a
@@ -189,7 +189,7 @@ instance Arbitrary (TaskT l m Int) where
       , mkpair
       , (-||-) <$> arbitrary <*> arbitrary
       , (-??-) <$> arbitrary <*> arbitrary
-      , pure fail
+      , pure failure
       , (>>-) <$> (arbitrary :: Gen (TaskT l m Int)) <*> arbitrary
       , (>>?) <$> (arbitrary :: Gen (TaskT l m Int)) <*> arbitrary
       -- , Label <$> (arbitrary :: Gen Label) <*> arbitrary
