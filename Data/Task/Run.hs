@@ -9,30 +9,34 @@ import Data.Task.Input as Input
 
 
 
-{- Running ---------------------------------------------------------------------
+-- Running ---------------------------------------------------------------------
 
 
-getInput :: IO Input
+getInput :: IO (Input Action)
 getInput = do
-  putStr ">> "
+  putText ">> "
   input <- getLine
   case input of
-    "quit" -> exit 0
+    "quit" -> exitSuccess
     _ ->
       case Input.parse (words input) of
-        Right event -> do
-          edit event
+        Right i -> do
+          pure i
         Left msg -> do
           putStrLn msg
           getInput
 
 
-loop :: Show (typeOf a) -> Task a -> IO ()
+{-
+loop :: TaskIO a -> IO ()
 loop task = do
-  putStrLn !(Task.ui task)
-  putStrLn $ "Possibilities: " <> show !(Task.inputs task)
-  event <- getInput
-  loop !(_ task event)
+  ui <- Task.ui task
+  putStrLn ui
+  is <- Task.inputs task
+  putStrLn $ "Possibilities: " <> show is
+  input <- getInput
+  task_new <- _ task input
+  loop task_new
 
 
 run :: Show (typeOf a) -> Task a -> IO ()
