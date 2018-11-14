@@ -97,8 +97,8 @@ And again, this is proven by induction over $e$.
 
 \subsection{Progress}
 
-Furthermore, a well-typed term of a task type is guaranteed to progress after
-normalisation, unless it is failing.
+A well-typed term of a task type is guaranteed to progress after normalisation,
+unless it is failing.
 
 We define what we mean with progress in Theorem~\ref{thm:prog-norm}.
 \begin{theorem}[Progress under handling]
@@ -113,10 +113,10 @@ We define what we mean with progress in Theorem~\ref{thm:prog-norm}.
 
 If an expression $e$ and state $s$ are well-typed, then after normalisation, it
 either fails, or there exists some input $i$ that can be handled by it.
-In order to prove this Theorem to be true, we require two additional theorems.
+In order to prove this Theorem, we require two additional theorems.
 
 % \paragraph{Normalisation is Big-Step}
-
+\fixme{Should we move this section to the rules?}
 The normalisation semantics is a big-step semantics. This would be quite
 straight-forward, if we did not have to deal with state. Consider the following
 example:
@@ -130,8 +130,8 @@ normalised, in this case to $e$. To overcome this problem, the \refrule{N-Done} 
 the shared memory $s$ has become stable and no further normalisation can be
 applied.
 
-To prove that this is true, and that therefore normalisation is a big-step
-semantics, we show the following theorem to be true.
+To prove that normalisation is indeed a big-step semantics, we prove the 
+following theorem.
 
 \begin{theorem}[Normalisation is big step]
   For all well typed expressions $e$ and states $s$,
