@@ -131,7 +131,7 @@
   \begin{grammar*}
     v ::= &                                                     & Values \\
       \mid& \lambda x:\tau.\ e \Mid \tuple{v_1, v_2} \Mid \unit & – abstraction, pair, unit \\
-      \mid& c \Mid l \Mid u \Mid t                              & – constant, location, user, task \\
+      \mid& c \Mid l \Mid t                                     & – constant, location, task \\
     t ::= &                                                     & Tasks \\
       \mid& \Edit v \Mid \Enter \tau \Mid \Update l             & – editors \\
       \mid& t_1 \Then e_2 \Mid t_1 \Next e_2                    & – steps \\
@@ -160,11 +160,12 @@
 
 \newmacro{G-Inputs-Compact}{
   \begin{grammar*}
+    j ::= &                                           & Maybe Appointed Inputs\\
+    \mid  & u\At i \Mid i                             & – assigned input, input\\
     i ::= &                                           & Inputs \\
     \mid  & a \Mid \First i \Mid \Second i            & – action, pass to first, pass to second \\
     a ::= &                                           & Actions \\
-    \mid  & v \Mid \Empty \Mid \Continue \Mid \Pick r & – change, empty, continue, pick route \\
-    r ::= &                                           & Routes \\
-    \mid  &\Left \Mid \Right                          & – go left, go right
+    \mid  & v \Mid \Empty \Mid \Continue              & – change, empty, continue\\
+    \mid  & \Left \Mid \Right                         & – go left, go right
   \end{grammar*}
 }
