@@ -155,13 +155,23 @@ We now have the ingredients to prove Theorem~\ref{thm:prog-norm}.
 
 
 
-\subsection{Completeness of inputs}
+\subsection{Soundness and Completeness of Inputs}
 
-\begin{theorem}[Inputs are complete]
-  \todo{Is this a correct title?}
+In order to validate the function that calculates all possible inputs $\Inputs$,
+we want to show that the set of possible inputs it produces is both sound and
+complete with respect to the handle semantics. By sound we mean that all inputs
+in the set of possible inputs can actually be handled by the handle semantics,
+and by complete we meand that the set of possible inputs contains all inputs
+that can be handled by the handle semantics. Theorem~\ref{safety-i} expresses
+exactly this property.
+
+\begin{theorem}[Inputs function is sound and complete]
   For all well typed expressions $e$, states $s$, and inputs $i$,
   % For all expressions $e$, states $s$, and inputs $i$
   % such that $\Gamma,\Sigma \infers e:\tau$ and $\Sigma \infers s$,
   we have that $i \in \Inputs{(e)}$ if and only if $e,s \handle{i} e',s'$.
   \label{thm:safety-i}
 \end{theorem}
+
+We prove the above theorem by induction over $e$. The proof is listed in the
+appendix.
