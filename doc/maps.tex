@@ -83,7 +83,7 @@
 
 \newmacro{O-Inputs}{
   \begin{function}
-    \signature{\Inputs : \mathrm{Tasks} \times \mathrm{States} \to \powerset(\mathrm{Inputs})} \\
+    \signature{\Inputs : \mathrm{Tasks} \times \mathrm{States} \to \powerset(\mathrm{Maybe Appointed Inputs})} \\
     \Inputs(\Edit v,s)             &=& \set{v':\tau, \Empty}                       \quad\where\ \Edit v : \Task\tau \\
     \Inputs(\Enter \tau,s)         &=& \set{v':\tau} \\
     \Inputs(\Update l,s)           &=& \obox{\set{v':\tau, \Empty}}{\set{v':\tau}} \quad\where\ \Update l : \Task\tau \\
@@ -93,8 +93,8 @@
                                    & & \quad e_2\ v_1, s \normalise t_2, s' \land \lnot\Failing(t_2, s')\} \\
     \Inputs(t_1 \And t_2,s)        &=& \set{\First\ i \mid i \in \Inputs(t_1,s)} \cup \set{\Second\ i \mid i \in \Inputs(t_2,s)} \\
     \Inputs(t_1 \Or t_2,s)         &=& \set{\First\ i \mid i \in \Inputs(t_1,s)} \cup \set{\Second\ i \mid i \in \Inputs(t_2,s)} \\
-    \Inputs(e_1 \Xor e_2,s)        &=& \set{\Pick \obox{\Right}{\Left} \mid e_1, s \normalise t_1, s' \land \lnot\Failing(t_1, s')} \cup \phantom{} \\
-                                   & & \set{\Pick \Right \mid e_2, s \normalise t_2, s' \land \lnot\Failing(t_2, s')} \\
+    \Inputs(e_1 \Xor e_2,s)        &=& \set{\Left \mid e_1, s \normalise t_1, s' \land \lnot\Failing(t_1, s')} \cup \phantom{} \\
+                                   & & \set{\Right \mid e_2, s \normalise t_2, s' \land \lnot\Failing(t_2, s')} \\
     \Inputs(u_1 \At t,s)           &=& \set{u_2 \At i\mid u_2 \At i \in \Inputs(t,s)} \cup \set{u_1 \At i\mid i\in \Inputs(t,s)}
   \end{function}
 }
