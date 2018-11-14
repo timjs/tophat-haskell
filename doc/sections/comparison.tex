@@ -275,3 +275,9 @@ A process with nondeterministic behaviour must always be regarded as a specifica
 
 \TOP is meant solely for implementation and does not have any form of nondeterminism.
 Input events for parallel tasks are disambiguated, internal steps have a well-defined evaluation order, and internal choice is left-biased.
+
+
+\paragraph{Conclusion}
+
+There are several concepts that exist in both languages, like concurrency, sequential composition, or sending values between concurrent agents.
+In \TOP however they are meant to be used on a higher level of abstraction, which allows concise declarative description of patterns of collaboration, without worrying about the implementation details of communication.
