@@ -461,15 +461,17 @@ These conditions make sure the type of the entered value and the type of the edi
 
 \paragraph{Inputs}
 
-\fixme{Add inputs description}
-
 \begin{figure}[h]
   \small
   \usemacro{O-Inputs}
-  \caption{Inputs} \label{fig:observation-value}
+  \caption{Inputs} \label{fig:observation-input}
 \end{figure}
 
-
+In order to know which inputs a task expects, we have constructed a function
+that calculates a set of all possible inputs that can be handled. This function
+called inputs, denoted with $\Inputs$, takes the current normalised expression
+and state, and returns a set of inputs that can be assigned to a specific user.
+The definition of this function is listed in Figure~\ref{fig:observation-input}.
 
 
 
