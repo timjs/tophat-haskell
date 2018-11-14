@@ -2,8 +2,8 @@ module Preload
   ( module Protolude
   , module Control.Monad.Zero
   , module Data.Bitraversable
-  , words, unwords, lines, unlines
-  , List
+  , quote, words, unwords, lines, unlines
+  , List, Unit, Msg
   , (<<), (>>)
   , Pretty(..), module GHC.Show, showText, read
   , neutral
@@ -33,6 +33,8 @@ import GHC.Show (Show(showsPrec), ShowS, showString, showParen)
 
 
 type List a = [a]
+type Unit = ()
+type Msg = Text
 
 
 -- Functions -------------------------------------------------------------------
@@ -48,6 +50,14 @@ infixr 9 >>
 {-# INLINE (>>) #-}
 (>>) :: (a -> b) -> (b -> c) -> a -> c
 (>>) = flip (<<)
+
+
+
+-- Text ------------------------------------------------------------------------
+
+
+quote :: Text -> Text
+quote t = "`" <> t <> "`"
 
 
 

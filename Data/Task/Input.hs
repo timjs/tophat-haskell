@@ -27,6 +27,13 @@ instance Pretty Path where
   pretty GoRight = "r"
 
 
+parsePath :: Text -> Either Msg Path
+parsePath "l"   = ok $ GoLeft
+parsePath "r"   = ok $ GoRight
+parsePath other = throw $ "!! " <> quote other <> " is not a valid path, type `help` for more info"
+
+
+
 -- Inputs ----------------------------------------------------------------------
 
 -- Real actions --
@@ -125,16 +132,16 @@ instance Show Dummy where
 
 
 data Input a
-  = ToLeft (Input a)
+  = ToFirst (Input a)
   | ToHere a
-  | ToRight (Input a)
+  | ToSecond (Input a)
   deriving (Eq, Show, Functor, Foldable, Traversable)
 
 
 instance Pretty a => Pretty (Input a) where
-  pretty (ToLeft e)  = "l " <> pretty e
+  pretty (ToFirst e)  = "l " <> pretty e
   pretty (ToHere a)  = pretty a
-  pretty (ToRight e) = "r " <> pretty e
+  pretty (ToSecond e) = "r " <> pretty e
 
 
 
@@ -192,34 +199,19 @@ usage = unlines
   , "and labels always start with a Capital letter"
   ]
 
-parse :: List Text -> Either Text (Input Action)
+parse :: List Text -> Either Msg (Input Action)
 parse [ "change", val ]
-  | Just v <- read val :: Maybe Int  = ok $ ToHere $ Change v
-  | Just v <- read val :: Maybe Bool = ok $ ToHere $ Change v
-  | Just v <- read val :: Maybe Text = ok $ ToHere $ Change v
-parse other = throw $ "!! `" <> unwords other <> "` is not a valid command, type `help` for more info"
-
-
-{-
-parse [ "change", val ] with (Universe.parse val)
-  | Nothing              = throw $ "!! Error parsing value `" ++ val ++ "`"
-  -- NOTE: `c` is the type of `v` in our universe, which is automatically used by implicit of the `Change` constructor.
-  | Just (c ** v)        = ok $ ToHere $ Change (Exactly v)
-parse [ "empty" ]        = ok $ ToHere $ Empty
--- parse [ "pick", next ]   =
---   if isLabel next then
---     ok $ ToHere $ PickWith next
---   else
---     map (ToHere . Pick) $ Path.parse [ next ]
-parse ("pick" : rest)    = map (ToHere . Pick) $ Path.parse rest
-parse [ "cont" ]         = ok $ ToHere $ Continue
--- parse [ "cont", next ]   =
---   if isLabel next then
---     ok $ ToHere $ ContinueWith next
---   else
---     throw $ "!! Could not parse `" ++ next ++ "` as a label, type `help` for more info"
-parse ("l" : rest)       = map ToLeft $ parse rest
-parse ("r" : rest)       = map ToRight $ parse rest
-parse [ "help" ]         = throw usage
-parse other              = throw $ "!! `" ++ unwords other ++ "` is not a valid command, type `help` for more info"
--}
+  | Just v <- read val :: Maybe Unit   = ok $ ToHere $ Change v
+  | Just v <- read val :: Maybe Bool   = ok $ ToHere $ Change v
+  | Just v <- read val :: Maybe Int    = ok $ ToHere $ Change v
+  | Just v <- read val :: Maybe Text   = ok $ ToHere $ Change v
+  | Just v <- read val :: Maybe [Bool] = ok $ ToHere $ Change v
+  | Just v <- read val :: Maybe [Int]  = ok $ ToHere $ Change v
+  | Just v <- read val :: Maybe [Text] = ok $ ToHere $ Change v
+  | otherwise                          = throw $ "!! Error parsing value " <> quote val
+parse [ "pick", next ]                 = map (ToHere << Pick) $ parsePath next
+parse [ "cont" ]                       = ok $ ToHere $ Continue
+parse ("f" : rest)                     = map ToFirst $ parse rest
+parse ("s" : rest)                     = map ToSecond $ parse rest
+parse [ "help" ]                       = throw usage
+parse other                            = throw $ "!! " <> quote (unwords other) <> " is not a valid command, type `help` for more info"
