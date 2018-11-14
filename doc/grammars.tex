@@ -131,7 +131,7 @@
   \begin{grammar*}
     v ::= &                                                     & Values \\
       \mid& \lambda x:\tau.\ e \Mid \tuple{v_1, v_2} \Mid \unit & – abstraction, pair, unit \\
-      \mid& c \Mid l \Mid t                                     & – constant, location, task \\
+      \mid& c \Mid l \Mid u \Mid t                              & – constant, location, user, task \\
     t ::= &                                                     & Tasks \\
       \mid& \Edit v \Mid \Enter \tau \Mid \Update l             & – editors \\
       \mid& t_1 \Then e_2 \Mid t_1 \Next e_2                    & – steps \\
