@@ -4,7 +4,16 @@
 
 \section{Related work}
 
-\fixme{Should we write this section or not?}
+There have been two previous papers that describe semantics of iTasks, by \citet{conf/ifl/KoopmanPA08} and \citet{conf/ppdp/PlasmeijerLMAK12}.
+Both give a different semantics in the form of minimal implementations of a subset of the interface of iTasks.
+Our work is based on them, but differs in three major ways.
+First, we make an explicit distinction between the host language and the task language, to emphasize their boundaries.
+Second, we make use of separate semantic functions for querying the current task value, determining the continuation after an input event, and producing a user interface.
+In iTasks and its aforementioned semantics, these are integrated into the Task datatype.
+Third, our system does not have the notion of task stability.
+When desired, stability can be introduced by the programmer, but the system itself makes no use of it.
+We argue that this does not impact the expressiveness of our language.
+
 
 % mTasks is another implementation of TOP, designed for coordination of IoT devices. \alert{cite MSc Lubbers}
 % mTasks has been used in a demonstrator for home automation. \alert{cite MSc Andrade}
