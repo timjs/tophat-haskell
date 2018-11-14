@@ -1,21 +1,31 @@
 module Preload
   ( module Protolude
+  , module Control.Monad.Zero
   , module Data.Bitraversable
+  , words, unwords, lines, unlines
   , List
   , (<<), (>>)
-  , Pretty(..)
+  , Pretty(..), module GHC.Show, showText, read
   , neutral
+  , ok, throw, catch
   , (<&>), skip
   , forany, forall
-  , sameT, proxyOf, arbitraryOf
+  , sameT, proxyOf, arbitraryOf, typeOf
   ) where
 
 
-import Protolude hiding ((<&>), (<&&>), (.), (>>), trace, handle, lift, TypeRep, typeRep)
+import Protolude hiding ((<&>), (<&&>), (.), (>>), trace, handle, lift, TypeRep, typeRep, catch)
+
+import Control.Monad.Zero
 
 import Data.Bitraversable
+import Data.Text (unpack, words, unwords, lines, unlines)
 
 import Test.QuickCheck (Arbitrary(..), Gen)
+
+import Type.Reflection (typeOf)
+
+import GHC.Show (Show(showsPrec), ShowS, showString, showParen)
 
 
 
@@ -88,6 +98,25 @@ forall (x:xs) p = ifM (p x) (forall xs p) (return False)
 
 
 
+-- MonadError ------------------------------------------------------------------
+
+
+{-# INLINE ok #-}
+ok :: MonadError e m => a -> m a
+ok = pure
+
+
+{-# INLINE throw #-}
+throw :: MonadError e m => e -> m a
+throw = throwError
+
+
+{-# INLINE catch #-}
+catch :: MonadError e m => m a -> (e -> m a) -> m a
+catch = catchError
+
+
+
 -- Type equality & Proxys ------------------------------------------------------
 
 
@@ -107,8 +136,16 @@ arbitraryOf _ = arbitrary
 
 
 
--- Pretty printing -------------------------------------------------------------
+-- Reading & Showing -----------------------------------------------------------
 
 
 class Pretty a where
   pretty :: a -> Text
+
+
+showText :: Text -> ShowS
+showText = showString << toS
+
+
+read :: Read a => Text -> Maybe a
+read = readMaybe << unpack

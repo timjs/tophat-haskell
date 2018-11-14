@@ -5,9 +5,9 @@ module Data.Task
   , ui, value, failing, inputs
   , normalise, initialise, handle, drive
   -- ** Constructors
-  , edit, enter, update
-  , lift, (-&&-), (&&-), (-&&), (-||-), (-??-), fail, (>>-), (>>?)
-  , label, delabel, keeper
+  , edit, enter, view, update, watch
+  , lift, (-&&-), (&&-), (-&&), (-||-), (-??-), failure, (>>-), (>>?)
+  , label, (-#-), delabel, keeper
   -- ** Reexports
   , Label
   , Basic
@@ -22,8 +22,6 @@ import Preload
 import Control.Monad.Trace
 import Control.Monad.Mem
 
-import Data.IORef
-import Data.STRef
 import Data.Task.Input
 import Data.Task.Internal
 
@@ -32,13 +30,13 @@ import Data.Task.Internal
 -- Aliases ---------------------------------------------------------------------
 
 
-type TaskIO = TaskT IORef IO
+type TaskIO = TaskT IO
 
 
-type TaskST s = TaskT (STRef s) (ST s)
+type TaskST s = TaskT (ST s)
 
 
-type Task = TaskT Loc Mem
+type Task = TaskT Mem
 
 
 -- runTask :: Task a -> ( a, Heap )
@@ -57,7 +55,9 @@ type Task = TaskT Loc Mem
 -- Observations ----------------------------------------------------------------
 
 
-ui :: MonadRef l m => TaskT l m a -> m Text
+ui ::
+  MonadRef l m =>
+  TaskT m a -> m Text
 ui (Edit (Just x)) = pure $ "□(" <> show x <> ")"
 ui (Edit Nothing)  = pure $ "□(_)"
 ui (Store l) = do
@@ -97,29 +97,26 @@ ui (Label l this) = do
   pure $ l <> ":\n\t" <> t
 
 
-value :: MonadRef l m => TaskT l m a -> m (Maybe a)
-value (Edit val) = pure $ val
-value (Store loc) = Just <$> deref loc
-value (And left rght) = do
-  l <- value left
-  r <- value rght
-  pure $ l <&> r
-value (Or left rght) = do
-  l <- value left
-  r <- value rght
-  pure $ l <|> r
-value (Xor _ _) = pure $ Nothing
-value (Fail) = pure $ Nothing
-value (Then _ _) = pure $ Nothing
-value (Next _ _) = pure $ Nothing
-value (Label _ this) = value this
+value ::
+  MonadRef l m =>
+  TaskT m a -> m (Maybe a)
+value (Edit val)      = pure $ val
+value (Store loc)     = Just <$> deref loc
+value (And left rght) = (<&>) <$> value left <*> value rght
+value (Or left rght)  = (<|>) <$> value left <*> value rght
+value (Xor _ _)       = pure $ Nothing
+value (Fail)          = pure $ Nothing
+value (Then _ _)      = pure $ Nothing
+value (Next _ _)      = pure $ Nothing
+value (Label _ this)  = value this
 
 
-failing :: TaskT l m a -> Bool
+failing :: TaskT m a -> Bool
 failing (Edit _)        = False
 failing (Store _)       = False
 failing (And left rght) = failing left && failing rght
 failing (Or  left rght) = failing left && failing rght
+--TODO: fix to peek in future
 failing (Xor left rght) = failing left && failing rght
 failing (Fail)          = True
 failing (Then this _)   = failing this
@@ -127,11 +124,17 @@ failing (Next this _)   = failing this
 failing (Label _ this)  = failing this
 
 
-inputs :: forall l m a. MonadRef l m => TaskT l m a -> m (List (Input Dummy))
+inputs :: forall s l m a.
+  Eq s => MonadZero m => MonadState s m => MonadRef l m =>
+  TaskT m a -> m (List (Input Dummy))
 inputs (Edit _) =
-  pure $ [ ToHere (AChange (Proxy :: Proxy a)), ToHere AEmpty ]
+  pure $ [ ToHere (AChange tau), ToHere AEmpty ]
+  where
+    tau = Proxy :: Proxy a
 inputs (Store _) =
-  pure $ [ ToHere (AChange (Proxy :: Proxy a)) ]
+  pure $ [ ToHere (AChange tau) ]
+  where
+    tau = Proxy :: Proxy a
 inputs (And left rght) = do
   l <- inputs left
   r <- inputs rght
@@ -153,12 +156,8 @@ inputs (Fail) =
   pure $ []
 inputs (Then this _) =
   inputs this
-inputs (Next this next) = do
-  available <- inputs this
-  val <- value this
-  pure $ maybe [] cont val ++ available
-  where
-    cont v = if failing (next v) then [] else [ ToHere AContinue ]
+inputs (Next this next) =
+  (++) <$> inputs this <*> [ [ToHere AContinue] | Just v <- value this, cont <- normalise (next v), not $ failing cont ]
 inputs (Label _ this) =
   inputs this
 
@@ -167,57 +166,74 @@ inputs (Label _ this) =
 -- Normalisation ---------------------------------------------------------------
 
 
-normalise :: MonadRef l m => TaskT l m a -> m (TaskT l m a)
+stride ::
+  MonadRef l m =>
+  TaskT m a -> m (TaskT m a)
 
 -- Step --
-normalise (Then this cont) = do
-  this_new <- normalise this
+stride (Then this cont) = do
+  this_new <- stride this
   val <- value this_new
   case val of
     Nothing -> pure $ Then this_new cont
     Just v  ->
-      --FIXME: should we use normalise here instead of just eval?
+      --FIXME: should we use stride here instead of just eval?
       let next = cont v in
       if failing next then
         pure $ Then this_new cont
       else
-        normalise next
+        stride next
 
 -- Evaluate --
-normalise (And left rght) = do
-  left_new <- normalise left
-  rght_new <- normalise rght
+stride (And left rght) = do
+  left_new <- stride left
+  rght_new <- stride rght
   pure $ And left_new rght_new
 
-normalise (Or left rght) = do
-  left_new <- normalise left
+stride (Or left rght) = do
+  left_new <- stride left
   val_left <- value left_new
   case val_left of
     Just _  -> pure $ left_new
     Nothing -> do
-      rght_new <- normalise rght
+      rght_new <- stride rght
       val_rght <- value rght_new
       case val_rght of
         Just _  -> pure $ rght_new
         Nothing -> pure $ Or left_new rght_new
 
-normalise (Next this cont) = do
-  this_new <- normalise this
+stride (Next this cont) = do
+  this_new <- stride this
   pure $ Next this_new cont
 
 -- Label --
-normalise (Label l this)
-  | keeper this = normalise this
+stride (Label l this)
+  | keeper this = stride this
   | otherwise = do
-      this_new <- normalise this
+      this_new <- stride this
       pure $ Label l this_new
 
 -- Values --
-normalise task = do
+stride task = do
   pure $ task
 
 
-initialise :: MonadRef l m => TaskT l m a -> m (TaskT l m a)
+normalise ::
+  Eq s => MonadState s m => MonadRef l m =>
+  TaskT m a -> m (TaskT m a)
+normalise task = do
+  state_old <- get
+  task_new <- stride task
+  state_new <- get
+  if state_old == state_new then
+    pure task_new
+  else
+    normalise task_new
+
+
+initialise ::
+  Eq s => MonadState s m => MonadRef l m =>
+  TaskT m a -> m (TaskT m a)
 initialise = normalise
 
 
@@ -232,7 +248,9 @@ data NotApplicable
   | CouldNotHandle
 
 
-handle :: forall l m a. MonadTrace NotApplicable m => MonadRef l m => TaskT l m a -> Input Action -> m (TaskT l m a)
+handle :: forall l m a.
+  MonadTrace NotApplicable m => MonadRef l m =>
+  TaskT m a -> Input Action -> m (TaskT m a)
 
 -- Edit --
 handle (Edit _) (ToHere Empty) =
@@ -338,6 +356,8 @@ handle task _ =
   trace CouldNotHandle task
 
 
-drive :: MonadTrace NotApplicable m => MonadRef l m => TaskT l m a -> Input Action -> m (TaskT l m a)
+drive ::
+  Eq s => MonadTrace NotApplicable m => MonadState s m => MonadRef l m =>
+  TaskT m a -> Input Action -> m (TaskT m a)
 drive task input =
   handle task input >>= normalise

@@ -1,9 +1,9 @@
 module Data.Task.Internal
   ( TaskT(..)
   , Label
-  , edit, enter, update
-  , lift, (-&&-), (&&-), (-&&), (-||-), (-??-), fail, (>>-), (>>?)
-  , label, delabel, keeper
+  , edit, enter, view, update, watch
+  , lift, (-&&-), (&&-), (-&&), (-||-), (-??-), failure, (>>-), (>>?)
+  , label, (-#-), delabel, keeper
   , module Control.Monad.Ref
   , module Data.Basic
   ) where
@@ -19,9 +19,8 @@ import Control.Monad.Ref
 
 import Data.Basic (Basic)
 
-import GHC.Show (Show(showsPrec), ShowS, showString, showParen)
 
-
+infixr 6 -#-
 infixl 5 -&&-, -&&, &&-
 infixl 3 -||-, -??-
 infixl 2 >>-, >>?
@@ -34,33 +33,33 @@ infixl 2 >>-, >>?
 type Label = Text
 
 
-data TaskT :: (Type -> Type) -> (Type -> Type) -> Type -> Type where
+data TaskT :: (Type -> Type) -> Type -> Type where
   -- | Editors, valued or unvalued
-  Edit :: Basic r => Maybe r -> TaskT l m r
+  Edit :: Basic r => Maybe r -> TaskT m r
 
   -- | Stores referring to some shared value of type `r`
-  Store :: ( MonadRef l m, Basic r ) => l r -> TaskT l m r
+  Store :: ( MonadRef l m, Basic r ) => l r -> TaskT m r
 
   -- | Composition of two tasks.
-  And :: TaskT l m a -> TaskT l m b -> TaskT l m ( a, b )
+  And :: TaskT m a -> TaskT m b -> TaskT m ( a, b )
 
   -- | Internal choice between two tasks.
-  Or :: TaskT l m r -> TaskT l m r -> TaskT l m r
+  Or :: TaskT m r -> TaskT m r -> TaskT m r
 
   -- | External choice between two tasks.
-  Xor :: TaskT l m r -> TaskT l m r -> TaskT l m r
+  Xor :: TaskT m r -> TaskT m r -> TaskT m r
 
   -- | The failing task
-  Fail :: TaskT l m r
+  Fail :: TaskT m r
 
   -- | Internal, or system step.
-  Then :: TaskT l m a -> (a -> TaskT l m r) -> TaskT l m r
+  Then :: TaskT m a -> (a -> TaskT m r) -> TaskT m r
 
   -- | External, or user step.
-  Next :: TaskT l m a -> (a -> TaskT l m r) -> TaskT l m r
+  Next :: TaskT m a -> (a -> TaskT m r) -> TaskT m r
 
   -- | Labeled tasks.
-  Label :: Label -> TaskT l m r -> TaskT l m r
+  Label :: Label -> TaskT m r -> TaskT m r
 
   --FIXME: add lift and program some examples
 
@@ -69,7 +68,7 @@ data TaskT :: (Type -> Type) -> (Type -> Type) -> Type -> Type where
 -- Show --
 
 
-instance Show (TaskT l m a) where
+instance Show (TaskT m a) where
   showsPrec d (Edit (Just x)) =
     showParen (d > p) $ showString "Edit " << showsPrec (succ p) x
       where p = 10
@@ -105,15 +104,11 @@ instance Show (TaskT l m a) where
       where p = 9
 
 
-showText :: Text -> ShowS
-showText = showString << toS
-
-
 
 -- Functor --
 
 
-lift :: Basic b => (a -> b) -> TaskT l m a -> TaskT l m b
+lift :: Basic b => (a -> b) -> TaskT m a -> TaskT m b
 lift f t = (>>-) t (\x -> edit (f x))
 
 
@@ -121,31 +116,39 @@ lift f t = (>>-) t (\x -> edit (f x))
 -- Applicative --
 
 
-edit :: Basic a => a -> TaskT l m a
+edit :: Basic a => a -> TaskT m a
 edit x = Edit (Just x)
 
 
-enter :: Basic a => TaskT l m a
+enter :: Basic a => TaskT m a
 enter = Edit Nothing
 
 
-update :: MonadRef l m => Basic a => l a -> TaskT l m a
-update r = Store r
+view :: Basic a => a -> TaskT m a
+view = edit
 
 
-(-&&-) :: TaskT l m a -> TaskT l m b -> TaskT l m ( a, b )
+update :: MonadRef l m => Basic a => l a -> TaskT m a
+update = Store
+
+
+watch :: MonadRef l m => Basic a => l a -> TaskT m a
+watch = update
+
+
+(-&&-) :: TaskT m a -> TaskT m b -> TaskT m ( a, b )
 (-&&-) = And
 
 
-(-&&) :: Basic a => TaskT l m a -> TaskT l m b -> TaskT l m a
+(-&&) :: Basic a => TaskT m a -> TaskT m b -> TaskT m a
 x -&& y = lift fst $ x -&&- y
 
 
-(&&-) :: Basic b => TaskT l m a -> TaskT l m b -> TaskT l m b
+(&&-) :: Basic b => TaskT m a -> TaskT m b -> TaskT m b
 x &&- y = lift snd $ x -&&- y
 
 
--- apply' :: TaskT l m (a -> b) -> TaskT l m a -> TaskT l m b
+-- apply' :: TaskT m (a -> b) -> TaskT m a -> TaskT m b
 -- apply' ff fx = map (\(Tuple f x) -> f x) $ ff <&> fx
 
 
@@ -153,15 +156,15 @@ x &&- y = lift snd $ x -&&- y
 -- Alternative --
 
 
-fail :: TaskT l m a
-fail = Fail
+failure :: TaskT m a
+failure = Fail
 
 
-(-||-) :: TaskT l m a -> TaskT l m a -> TaskT l m a
+(-||-) :: TaskT m a -> TaskT m a -> TaskT m a
 (-||-) = Or
 
 
-(-??-) :: TaskT l m a -> TaskT l m a -> TaskT l m a
+(-??-) :: TaskT m a -> TaskT m a -> TaskT m a
 (-??-) = Xor
 
 
@@ -169,19 +172,26 @@ fail = Fail
 -- Monad --
 
 
-(>>-) :: TaskT l m b -> (b -> TaskT l m a) -> TaskT l m a
+(>>-) :: TaskT m b -> (b -> TaskT m a) -> TaskT m a
 (>>-) = Then
 
 
-(>>?) :: TaskT l m a -> (a -> TaskT l m b) -> TaskT l m b
+(>>?) :: TaskT m a -> (a -> TaskT m b) -> TaskT m b
 (>>?) = Next
+
+
+-- Labeling --
+
+
+(-#-) :: Text -> TaskT m a -> TaskT m a
+(-#-) = Label
 
 
 
 -- Arbitrary --
 
 
-instance Arbitrary (TaskT l m Int) where
+instance Arbitrary (TaskT m Int) where
   arbitrary =
     Gen.oneof
       [ arbitrary >>= (pure << edit)
@@ -189,9 +199,9 @@ instance Arbitrary (TaskT l m Int) where
       , mkpair
       , (-||-) <$> arbitrary <*> arbitrary
       , (-??-) <$> arbitrary <*> arbitrary
-      , pure fail
-      , (>>-) <$> (arbitrary :: Gen (TaskT l m Int)) <*> arbitrary
-      , (>>?) <$> (arbitrary :: Gen (TaskT l m Int)) <*> arbitrary
+      , pure failure
+      , (>>-) <$> (arbitrary :: Gen (TaskT m Int)) <*> arbitrary
+      , (>>?) <$> (arbitrary :: Gen (TaskT m Int)) <*> arbitrary
       -- , Label <$> (arbitrary :: Gen Label) <*> arbitrary
       ]
     where
@@ -207,7 +217,7 @@ instance Arbitrary (TaskT l m Int) where
 
 
 -- | Get the current label, if one
-label :: TaskT l m a -> Maybe Label
+label :: TaskT m a -> Maybe Label
 label (Label l _) = Just l
 label _           = Nothing
 
@@ -215,13 +225,13 @@ label _           = Nothing
 -- | Remove as much labels as possible from a task.
 -- |
 -- | Usefull to deeply match task constructors while ignoring labels.
-delabel :: TaskT l m a -> TaskT l m a
+delabel :: TaskT m a -> TaskT m a
 delabel (Label _ t) = delabel t
 delabel t           = t
 
 
 -- | Check if a task constructor keeps its label after stepping or loses it.
-keeper :: TaskT l m a -> Bool
+keeper :: TaskT m a -> Bool
 keeper (Edit _)  = True
 keeper (And _ _) = True
 keeper (Fail)    = True

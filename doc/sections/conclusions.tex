@@ -2,15 +2,31 @@
 
 \section{Conclusion}
 
+In this paper we have developed a domain-specific language for declarative interactive workflows.
+We have identified, what we believe to be, the essence of Task-Oriented Programming, and provided corresponding operators in our language.
+We have compared our language with \CSP to point out differences and similarities.
+Finally, we have proven type safety for our language.
+
 \paragraph{Future work}
 
-\begin{itemize*}
-  \item read-only editors
-  \item reasoning over tasks
-  \item task equality and laws
-  \item prove theorems in Idris
-  \item visualisation
-  \item resource analysis
-  \item end-user feedback
-  \item IDE
-\end{itemize*}
+There are a couple of ways in which we would like to continue this line of work.
+
+The addition of read-only shared editors would allow watching references without being able to change them.
+Some programs could be expressed more faithfully, where we for now require that users do not modify certain shares.
+
+One goal of the formalization of a language is the ability to reason about programs.
+In this paper we reason about the language itself, but it would be nice to prove properties about individual programs.
+We would like to prove whether certain programs are equal, for example to show that the monad laws hold for our step combinator.
+This requires a notion of equality, which in the presence of side effects most certainly needs some form of coalgebraic input-output conformance.
+
+We have implemented the reduction semantics of our language in Idris, whose type system could aid in a formalization of those proofs.
+
+Another form of reasoning about programs is static analysis.
+In previous work we have developed a cost analysis for tasks that require resources in order to be executed \cite{conf/ifl/KlinikJP17}.
+This analysis was developed for a simpler task calculus, and could be brought over to the one developed here.
+
+%\begin{itemize*}
+  %\item visualisation
+  %\item end-user feedback
+  %\item IDE
+%\end{itemize*}

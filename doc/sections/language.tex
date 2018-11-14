@@ -54,6 +54,7 @@ We use open symbols ($\Edit, \Enter, \Next, \Xor$) for tasks that require user i
 
 
 \paragraph{Typing}
+\label{sub:typing}
 
 % Typing of our expressions $e$ is as to be expected.
 % and won't be given in this document.
@@ -161,6 +162,7 @@ We study sequential composition first, and after that pairing and choosing.
 
 
 \paragraph{Internal and external step $(e \Then c, e \Next c)$}
+\label{sub:steps}
 
 Sequential composition has a task $e$ on the left hand side and a continuation $c$ on the right.
 The accompanying typing rules are \refrule{T-Then} and \refrule{T-Next}.
@@ -189,6 +191,7 @@ When the user enters an integer, the program continues immediately with either \
 
 
 \paragraph{Fail $(\Fail)$}
+\label{sub:fail}
 
 Fail is a task that never has a value and never accepts input.
 The typing rule \refrule{T-Fail} states that it has type $\Task \tau$ for any type $\tau$.
@@ -244,7 +247,7 @@ The second step is guarded until the current time is greater or equal to the sta
 
 \begin{example}[Delay]
 
-\lstset{emph={n,proceed}}
+\lstset{emph={proceed}}
 
 To illustrate the usage of internal and external choices,
 we will create an example which will ask users explicitly to proceed with a task or to cancel.
@@ -277,13 +280,10 @@ which is common in workflow modelling.
 
 \paragraph{Appoint $(u \At e)$}
 
-Users are identified by a name $u$, and can be appointed tasks by means of the
-$\At$ combinator. The sole purpose of this labeling is to be able to tell users
-which inputs are expected of them.
-In section~\ref{sec:handling}, a function is described to calculate which users
-can take what actions. Other than this function, the appointment of tasks has no
-influence on the semantics; \refrule{E-Appoint}, \refrule{S-Appoint} and
-\refrule{H-Appoint} simply continue with their operations as if the label was
-not there.
-
-\fixme{we still have to fix the type of $\Inputs$ and state the type of $u$}
+Users are identified by a name $u$ which is a string.
+They can be appointed tasks by means of the $\At$ combinator.
+The sole purpose of this labelling is to be able to tell users which inputs are expected of them.
+In \autoref{sec:handling}, a function is described to calculate which users can take what actions.
+Other than this function, the appointment of tasks has no influence on the semantics.
+All semantic rules in \autoref{sec:semantics} simply continue with their operations as if the label was not there.
+\todo{we still have to fix the type of $\Inputs$ and state the type of $u$}
