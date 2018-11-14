@@ -1,7 +1,7 @@
 module Control.Monad.Mem
   ( module Data.Heap
-  , MemT, runMemT, execMemT, evalMemT
-  , Mem, runMem, execMem, evalMem
+  , MemT, runMemT, runMemTWith, execMemT, evalMemT
+  , Mem, runMem, runMemWith, execMem, evalMem
   ) where
 
 
@@ -46,9 +46,12 @@ instance Monad m => MonadRef Loc (MemT m) where
     put m'
 
 
+runMemTWith :: MemT m a -> Heap -> m ( a, Heap )
+runMemTWith (MemT st) hp = runStateT st hp
+
 
 runMemT :: MemT m a -> m ( a, Heap )
-runMemT (MemT st) = runStateT st Heap.empty
+runMemT mem = runMemTWith mem Heap.empty
 
 
 evalMemT :: Monad m => MemT m a -> m a
@@ -60,6 +63,10 @@ execMemT mem = snd <$> runMemT mem
 
 
 type Mem = MemT Identity
+
+
+runMemWith :: Mem a -> ( a, Heap )
+runMemWith (MemT st) = runIdentity $ runStateT st Heap.empty
 
 
 runMem :: Mem a -> ( a, Heap )
