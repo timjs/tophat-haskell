@@ -483,64 +483,11 @@ This lemma follows immediately from definition.
 
 \end{proof}
 
-\subsubsection{Theorem~\ref{thm:norm-is-bigstep}}
 
-  In order to prove this theorem, we require an additional lemma.
 
-\begin{lemma}
-  For all $e$ and $s$ such that $\Gamma,\Sigma\infers e$ and $\Sigma\infers s$,
-  If $t,s\stride t',s'$ with $s=s'$ and $t',s'\stride t'',s''$, then $t'=t''$
-  and $s'=s''$.
-  \label{lem:stride-is-bigstep}
-\end{lemma}
-\begin{proof}
-
-  We prove Lemma~\ref{lem:stride-is-bigstep} by induction on $e$:\\
-\fixme{This lemma actually does not hold, a stronger indcution is needed.}
-  % \noindent\textbf{Case} $\userule{S-Fail}$ \\
-  %
-  % \noindent\textbf{Case} $\userule{S-Xor}$ \\
-  %
-  % \noindent\textbf{Case} $\userule{S-Update}$ \\
-  %
-  % \noindent\textbf{Case} $\userule{S-Fill}$ \\
-  %
-  % \noindent\textbf{Case} $\userule{S-Edit}$ \\
-  %
-  % \noindent\textbf{Case} $\userule{S-And}$ \\
-  %
-  % \noindent\textbf{Case} $\userule{S-Next}$ \\
-  %
-  % \noindent\textbf{Case} $\userule{S-OrLeft}$ \\
-  %
-  % \noindent\textbf{Case} $\userule{S-OrRight}$ \\
-  %
-  % \noindent\textbf{Case} $\userule{S-OrNone}$\\
-  %
-  % \noindent\textbf{Case} $\userule{S-ThenStay}$\\
-  %
-  % \noindent\textbf{Case} $\userule{S-ThenFail}$\\
-  %
-  % \noindent\textbf{Case} $\userule{S-ThenCont}$\\
-  %
-  % \noindent\textbf{Case} $\userule{S-Appoint}$
-
-\end{proof}
-
-\begin{proof}
-
-  We prove Theorem~\ref{thm:norm-is-bigstep} by induction on $e$:\\
-\fixme{to be proven}
-  \noindent\textbf{Case} $\userule{N-Done}$ \\
-
-  \noindent\textbf{Case} $\userule{N-Repeat}$ \\
-
-\end{proof}
 
 
 \subsubsection{Theorem~\ref{thm:failing}}
-
-
 
 \begin{proof}
 
@@ -611,10 +558,10 @@ This lemma follows immediately from definition.
    Given that $\userule{H-PassThen}$, we have by definition that $\Inputs(t_1\Then e_2)= \Inputs(t_1)$. By the induction hypthesis, we have that $i\in \Inputs(t_1)$, and by definiton of $\Inputs$, $i$ is therefore also included in this case.\\
 
   \noindent\textbf{Case} $e=t_1\And t_2 , i=\First i$\\
-   Given that $\userule{H-FirstOr}$ we have by definition that $\Inputs(t_1\And t_2) = \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)}$. By the induction hypothesis, we have that $i\in\Inputs(t_1)$, and by definition of $\Inputs$, $\First i$ is therefore als included in this case.\\
+   Given that $\userule{H-FirstAnd}$ we have by definition that $\Inputs(t_1\And t_2) = \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)}$. By the induction hypothesis, we have that $i\in\Inputs(t_1)$, and by definition of $\Inputs$, $\First i$ is therefore als included in this case.\\
 
   \noindent\textbf{Case} $e=t_1\And t_2 , i=\Second i$\\
-   Given that $\userule{H-SecondOr}$ we have by definition that $\Inputs(t_1\And t_2) = \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)}$. By the induction hypothesis, we have that $i\in\Inputs(t_2)$, and by definition of $\Inputs$, $\Second i$ is therefore als included in this case.\\
+   Given that $\userule{H-SecondAnd}$ we have by definition that $\Inputs(t_1\And t_2) = \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)}$. By the induction hypothesis, we have that $i\in\Inputs(t_2)$, and by definition of $\Inputs$, $\Second i$ is therefore als included in this case.\\
 
   \noindent\textbf{Case} $e=t_1\Or t_2 , i=\First i$\\
    Given that $\userule{H-FirstOr}$ we have by definition that $\Inputs(t_1\Or t_2) = \set{\First\ i \mid i \in \Inputs(t_1)} \cup \set{\Second\ i \mid i \in \Inputs(t_2)}$. By the induction hypothesis, we have that $i\in\Inputs(t_1)$, and by definition of $\Inputs$, $\First i$ is therefore als included in this case.\\
