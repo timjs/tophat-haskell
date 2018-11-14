@@ -138,11 +138,11 @@ inputs (Store _) =
 inputs (And left rght) = do
   l <- inputs left
   r <- inputs rght
-  pure $ map ToLeft l ++ map ToRight r
+  pure $ map ToFirst l ++ map ToSecond r
 inputs (Or left rght) = do
   l <- inputs left
   r <- inputs rght
-  pure $ map ToLeft l ++ map ToRight r
+  pure $ map ToFirst l ++ map ToSecond r
 inputs (Xor left rght) =
   pure $ map (ToHere << APick) choices
   where
@@ -279,22 +279,22 @@ handle (Store loc) (ToHere (Change val_ext))
       trace CouldNotChange $ Store loc
 
 -- Pass to left or rght --
-handle (And left rght) (ToLeft input) = do
+handle (And left rght) (ToFirst input) = do
   -- Pass the input to left
   left_new <- handle left input
   pure $ And left_new rght
 
-handle (And left rght) (ToRight input) = do
+handle (And left rght) (ToSecond input) = do
   -- Pass the input to rght
   rght_new <- handle rght input
   pure $ And left rght_new
 
-handle (Or left rght) (ToLeft input) = do
+handle (Or left rght) (ToFirst input) = do
   -- Pass the input to left
   left_new <- handle left input
   pure $ Or left_new rght
 
-handle (Or left rght) (ToRight input) = do
+handle (Or left rght) (ToSecond input) = do
   -- Pass the input to rght
   rght_new <- handle rght input
   pure $ Or left rght_new
