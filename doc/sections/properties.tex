@@ -51,9 +51,9 @@ following Theorem holds.
 \begin{theorem}[Preservation under normalisation]
   % For all well typed expressions $e$ and states $s$,
   For all expressions $e$ and states $s$
-  such that $\Gamma,\Sigma \infers e:\tau$ and $\Sigma \infers s$,
+  such that $\Gamma,\Sigma \infers e:\Task\tau$ and $\Sigma \infers s$,
   if $e,s \normalise e',s'$,
-  then $\Gamma,\Sigma \infers e':\tau$ and $\Sigma \infers s'$.
+  then $\Gamma,\Sigma \infers e':\Task\tau$ and $\Sigma \infers s'$.
   \label{thm:pres-norm}
 \end{theorem}
 
@@ -77,7 +77,7 @@ show that preservation also holds for these two semantics.
   \label{thm:pres-stride}
 \end{lemma}
 
-Lemma~\ref{lem:presvalue} states exactly this property, and is proven in the
+Lemma~\ref{lem:presvalue} and \ref{lem:pres-stride} are proven in the
 appendix by induction over $e$. This subsequently allows us to prove
 Theorem~\ref{thm:pres-norm}, again by induction over $e$.
 
@@ -86,9 +86,9 @@ This brings us finally to the type preservation property of the handling semanti
 \begin{theorem}[Preservation under handling]
   % For all well typed expressions $e$, states $s$, and inputs $i$,
   For all expressions $e$, states $s$ and inputs $i$
-  such that $\Gamma,\Sigma \infers e:\tau$ and $\Sigma \infers s$,
+  such that $\Gamma,\Sigma \infers e:\Task\tau$ and $\Sigma \infers s$,
   if $ e,s \handle{i} e's'$,
-  then $\Gamma,\Sigma\infers e':\tau$ and $\Sigma\infers s'$.
+  then $\Gamma,\Sigma\infers e':\Task\tau$ and $\Sigma\infers s'$.
   \label{thm:pres-handle}
 \end{theorem}
 
@@ -112,39 +112,16 @@ We define what we mean with progress in Theorem~\ref{thm:prog-norm}.
   \label{thm:prog-norm}
 \end{theorem}
 
+Where a well typed espression $e$ means that $\Gamma,\Sigma\infers e:\tau$ for
+some type $\tau$, and a well typed state means that $\Sigma\infers s$.
+
 If an expression $e$ and state $s$ are well-typed, then after normalisation, it
 either fails, or there exists some input $i$ that can be handled by it.
-In order to prove this Theorem, we require two additional theorems.
-
-% \paragraph{Normalisation is Big-Step}
-
-
-To prove that normalisation is indeed a big-step semantics, we prove the
-following theorem.
-
-\begin{theorem}[Normalisation is big step]
-  For all well typed expressions $e$ and states $s$,
-  % For all expressions $e$ and states $s$
-  % such that $\Gamma,\Sigma \infers e:\Task\tau$ and $\Sigma\infers s$,
-  if $e,s \normalise e',s'$ and $e',s' \normalise e'',s''$,
-  then $e'= e''$ and $s'= s''$.
-  \label{thm:norm-is-bigstep}
-\end{theorem}
-
-An additional lemma is required.
-
-\begin{lemma}[]
-  For all well typed expressions $e$ and states $s$,
-  % For all expressions $e$ and states $s$
-  % such that $\Gamma,\Sigma \infers e:\Task\tau$ and $\Sigma \infers s$,
-  if $e,s \evaluate t,s'$, $t,s' \stride t',s''$, $s'=s''$ and $t',s'' \evaluate t'',s'''$,
-  then $t'=t''$ and $s''=s'''$.
-  \label{lem:stride-does-not-eval}
-\end{lemma}
+In order to prove this Theorem, we require an additional theorem.
 
 % \paragraph{Failing}
 
-We then show that the failing function $\Failing$ behaves as desired.
+We need to show that the failing function $\Failing$ behaves as desired.
 
 \begin{theorem}[Failing means no interaction possible]
   For all well typed expressions $e$ and states $s$,
@@ -170,12 +147,10 @@ We now have the ingredients to prove Theorem~\ref{thm:prog-norm}.
   normalisation $e,s \normalise e',s'$, we find ourselves in either one of the
   following situations:
 
-  There exists an $i$ such that $e',s'\handle{i}\_,\_$.
+  There exists an $i$ such that $e',s'\handle{i} e'',s''$.
 
-  There does not exist an $i$ such that $e',s'\handle{i}\_,\_$. In this case, we
-  know that $\Failing(e',s')$ must be true, since Theorem~\ref{thm:norm-is-bigstep}
-  gives us that $e',s'$ can not be normalised further and we assumed that there
-  is no possible input that can be handled.
+  There does not exist an $i$ such that $e',s'\handle{i} e'',s''$. In this case, we
+  know that $\Failing(e',s')$ must be true, by Theorem~\ref{thm:failing}.
 \end{proof}
 
 
