@@ -17,7 +17,7 @@ This is done in two additional semantics, one for the internal normalisation of 
 One of our explicit goals is to keep the semantics for evaluation and normalization separate.
 This is achieved by letting tasks be values in the host language.
 
-The three main layers of semantics are \emph{evaluation}, \emph{normalisation}, and \emph{interaction}.
+The three main layers of semantics are thus \emph{evaluation}, \emph{normalisation}, and \emph{interaction}.
 The semantics, together with \emph{observations}, will be discussed in the following subsections.
 \Cref{fig:semantic-functions} shows the relation between the semantics.
 It also shows that there are two helper semantics, \emph{handle} and \emph{stride}.
@@ -38,21 +38,13 @@ We use the convention that downward arrows are big-step semantics, and rightward
 \subsection{Evaluating expressions}
 \label{sec:evaluation}
 
-To express evaluation,
-we use the big step semantics of our host language.
-Turning an expression $e$ in state $s$ into a value $v$ in state $s'$ is denoted by $\RelationE$.
-To ease reasoning about references,
-we choose our host language to be \emph{eagerly} evaluated.
+The host language evaluates expressions using a big-step semantics.
+Evaluating an expression $e$ in state $s$ into a value $v$ in state $s'$ is denoted by $\RelationE$.
+To ease reasoning about references, we choose a call-by-value evaluation strategy.
 
 \Cref{fig:value-grammar} shows values with respect to the evaluation semantics.
-% Regarding our base language, lambda abstractions are values, as are all constants.
-Each \emph{pretask} $p$ is accompanied by a corresponding \emph{task} $t$,
-which are also values with respect to evaluation.
-Only external choice ($\Xor$) stores its expressions lazily,
-because we require users to pick one of two options before evaluating any side effects.
-% This means pretasks will be eagerly evaluated to tasks by the relation $\evaluate$.
-% which makes it easier to reason about data constructors.
-% This suggestion by \textcite[p. 323]{books/Harper16PFPL}
+Tasks are values, and the operands of task constructors are evaluated eagerly.
+Exceptions to this are steps and external choice, where some or all of the operands are not evaluated.
 
 \begin{figure}[h]
   \small
@@ -60,57 +52,9 @@ because we require users to pick one of two options before evaluating any side e
   \caption{Value grammar} \label{fig:value-grammar}
 \end{figure}
 
-The rules to evaluate expressions $e$ do not differ from standard work,
-except for the newly introduced pretasks.
-One can deduce the evaluation rules from the value grammar.
-For completeness they are given in the appendix.
-
-% \begin{figure}[h]
-%   \small
-%   \begin{mathpar}
-%     \boxed{\RelationE} \\
-%     \userule{E-Edit} \quad
-%     \userule{E-Enter} \quad
-%     \userule{E-Update} \\
-%     \userule{E-Then} \quad
-%     \userule{E-Next} \\
-%     \userule{E-And} \quad
-%     \userule{E-Or} \\
-%     \userule{E-Xor} \quad
-%     \userule{E-Appoint} \quad
-%     \userule{E-Fail}
-%   \end{mathpar}
-%   \caption{Evaluation semantics} \label{fig:evaluation-semantics}
-% \end{figure}
-
-% The difference between \emph{pretasks} and \emph{tasks} is subtile.
-% Note for example the change from $\Edit e$ to $\Edit v$ in the valued editor.
-% That is, an editor with an arbitrary (although well typed) expression $e$,
-% versus an editor with an (evaluated) value $v$.
-% Coming from one to the other is done by the evaluation rules given in \cref{fig:evaluation-semantics}.
-
-% The rule \refrule{E-Edit} uses the big step semantics from our base language ($\evaluate$)
-% to evaluate the wrapped expression $e$ to a value $v$ and rewraps it in an editor.
-% Rule \refrule{E-Enter} has nothing to evaluate and just keeps the unvalued editor as is.
-
-% Evaluation of a sequence is done by only evaluating the left hand side, $e_1$.
-% This expression is something of type $\Task \tau_1$.
-% The right hand side, $e_2$, is a function,
-% which we store for later evaluation.
-% % it does not matter if we evaluate $e_2$ right away or store it lazily.
-
-% Summarising, pretask $p$ allow us to syntactically write down arbitrary expressions inside a valued editor,
-% or any other pretask we will define in the future.
-% Tasks $t$ are pretasks \emph{after evaluation} using the relation $\evaluate$.
-% With other words:
-% \begin{itemize}
-%   \item
-%     Pretasks $p$ are task expressions.
-%   \item
-%     Tasks $t$ are a syntactical subset of pretasks $p$.
-%     They are values with respect to evaluation, i.e. the relation $\evaluate$.
-% \end{itemize}
-
+The rules to evaluate expressions $e$ do not differ from standard work, except for the task constructs.
+The evaluation rules for tasks can be deduced from the value grammar.
+They are given in the appendix.
 
 
 \subsection{Task observations}
