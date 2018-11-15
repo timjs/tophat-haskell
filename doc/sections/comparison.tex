@@ -134,10 +134,11 @@ The step combinator represents data flow that follows control flow, and shared d
 
 The step combinator in $t \Then e$ passes the value of $t$ to the continuation $e$.
 Shared data sources are assignable references, whose changes in value are immediately visible to all tasks interested in them.
-
+%
 The semantics of \TOP requires all updates to shared data and all enabled internal steps to be processed before any further communication with the environment can take place.
 This introduces the possibility of diverging computations, where a cyclic dependency between shared data causes internal steps to be taken continuously without ever being able to engage in external communication.
 
+\todo{These two paragraphs could be shorter --TS}
 \CSP uses prefixing for both internal and external communication.
 Parallel processes that all eventually are willing to engage in some action must wait for the others and then progress in one synchronised step.
 This step is still visible to the environment, which means the processes can not engage in this action unless the environment is also willing to.
@@ -153,6 +154,7 @@ This introduces the possibility of diverging computations, that is processes whi
 
 \paragraph{Sequential composition}
 
+\todo{Maybe remove this subsection? --TS}
 The intuition about sequential composition is to first do one thing, and once it is done, do some other thing.
 
 In \TOP, tasks never terminate.
@@ -173,27 +175,31 @@ If $P$ never terminates successfully, neither does $P;Q$
 
 \subsection{Multiprogramming}
 
-Both \TOP and \CSP are models of \emph{multiprogramming}, as opposed to multiprocessing.
-This means that one processor evaluates multiple programs in an interleaving fashion.
+Both \TOP and \CSP are models of \emph{multiprogramming}, as opposed to \emph{multiprocessing}.
+This means that one processor evaluates multiple programs in an interleaving fashion,
+instead of multiple processors that evaluate one or more programs.
+\todo{Is this a correct statement? --TS}
 Multiprogramming involves three aspects: concurrency, synchronisation, and nondeterminism.
+
+
 
 \paragraph{Concurrency}
 
 Concurrency is the source of parallelism: two things are done at the same time.
-
+%
 In \TOP, the parallel combinator $t_1 \And t_2$ stands for two independent tasks carried out at the same time.
 For the system it does not matter if the tasks are executed by two people actually in parallel, or by one person who switches between the tasks.
 All events sent to the combined task are interleaved into a serial stream of inputs.
 The tasks are truly independent of each other, all interleavings are permitted.
-Events to $t_1$ and $t_2$ must be prefixed by $\Left$ and $\Right$ respectively.
+Events to $t_1$ and $t_2$ must be prefixed by $\First$(irst) and $\Second$(econd) respectively.
 This unambiguously renames the events, removing any source of nondeterminism.
 
 In \CSP, there are two different combinators for parallel composition: parallel and interleave.
-The parallel process $P || Q$ can take $P$-steps and $Q$-steps in arbitrary interleaving for actions unique to $P$ and $Q$.
+The parallel process $P \parallel Q$ can take $P$-steps and $Q$-steps in arbitrary interleaving for actions unique to $P$ and $Q$.
 Actions in the alphabets of both $P$ and $Q$ must be taken in synchronisation, so if one process wants to take such a step, it must wait until the other is ready to do so.
 Synchronised steps are the only occasion where two processes actually do something at the same time.
 
-The interleaving operator $P ||| Q$ does not synchronise any actions of $P$ and $Q$.
+The interleaving operator $P \mid\mid\mid Q$ does not synchronise any actions of $P$ and $Q$.
 All interleavings are permitted.
 Actions that occur in both alphabets are nondeterministically taken by either $P$ or $Q$.
 
@@ -205,22 +211,24 @@ Synchronisation means that an agent has to pause execution until some condition 
 The need for synchronisation arises quite naturally in countless variations in situations involving concurrency.
 For multiprogramming, synchronisation always means that some of the possible interleavings are forbidden.
 
+\todo{Is this needed? --TS}
 For example, the mutual exclusion problem for two parallel processes $a_p \to b_p \to \text{STOP} $ and $a_q \to b_q \to \text{STOP}$ can be stated as:
 In no interleaving should there be two adjacent $a$'s.
 
 The mutual exclusion problem for two parallel tasks can be stated as follows.
-Let \textit{inc} and \textit{dec} be tasks that increment and decrement some shared counter.
-In $(\textit{inc} \Next \textit{dec}) \And (\textit{inc} \Next \textit{dec})$, the shared counter should at no point be greater than 1.
-This means that in no interleaving should there be two adjacent \textit{inc}'s.
+Let \TS{inc} and \TS{dec} be tasks that increment and decrement some shared counter.
+In \TS{(inc x >>? dec) <&> (dec x >>? inc)}, the shared counter should at no point be greater than 1.
+This means that in no interleaving should there be two adjacent \TS{inc}'s.
 
 The basic method for synchronisation in \TOP is built into the step combinator.
 The task $t \Next e$ can only continue execution when two conditions are met:
-Task $t$ must have a value $v$, and $cv$ must not evaluate to $\Fail$.
+Task $t$ must have a value $v$, and $e\ v$ must not evaluate to $\Fail$.
 Programmers can encode arbitrary conditions in $e\ v$, which are evaluated atomically between interaction steps.
 This allows a variety of synchronisation problems to be solved in an intuitive and straight-forward manner.
 
+\todo{Is this needed?}
 The basic method for synchronisation in \CSP is synchronised prefixing.
-If some action $a$ is in the alphabets of both $P$ and $Q$, then their parallel composition $P||Q$ can take an $a$-step only if both $P$ and $Q$ are ready to take an $a$-step, in which case they both take their $a$-step simultaneously.
+If some action $a$ is in the alphabets of both $P$ and $Q$, then their parallel composition $P \parallel Q$ can take an $a$-step only if both $P$ and $Q$ are ready to take an $a$-step, in which case they both take their $a$-step simultaneously.
 They both have to wait for the condition that the other process is ready to take the step.
 All synchronisation problems in \CSP must be solved by employing synchronised steps in some form.
 
@@ -230,7 +238,7 @@ All synchronisation problems in \CSP must be solved by employing synchronised st
 
 The cigarette smokers problem \cite{books/Downey08LBOS} is a surprisingly tricky synchronisation problem.
 We study it here because it demonstrates the capabilities of guarded steps.
-The problem requires waiting for two conditions, waking up only if both conditions are satisfied.
+% The problem requires waiting for two conditions, waking up only if both conditions are satisfied.
 The problem is stated as follows.
 In order to smoke a cigarette, three ingredients are required: tobacco, paper, and a match.
 There are three smokers, each having one of the ingredients and requiring the other two.
@@ -238,40 +246,40 @@ There is an agent that randomly provides two of the ingredients.
 
 Downey models availability of the ingredients using a semaphore for each ingredient.
 The agent randomly signals two of the three semaphores.
-The problem asks writing code for the smokers so that the smoker who requires the two signalled semaphores wakes up and proceeds with smoking.
-
-A naïve attempt where each smoker first waits for one and then the other semaphore can lead to deadlock.
-The following pseudo-code is a non-solution.
-Let \emph{paper}, \emph{tobacco} and \emph{match} be semaphores, initialised to 0.
-\begin{TASK}
-  tobaccoSmoker = wait(match); wait(paper); smoke();
-  paperSmoker = wait(tobacco); wait(match); smoke();
-  matchSmoker = wait(tobacco); wait(paper); smoke();
-\end{TASK}
-To see what can go wrong, imagine the three smokers running in parallel.
-Let the agent signal the two semaphores \emph{tobacco} and \emph{paper}.
-One of \emph{paperSmoker} and \emph{matchSmoker} can take their first step, but if \emph{paperSmoker} takes the step, the system deadlocks.
-
+% The problem asks writing code for the smokers so that the smoker who requires the two signalled semaphores wakes up and proceeds with smoking.
+%
+% A naïve attempt where each smoker first waits for one and then the other semaphore can lead to deadlock.
+% The following pseudo-code is a non-solution.
+% Let \emph{paper}, \emph{tobacco} and \emph{match} be semaphores, initialised to 0.
+% \begin{TASK}
+%   tobaccoSmoker = wait(match); wait(paper); smoke();
+%   paperSmoker = wait(tobacco); wait(match); smoke();
+%   matchSmoker = wait(tobacco); wait(paper); smoke();
+% \end{TASK}
+% To see what can go wrong, imagine the three smokers running in parallel.
+% Let the agent signal the two semaphores \emph{tobacco} and \emph{paper}.
+% One of \emph{paperSmoker} and \emph{matchSmoker} can take their first step, but if \emph{paperSmoker} takes the step, the system deadlocks.
+%
 The solution proposed by Downey involves an additional mutex, three additional semaphores, three additional threads called \emph{pushers}, and three regular Boolean variables.
 The job of the pushers is to record availability of their ingredient in their Boolean variable, and check availability of other resources, waking the correct smoker when appropriate.
 The details of the solution are not important here.
 
 What is important is that the implementation of what is essentially waiting for two semaphores requires a substantial amount of additional synchronisation, together with non-trivial conditional statements.
-
+%
 A similar effort as in Downey's solution must be made in order to solve the problem using synchronised actions in \CSP.
 This is because in \CSP, processes can only synchronise on one action at a time.
 
 \TOP allows a simple solution to this problem, using guarded steps.
 Steps can be guarded with arbitrary expressions, and the parallel combinator can be used to watch two shared data sources at the same time.
-Let \textit{match}, \textit{paper}, and \textit{tobacco} be shared Booleans.
+Let \TS{match}, \TS{paper}, and \TS{tobacco} be shared Booleans.
 The smokers are defined as follows.
 \begin{TASK}
-  let continue = \<<x,y>>. if x && y then smoke else fail in
+  let continue = \<<x,y>>. if x /\ y then smoke else fail in
   let tobaccoSmoker = (update match <&> update paper) >>? continue in
   let paperSmoker = (update tobacco <&> update match) >>? continue in
   let matchSmoker = (update tobacco <&> update paper) >>? continue
 \end{TASK}
-When the agent supplies two of the ingredients by setting the respective shares to $\True$, only the step of the smoker that waits for those becomes enabled.
+When the agent supplies two of the ingredients by setting the respective shares to \TS{True}, only the step of the smoker that waits for those becomes enabled.
 
 \end{example}
 
