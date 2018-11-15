@@ -134,9 +134,8 @@
     t ::= &                                                     & Tasks \\
       \mid& \Edit v \Mid \Enter \tau \Mid \Update l             & – editors \\
       \mid& t_1 \Then e_2 \Mid t_1 \Next e_2                    & – steps \\
-      \mid& t_1 \And t_2                                        & – composition \\
+      \mid& \Fail \Mid t_1 \And t_2                             & – fail, combination \\
       \mid& t_1 \Or t_2 \Mid e_1 \Xor e_2                       & – choices \\
-      \mid& u @ t \Mid \Fail                                    & – appoint, fail
   \end{grammar*}
 }
 

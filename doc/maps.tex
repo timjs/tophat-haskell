@@ -26,7 +26,7 @@
       \end{array}
     \right. \\
     \Value(t_1 \Xor t_2, s)           &=& \bot \\
-    \Value(u \At t, s)                &=& \Value(t,s)
+    % \Value(u \At t, s)                &=& \Value(t,s)
   \end{function}
 }
 
@@ -55,7 +55,7 @@
       \end{array}
     \right. \\
     \Value(t_1 \Xor t_2, s)           &=& \bot \\
-    \Value(u \At t, s)                &=& \Value(t,s)
+    % \Value(u \At t, s)                &=& \Value(t,s)
   \end{function}
 }
 
@@ -76,7 +76,7 @@
       \inset{\when\ \Value(t_1, s) = \bot \land \Value(t_2, s) = v_2} \\
                              &=& \bot \quad \otherwise \\
     \Value(t_1 \Xor t_2, s)  &=& \bot \\
-    \Value(u \At t, s)       &=& \Value(t,s)
+    % \Value(u \At t, s)       &=& \Value(t,s)
   \end{function}
 }
 
@@ -115,8 +115,8 @@
                                 &\cup& \set{\Second\ i \mid i \in \Inputs(t_2,s)} \\
     \Inputs(e_1 \Xor e_2,s)        &=& \set{\Pick \obox{\Right}{\Left} \mid e_1, s \normalise t_1, s' \land \lnot\Failing(t_1, s')} \\
                                 &\cup& \set{\Pick \Right \mid e_2, s \normalise t_2, s' \land \lnot\Failing(t_2, s')} \\
-    \Inputs(u_1 \At t,s)           &=& \set{u_2 \At i\mid u_2 \At i \in \Inputs(t,s)} \\
-                                &\cup& \set{u_1 \At i\mid i\in \Inputs(t,s)}
+    % \Inputs(u_1 \At t,s)           &=& \set{u_2 \At i\mid u_2 \At i \in \Inputs(t,s)} \\
+                                % &\cup& \set{u_1 \At i\mid i\in \Inputs(t,s)}
   \end{function}
 }
 
@@ -135,7 +135,7 @@
     \Failing(e_1 \Xor e_2,s)  &=& \Failing(t_1,s_1') \land \Failing(t_2,s_2') \\
       % \inset{\where\ e_1,s \normalise t_1,s_1' \mathbf{\ and\ } e_2,s \normalise t_2,s_2'} \\
                               & & \quad\where\ e_1,s \normalise t_1,s_1' \mathbf{\ and\ } e_2,s \normalise t_2,s_2' \\
-    \Failing(u \At t,s)       &=& \Failing(t,s)
+    % \Failing(u \At t,s)       &=& \Failing(t,s)
   \end{function}
 }
 
@@ -153,7 +153,8 @@
     \Failing(e_1 \Xor e_2,s)  &=& \Failing(t_1,s_1') \land \Failing(t_2,s_2') \\
                               \multicolumn{3}{R@{}}{\where\ e_1,s \normalise t_1,s_1'} \\
                               \multicolumn{3}{R@{}}{\mathbf{and\ } e_2,s \normalise t_2,s_2'} \\
-    \Failing(u \At t,s)       &=& \Failing(t,s) \\
+    % \Failing(u \At t,s)       &=& \Failing(t,s) \\
+                              & & \\
                               & & \\
                               & & \\
                               & & \\
@@ -173,6 +174,6 @@
     \Watching(t_1 \And t_2)  &=& \Watching(t_1) \cup \Watching(t_2) \\
     \Watching(t_1 \Or t_2)   &=& \Watching(t_1) \cup \Watching(t_2) \\
     \Watching(e_1 \Xor e_2)  &=& \nothing \\
-    \Watching(u \At t)       &=& \Watching(t)
+    % \Watching(u \At t)       &=& \Watching(t)
   \end{function}
 }
