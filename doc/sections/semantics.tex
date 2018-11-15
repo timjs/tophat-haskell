@@ -184,7 +184,7 @@ External choice does not have a value, because it waits for user input.
 
 \paragraph{Failing $(\Failing)$}
 
-In \autoref{sec:fail} we introduced $\Fail$ to signal a senseless continuation of work.
+In \autoref{sub:fail} we introduced $\Fail$ to signal a senseless continuation of work.
 However, not only the fail task itself represents failure:
 combinations of tasks could also yield senseless continuations.
 Take for example the parallel composition of two fail tasks ($\Fail \And \Fail$).
@@ -243,15 +243,35 @@ which then get parsed and processed.
 \subsection{Normalising tasks}
 \label{sec:normalise}
 
-Normalisation makes use of evaluation of the underlying host language
-As evaluation, normalisation is big step.
+Normalisation prepares tasks to handle any given input by the end user.
+It is a big-step semantics which makes use of evaluation of the underlying host language.
 We write $\RelationN$ to describe that
 an expression $e$ in state $s$ normalises to task $t$ in state $s'$.
-It is a semantic relation that acts on the task level.
-Intuitively, normalisation prepares tasks to handle any given input by the end user.
+It is a semantic relation that acts on the task level
+and only accepts expressions of type $\Task \tau$.
+
+
 
 Normalisation rules are given in \autoref{fig:normalisation-semantics} in a two step fashion.
-\todo{How are we going to do this?}
+
+\begin{figure}[h]
+  \small
+
+  \boxed{\RelationN}
+  \begin{mathpar}
+    \userule{N-Done} \\
+    \userule{N-Repeat}
+  \end{mathpar}
+  \caption{Normalisation semantics} \label{fig:normalisation-semantics}
+
+\end{figure}
+
+Normalisation first ensure the expression is evaluated by the host language ($\evaluate$).
+Then it will perform internal steps and internal choices by delegating this work to the stride semantics ($\stride$).
+% A stride from task $t$ in state $s$ to $t'$ in state $s'$ is denoted by $\RelationS$.
+These actions are repeated by \refrule{N-Repeat} till the resulting state and task stabilise.
+
+
 
 \begin{figure}[h]
   \small
@@ -289,18 +309,6 @@ Normalisation rules are given in \autoref{fig:normalisation-semantics} in a two 
   \end{mathpar}
 
   \caption{Striding semantics} \label{fig:normalisation-semantics}
-\end{figure}
-
-\begin{figure}[h]
-  \small
-
-  \boxed{\RelationN}
-  \begin{mathpar}
-    \userule{N-Done} \\
-    \userule{N-Repeat}
-  \end{mathpar}
-  \caption{Normalisation semantics} \label{fig:normalisation-semantics}
-
 \end{figure}
 
 
