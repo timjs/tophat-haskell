@@ -284,10 +284,10 @@
    e_2\ v_1,s' \evaluate t_2,s''}
   {t_1 \Then e_2,s \stride t_1' \Then e_2,s'}
 
-\newrule{S-ThenCont}[\ontopof{L}{\Value(t_1',s') = v_1}{\phantom{}\land \lnot\Failing(t_2,s'')}]
+\newrule{S-ThenCont}[\Value(t_1',s') = v_1 \land \lnot\Failing(t_2,s'')]
   {t_1,s \stride t_1',s'  \Quad
-   e_2\ v_1,s' \evaluate t_2 ,s''  \Quad
-   t_2,s'' \stride t_2',s'''}
+   e_2\ v_1,s' \evaluate t_2 ,s''}
+   % t_2,s'' \stride t_2',s'''}
   {t_1 \Then e_2,s \stride t_2',s'''}
 
 \newrule{S-Next}
