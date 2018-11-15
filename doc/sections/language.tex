@@ -273,7 +273,18 @@ In that case, the internal step uses the paired integer and string to calculate 
 
 \paragraph{Internal and external choice $(e_1 \Or e_2, e_1 \Xor e_2)$}
 
-\fixme{Write section on choice}
+Where combinations wait for both tasks to produce results,
+internal choices pick one branch as soon as it has a result.
+Its typing rule \refrule{T-Or} therefore dictates that both branches should have the same type $\Task \tau$.
+E.g. $\Edit 37 \Or \Enter \Int$ will result in $\Edit 37$ directly,
+because $\Enter \Int$ does not contain a value.
+To make \TOPHAT deterministic,
+we always prefer the first task over the second.
+
+As with combinations, users can work on both tasks of an internal choice ($\Or$) simultaneously.
+However, this does not hold for external choice ($\Xor$).
+External choices await user input to pick the left or right branch before continuing with that task.
+This means one cannot work on both branches of an external choice before picking one or the other.
 
 
 
