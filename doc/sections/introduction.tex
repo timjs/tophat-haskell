@@ -23,17 +23,17 @@ There is sequential composition, parallel composition, and choice.
 People need to communicate in order to engage in these forms of collaboration.
 This is reflected in \TOP by three kinds of communication mechanisms.
 There is data flow alongside control flow, where the result of a task is passed onto the next.
-There is data flow across control flow, where information is shared between multiple tasks.
+There is data flow \emph{across} control flow, where information is shared between multiple tasks.
 Finally, there is communication with the outside world, where information is entered into the system via input events.
-The end points where the outside world interacts with applications are called editors.
+The end points where the outside world interacts with \TOP applications are called editors.
 In generated applications, editors can take many forms, like input fields, selection boxes, or map widgets.
 
-iTasks is an implementation of \TOP, in the form of an embedded domain-specific language in the lazy functional programming language Clean.
+iTasks is an implementation of \TOP, in the form of a shallowly embedded domain-specific language in the lazy functional programming language Clean.
 It is a library that provides editors and monadic combinators.
 iTasks uses the generic programming facilities of Clean to derive web applications from workflow models.
 
-iTasks has been used to implement an incident management tool for the Dutch coast guard \cite{conf/iscram/LijnseJP12}.
-Furthermore it has been used numerous times to prototype ideas for Command and Control \cite{theses/nlda/Kool17, theses/radboud/Stutterheim17}, and in a case study for the Dutch tax authority \cite{conf/sfp/StutterheimAP17}.
+iTasks has been used to implement an incident management tool for the Dutch coast guard~\cite{conf/iscram/LijnseJP12}.
+Furthermore it has been used numerous times to prototype ideas for Command and Control~\cite{theses/nlda/Kool17, theses/radboud/Stutterheim17}, and in a case study for the Dutch tax authority \cite{conf/sfp/StutterheimAP17}.
 
 iTasks has many features, and its basic combinators are versatile and powerful.
 Simpler combinators are implemented by restricting the powerful ones.
@@ -41,8 +41,9 @@ This is useful for everyday programming, where having lots of functionality at o
 
 Our language is a strict subset of iTasks.
 With iTasks it is possible to express very complicated real-world situations in a comfortable and productive manner.
-\TOPHAT tries to cover as many of those use cases as possible, while still being small enough to be open for formal reasoning.
-Neither the semantics in \cite{conf/ppdp/PlasmeijerLMAK12} nor iTasks itself lend themselves well for formal reasoning, because of the complicated collaboration patterns that can be expressed.
+\TOPHAT\todo{this is the first mention of TOPHAT, should be introduced.}
+tries to cover as many of those use cases as possible, while still being small enough to be open for formal reasoning.
+Neither the semantics by Plasmeijer et al.~\cite{conf/ppdp/PlasmeijerLMAK12} nor iTasks itself lend themselves well for formal reasoning, because of the complicated collaboration patterns that can be expressed.
 
 In this paper, we set out to develop a formal basis for \TOP, with the goal of specifying the basic building blocks of declarative workflows.
 We clearly separate them from general purpose programming concepts.
@@ -52,8 +53,8 @@ This allows us to prove properties like progress and type preservation.
 We present a task calculus for modeling declarative workflows, embedded in a simply typed lambda-calculus.
 We develop an operational semantics that is driven by user inputs.
 The semantics of the task language is clearly separated from the semantics of the underlying host language.
-Furthermore, we present the following semantic observations on tasks: the current value, the current user interface, the accepted inputs, and whether a term is stuck.
+Furthermore, we present the following semantic observations on tasks: the current value, the current user interface\todo{this is NOT a provided observation in this paper, apart from the implementation}, the accepted inputs, and whether a term is stuck.
 All these observations exist in iTasks, albeit combined into one big type.
 By separating them in the style of a deep embedding \cite{conf/cefp/Gibbons13}, we make explicit where, and where not, they depend on each other.
 
-Furthermore we compare our calculus with the process algebra \CSP, to show how their concepts like communication, and sequential and parallel composition relate.
+Furthermore we compare our calculus with the process algebra \CSP, to show how their concepts, like communication, and sequential and parallel composition, relate.
