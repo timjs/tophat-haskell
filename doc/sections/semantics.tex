@@ -71,13 +71,11 @@ It is only described in passing here.
 
 \paragraph{Observable values $(\Value)$}
 
-Intuitively, valued editors are tasks which contain values.
-The same holds for to shared editors.
-These values are used by steps to calculate continuations.
-However, unvalued editors clearly do not contain any value,
-neither does the fail task.
-To make this intuition more precise,
-the partial function $\Value$ associates a value $v$ to tasks $t$ where possible.
+Task values are used by steps to calculate the successor task.
+Filled editors are tasks which contain values, as are shared editors.
+Unvalued editors do not contain values, neither does the fail task.
+These facts propagate through all other task constructors.
+The partial function $\Value$ associates a value $v$ to tasks $t$ where possible.
 Its definition is given in \cref{fig:observation-value}.
 
 \begin{figure}[h]
@@ -86,13 +84,10 @@ Its definition is given in \cref{fig:observation-value}.
   \caption{Values} \label{fig:observation-value}
 \end{figure}
 
-Internal and external steps do not have an observable value because performing a step may change it's type (see \cref{sub:typing}).
-% We could choose that the value of a sequence equals the value of the left hand side.
-% This will have fatal consequences for our stepping semantics however.
-Parallel composition only has a value when both branches have values.
-These values are then paired.
+Internal and external steps do not have an observable value, because calculating the value would require evaluation of the continuation.
+Parallel composition only has a value when both branches have values, in which case these values are paired.
 Internal choice has a value when one of the branches has a value.
-When both branches have a value, we choose the left over the right.
+When both branches have a value, it takes the value of the left branch.
 External choice does not have a value, because it waits for user input.
 
 
