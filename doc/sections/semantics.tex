@@ -59,25 +59,13 @@ They are given in the appendix.
 
 \subsection{Task observations}
 
-In the specification of the normalisation and interaction semantics, we will make use of two observations on tasks.
-% Before we can discuss task normalisation,
-% we need to introduce some helpers.
-% These helpers are observations on the task syntax tree.
-Observations are simple semantic functions on the syntax tree of tasks.
-The goal is to formalise observable values for tasks
-and to specify when tasks are equivalent to the fail task.
-Observations can also be used to create a graphical or textual user interface.
+The normalisation and interaction semantics make use of observations on tasks.
+Observations are semantic functions on the syntax tree of tasks.
+There are four semantic functions: $\Value$ for the current task value, $\Failing$ to determine if a task fails, $\Inputs$ for the currently accepted input events, and a function for generating user interfaces.
+The semantics make use of $\Value$ and $\Failing$, while $\Inputs$ is used for proving safety.
+The function for user interfaces is not used by the semantics, but by our implementation.
+It is only described in passing here.
 
-% First, we specify what it means for a task to have an observable value.
-% Next, we show how to observe if a task is equivalent to the failing task.
-% Lastly, observations can also be used to create a graphical or textual user interface.
-
-% \begin{figure*}[b]
-%   \small
-%   \usemacro{O-Failing-Compact} \hfill \usemacro{O-Value-Compact} \hfill \usemacro{O-Inputs-Compact}
-%   \caption{Observations on tasks}
-%   \label{fig:observations}
-% \end{figure*}
 
 
 
