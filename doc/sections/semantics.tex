@@ -250,9 +250,11 @@ an expression $e$ in state $s$ normalises to task $t$ in state $s'$.
 It is a semantic relation that acts on the task level
 and only accepts expressions of type $\Task \tau$.
 
-
-
-Normalisation rules are given in \autoref{fig:normalisation-semantics} in a two step fashion.
+Normalisation rules are given in \autoref{fig:normalisation-semantics}.
+Both rules ensure expressions $e$ are first evaluated by the host language ($\evaluate$).
+Then it will delegate work to the stride semantics ($\stride$) we will discuss below.
+These two actions are repeated by \refrule{N-Repeat} till the resulting state and task stabilise,
+which is expressed by \refrule{N-Done}.
 
 \begin{figure}[h]
   \small
@@ -266,12 +268,30 @@ Normalisation rules are given in \autoref{fig:normalisation-semantics} in a two 
 
 \end{figure}
 
-Normalisation first ensure the expression is evaluated by the host language ($\evaluate$).
-Then it will perform internal steps and internal choices by delegating this work to the stride semantics ($\stride$).
-% A stride from task $t$ in state $s$ to $t'$ in state $s'$ is denoted by $\RelationS$.
-These actions are repeated by \refrule{N-Repeat} till the resulting state and task stabilise.
+The reason to split out striding from normalisation have to do with state.
+% This would be quite straight-forward, if we did not have to deal with state.
+Consider the following example
+\begin{TASK}
+  (update l >>= \x:Bool. if x then e else fail) <&> (l := True; edit <<>>)
+\end{TASK}
+with $s=\set{l\mapsto\False}$.
+When we apply \refrule{S-And} in order to normalise the expression above, we obtain
+\begin{TASK}
+  (update l >>= \x:Bool. if x then e else fail) <&> (edit <<>>)
+\end{TASK}
+with $s'=\set{l\mapsto\True}$.
+This expression in fact is not normalised.
+The issue here lies in the fact that $s$ gets updated by the second component,
+which allows the first component of $\And$ to be further normalised, in this case to $e$.
+To overcome this problem, the \refrule{N-Done} and \refrule{N-Repeat} rules have been added.
+They ensure that normalisation is applied until the shared memory $s$ has become stable and no further normalisation can be applied.
 
-
+Striding semantics are intended to perform internal steps and internal choices.
+A stride from task $t$ in state $s$ to $t'$ in state $s'$ is denoted by $\RelationS$.
+All rules are given in \autoref{fig:striding-semantics}.
+Tasks like editors, fail and external choice are ready and stride to themselves.
+For external choice, parallel, and appoint,
+there are congruence rules.
 
 \begin{figure}[h]
   \small
@@ -308,66 +328,46 @@ These actions are repeated by \refrule{N-Repeat} till the resulting state and ta
     % \userule{S-Eval}
   \end{mathpar}
 
-  \caption{Striding semantics} \label{fig:normalisation-semantics}
+  \caption{Striding semantics} \label{fig:striding-semantics}
 \end{figure}
 
 
 
-\paragraph{Two principles of stepping}
-\label{sec:stepping-principles}
+\paragraph{Principles of stepping}
+\label{sub:stepping-principles}
 
-\fixme{Add principles}
+Stepping from task $t_1$ to its continuation $t_2$ can only be performed when
+$t_1$ has an observable value ($\Value(t_1) = v_1$).
+This uses the fact that that calculating a new task $t_2$ from an expression $e$
+is not possible when there is no observable value of $t_1$ to pass on.
+To protect users from stepping to a failing task,
+we add the condition that $t_2$ is not failing ($\Failing(t_2) = \False$).
 
-Above rules imply that we have three cases when normalising a sequence.
-First,
-it could be the case that the left hand side does not have a value after normalisation.
-This means we cannot pass a value to the right hand side
-and thus we cannot make the step.
-\refrule{S-ThenStay}
-
-Second,
-the normalised left hand side has a value,
-but when evaluating the right hand side,
-it leads to a failing task.
-We do not allow stepping to a failing task
-and thus we also cannot make a step.
-\refrule{S-ThenFail}
-Note we use the evaluation semantics of our host language
-to evaluate the function application $e_2\ v_1$ to a new task $t_2$.
-
-Third,
-the normalised left hand side has a value,
-and the evaluated right hand side is a succeeding task.
-Now we can make a step!
-\refrule{S-ThenCont}
-Note we normalise $t_2$ first before yielding our result.
-
-The sequence construct itself does not handle any user input.
-The left hand side however,
-can be an interactive task, such as an editor.
-To reach this encapsulated interactive task,
-$\Then$ needs to pass inputs to the left.
-\refrule{H-PassThen}
+These principles lead to the step rules in \autoref{fig:striding-semantics}.
+\refrule{S-ThenStay} does nothing,
+because the lhs does not have a value.
+In the rule \refrule{S-ThenFail},
+the lhs has a value, but the calculate continuation is failing.
+Note it uses the semantics of the host language to evaluate the function application $e_2 v_1$.
+In case the continuation is not failing,
+\refrule{S-ThenCont} strides to this new task.
 
 
-\paragraph{Three principles of choosing}
-\label{sec:choosing-principles}
 
-\fixme{Add principles}
+\paragraph{Principles of choosing}
+\label{sub:choosing-principles}
 
-\fixme{Should we move this section to the rules?}
-The normalisation semantics is a big-step semantics. This would be quite
-straight-forward, if we did not have to deal with state. Consider the following
-example:
-$(\Update l \Then \lambda x:\Bool.\allowbreak \If{x}{e}{\Fail}) \And (l:=\True; \Edit \unit)$ with $s=\set{l\mapsto\False}$.
-When we apply \refrule{S-And} in order to normalise the expression above, we obtain
-$(\Update l \Then \lambda x:\Bool .\ \If{x}{e}{\Fail})\And (\Edit \unit)$ with $s'=\set{l\mapsto\True}$,
-an expression which in fact is not normalised. The issue here lies in the fact
-that $s$ gets updated, and allows the first component of $\And$ to be further
-normalised, in this case to $e$. To overcome this problem, the \refrule{N-Done} and
-\refrule{N-Repeat} rules have been added. They ensure that normalisation is applied until
-the shared memory $s$ has become stable and no further normalisation can be
-applied.
+Making a choice between two tasks $t_1$ and $t_2$ can only be done when
+$t_1$ or $t_2$ has an observable value ($\Value(t_1) = v_1 \lor \Value(t_2) = v_2$).
+To make the semantics deterministic,
+we prefer the left over the right if both tasks have values.
+Therefore, as long as tasks do not have an observable value ($\Value(t) = \bot$),
+
+These principles lead to the three rules \refrule{S-OrLeft}, \refrule{S-OrRight}, and \refrule{S-OrNone}.
+They resprectively pick the left task if it has a value;
+pick the right is the left task does not have a value and the right has;
+or does nothing when both task do not have values.
+
 
 
 \subsection{Handling user inputs}
