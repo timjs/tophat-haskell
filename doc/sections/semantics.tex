@@ -161,10 +161,6 @@ Steps will only show the interface of their left hand side.
 In case of an external step they will be accompanied with a button.
 To reflect if a continuation is failing, this button can be temporary disabled.
 
-A textual user interface is part of the implementation of this semantics.
-It prompts users to explicitly type in values and other inputs,
-which then get parsed and processed.
-
 
 
 \subsection{Normalising tasks}
@@ -329,8 +325,9 @@ We use labeled transitions in the same way as \textcite{school/maktoberdorf/Peyt
 % who gives denotational semantics to the Haskell \IO monad.
 Therefore events live on the \emph{semantic level} only
 and they are \emph{not} accessible from within our language.
-We define a new syntactic category of \emph{events} $i$,
-which contain \emph{actions} $a$.
+We define a new syntactic category of \emph{inputs} $i$,
+which contain \emph{actions} $a$,
+shown in figure \autoref{fig:input-grammar}.
 
 \begin{figure}[h]
   \small
@@ -348,18 +345,14 @@ there are three actions that can be handled by editors:
 We choose to merge the first two, filling and changing, into one action.
 The value of an editor, empty or not, can be changed to a value $v$ by just sending the value as an action.
 To empty a valued editor, we send the $\Empty$(mpty) action.
+To continue an external step, users send the $\Continue$(ontinue) action.
+$\Left$(eft) and $\Right$ are used to pick the left or right option of an external choice.
+The inputs $\First$(irst) and $\Second$(econd) are used to direct inputs to the correct branch of parallel constructs.
 
 Handling inputs is done by a new semantic relation.
 This small step relation takes a task $t$ and an event $h$ which results in a new task $t'$.
-We write $\RelationH$
-Formalising the states and transitions shown in \cref{fig:editor-state},
-we need three rules to describe editors:
-\refrule{H-Change}, \refrule{H-Empty}, and \refrule{H-Fill}.
-Note that the conditions to the right of the rules take care of typing.
-Only when the entered value $v'$ has the same type $\tau$ as the original value $v$ we can change a valued editor.
-In case of an unvalued editor,
-the entered value $v'$ needs to have the same type as the type annotation $\tau$.
-These conditions make sure the type of the entered value and the type of the editor are always the same.
+We write $\RelationH$.
+The rules are shown in \cref{fig:handling-semantics}.
 
 \begin{figure}[h]
   \small
@@ -394,6 +387,15 @@ These conditions make sure the type of the entered value and the type of the edi
   \caption{Handling semantics} \label{fig:handling-semantics}
 \end{figure}
 
+Formalising the states and transitions shown in \cref{fig:editor-state},
+we need three rules to describe editors:
+\refrule{H-Change}, \refrule{H-Empty}, and \refrule{H-Fill}.
+Note that the conditions to the right of the rules take care of typing.
+Only when the entered value $v'$ has the same type $\tau$ as the original value $v$ we can change a valued editor.
+In case of an unvalued editor,
+the entered value $v'$ needs to have the same type as the type annotation $\tau$.
+These conditions make sure the type of the entered value and the type of the editor are always the same.
+
 
 
 \paragraph{Inputs}
@@ -412,18 +414,18 @@ The definition of this function is listed in Figure~\ref{fig:observation-input}.
 
 
 
-\paragraph{Driving}
-\label{sec:drive}
+\paragraph{Interacting}
+\label{sec:interact}
 
 To ensure tasks are ready to process the next event,
 we need to normalise after each use of the handling semantics.
 Instead of adding normalisation to every handling rule,
 we introduce a fourth semantic relation to deal with this.
-The drive relation $\RelationD$ simply passes the event $h$ to the handle semantics
+The interact relation $\RelationD$ simply passes the event $i$ to the handle semantics
 and normalises the task afterwards.
 \refrule{D-Handle}
 Note that again,
-the double arrow $\drive{h}$ uses the single arrow $\handle{h}$.
+the double arrow $\drive{i}$ uses the single arrow $\handle{i}$.
 
 \begin{figure}[h]
   \small
@@ -431,11 +433,18 @@ the double arrow $\drive{h}$ uses the single arrow $\handle{h}$.
     \boxed{\RelationD} \\
     \userule{D-Handle}
   \end{mathpar}
-  \caption{Driving semantics} \label{fig:driving-semantics}
+  \caption{Interaction semantics} \label{fig:driving-semantics}
 \end{figure}
 
 
 
 \subsection{Implementation}
 
-\fixme{Write something about the Idris/Haskell implementations.}
+Above semantics have been implemented using the Idris programming language \cite{journals/jfp/Brady13}.
+We use techniques presented by \textcite{journals/entcs/JaskelioffGH11}, \textcite{journals/jfp/Swierstra08}, and \textcite{school/maktoberdorf/PeytonJones01}.
+Having such an implementation gives us an opportunity to gain confidence in the correctness and completeness of our semantics.
+The code can be found on GitHub.\footnote{\url{http://github.com/XXX/XXX}}
+
+A textual user interface is part of this implementation.
+It prompts users to explicitly type in values and other inputs,
+which then get parsed and processed by the interaction semantics.
