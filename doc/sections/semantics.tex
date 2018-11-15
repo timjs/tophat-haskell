@@ -88,30 +88,20 @@ Internal and external steps do not have an observable value, because calculating
 Parallel composition only has a value when both branches have values, in which case these values are paired.
 Internal choice has a value when one of the branches has a value.
 When both branches have a value, it takes the value of the left branch.
-External choice does not have a value, because it waits for user input.
+External choice does not have a value because it waits for user input.
 
 
 
 \paragraph{Failing $(\Failing)$}
 
-In \cref{sub:fail} we introduced $\Fail$ to signal a senseless continuation of work.
-However, not only the fail task itself represents failure:
-combinations of tasks could also yield senseless continuations.
-Take for example the parallel composition of two fail tasks ($\Fail \And \Fail$).
-This expression is in some way equivalent to $\Fail$ itself.
-% it cannot be normalised and cannot handle any input.
+In \cref{sub:fail} we introduced $\Fail$ to stand for an impossible task.
+Combinations of tasks can also be impossible.
+Take for example the parallel composition of two fails ($\Fail \And \Fail$).
+This expression is equivalent to $\Fail$, because it can not handle input and can not be further normalized.
 
 This intuition is formalised by the function $\Failing$ in \cref{fig:observation-failing}.
-% It specifies which tasks are equivalent to $\Fail$.
-It determines the property that a task
-% \begin{enumerate*}
-% will not normalise any further,
-will never produce a value, and
-cannot handle any input.
-% \end{enumerate*}
-We call such tasks \emph{failing}.
-% If a task is failing or not is determined by function $\Failing$.
-% This is one of the properties we will prove in \cref{sec:properties}.
+It determines whether a task is impossible.
+Such tasks are called \emph{failing}.
 
 \begin{figure}[h]
   \small
@@ -119,17 +109,12 @@ We call such tasks \emph{failing}.
   \caption{Failing} \label{fig:observation-failing}
 \end{figure}
 
-% Failing tasks will never produce a value.
-Steps whose left hand sides are failing will never proceed because of the lack of an observable value.
+Steps whose left hand sides are failing can never proceed because of the lack of an observable value.
 Therefore they are itself failing.
-Like with parallel, the internal choice of two failing tasks is failing itself.
-External choices are somewhat special.
-They let the user enter a choice and only then evaluate one of its two subexpressions.
-So, to determine if an external choice itself is failing or not,
-we will need to peek into the future to check if both subexpressions result in a failing task.
-This is done by normalising both expressions first.
+The internal choice of two failing tasks is failing.
+External choices let the user pick a side and only then evaluate the corresponding subexpression.
+To determine if an external choice is failing, it needs to peek into the future to check if both subexpressions are failing.
 Annotations are failing only if the inner task is failing.
-% We will discuss normalisation in the next subsection.
 
 
 
