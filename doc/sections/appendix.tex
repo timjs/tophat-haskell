@@ -412,76 +412,76 @@ This lemma follows immediately from definition.
 %
 % \end{proof}
 
-\subsubsection{Lemma~\ref{lem:stride-does-not-eval}}
-
-\begin{proof}
-  We prove Lemma~\ref{lem:stride-does-not-eval} by induction on $e$. First we
-  apply evaluation, and we then find ourselves in one of the cases below.\\
-
-  \noindent\textbf{Case} $\userule{S-ThenStay}$\\
-  and $\userule{S-ThenFail}$ The \refrule{E-Then} rule gives us that evaluation
-  has been applied to $t_1$. We therefore can apply the induction hypothesis,
-  from which we obtain that $t_1',s'\evaluate t_1'',s''$ then $t_1'=t_1''$ and
-  $s'=s''$. This, together with the \refrule{E-Then} rule, proves this case.\\
-
-  \noindent\textbf{Case} $\userule{S-ThenCont}$ By application of the induction
-  hypothesis, we obtain that $t_2',s'''\evaluate t_2'',s''''$ then $t_2'=t_2''$
-  and $s'''=s''''$, which immediately proves this case.\\
-
-  \noindent\textbf{Case} $\userule{S-OrLeft}$ The \refrule{E-Or} rule gives us
-  that evaluation has been applied to $t_1$. We therefore can apply the
-  induction hypothesis, from which we obtain that $t_1',s'\evaluate t_1'',s''$
-  then $t_1'=t_1''$ and $s'=s''$, which immediately proves this case.\\
-
-  \noindent\textbf{Case} $\userule{S-OrRight}$The \refrule{E-Or} rule gives us
-  that evaluation has been applied to $t_2$. We therefore can apply the
-  induction hypothesis, from which we obtain that $t_2',s'\evaluate t_2'',s''$
-  then $t_2'=t_2''$ and $s'=s''$, which immediately proves this case.\\
-
-  \noindent\textbf{Case} $\userule{S-OrNone}$ The \refrule{E-Or} rule gives us
-  that evaluation has been applied to both $t_1$ and $t_1$. We assumed that the
-  states do not change, so we know that $s=s'=s''$. We can therefore safely
-  apply the induction hypothesis twice, to obtain that
-  $t_1',s''\evaluate t_1'',s'''$ then $t_1'=t_1''$ and $s''=s'''$, and
-  $t_2',s'''\evaluate t_2'',s''''$ then $t_2'=t_2''$ and $s'''=s''''$. This,
-  together with the \refrule{E-Or} rule proves this case.\\
-
-  \noindent\textbf{Case} $\userule{S-Edit}$ by definiton, $\Edit v$ is a value
-  with respect to evaluation.\\
-
-  \noindent\textbf{Case} $\userule{S-Fill}$ by definition, $\Enter \tau$ is a
-  value with respect to evaluation.\\
-
-  \noindent\textbf{Case} $\userule{S-Update}$ by definiton, $\Update l$ is a
-  value with respect to evaluation.\\
-
-  \noindent\textbf{Case} $\userule{S-Fail}$ by definiton, $\Fail$ is a value
-  with respect to evaluation.\\
-
-  \noindent\textbf{Case} $\userule{S-Xor}$ by definition, $e_1\Xor e_2$ is a
-  value with respect to evaluation.\\
-
-  \noindent\textbf{Case} $\userule{S-Next}$ The \refrule{E-Next} rule gives us
-  that evaluation has been applied to $t_1$. We therefore can apply the
-  induction hypothesis, from which we obtain that $t_1',s'\evaluate t_1'',s''$
-  then $t_1'=t_1''$ and $s'=s''$. This, together with the \refrule{E-Next} rule,
-  proves this case.\\
-
-  \noindent\textbf{Case} $\userule{S-And}$ The \refrule{E-And} rule gives us
-  that evaluation has been applied to both $t_1$ and $t_1$. We assumed that the
-  states do not change, so we know that $s=s'=s''$. We can therefore safely
-  apply the induction hypothesis twice, to obtain that
-  $t_1',s''\evaluate t_1'',s'''$ then $t_1'=t_1''$ and $s''=s'''$, and
-  $t_2',s'''\evaluate t_2'',s''''$ then $t_2'=t_2''$ and $s'''=s''''$. This,
-  together with the \refrule{E-And} rule proves this case.\\
-
-  \noindent\textbf{Case} $\userule{S-Appoint}$ The \refrule{E-Appoint} rule
-  gives us that evaluation has been applied to $t$. We therefore can apply the
-  induction hypothesis, from which we obtain that $t',s'\evaluate t'',s''$ then
-  $t'=t''$ and $s'=s''$. This, together with the \refrule{E-Appoint} rule,
-  proves this case.
-
-\end{proof}
+% \subsubsection{Lemma~\ref{lem:stride-does-not-eval}}
+%
+% \begin{proof}
+%   We prove Lemma~\ref{lem:stride-does-not-eval} by induction on $e$. First we
+%   apply evaluation, and we then find ourselves in one of the cases below.\\
+%
+%   \noindent\textbf{Case} $\userule{S-ThenStay}$\\
+%   and $\userule{S-ThenFail}$ The \refrule{E-Then} rule gives us that evaluation
+%   has been applied to $t_1$. We therefore can apply the induction hypothesis,
+%   from which we obtain that $t_1',s'\evaluate t_1'',s''$ then $t_1'=t_1''$ and
+%   $s'=s''$. This, together with the \refrule{E-Then} rule, proves this case.\\
+%
+%   \noindent\textbf{Case} $\userule{S-ThenCont}$ By application of the induction
+%   hypothesis, we obtain that $t_2',s'''\evaluate t_2'',s''''$ then $t_2'=t_2''$
+%   and $s'''=s''''$, which immediately proves this case.\\
+%
+%   \noindent\textbf{Case} $\userule{S-OrLeft}$ The \refrule{E-Or} rule gives us
+%   that evaluation has been applied to $t_1$. We therefore can apply the
+%   induction hypothesis, from which we obtain that $t_1',s'\evaluate t_1'',s''$
+%   then $t_1'=t_1''$ and $s'=s''$, which immediately proves this case.\\
+%
+%   \noindent\textbf{Case} $\userule{S-OrRight}$The \refrule{E-Or} rule gives us
+%   that evaluation has been applied to $t_2$. We therefore can apply the
+%   induction hypothesis, from which we obtain that $t_2',s'\evaluate t_2'',s''$
+%   then $t_2'=t_2''$ and $s'=s''$, which immediately proves this case.\\
+%
+%   \noindent\textbf{Case} $\userule{S-OrNone}$ The \refrule{E-Or} rule gives us
+%   that evaluation has been applied to both $t_1$ and $t_1$. We assumed that the
+%   states do not change, so we know that $s=s'=s''$. We can therefore safely
+%   apply the induction hypothesis twice, to obtain that
+%   $t_1',s''\evaluate t_1'',s'''$ then $t_1'=t_1''$ and $s''=s'''$, and
+%   $t_2',s'''\evaluate t_2'',s''''$ then $t_2'=t_2''$ and $s'''=s''''$. This,
+%   together with the \refrule{E-Or} rule proves this case.\\
+%
+%   \noindent\textbf{Case} $\userule{S-Edit}$ by definiton, $\Edit v$ is a value
+%   with respect to evaluation.\\
+%
+%   \noindent\textbf{Case} $\userule{S-Fill}$ by definition, $\Enter \tau$ is a
+%   value with respect to evaluation.\\
+%
+%   \noindent\textbf{Case} $\userule{S-Update}$ by definiton, $\Update l$ is a
+%   value with respect to evaluation.\\
+%
+%   \noindent\textbf{Case} $\userule{S-Fail}$ by definiton, $\Fail$ is a value
+%   with respect to evaluation.\\
+%
+%   \noindent\textbf{Case} $\userule{S-Xor}$ by definition, $e_1\Xor e_2$ is a
+%   value with respect to evaluation.\\
+%
+%   \noindent\textbf{Case} $\userule{S-Next}$ The \refrule{E-Next} rule gives us
+%   that evaluation has been applied to $t_1$. We therefore can apply the
+%   induction hypothesis, from which we obtain that $t_1',s'\evaluate t_1'',s''$
+%   then $t_1'=t_1''$ and $s'=s''$. This, together with the \refrule{E-Next} rule,
+%   proves this case.\\
+%
+%   \noindent\textbf{Case} $\userule{S-And}$ The \refrule{E-And} rule gives us
+%   that evaluation has been applied to both $t_1$ and $t_1$. We assumed that the
+%   states do not change, so we know that $s=s'=s''$. We can therefore safely
+%   apply the induction hypothesis twice, to obtain that
+%   $t_1',s''\evaluate t_1'',s'''$ then $t_1'=t_1''$ and $s''=s'''$, and
+%   $t_2',s'''\evaluate t_2'',s''''$ then $t_2'=t_2''$ and $s'''=s''''$. This,
+%   together with the \refrule{E-And} rule proves this case.\\
+%
+%   \noindent\textbf{Case} $\userule{S-Appoint}$ The \refrule{E-Appoint} rule
+%   gives us that evaluation has been applied to $t$. We therefore can apply the
+%   induction hypothesis, from which we obtain that $t',s'\evaluate t'',s''$ then
+%   $t'=t''$ and $s'=s''$. This, together with the \refrule{E-Appoint} rule,
+%   proves this case.
+%
+% \end{proof}
 
 
 
