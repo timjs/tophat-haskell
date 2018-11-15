@@ -39,8 +39,8 @@ In this paper, we set out to develop a formal basis for \TOP, called \TOPHAT (To
 Our goal is to specify the basic building blocks of declarative workflows.
 We clearly separate them from general purpose programming concepts.
 This allows us to prove properties like progress and type preservation.
-With \TOPHAT it should be possible to express complicated real-world situations,
-while still being open for formal reasoning.
+\TOPHAT should be powerful enough to model complicated real-world situations,
+without losing oportunities for formal reasoning.
 
 
 
@@ -49,10 +49,12 @@ while still being open for formal reasoning.
 We present a calculus for modelling declarative workflows, embedded in a simply typed lambda-calculus.
 We develop an operational semantics that is driven by user inputs.
 The semantics of the task language is clearly separated from the semantics of the underlying host language.
-Furthermore, we present the following semantic observations on tasks: the current value, whether a term is stuck, the current user interface, and the accepted inputs.
+Along the semantics, we present the following semantic observations on tasks: the current value, whether a term is stuck, the current user interface, and the accepted inputs.
+%%NOTE: iTasks things are moved to related work
 % All these observations exist in iTasks, albeit combined into one big type.
-By separating them in the style of a deep embedding \cite{conf/cefp/Gibbons13}, we make explicit where, and where not, they depend on each other.
-
+By separating them in the style of a deep embedding \cite{conf/cefp/Gibbons13}, we make explicit where and where not, they depend on each other.
+Additionally, we implemented the whole semantic system in the dependently typed programming language Idris \cite{journals/jfp/Brady13},
+to gain confidence for our system and check practical applicability.
 Furthermore we compare our calculus with the process algebra \CSP, to show how their concepts, like communication, and sequential and parallel composition, relate.
 We show that, where process algebras focus on the \emph{coordination} of processes and the \emph{communication} between them,
 \TOP, and therefore \TOPHAT, focus on supporting \emph{tasks} and model ways to \emph{collaborate} on them.
