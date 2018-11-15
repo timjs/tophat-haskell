@@ -120,14 +120,14 @@ Annotations are failing only if the inner task is failing.
 
 \paragraph{User interface}
 
-\TOPHAT is designed in such a way that an observation on a tasks' syntax tree can be used to generate an user interface.
-A possible graphical user interface is shown in \cref{fig:flight-booking}.
-Editors are rendered as \HTML input entries,
+\TOPHAT is designed such that a user interface can be generated from a task's syntax tree.
+A possible graphical user interface is shown in \cref{fig:flight-booking}, where tasks are rendered as \HTML pages.
+Editors are rendered as input fields,
 external choices are represented by two buttons,
-and parallel composition is rendered side by side.
-Steps will only show the interface of their left hand side.
-In case of an external step they will be accompanied with a button.
-To reflect if a continuation is failing, this button can be temporary disabled.
+and parallel tasks are rendered side by side.
+Steps only show the interface of their left hand side.
+In case of an external step they are accompanied by a button.
+When the guard condition of a step is not fulfilled, the button is disabled.
 
 
 
