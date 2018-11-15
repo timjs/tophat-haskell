@@ -78,6 +78,13 @@ and runs these in parallel.
 \end{TASK}
 A screenshot of the running application is shown in \cref{fig:flight-booking}.
 
+Note that every instance of the \TS{bookFlight} task has access to the same shared list of free seats.
+Rewriting above example in a calculus without side effects would not only be cumbersome,
+obfuscating the code with explicit threading of state,
+it would also be impossible to model the parallel execution of three \TS{bookFlight} tasks.
+Because we do not know upfront which branch will finish first,
+we do not know which task would produce the updated free seats list to be used for the next one.
+
 \end{example}
 
 
