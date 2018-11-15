@@ -84,7 +84,6 @@ The typing rules for pretasks are given in \cref{fig:typing-rules}.
     \userule{T-And} \\
     \userule{T-Or} \quad
     \userule{T-Xor}\\
-    \userule{T-Appoint} \quad
     \userule{T-Fail}
   \end{mathpar}
   \caption{Typing rules} \label{fig:typing-rules}
@@ -267,24 +266,26 @@ it is a task which takes another task as a parameter.
 
 \end{example}
 
+\subsection{Appointment}
 
+\fixme{write this subsection}
 
-\subsection{Annotations}
-
-Lastly, pretasks can be annotated with additional information.
-One could think of labelling information for buttons,
-or description of tasks.
-For now, we only concentrate on appointing tasks to users,
-which is common in workflow modelling.
-
-
-
-\paragraph{Appoint $(u \At e)$}
-
-Users are identified by a name $u$ which is a string.
-They can be appointed tasks by means of the $\At$ combinator.
-The sole purpose of this labelling is to be able to tell users which inputs are expected of them.
-In \cref{sec:handling}, a function is described to calculate which users can take what actions.
-Other than this function, the appointment of tasks has no influence on the semantics.
-All semantic rules in \cref{sec:semantics} simply continue with their operations as if the label was not there.
-\todo{we still have to fix the type of $\Inputs$ and state the type of $u$}
+% \subsection{Annotations}
+%
+% Lastly, pretasks can be annotated with additional information.
+% One could think of labelling information for buttons,
+% or description of tasks.
+% For now, we only concentrate on appointing tasks to users,
+% which is common in workflow modelling.
+%
+%
+%
+% \paragraph{Appoint $(u \At e)$}
+%
+% Users are identified by a name $u$ which is a string.
+% They can be appointed tasks by means of the $\At$ combinator.
+% The sole purpose of this labelling is to be able to tell users which inputs are expected of them.
+% In \cref{sec:handling}, a function is described to calculate which users can take what actions.
+% Other than this function, the appointment of tasks has no influence on the semantics.
+% All semantic rules in \cref{sec:semantics} simply continue with their operations as if the label was not there.
+% \todo{we still have to fix the type of $\Inputs$ and state the type of $u$}

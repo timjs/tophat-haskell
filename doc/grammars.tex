@@ -74,7 +74,7 @@
     \mid  & e_1 \Then e_2 \Mid   e_1 \Next e_2           & – steps: system, user \\
     \mid  & e_1 \And e_2                                 & – pairing \\
     \mid  & e_1 \Or e_2 \Mid   e_1 \Xor e_2              & – choice: system, user \\
-    \mid  & u \At e \Mid   \Fail                         & – appoint, fail
+    \mid  & \Fail                                        & – fail
   \end{grammar*}
 }
 
@@ -160,8 +160,8 @@
 
 \newmacro{G-Inputs-Compact}{
   \begin{grammar*}
-    j ::= &                                           & Maybe Appointed Inputs\\
-    \mid  & u\At i \Mid i                             & – assigned input, input\\
+    %j ::= &                                           & Maybe Appointed Inputs\\
+    %\mid  & u\At i \Mid i                             & – assigned input, input\\
     i ::= &                                           & Inputs \\
     \mid  & a \Mid \First i \Mid \Second i            & – action, pass to first, pass to second \\
     a ::= &                                           & Actions \\

@@ -97,10 +97,10 @@
       $\Gamma,\Sigma\infers t_2:\Task\tau$ and $\Sigma\infers s''$. Therefore $\Gamma,\Sigma\infers t_1\Or t_2:\Task\tau$.\\
 
   \noindent\textbf{Case} $\userule{E-Xor}$
-      Evaluation does not alter $e$ and $s$, therefore this case holds tivially.\\
+      Evaluation does not alter $e$ and $s$, therefore this case holds tivially.
 
-  \noindent\textbf{Case} $\userule{E-Appoint}$
-      Given that $\Gamma,\Sigma\infers u \At e:\Task\tau$ and $\Sigma\infers s$, the induction hypothesis gives us that $e,s\evaluate t,s'$ also preserves, and therefore by \refrule{T-Appoint} $\Gamma,\Sigma\infers u \At t:\Task\tau$.
+  % \noindent\textbf{Case} $\userule{E-Appoint}$
+  %     Given that $\Gamma,\Sigma\infers u \At e:\Task\tau$ and $\Sigma\infers s$, the induction hypothesis gives us that $e,s\evaluate t,s'$ also preserves, and therefore by \refrule{T-Appoint} $\Gamma,\Sigma\infers u \At t:\Task\tau$.
 \end{proof}
 
 
@@ -159,10 +159,10 @@
   lead to a value, the lemma holds trivially.\\
 
   \noindent\textbf{Case} $\Value{(t_1\Xor t_2,s)}=\bot$ Since this case does not
-  lead to a value, the lemma holds trivially.\\
+  lead to a value, the lemma holds trivially.
 
-  \noindent\textbf{Case} $\Value{(u\At t,s)}=\Value(t,s)$ This case follows
-  directly from the induction hypothesis.\\
+  % \noindent\textbf{Case} $\Value{(u\At t,s)}=\Value(t,s)$ This case follows
+  % directly from the induction hypothesis.\\
 \end{proof}
 
 
@@ -238,12 +238,12 @@
   that $\Value{(t_1')}=v_1$ preserves. By Theorem~\ref{thm:pres-eval} we know
   that $e_2 v_1\evaluate t_2$ preserves. And finally by the induction hypothesis,
   we know that $t_2\stride t_2'$ preserves. Therefore
-  $\Gamma,\Sigma\infers t_2':\Task\tau$.\\
-
-  \noindent\textbf{Case} $\userule{S-Appoint}$ Given that
-  $\Gamma,\Sigma\infers u\At t:\Task\tau$, by \refrule{T-Appoint} we have
-  $t:\Task\tau$. By the induction hypothesis, we know that $t,s\stride t',s'$
-  preserves, and thus $\Gamma,\Sigma\infers u\At t':\Task\tau$.\\
+  $\Gamma,\Sigma\infers t_2':\Task\tau$.
+  %
+  % \noindent\textbf{Case} $\userule{S-Appoint}$ Given that
+  % $\Gamma,\Sigma\infers u\At t:\Task\tau$, by \refrule{T-Appoint} we have
+  % $t:\Task\tau$. By the induction hypothesis, we know that $t,s\stride t',s'$
+  % preserves, and thus $\Gamma,\Sigma\infers u\At t':\Task\tau$.\\
 
 \end{proof}
 
@@ -368,13 +368,13 @@ This lemma follows immediately from definition.
   $\Gamma,\Sigma\infers t_2:\Task\tau$. By the induction hypothesis we know that
   $t_2,s\handle{i}t_2',s'$ also preserves, and therefore
   $\Gamma,\Sigma\infers t_2':\Task\tau$ and $\Sigma\infers s'$. By T-Or we now
-  obtain $\Gamma,\Sigma\infers t_1\Or t_2':\Task\tau$.\\
+  obtain $\Gamma,\Sigma\infers t_1\Or t_2':\Task\tau$.
 
-  \noindent\textbf{Case} $\userule{H-Appoint}$ Given that
-  $\Gamma,\Sigma\infers u\At t:\Task\tau$, \refrule{T-Assign} gives us that
-  $\Gamma,\Sigma\infers t:\Task\tau$. By the induction hypothesis, we know that
-  $t,s\handle{i}t',s'$ also preserves, and therefore
-  $\Gamma,\Sigma\infers u\At t'$ and $\Sigma\infers s'$.
+  % \noindent\textbf{Case} $\userule{H-Appoint}$ Given that
+  % $\Gamma,\Sigma\infers u\At t:\Task\tau$, \refrule{T-Assign} gives us that
+  % $\Gamma,\Sigma\infers t:\Task\tau$. By the induction hypothesis, we know that
+  % $t,s\handle{i}t',s'$ also preserves, and therefore
+  % $\Gamma,\Sigma\infers u\At t'$ and $\Sigma\infers s'$.
 \end{proof}
 
 % \subsubsection{Theorem~\ref{thmprogressnorm}}
@@ -521,10 +521,10 @@ This lemma follows immediately from definition.
 
   \noindent\textbf{Case} $e = t_1\Or t_2$\\
   We can again find ourselfs in one of two situations. In the first case, both sub expressions fail, $\Failing(t_1,s)$ and $\Failing(t_2,s)$. In that case, we know that $\Failing(t_1\Or t_2,s)$ also fails by definition. By the induction hypothesis, we know that for both $t_1$ and $t_2$ there is no input that can be handled. Since the only two rules for $\Or$ that handle input just pass this input on to one of the two expressions, we know that indeed no $i$ applies.\\
-                                           In the case that one or both sub expressions do not fail, then by definition $t_1\Or t_2$ not failing under $s$. Again by induction hypothesis, we know that for one or both of the expressions, there exits an $i$ that can be handled. Then by H-FirstOr and H-SecondOr, we know that we can pass this $i$, by prefixing it with either $\First$ or $\Second$.\\
+                                           In the case that one or both sub expressions do not fail, then by definition $t_1\Or t_2$ not failing under $s$. Again by induction hypothesis, we know that for one or both of the expressions, there exits an $i$ that can be handled. Then by H-FirstOr and H-SecondOr, we know that we can pass this $i$, by prefixing it with either $\First$ or $\Second$.
 
-  \noindent\textbf{Case} $e = u \At t$\\
-   This case follows directly from applying the induction hypothesis, since $\Failing(u \At t,s)=\Failing(t,s)$ and any input that applies to $t$ also applies to $u \At t$.\\
+  % \noindent\textbf{Case} $e = u \At t$\\
+  %  This case follows directly from applying the induction hypothesis, since $\Failing(u \At t,s)=\Failing(t,s)$ and any input that applies to $t$ also applies to $u \At t$.\\
 \end{proof}
 
 \subsubsection{Theorem~\ref{thm:safety-i}}
@@ -567,8 +567,8 @@ This lemma follows immediately from definition.
    Given that $\userule{H-FirstOr}$ we have by definition that $\Inputs(t_1\Or t_2,s) = \set{\First\ i \mid i \in \Inputs(t_1,s)} \cup \set{\Second\ i \mid i \in \Inputs(t_2,s)}$. By the induction hypothesis, we have that $i\in\Inputs(t_1,s)$, and by definition of $\Inputs$, $\First i$ is therefore als included in this case.\\
 
   \noindent\textbf{Case} $e=t_1\Or t_2 , i=\Second i$\\
-   Given that $\userule{H-FirstOr}$ we have by definition that $\Inputs(t_1\Or t_2,s) = \set{\First\ i \mid i \in \Inputs(t_1,s)} \cup \set{\Second\ i \mid i \in \Inputs(t_2,s)}$. By the induction hypothesis, we have that $i\in\Inputs(t_2,s)$, and by definition of $\Inputs$, $\Second i$ is therefore als included in this case.\\
-
-  \noindent\textbf{Case} $e=u\At t, i$\\
-   Given that $\userule{H-Appoint}$, we can directly apply the induction hypothesis to prove this case.\\
+   Given that $\userule{H-FirstOr}$ we have by definition that $\Inputs(t_1\Or t_2,s) = \set{\First\ i \mid i \in \Inputs(t_1,s)} \cup \set{\Second\ i \mid i \in \Inputs(t_2,s)}$. By the induction hypothesis, we have that $i\in\Inputs(t_2,s)$, and by definition of $\Inputs$, $\Second i$ is therefore als included in this case.
+  % 
+  % \noindent\textbf{Case} $e=u\At t, i$\\
+  %  Given that $\userule{H-Appoint}$, we can directly apply the induction hypothesis to prove this case.\\
 \end{proof}

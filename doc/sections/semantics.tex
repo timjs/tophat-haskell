@@ -324,7 +324,7 @@ there are congruence rules.
   \begin{mathpar}
     \userule{S-Next} \quad
     \userule{S-And} \\
-    \userule{S-Appoint}
+    %\userule{S-Appoint}
     % \userule{S-Eval}
   \end{mathpar}
 
@@ -462,7 +462,7 @@ These conditions make sure the type of the entered value and the type of the edi
     \userule{H-PassThen} \quad \userule{H-PassNext} \\
     \userule{H-FirstAnd} \quad \userule{H-SecondAnd} \\
     \userule{H-FirstOr}  \quad \userule{H-SecondOr}\\
-    \userule{H-Appoint}
+  %  \userule{H-Appoint}
   \end{mathpar}
 
   \caption{Handling semantics} \label{fig:handling-semantics}
@@ -481,7 +481,7 @@ These conditions make sure the type of the entered value and the type of the edi
 In order to know which inputs a task expects, we have constructed a function
 that calculates a set of all possible inputs that can be handled. This function
 called inputs, denoted with $\Inputs$, takes the current normalised expression
-and state, and returns a set of inputs that can be assigned to a specific user.
+and state, and returns a set of inputs that can be handled.
 The definition of this function is listed in Figure~\ref{fig:observation-input}.
 
 
