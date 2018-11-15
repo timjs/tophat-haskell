@@ -162,12 +162,12 @@ Parallel composition comes in two variants: pairing two tasks (\emph{and}-parall
 We study sequential composition first, and after that pairing and choosing.
 
 
-\paragraph{Internal and external step $(e \Then c, e \Next c)$}
+\paragraph{Internal and external step $(t \Then e, t \Next e)$}
 \label{sub:steps}
 
-Sequential composition has a task $e$ on the left hand side and a continuation $c$ on the right.
+Sequential composition has a task $t$ on the left hand side and a continuation $e$ on the right.
 The accompanying typing rules are \refrule{T-Then} and \refrule{T-Next}.
-According to these rules, the left hand side must be a task $e : \Task \tau_1$, and the right hand side $c : \tau_1 \to \Task \tau_2$ must be a function that, given the task value of $e$, calculates the task with which to continue.
+According to these rules, the left hand side must be a task $t : \Task \tau_1$, and the right hand side $e : \tau_1 \to \Task \tau_2$ must be a function that, given the task value of $t$, calculates the task with which to continue.
 
 Steps are guarded, which means that the step combinators can only proceed when the following conditions are met.
 The left hand side must have a value, only then can the right hand side calculate the successor task.
