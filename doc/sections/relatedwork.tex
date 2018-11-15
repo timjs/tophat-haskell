@@ -21,7 +21,7 @@ However, it makes formal reasoning difficult.
 Our language is a strict subset of iTasks.
 With iTasks it is possible to express very complicated real-world situations in a comfortable and productive manner.
 \TOPHAT tries to cover as many of those use cases as possible, while still being small enough to be open for formal reasoning.
-Neither the semantics by Plasmeijer et al.~\cite{conf/ppdp/PlasmeijerLMAK12} nor iTasks itself lend themselves well for formal reasoning.
+% Neither the semantics by Plasmeijer et al.~\cite{conf/ppdp/PlasmeijerLMAK12} nor iTasks itself lend themselves well for formal reasoning.
 %, because of the complicated collaboration patterns that can be expressed.
 
 There have been two previous papers that describe semantics of iTasks, by \citet{conf/ifl/KoopmanPA08} and \citet{conf/ppdp/PlasmeijerLMAK12}.
@@ -29,7 +29,7 @@ Both give a different semantics in the form of minimal implementations of a subs
 Our work is based on them, but differs in three major ways.
 First, we make an explicit distinction between the host language and the task language, to emphasize their boundaries.
 Second, we make use of separate semantic functions for querying the current task value, determining the continuation after an input event, and producing a user interface.
-In iTasks and its aforementioned semantics, these are integrated into the Task datatype.
+In iTasks and its aforementioned semantics, these are integrated into the \CL{Task} datatype.
 Third, our system does not have the notion of task stability.
 When desired, stability can be introduced by the programmer, but the system itself makes no use of it.
 We argue that this does not impact the expressiveness of our language.
