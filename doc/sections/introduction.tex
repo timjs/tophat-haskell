@@ -60,14 +60,16 @@ This allows us to prove properties like progress and type preservation.
 
 \paragraph{Contributions}
 
-We present a task calculus for modelling declarative workflows, embedded in a simply typed lambda-calculus.
+We present a calculus for modelling declarative workflows, embedded in a simply typed lambda-calculus.
 We develop an operational semantics that is driven by user inputs.
 The semantics of the task language is clearly separated from the semantics of the underlying host language.
-Furthermore, we present the following semantic observations on tasks: the current value, the current user interface\todo{this is NOT a provided observation in this paper, apart from the implementation}, the accepted inputs, and whether a term is stuck.
-All these observations exist in iTasks, albeit combined into one big type.
+Furthermore, we present the following semantic observations on tasks: the current value, whether a term is stuck, the current user interface, and the accepted inputs.
+% All these observations exist in iTasks, albeit combined into one big type.
 By separating them in the style of a deep embedding \cite{conf/cefp/Gibbons13}, we make explicit where, and where not, they depend on each other.
 
 Furthermore we compare our calculus with the process algebra \CSP, to show how their concepts, like communication, and sequential and parallel composition, relate.
+We show that, where process algebras focus on the \emph{coordination} of processes and the \emph{communication} between them,
+\TOP, and therefore \TOPHAT, focus on supporting \emph{tasks} and model ways to \emph{collaborate} on them.
 
 
 
