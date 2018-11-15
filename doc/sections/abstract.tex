@@ -4,17 +4,17 @@ Task-Oriented Programming (\TOP) is a programming paradigm that focusses on mode
 It prescribes a declarative programming style to specify multi-user workflows.
 Workflows can be higher-order and communicate through typed values on a local or global level.
 Such specifications can be turned into interactive applications for different platforms,
-supporting collaborators during execution.
+supporting collaboration during execution.
 
 In this paper we decompose the rich features of \TOP into elementary language elements,
 which makes them suitable for formal treatment.
 We use the simply typed lambda calculus, extended with pairs and references, as a base language.
-On top of this, we develop a calculus for interactive workflows.
+On top of this language, we develop our calculus for interactive workflows.
 
 The embedding of our calculus gives rise to a layered semantics.
 The layers consists of multiple big step evaluations of expressions,
 and labelled small step handling of user inputs working in unison.
-We use this machinery to show some interesting properties.
+We show some interesting properties of this machinery.
 
 Our approach allows for comparison with other work in the field.
 We place our calculus in perspective with iTasks, a reference implementation of \TOP,
