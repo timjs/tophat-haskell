@@ -251,11 +251,11 @@ The second step is guarded until the current time is greater or equal to the sta
 \lstset{emph={proceed}}
 
 To illustrate the usage of internal and external choices,
-we will create an example which will ask users explicitly to proceed with a task or to cancel.
+we will create an example that will ask users explicitly to proceed with a task or to cancel.
 When users do not make a choice within a given amount of time,
 we will automatically proceed.
 To do this,
-we will make user of the \TS{wait}-task from \cref{exm:wait}.
+we will make use of the \TS{wait}-task from \cref{exm:wait}.
 \begin{TASK}
   let cancel : Task Unit = edit <<>> in
   let delay : Int -> Task Unit -> Task Unit =
