@@ -28,25 +28,8 @@ Finally, there is communication with the \emph{outside} world, where information
 The end points where the outside world interacts with \TOP applications are called editors.
 In generated applications, editors can take many forms, like input fields, selection boxes, or map widgets.
 
-iTasks is an implementation of \TOP, in the form of a shallowly embedded domain-specific language in the lazy functional programming language Clean.
-It is a library that provides editors and monadic combinators.
-iTasks uses the generic programming facilities of Clean to derive web applications from workflow models.
-
 \TOP has been used to model an incident management tool for the Dutch coast guard~\cite{conf/iscram/LijnseJP12}.
 Furthermore it has been used numerous times to prototype ideas for Command and Control~\cite{theses/nlda/Kool17, theses/radboud/Stutterheim17}, and in a case study for the Dutch tax authority \cite{conf/sfp/StutterheimAP17}.
-
-iTasks has many features, and its basic combinators are versatile and powerful.
-Simpler combinators are implemented by restricting the powerful ones.
-This is useful for everyday programming, where having lots of functionality at one's fingertips is convenient and efficient.
-However, it makes formal reasoning difficult.
-
-\todo{Move to Related Work?}
-Our language is a strict subset of iTasks.
-With iTasks it is possible to express very complicated real-world situations in a comfortable and productive manner.
-\TOPHAT\todo{this is the first mention of TOPHAT, should be introduced.}
-tries to cover as many of those use cases as possible, while still being small enough to be open for formal reasoning.
-Neither the semantics by Plasmeijer et al.~\cite{conf/ppdp/PlasmeijerLMAK12} nor iTasks itself lend themselves well for formal reasoning.
-%, because of the complicated collaboration patterns that can be expressed.
 
 
 

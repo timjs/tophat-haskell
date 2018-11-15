@@ -3,8 +3,26 @@
 
 
 \section{Related work}
-
 \label{sec:relatedwork}
+
+
+
+\paragraph{iTasks}
+
+iTasks is an implementation of \TOP, in the form of a shallowly embedded domain-specific language in the lazy functional programming language Clean.
+It is a library that provides editors and monadic combinators.
+iTasks uses the generic programming facilities of Clean to derive web applications from workflow models.
+
+iTasks has many features, and its basic combinators are versatile and powerful.
+Simpler combinators are implemented by restricting the powerful ones.
+This is useful for everyday programming, where having lots of functionality at one's fingertips is convenient and efficient.
+However, it makes formal reasoning difficult.
+
+Our language is a strict subset of iTasks.
+With iTasks it is possible to express very complicated real-world situations in a comfortable and productive manner.
+\TOPHAT tries to cover as many of those use cases as possible, while still being small enough to be open for formal reasoning.
+Neither the semantics by Plasmeijer et al.~\cite{conf/ppdp/PlasmeijerLMAK12} nor iTasks itself lend themselves well for formal reasoning.
+%, because of the complicated collaboration patterns that can be expressed.
 
 There have been two previous papers that describe semantics of iTasks, by \citet{conf/ifl/KoopmanPA08} and \citet{conf/ppdp/PlasmeijerLMAK12}.
 Both give a different semantics in the form of minimal implementations of a subset of the interface of iTasks.
@@ -15,7 +33,6 @@ In iTasks and its aforementioned semantics, these are integrated into the Task d
 Third, our system does not have the notion of task stability.
 When desired, stability can be introduced by the programmer, but the system itself makes no use of it.
 We argue that this does not impact the expressiveness of our language.
-
 
 % mTasks is another implementation of TOP, designed for coordination of IoT devices. \alert{cite MSc Lubbers}
 % mTasks has been used in a demonstrator for home automation. \alert{cite MSc Andrade}
