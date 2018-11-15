@@ -5,9 +5,9 @@
 \section{Semantics}
 \label{sec:semantics}
 
-In the previous section we introduced our workflow calculus,
-and described semantics of each construct intuitively.
-In this section we will formalise this intuition.
+% In the previous section we introduced our workflow calculus,
+% and described semantics of each construct intuitively.
+In this section we will formalise the intuition of each language construct described above.
 To do this,
 we need to take into account the way our calculus is structured.
 
@@ -17,7 +17,7 @@ This requires us to specify how the host language \emph{evaluates} its expressio
 and how it handles our domain language.
 
 Secondly,
-the previous sections describe two ways to decide how to proceed from one task to another:
+we have seen two ways to decide how to proceed from one task to another:
 internally by the system itself, or externally by the user.
 This means we need two additional semantics:
 one to specify the internal \emph{normalisation} of tasks,
@@ -29,7 +29,8 @@ because it would pollute the semantics of the host language with workflow specif
 By lifting normalisation to an additional layer,
 tasks will be ordinary values for the host language.
 
-The three main layers of semantics we need to discuss are evaluation, normalisation, and interaction.
+The three main layers of semantics are evaluation, normalisation, and interaction.
+Together with \emph{observations} we will discuss these smantics in the subsections to come.
 \Autoref{fig:semantic-functions} shows the relation between these semantics.
 It also shows that we will make use of two \emph{helper semantics}.
 Normalisation will make use of \emph{striding} semantics,
@@ -64,7 +65,8 @@ we choose our host language to be \emph{eagerly} evaluated.
 % Regarding our base language, lambda abstractions are values, as are all constants.
 Each \emph{pretask} $p$ is accompanied by a corresponding \emph{task} $t$,
 which are also values with respect to evaluation.
-Only external choice ($\Xor$) stores its expressions lazily.
+Only external choice ($\Xor$) stores its expressions lazily,
+because we require users to pick one of two options before evaluating any side effects.
 % This means pretasks will be eagerly evaluated to tasks by the relation $\evaluate$.
 % which makes it easier to reason about data constructors.
 % This suggestion by \textcite[p. 323]{books/Harper16PFPL}
@@ -135,7 +137,8 @@ In the specification of the normalisation and interaction semantics, we will mak
 % we need to introduce some helpers.
 % These helpers are observations on the task syntax tree.
 Observations are simple semantic functions on the syntax tree of tasks.
-Goals are to formalise observable values for tasks and when tasks is equivalent to the fail task.
+The goal is to formalise observable values for tasks
+and to specify when tasks are equivalent to the fail task.
 Observations can also be used to create a graphical or textual user interface.
 
 % First, we specify what it means for a task to have an observable value.
@@ -153,10 +156,10 @@ Observations can also be used to create a graphical or textual user interface.
 
 \paragraph{Observable values $(\Value)$}
 
-Intuitively, a valued editor is a task which holds a value.
-The same applies to to shared editors.
-This value can be used by steps to calculate continuations.
-However, unvalued editors clearly do not hold a value,
+Intuitively, valued editors are tasks which contain values.
+The same holds for to shared editors.
+These values are used by steps to calculate continuations.
+However, unvalued editors clearly do not contain any value,
 neither does the fail task.
 To make this intuition more precise,
 the partial function $\Value$ associates a value $v$ to tasks $t$ where possible.
@@ -196,7 +199,7 @@ It determines the property that a task
 will never produce a value, and
 cannot handle any input.
 % \end{enumerate*}
-Such tasks we call \emph{failing}.
+We call such tasks \emph{failing}.
 % If a task is failing or not is determined by function $\Failing$.
 % This is one of the properties we will prove in \autoref{sec:properties}.
 
@@ -223,7 +226,7 @@ Annotations are failing only if the inner task is failing.
 \paragraph{User interface}
 
 \TOPHAT is designed in such a way that an observation on a tasks' syntax tree can be used to generate an user interface.
-A graphical user interface is shown in \autoref{fig:flight-booking}.
+A possible graphical user interface is shown in \autoref{fig:flight-booking}.
 Editors are rendered as \HTML input entries,
 external choices are represented by two buttons,
 and parallel composition is rendered side by side.
