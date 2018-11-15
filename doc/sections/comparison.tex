@@ -143,7 +143,7 @@ The intuition about sequential composition is to first do one thing, and once it
 
 In \TOP, tasks never terminate.
 Nonetheless, the notion of sequential composition exists in two forms: the external and the internal step.
-The task $t \Then c$ acts like $t$ as long as the step is guarded, as described in \autoref{sub:steps}.
+The task $t \Then c$ acts like $t$ as long as the step is guarded, as described in \cref{sub:steps}.
 Once it becomes unguarded, the task continues as $cv$, where $v$ is the value of $t$.
 The task $t \Next c$ requires an input event $\Continue$ in addition to the step being unguarded in order to step.
 

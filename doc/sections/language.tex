@@ -11,7 +11,7 @@
 
 \label{sub:expressions}
 The host language is a simply typed lambda calculus, extended with some basic types and \ML-style references.
-The grammar in \autoref{fig:language-grammar} defines the syntax of the host language.
+The grammar in \cref{fig:language-grammar} defines the syntax of the host language.
 It has abstractions, applications, variables, and constants for booleans, integers and strings.
 The symbol $\star$ stands for binary operators.
 For the result of parallel tasks we need pairs.
@@ -41,7 +41,7 @@ The notation $e_1; e_2$ is an abbreviation for $(\lambda x:\Unit.\ e_2)\ e_1$, w
 The notation $\Let x:\tau = e_1 \In e_2$ is an abbreviation for $(\lambda x:\tau.\ e_2)\ e_1$.
 
 \label{sub:pretasks}
-The grammar in \autoref{fig:task-grammar} specifies the syntactic category of \emph{pretasks}.
+The grammar in \cref{fig:task-grammar} specifies the syntactic category of \emph{pretasks}.
 Pretasks are tasks that have unevaluated subexpressions.
 Pretasks are discussed in more detail in the following sections.
 We use open symbols ($\Edit, \Enter, \Next, \Xor$) for tasks that require user input, and closed symbols ($\Update, \Then, \Or$) for tasks that can be evaluated without user input.
@@ -70,7 +70,7 @@ It has functions, pairs, basic types, unit, references, and tasks.
 
 Typing rules are of the form $\RelationT$, which should be read as \enquote{in environment $\Gamma$ and store typing $\Sigma$, expression $e$ has type $\tau$}.
 Typing rules for expressions in the host language are presented in the appendix.
-The typing rules for pretasks are given in \autoref{fig:typing-rules}.
+The typing rules for pretasks are given in \cref{fig:typing-rules}.
 
 \begin{figure}[h]
   \small
@@ -102,7 +102,7 @@ To do this, we introduce the concept of editors.
 Editors are typed containers that either hold a value or are empty.
 Editors that have a value can be \emph{changed} or \emph{emptied}.
 Empty editors can be \emph{filled}.
-This is depicted as a state diagram in \autoref{fig:editor-state} below.
+This is depicted as a state diagram in \cref{fig:editor-state} below.
 
 \begin{figure}[h]
   \centering
@@ -116,7 +116,7 @@ This is depicted as a state diagram in \autoref{fig:editor-state} below.
 
 Editors stand for various forms of input and output, for example widgets in a \GUI, form fields on a webpage, sensors, or network connections.
 
-Consider the editor for a person's age from \autoref{exm:flight-booking}.
+Consider the editor for a person's age from \cref{exm:flight-booking}.
 Users can change the value until they are satisfied with it.
 Editors are meant capture this constantly changing nature of user input.
 
@@ -217,7 +217,7 @@ As soon as the value of the left hand side is $42$, the right hand side evaluate
 \lstset{emph={delay,start,now}}
 With the language constructs seen so far it is possible to create a task that delays execution for a specified delay of time.
 To do this,
-we make use of a shared editor holding the current time (see \autoref{sub:time}),
+we make use of a shared editor holding the current time (see \cref{sub:time}),
 and a guarded internal step.
 \begin{TASK}
   let wait : Int -> Task Unit = \delay : Int.
@@ -255,7 +255,7 @@ we will create an example which will ask users explicitly to proceed with a task
 When users do not make a choice within a given amount of time,
 we will automatically proceed.
 To do this,
-we will make user of the \TS{wait}-task from \autoref{exm:wait}.
+we will make user of the \TS{wait}-task from \cref{exm:wait}.
 \begin{TASK}
   let cancel : Task Unit = edit <<>> in
   let delay : Int -> Task Unit -> Task Unit =
@@ -284,7 +284,7 @@ which is common in workflow modelling.
 Users are identified by a name $u$ which is a string.
 They can be appointed tasks by means of the $\At$ combinator.
 The sole purpose of this labelling is to be able to tell users which inputs are expected of them.
-In \autoref{sec:handling}, a function is described to calculate which users can take what actions.
+In \cref{sec:handling}, a function is described to calculate which users can take what actions.
 Other than this function, the appointment of tasks has no influence on the semantics.
-All semantic rules in \autoref{sec:semantics} simply continue with their operations as if the label was not there.
+All semantic rules in \cref{sec:semantics} simply continue with their operations as if the label was not there.
 \todo{we still have to fix the type of $\Inputs$ and state the type of $u$}

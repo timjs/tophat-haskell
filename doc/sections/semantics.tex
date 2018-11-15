@@ -104,7 +104,7 @@ For completeness they are given in the appendix.
 % Note for example the change from $\Edit e$ to $\Edit v$ in the valued editor.
 % That is, an editor with an arbitrary (although well typed) expression $e$,
 % versus an editor with an (evaluated) value $v$.
-% Coming from one to the other is done by the evaluation rules given in \autoref{fig:evaluation-semantics}.
+% Coming from one to the other is done by the evaluation rules given in \cref{fig:evaluation-semantics}.
 
 % The rule \refrule{E-Edit} uses the big step semantics from our base language ($\evaluate$)
 % to evaluate the wrapped expression $e$ to a value $v$ and rewraps it in an editor.
@@ -163,7 +163,7 @@ However, unvalued editors clearly do not contain any value,
 neither does the fail task.
 To make this intuition more precise,
 the partial function $\Value$ associates a value $v$ to tasks $t$ where possible.
-It's definition is given in \autoref{fig:observation-value}.
+It's definition is given in \cref{fig:observation-value}.
 
 \begin{figure}[h]
   \small
@@ -171,7 +171,7 @@ It's definition is given in \autoref{fig:observation-value}.
   \caption{Values} \label{fig:observation-value}
 \end{figure}
 
-Internal and external steps do not have an observable value because performing a step may change it's type (see \autoref{sub:typing}).
+Internal and external steps do not have an observable value because performing a step may change it's type (see \cref{sub:typing}).
 % We could choose that the value of a sequence equals the value of the left hand side.
 % This will have fatal consequences for our stepping semantics however.
 Parallel composition only has a value when both branches have values.
@@ -184,14 +184,14 @@ External choice does not have a value, because it waits for user input.
 
 \paragraph{Failing $(\Failing)$}
 
-In \autoref{sub:fail} we introduced $\Fail$ to signal a senseless continuation of work.
+In \cref{sub:fail} we introduced $\Fail$ to signal a senseless continuation of work.
 However, not only the fail task itself represents failure:
 combinations of tasks could also yield senseless continuations.
 Take for example the parallel composition of two fail tasks ($\Fail \And \Fail$).
 This expression is in some way equivalent to $\Fail$ itself.
 % it cannot be normalised and cannot handle any input.
 
-This intuition is formalised by the function $\Failing$ in \autoref{fig:observation-failing}.
+This intuition is formalised by the function $\Failing$ in \cref{fig:observation-failing}.
 % It specifies which tasks are equivalent to $\Fail$.
 It determines the property that a task
 % \begin{enumerate*}
@@ -201,7 +201,7 @@ cannot handle any input.
 % \end{enumerate*}
 We call such tasks \emph{failing}.
 % If a task is failing or not is determined by function $\Failing$.
-% This is one of the properties we will prove in \autoref{sec:properties}.
+% This is one of the properties we will prove in \cref{sec:properties}.
 
 \begin{figure}[h]
   \small
@@ -226,7 +226,7 @@ Annotations are failing only if the inner task is failing.
 \paragraph{User interface}
 
 \TOPHAT is designed in such a way that an observation on a tasks' syntax tree can be used to generate an user interface.
-A possible graphical user interface is shown in \autoref{fig:flight-booking}.
+A possible graphical user interface is shown in \cref{fig:flight-booking}.
 Editors are rendered as \HTML input entries,
 external choices are represented by two buttons,
 and parallel composition is rendered side by side.
@@ -250,7 +250,7 @@ an expression $e$ in state $s$ normalises to task $t$ in state $s'$.
 It is a semantic relation that acts on the task level
 and only accepts expressions of type $\Task \tau$.
 
-Normalisation rules are given in \autoref{fig:normalisation-semantics}.
+Normalisation rules are given in \cref{fig:normalisation-semantics}.
 Both rules ensure expressions $e$ are first evaluated by the host language ($\evaluate$).
 Then it will delegate work to the stride semantics ($\stride$) we will discuss below.
 These two actions are repeated by \refrule{N-Repeat} till the resulting state and task stabilise,
@@ -288,7 +288,7 @@ They ensure that normalisation is applied until the shared memory $s$ has become
 
 Striding semantics are intended to perform internal steps and internal choices.
 A stride from task $t$ in state $s$ to $t'$ in state $s'$ is denoted by $\RelationS$.
-All rules are given in \autoref{fig:striding-semantics}.
+All rules are given in \cref{fig:striding-semantics}.
 Tasks like editors, fail and external choice are ready and stride to themselves.
 For external choice, parallel, and appoint,
 there are congruence rules.
@@ -343,7 +343,7 @@ is not possible when there is no observable value of $t_1$ to pass on.
 To protect users from stepping to a failing task,
 we add the condition that $t_2$ is not failing ($\Failing(t_2) = \False$).
 
-These principles lead to the step rules in \autoref{fig:striding-semantics}.
+These principles lead to the step rules in \cref{fig:striding-semantics}.
 \refrule{S-ThenStay} does nothing,
 because the lhs does not have a value.
 In the rule \refrule{S-ThenFail},
@@ -426,7 +426,7 @@ To empty a valued editor, we send the $\Empty$(mpty) action.
 Handling inputs is done by a new semantic relation.
 This small step relation takes a task $t$ and an event $h$ which results in a new task $t'$.
 We write $\RelationH$
-Formalising the states and transitions shown in \autoref{fig:editor-state},
+Formalising the states and transitions shown in \cref{fig:editor-state},
 we need three rules to describe editors:
 \refrule{H-Change}, \refrule{H-Empty}, and \refrule{H-Fill}.
 Note that the conditions to the right of the rules take care of typing.
