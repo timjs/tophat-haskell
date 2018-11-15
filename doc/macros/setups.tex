@@ -15,29 +15,23 @@
 % \clubpenalty=150
 
 
-%% Spacing %%
+%% Section spacing %%
 %%NOTE: requires 'titlesec'
-
-\renewcommand{\MathparLineskip}{
-  \setlength{\lineskiplimit}{\bigskipamount}
-  \setlength{\lineskip}{\bigskipamount}
-}
 
 % \titlespacing*{\section}{0pt}{\hugeskipamount}{\bigskipamount}
 % \titlespacing*{\subsection}{0pt}{\bigskipamount}{\medskipamount}
 % \titlespacing*{\paragraph}{0pt}{\medskipamount}{1em}
 
 
-%% Quoting %%
-%%NOTE: requires 'quoting'
+%% Math spacing %%
 
-\quotingsetup
-  {font=itshape
-  ,leftmargin=\parindent
-  ,listvskip}
+\renewcommand{\MathparLineskip}{
+  \setlength{\lineskiplimit}{\bigskipamount}
+  \setlength{\lineskip}{\bigskipamount}
+}
 
 
-%% Floats %%
+%% Float spacing %%
 
 \setlength{\abovecaptionskip}{\medskipamount}
 \setlength{\floatsep}        {\medskipamount}
@@ -47,7 +41,7 @@
 \setlength{\dbltextfloatsep} {\bigskipamount}
 
 
-%% Compact lists %%
+%% List spacing %%
 %% NOTE: requires `paralist`
 
 \setlength{\pltopsep}   {\medskipamount}
@@ -61,6 +55,15 @@
 
 % \renewmacro{arraystretch}
 %   {1.1}
+
+
+%% Quoting %%
+%%NOTE: requires 'quoting'
+
+\quotingsetup
+  {font=itshape
+  ,leftmargin=\parindent
+  ,listvskip}
 
 
 %% Boxes %%
