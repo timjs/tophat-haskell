@@ -7,18 +7,19 @@
 
 In this section we develop a small example program to demonstrate the capabilities of \TOPHAT.
 The example is a simple flight booking system.
-It demonstrates communication with the environment, communication between parallel tasks, synchronisation, and input validation.
+It demonstrates communication on all three levels: with the environment, across control flow, and alongside it.
+Besides that, it shows synchronisation and input validation.
 
 The application works as follows.
 \begin{enumerate*}
   \item A user has to input a list of passengers for which to book tickets.
   \item At least one of these passengers has to be an adult.
-  \item After a valid list of passengers has been input, the user has to pick seats.
+  \item After a valid list of passengers has been entered, the user has to pick seats.
   \item Only free seats may be picked.
   \item Every passenger must have exactly one seat.
   \item Multiple users should be able to book tickets at the same time.
 \end{enumerate*}
-For this example we assume that the host language has lists and two functions on them: intersect and difference.
+For this example we assume that the host language has lists and four functions on them: all, any, intersect, and difference.
 For brevity, we omit the type annotations of variable bindings.
 
 
@@ -29,7 +30,6 @@ For brevity, we omit the type annotations of variable bindings.
 We start by defining some type aliases.
 A passenger is a pair with name and age.
 A seat is a pair with a row number and a seat letter.
-A booking contains a list of passengers and a list of seats.
 \begin{TASK}
   type Passenger = String * Int
   type Seat = Int * String
@@ -38,10 +38,11 @@ A booking contains a list of passengers and a list of seats.
 Choosing seats requires reading and updating shared information.
 The list of free seats is stored in a reference called \TS{freeSeats}.
 \begin{TASK}
-  let freeSeats = ref [<<1,"A">>, <<1,"B">>, <<1,"C">>, ...] in
+  let freeSeats = ref [<<1,"A">>, <<1,"B">>, <<1,"C">>, ...]
 \end{TASK}
 
-The flight booking task starts with entering a valid list of passengers,
+Now we develop our workflow in a top down way.
+A flight booking starts with the task of entering a valid list of passengers,
 denoted by \TS{enter (List Passenger)}.
 A passenger is valid if the name is not empty and the age is at least 0.
 A list of passengers is valid if each passenger is valid, and at least one of the passengers is an adult.
@@ -52,29 +53,30 @@ and the user can proceed to picking seats.
   let adult = \p. snd p >= 18 in
   let allValid = \ps. all valid ps /\ any adult ps in
   let bookFlight = enter (List Passenger) >>? \ps.
-    if allValid ps then chooseSeats ps else fail in
+    if allValid ps then chooseSeats ps else fail
 \end{TASK}
 A selection of seats is correct if every entered seat is free.
 \begin{TASK}
   let correct = \ss. intersect ss !freeSeats == ss in
   let chooseSeats = \ps. enter (List Seat) >>? \ss.
     if correct ss /\ length ps == length ss
-      then confirmBooking ps ss else fail in
+      then confirmBooking ps ss else fail
 \end{TASK}
 The function \TS{confirmBooking} removes the picked seats from the shared list of free seats,
 and displays the end result using the \TS{edit}-construct.
 \begin{TASK}
   let confirmBooking = \ps. \ss.
-    freeSeats := difference !freeSeats ss; edit <<ps, ss>> in
+    freeSeats := difference !freeSeats ss; edit <<ps, ss>>
 \end{TASK}
 % It uses a function \TS{difference}, which removes all elements from the second list from the first list.
 
-The main task appoints the \TS{bookFlight} task to three different users: \TS{u1}, \TS{u2}, and \TS{u3},
-and run these tasks in parallel.
-%%NOTE: parentheses make the line to long...
+The main task starts three \TS{bookFlight} tasks,
+which could be performed by three different users,
+and runs these in parallel.
 \begin{TASK}
-  u1 @ bookFlight <&> u2 @ bookFlight <&> u3 @ bookFlight
+  bookFlight <&> bookFlight <&> bookFlight
 \end{TASK}
+A screenshot of the running application is shown in \cref{fig:flight-booking}.
 
 \end{example}
 
