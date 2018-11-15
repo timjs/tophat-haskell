@@ -5,36 +5,22 @@
 \section{Semantics}
 \label{sec:semantics}
 
-% In the previous section we introduced our workflow calculus,
-% and described semantics of each construct intuitively.
-In this section we will formalise the intuition of each language construct described above.
-To do this,
-we need to take into account the way our calculus is structured.
+In this section we formalise the semantics of the language constructs described in \cref{sec:language}.
+We organize this by following the structure of the language.
 
-Firstly,
-we have seen our calculus is embedded into a simply typed $\lambda$-calculus.
-This requires us to specify how the host language \emph{evaluates} its expressions,
-and how it handles our domain language.
+Firstly, the task language is embedded in a simply typed lambda calculus.
+This requires a specification of the evaluation of terms in the host language, and how it handles the task language.
 
-Secondly,
-we have seen two ways to decide how to proceed from one task to another:
-internally by the system itself, or externally by the user.
-This means we need two additional semantics:
-one to specify the internal \emph{normalisation} of tasks,
-and another to define the \emph{interaction} with the end user.
+Secondly, there are two ways to drive evaluation of task expressions, internally by the system itself, and externally by the user.
+This is done in two additional semantics, one for the internal normalisation of tasks, and another for the interaction with the end user.
 
-One could choose to merge evaluation and normalisation.
-We do not do so,
-because it would pollute the semantics of the host language with workflow specific semantics.
-By lifting normalisation to an additional layer,
-tasks will be ordinary values for the host language.
+One of our explicit goals is to keep the semantics for evaluation and normalization separate.
+This is achieved by letting tasks be values in the host language.
 
-The three main layers of semantics are evaluation, normalisation, and interaction.
-Together with \emph{observations} we will discuss these smantics in the subsections to come.
-\Cref{fig:semantic-functions} shows the relation between these semantics.
-It also shows that we will make use of two \emph{helper semantics}.
-Normalisation will make use of \emph{striding} semantics,
-and interaction makes use of \emph{handling} semantics.
+The three main layers of semantics are \emph{evaluation}, \emph{normalisation}, and \emph{interaction}.
+The semantics, together with \emph{observations}, will be discussed in the following subsections.
+\Cref{fig:semantic-functions} shows the relation between the semantics.
+It also shows that there are two helper semantics, \emph{handle} and \emph{stride}.
 
 \begin{figure}[h]
   \centering
@@ -45,10 +31,7 @@ and interaction makes use of \emph{handling} semantics.
   \label{fig:semantic-functions}
 \end{figure}
 
-We use the convention that downward arrows represent big-step semantics.
-Rightward arrows are small-step semantics.
-Also, double arrows make use of single arrows,
-e.g, the double down arrow $\normalise$ \emph{uses} the single down arrow $\evaluate$.
+We use the convention that downward arrows are big-step semantics, and rightward arrows are small-step semantics.
 
 
 
