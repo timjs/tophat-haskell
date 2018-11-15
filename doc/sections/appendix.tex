@@ -3,7 +3,38 @@
 \appendix
 \section{Appendix}
 
-  \subsection{Rules}
+  \subsection{Evaluation rules}
+
+  % \begin{figure}
+
+    \begin{mathpar}
+      \boxed{\RelationE} \\
+      \userule{E-Value} \\
+      \userule{E-App} \\
+      \userule{E-IfTrue} \\
+      \userule{E-IfFalse} \\
+      \userule{E-Pair} \\
+      \userule{E-Ref} \quad
+      \userule{E-Deref} \\
+      \userule{E-Assign} \\
+      \userule{E-Edit} \quad
+      \userule{E-Enter} \quad
+      \userule{E-Update} \\
+      \userule{E-Then} \quad
+      \userule{E-Next} \\
+      \userule{E-And} \quad
+      \userule{E-Or} \\
+      \userule{E-Xor} \quad
+      \userule{E-Appoint} \quad
+      \userule{E-Fail}
+    \end{mathpar}
+
+  %   \caption{Evaluation semantics} \label{fig:evaluation-semantics}
+  % \end{figure}
+
+  \subsection{Additional typing rules}
+
+  % \begin{figure}[h]
 
     \begin{mathpar}
       \boxed{\RelationT} \\
@@ -18,17 +49,8 @@
       \userule{T-Assign}
     \end{mathpar}
 
-    \begin{mathpar}
-      \boxed{\RelationE} \\
-      \userule{E-Value} \\
-      \userule{E-App} \\
-      \userule{E-IfTrue} \\
-      \userule{E-IfFalse} \\
-      \userule{E-Pair} \\
-      \userule{E-Ref} \quad
-      \userule{E-Deref} \\
-      \userule{E-Assign}
-    \end{mathpar}
+  %   \caption{Additional typing rules}
+  % \end{figure}
 
   \subsection{Proofs}
 

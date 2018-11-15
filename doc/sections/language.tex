@@ -157,8 +157,8 @@ This allows programmers to write tasks that react to sensor values or timeouts.
 Editors represent atomic units of work.
 In this section we look at ways to combine smaller tasks into bigger ones.
 Combining tasks can be done in two ways, sequential and parallel.
-Parallel composition comes in two variants: pairing two tasks (\emph{and}-parallel) and choosing between two tasks (\emph{or}-parallel).
-We study sequential composition first, and after that pairing and choosing.
+Parallel composition comes in two variants: combining two tasks (\emph{and}-parallel) and choosing between two tasks (\emph{or}-parallel).
+We study sequential composition first, and after that combining and choosing.
 
 
 \paragraph{Internal and external step $(t \Then e, t \Next e)$}
@@ -231,19 +231,61 @@ The second step is guarded until the current time is greater or equal to the sta
 
 
 
-\subsection{Side-by-side}
+\subsection{Parallel}
+
+Next to sequential composition,
+a main pattern in workflow design is splitting up work in two or more tasks
+that can be worked on simultaneously.
+Both branches can progress over time by users' input.
+This input needs to be addressed to the first or second task by tagging.
+One could wait for all tasks to produce results and combine those,
+or pick the first possible result available.
+Both ways of parallelisation introduce explicit forks and implicit joins in our language.
 
 
 
-\paragraph{Parallel $(e_1 \And e_2)$}
+\paragraph{Combination $(e_1 \And e_2)$}
 
-\fixme{Write section on parallel}
+A combination of two tasks,
+like $\Edit 37 \And \Enter \String$,
+is a parallel-and.
+It waits for both branches to produce a result.
+Only then it can pair up both results as its own.
+This is reflected in the typeing rule \refrule{T-And},
+It shows that if the first task has type $\tau_1$,
+and the second has type $\tau_2$,
+their combination has the pair type $\tau_1 \times \tau_2$.
 
+
+
+\begin{example}[Combining]
+
+The task
+\begin{TASK}
+  enter Int <&> edit "Batman" >>= \<<n, s>>. edit (replicate n "Na" ++ s)
+\end{TASK}
+will only step to its continuation when both the first, as well as the second editor are valued.
+In that case, the internal step uses the paired integer and string to calculate the exclamation.
+
+\end{example}
 
 
 \paragraph{Internal and external choice $(e_1 \Or e_2, e_1 \Xor e_2)$}
 
-\fixme{Write section on choice}
+Where combinations wait for both tasks to produce results,
+internal choices pick one branch as soon as it has a result.
+Its typing rule \refrule{T-Or} therefore dictates that both branches should have the same type $\Task \tau$.
+E.g. $\Edit 37 \Or \Enter \Int$ will result in $\Edit 37$ directly,
+because $\Enter \Int$ does not contain a value.
+To make \TOPHAT deterministic,
+we always prefer the first task over the second.
+
+As with combinations, users can work on both tasks of an internal choice ($\Or$) simultaneously.
+However, this does not hold for external choice ($\Xor$).
+External choices await user input to pick the left or right branch before continuing with that task.
+This means one cannot work on both branches of an external choice before picking one or the other.
+
+
 
 \begin{example}[Delay]
 
