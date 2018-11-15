@@ -151,9 +151,10 @@
   {e,s \evaluate v,s'}
 
 
-\newrule{E-Value}[v\in\set{\lambda x:\tau.e, \unit, l, B, I, S}]
+\newrule{E-Value}
   {\ }
   {v,s\evaluate v,s}
+
 
 \newrule{E-App}
   {\ontopof{C}
@@ -164,9 +165,9 @@
 
 
 \newrule{E-IfTrue}
-    {e_1,s\evaluate \True,s' \Quad
-     e_2,s'\evaluate v,s''}
-    {\If{e_1}{e_2}{e_3},s\evaluate v,s''}
+  {e_1,s\evaluate \True,s' \Quad
+   e_2,s'\evaluate v,s''}
+  {\If{e_1}{e_2}{e_3},s\evaluate v,s''}
 
 \newrule{E-IfFalse}
   {e_1,s\evaluate \False,s' \Quad
