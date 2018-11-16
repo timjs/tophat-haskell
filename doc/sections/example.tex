@@ -8,7 +8,7 @@
 In this section we develop a small example program to demonstrate the capabilities of \TOPHAT.
 The example is a small flight booking system.
 It demonstrates communication on all three levels: with the environment, across control flow, and alongside it.
-Besides that, it shows synchronisation and input validation.
+Also, it shows synchronisation and input validation.
 
 The application works as follows.
 \begin{enumerate*}
@@ -38,7 +38,7 @@ A seat is a pair with a row number and a seat letter.
 \end{TASK}
 
 Choosing seats requires reading and updating shared information.
-The list of free seats is stored in a reference called \TS{freeSeats}.
+The list of free seats is stored in a reference. % called \TS{freeSeats}.
 \begin{TASK}
   let freeSeats = ref [<<1,"A">>, <<1,"B">>, <<1,"C">>, ...]
 \end{TASK}
@@ -73,8 +73,7 @@ and displays the end result using the \TS{edit}-construct.
 % It uses a function \TS{difference}, which removes all elements from the second list from the first list.
 
 The main task starts three \TS{bookFlight} tasks,
-which could be performed by three different users,
-and runs these in parallel.
+which could be performed by three different users in parallel
 \begin{TASK}
   bookFlight <&> bookFlight <&> bookFlight
 \end{TASK}
@@ -83,9 +82,9 @@ A screenshot of the running application is shown in \cref{fig:flight-booking}.
 Note that every instance of the \TS{bookFlight} task has access to the same shared list of free seats.
 Rewriting above example in a calculus without side effects would not only be cumbersome,
 obfuscating the code with explicit threading of state,
-it would also be impossible to model the parallel execution of three \TS{bookFlight} tasks.
-Because we do not know upfront which branch will finish first,
-we do not know which task would produce the updated free seats list to be used for the next one.
+but it would also be impossible to model the parallel execution of three \TS{bookFlight} tasks.
+We do not know upfront which branch will finish first,
+and thus we do not know how to thread the free seat list between the parallel tasks.
 
 \end{example}
 
