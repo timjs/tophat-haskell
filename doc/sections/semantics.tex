@@ -225,21 +225,18 @@ For external choice and parallel there are congruence rules.
 \paragraph{Principles of stepping}
 \label{sub:stepping-principles}
 
-Stepping from task $t_1$ to its continuation $t_2$ can only be performed when
-$t_1$ has an observable value ($\Value(t_1) = v_1$).
-This uses the fact that that calculating a new task $t_2$ from an expression $e$
-is not possible when there is no observable value of $t_1$ to pass on.
-To protect users from stepping to a failing task,
-we add the condition that $t_2$ is not failing ($\Failing(t_2) = \False$).
+Stepping away from task $t_1$ can only be performed when
+$t_1$ has a value: $\Value(t_1) = v_1$.
+Only then can a new task $t_2$ be calculated from the expression $e$.
+On top of that, $t_2$ must not be failing: $\neg\Failing(t_2)$.
 
-These principles lead to the step rules in \cref{fig:striding-semantics}.
+These principles lead to the stepping rules in \cref{fig:striding-semantics}.
 \refrule{S-ThenStay} does nothing,
 because the lhs does not have a value.
-In the rule \refrule{S-ThenFail},
-the lhs has a value, but the calculate continuation is failing.
-Note it uses the semantics of the host language to evaluate the function application $e_2 v_1$.
-In case the continuation is not failing,
-\refrule{S-ThenCont} strides to this new task.
+\refrule{S-ThenFail} covers the case that
+the lhs has a value but the calculated successor task is failing.
+This rule uses the semantics of the host language to evaluate the application $e_2 v_1$.
+When all required conditions are fulfilled, \refrule{S-ThenCont} allows stepping to the successor task.
 
 
 
