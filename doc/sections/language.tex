@@ -245,11 +245,8 @@ Both ways introduce explicit forks and implicit joins in \TOPHAT.
 
 \paragraph{Combination $(e_1 \And e_2)$}
 
-A combination of two tasks,
-like $\Edit 37 \And \Enter \String$,
-is a parallel-and.
-It waits for both branches to produce a result.
-Only then it can pair up both results as its own.
+A combination of two tasks is a parallel \emph{and}.
+It has a value only if both branches have a value.
 This is reflected in the typing rule \refrule{T-And},
 It shows that if the first task has type $\tau_1$,
 and the second has type $\tau_2$,
@@ -263,8 +260,8 @@ The task
 \begin{TASK}
   enter Int <&> edit " Batman" >>= \<<n, s>>. edit (replicate n "Na" ++ s)
 \end{TASK}
-will only step to its continuation when both the first, as well as the second editor are valued.
-In that case, the internal step uses the paired integer and string to calculate the exclamation.
+can only step when both editors have values.
+When it steps, the continuation uses the pair of integer and string to calculate the result.
 
 \end{example}
 
