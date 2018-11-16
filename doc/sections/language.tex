@@ -271,19 +271,15 @@ When it steps, the continuation uses the pair of integer and string to calculate
 
 \paragraph{Internal and external choice $(e_1 \Or e_2, e_1 \Xor e_2)$}
 
-Where combinations wait for both tasks to produce results,
-internal choices pick one branch as soon as it has a result.
-Its typing rule \refrule{T-Or} therefore dictates that both branches should have the same type $\Task \tau$.
-E.g. $\Edit 37 \Or \Enter \Int$ will result in $\Edit 37$ directly,
-because $\Enter \Int$ does not contain a value.
-To make \TOPHAT deterministic,
-we always prefer the first task over the second.
+Internal choice ($\Or$) is a parallel \emph{or}.
+It picks the leftmost branch that has a value.
+Its typing rule \refrule{T-Or} states that both branches must have the same type $\Task \tau$.
+For example $\Enter \Int \Or \Edit 37$ normalizes to $\Edit 37$, because $\Enter \Int$ doesn't have a value.
+Users can work on both branches of an internal choice simultaneously.
 
-As with combinations, users can work on both tasks of an internal choice ($\Or$) simultaneously.
-However, this does not hold for external choice ($\Xor$).
-External choices await user input to pick the left or right branch before continuing with that task.
-This means one cannot work on both branches of an external choice before picking one or the other.
-
+External choice ($\Xor$) is different in this regard.
+An external choice requires users to pick a branch before continuing with it.
+This means users cannot work on the branches of an external choice before picking one.
 
 
 \begin{example}[Delay]
