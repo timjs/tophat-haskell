@@ -60,9 +60,9 @@ Such programs are supposed to hide implementation details from domain experts wh
 
 Both \TOP and \CSP have two sorts of communication: with the environment, and between subsystems.
 In both languages, communication with the \emph{environment} is input and output.
-It blocks evaluation of programs until the environment sends or receives events.
+They block evaluation of programs until the environment sends or receives events.
 In both languages, communication \emph{between subsystems} does not block.
-It evaluates programs as far as possible until further external input is required.
+They evaluate programs as far as possible until further external input is required.
 
 
 
@@ -133,8 +133,15 @@ When the user presses the continue button, the machine dispenses either a large 
 The step combinator represents data flow that follows control flow, and shared data represents data flow across control flow.
 
 The step combinators in $t \Then e$ and $t \Next e$ pass the value of $t$ to the continuation $e$.
+% The intuition about sequential composition is to first do one thing, and once it is done, do some other thing.
+% In \TOP, tasks never terminate.
+% Nonetheless, the notion of sequential composition exists in two forms: the external and the internal step.
+They both act like $t$ as long as the step is guarded.
+Once it becomes unguarded, the task continues as $e\ v$, where $v$ is the value of $t$.
+The task $t \Next e$ requires an input event $\Continue$ in addition to the step being unguarded in order to step.
+% \CSP's semicolon is like an internal step $t \Then e$ in \TOP where $t$ uses $\Unit$ to signal when it is done, and $e$ never fails.
+
 Shared data sources are assignable references, whose changes in value are immediately visible to all tasks interested in them.
-%
 The semantics of \TOPHAT requires all updates to shared data and all enabled internal steps to be processed before any further communication with the environment can take place.
 This introduces the possibility of diverging computations, where a cyclic dependency between shared data causes internal steps to be taken continuously without ever being able to engage in external communication.
 
@@ -146,33 +153,21 @@ This introduces the possibility of diverging computations, that is processes whi
 
 
 
-\paragraph{Sequential composition}
+% \paragraph{Sequential composition}
 
-\todo{Maybe remove this subsection? --TS}
-The intuition about sequential composition is to first do one thing, and once it is done, do some other thing.
-
-In \TOP, tasks never terminate.
-Nonetheless, the notion of sequential composition exists in two forms: the external and the internal step.
-The task $t \Then e$ acts like $t$ as long as the step is guarded, as described in \cref{sub:steps}.
-Once it becomes unguarded, the task continues as $e\ v$, where $v$ is the value of $t$.
-The task $t \Next e$ requires an input event $\Continue$ in addition to the step being unguarded in order to step.
-
-In \CSP, sequential composition is represented by the semicolon combinator together with the special action $\checkmark$, called \emph{success}.
-We require that if a process engages in $\checkmark$ at all, it must be its single last action.
-When that happens, we say the process terminates successfully.
-The process $P;Q$ behaves like $P$ until $P$ terminates successfully, after which it continues as $Q$.
-If $P$ never terminates successfully, neither does $P;Q$
-
-\CSP's semicolon is like an internal step $t \Then e$ in \TOP where $t$ uses $\Unit$ to signal when it is done, and $e$ never fails.
+% In \CSP, sequential composition is represented by the semicolon combinator together with the special action $\checkmark$, called \emph{success}.
+% We require that if a process engages in $\checkmark$ at all, it must be its single last action.
+% When that happens, we say the process terminates successfully.
+% The process $P;Q$ behaves like $P$ until $P$ terminates successfully, after which it continues as $Q$.
+% If $P$ never terminates successfully, neither does $P;Q$
 
 
 
 \subsection{Multiprogramming}
 
 Both \TOP and \CSP are models of \emph{multiprogramming}, as opposed to \emph{multiprocessing}.
-This means that one processor evaluates multiple programs in an interleaving fashion,
-instead of multiple processors that evaluate one or more programs.
-\todo{Is this a correct statement? --TS}
+This means that one processor evaluates multiple programs in an interleaving fashion.
+% instead of multiple processors.
 Multiprogramming involves three aspects: concurrency, synchronisation, and nondeterminism.
 
 
@@ -205,13 +200,12 @@ Synchronisation means that an agent has to pause execution until some condition 
 The need for synchronisation arises quite naturally in countless variations in situations involving concurrency.
 For multiprogramming, synchronisation always means that some of the possible interleavings are forbidden.
 
-\todo{Is this needed? --TS}
 For example, the mutual exclusion problem for two parallel processes $a_p \to b_p \to \text{STOP} $ and $a_q \to b_q \to \text{STOP}$ can be stated as:
 In no interleaving should there be two adjacent $a$'s.
-
+%
 The mutual exclusion problem for two parallel tasks can be stated as follows.
 Let \TS{inc} and \TS{dec} be tasks that increment and decrement some shared counter.
-In \TS{(inc x >>? dec) <&> (dec x >>? inc)}, the shared counter should at no point be greater than 1.
+Then, in \TS{(inc x >>? dec) <&> (dec x >>? inc)}, the shared counter should at no point be greater than 1.
 This means that in no interleaving should there be two adjacent \TS{inc}'s.
 
 The basic method for synchronisation in \TOP is built into the step combinator.
@@ -220,7 +214,6 @@ Task $t$ must have a value $v$, and $e\ v$ must not evaluate to $\Fail$.
 Programmers can encode arbitrary conditions in $e\ v$, which are evaluated atomically between interaction steps.
 This allows a variety of synchronisation problems to be solved in an intuitive and straight-forward manner.
 
-\todo{Is this needed?}
 The basic method for synchronisation in \CSP is synchronised prefixing.
 If some action $a$ is in the alphabets of both $P$ and $Q$, then their parallel composition $P \parallel Q$ can take an $a$-step only if both $P$ and $Q$ are ready to take an $a$-step, in which case they both take their $a$-step simultaneously.
 They both have to wait for the condition that the other process is ready to take the step.
