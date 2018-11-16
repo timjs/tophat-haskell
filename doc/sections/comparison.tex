@@ -15,7 +15,7 @@ We chose \CSP as an example to stand for the numerous process algebras in existe
 
 We provide comparisons based on two aspects.
 First, we compare the scope of the languages, as intended by the authors.
-Second, we focus on features common to \TOP and \CSP, and study their respective realisation.
+Second, we focus on features common to \TOP and \CSP, and study their realisation.
 When we point out differences, we do not argue that the different realisations are incompatible.
 As a matter of fact the primitives can certainly be expressed in terms of each other.
 Instead, we point out how the systems emphasize certain points of view by choosing different building blocks to express the same concepts.
@@ -138,7 +138,7 @@ The step combinators in $t \Then e$ and $t \Next e$ pass the value of $t$ to the
 % Nonetheless, the notion of sequential composition exists in two forms: the external and the internal step.
 They both act like $t$ as long as the step is guarded.
 Once it becomes unguarded, the task continues as $e\ v$, where $v$ is the value of $t$.
-The task $t \Next e$ requires an input event $\Continue$ in addition to the step being unguarded in order to step.
+The task $t \Next e$ requires an input event $\Continue$ in addition to the step being unguarded. % in order to step.
 % \CSP's semicolon is like an internal step $t \Then e$ in \TOP where $t$ uses $\Unit$ to signal when it is done, and $e$ never fails.
 
 Shared data sources are assignable references, whose changes in value are immediately visible to all tasks interested in them.
@@ -215,8 +215,8 @@ Programmers can encode arbitrary conditions in $e\ v$, which are evaluated atomi
 This allows a variety of synchronisation problems to be solved in an intuitive and straight-forward manner.
 
 The basic method for synchronisation in \CSP is synchronised prefixing.
-If some action $a$ is in the alphabets of both $P$ and $Q$, then their parallel composition $P \parallel Q$ can take an $a$-step only if both $P$ and $Q$ are ready to take an $a$-step, in which case they both take their $a$-step simultaneously.
-They both have to wait for the condition that the other process is ready to take the step.
+If some action $a$ is in the alphabets of both $P$ and $Q$, then their parallel composition $P \parallel Q$ can take an $a$-step only if both $P$ and $Q$ are ready to take an $a$-step, in which case they both take this step simultaneously.
+Both have to wait for the condition that the other process is ready to take the step.
 All synchronisation problems in \CSP must be solved by employing synchronised steps in some form.
 
 
@@ -278,7 +278,7 @@ Nondeterminism means that a system can react to the same input in different ways
 
 \CSP has an operator to explicitly introduce nondeterminism.
 Furthermore, nondeterminism can arise from the combination of some other combinators, for example choice and concealment.
-
+%
 Hoare states that nondeterminism is only useful for \emph{specifying} processes, never for \emph{implementing} them \cite{books/Hoare85CSP}.
 \CSP can be used for both.
 A process with nondeterministic behaviour must always be regarded as a specification, while a deterministic process can be seen as specification or implementation.
