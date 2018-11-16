@@ -255,20 +255,11 @@ which encode that the choice operator picks the leftmost task that has a value.
 \subsection{Handling user inputs}
 \label{sec:handling}
 
-% To ensure tasks are ready to process the next event,
-% we need to normalise after each use of the handling semantics.
-% Instead of adding normalisation to every handling rule,
-% we introduce a fourth semantic relation to deal with this.
-% The interact relation $\RelationI$ simply passes the event $i$ to the handle semantics
-% and normalises the task afterwards.
-% \refrule{I-Handle}
-% Note that again,
-% the double arrow $\drive{i}$ uses the single arrow $\handle{i}$.
-
-Performing external steps and choices, and changing the values of editors is specified by the outermost layer of our semantics.
-These interaction semantics are given in \cref{fig:interaction-semantics}.
-To apply this semantics, we demand $t$ to be normalised.
-Sending an input event $i$ to a task $t$ in state $s$ will first handle the event, and then prepare the resulting task for the next input by normalising it again.
+The handling semantics is the outermost layer of the stack of semantics.
+It is responsible for performing external steps and choices, and for changing the values of editors.
+The rules of the interaction semantics are given in \cref{fig:interaction-semantics}.
+The semantics is only applicable to normalized $t$.
+Sending an input event $i$ to a task $t$ first handles the event and then prepares the resulting task for the next input by normalising it.
 
 \begin{figure}[h]
   \small
@@ -279,11 +270,10 @@ Sending an input event $i$ to a task $t$ in state $s$ will first handle the even
   \caption{Interaction semantics} \label{fig:interaction-semantics}
 \end{figure}
 
-Handling an input is done by a separate handling semantics, shown in \cref{fig:handling-semantics}.
-This small step relation takes a task $t$ in a state $s$ and an input $i$ which results in a new task $t'$ in a new state $s'$.
-Both interaction and handling are labeled transition systems which abstract away from a user interface.
-Labels $i$ are formed from the grammar in \cref{fig:input-grammar}.
-Input events live on the semantic level only and they are not accessible from within \TOPHAT.
+Handling input is done by the \emph{handling} semantics shown in \cref{fig:handling-semantics}.
+It is a small step semantics with labelled transitions.
+It takes a task $t$ in a state $s$ and an input $i$, and yields a new task $t'$ in a new state $s'$.
+Inputs $i$ are formed according to the grammar in \cref{fig:input-grammar}.
 
 \begin{figure}[h]
   \small
