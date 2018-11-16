@@ -163,28 +163,24 @@ These two actions are repeated until the resulting state and task stabilise.
 \end{figure}
 
 The split between striding and normalisation is due to mutable references.
-Consider the following example
+Consider the following example, where $s=\set{l\mapsto\False}$.
 \begin{TASK}
   (update l >>= \x:Bool. if x then e else fail) <&> (l := True; edit <<>>)
 \end{TASK}
-with $s=\set{l\mapsto\False}$.
-When we apply \refrule{S-And} in order to normalise the expression above, we obtain
+\refrule{S-And} reduces this expression in one step to
 \begin{TASK}
   (update l >>= \x:Bool. if x then e else fail) <&> (edit <<>>)
 \end{TASK}
 with $s'=\set{l\mapsto\True}$.
-This expression in fact is not normalised.
-The issue here lies in the fact that $s$ gets updated by the second component,
-which allows the first component of $\And$ to be further normalised, in this case to $e$.
-To overcome this problem, the \refrule{N-Done} and \refrule{N-Repeat} rules have been added.
-They ensure that normalisation is applied until the shared memory $s$ has become stable and no further normalisation can be applied.
+This expression is not normalised, because the left task can take a step.
+The issue here lies in the fact that the right task updates $l$.
+To overcome this problem, the \refrule{N-Done} and \refrule{N-Repeat} rules ensure that striding is applied until the state $s$ becomes stable and no further normalisation can take place.
 
-Striding semantics are intended to perform internal steps and internal choices.
+The striding semantics is responsible for reducing internal steps and internal choices.
 A stride from task $t$ in state $s$ to $t'$ in state $s'$ is denoted by $\RelationS$.
-All rules are given in \cref{fig:striding-semantics}.
-Tasks like editors, fail and external choice are ready and stride to themselves.
-For external choice, parallel, and appoint,
-there are congruence rules.
+The rules for striding are given in \cref{fig:striding-semantics}.
+Tasks like editors, fail and external choice are not further reduced.
+For external choice and parallel there are congruence rules.
 
 \begin{figure}[h]
   \small
