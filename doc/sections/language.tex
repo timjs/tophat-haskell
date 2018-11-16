@@ -308,23 +308,39 @@ it is a task which takes another task as a parameter.
 
 \end{example}
 
-\subsection{Appointment}
-
-\fixme{write this subsection}
-
-It is essential for a workflow system to support multiple collaborators working
-together. Adding this funcitonaltiy to the \TOPHAT calculus is very
-straightforward. We identify users by means of a name $u$ which we can then use
-to label appointed tasks. The sole purpose of this labelling is to be able to
-tell which inputs are expected from what users. Other than that, it has no
-influence on the semantics. For space reasons, we have have excluded multi-user
-support from this paper.
-
-% \subsection{Annotations}
+% \subsection{Appointment}
 %
-% Lastly, pretasks can be annotated with additional information.
-% One could think of labelling information for buttons,
-% or description of tasks.
+% \fixme{write this subsection}
+
+% It is essential for a workflow system to support multiple collaborators working
+% together. Adding this funcitonaltiy to the \TOPHAT calculus is very
+% straightforward. We identify users by means of a name $u$ which we can then use
+% to label appointed tasks. The sole purpose of this labelling is to be able to
+% tell which inputs are expected from what users. Other than that, it has no
+% influence on the semantics. For space reasons, we have have excluded multi-user
+% support from this paper.
+%
+% Mss moeten we het schrijven vanuit het oogpunt van labeling: je kunt labels
+% toevoegen aan knoppen, als uitleg bij taken en om gebruikers toe te kennen aan
+% taken. Vervolgens zou je iets met die gebruikers kunnen doen: alleen taken voor
+% hun weergeven in de UI, alleen inputs voor hun genereren met I etc. Past dat?
+
+\subsection{Annotations}
+
+Lastly, pretasks can be annotated with additional information.
+This information can then be used to modify the user interface, or for analysis
+purposes like resource analysis, or automatic end-user feedback. In the case of
+user interface, one could think of labelling information for buttons,
+or with descriptions of tasks.
+We have implemented annotating pretasks with user information to support
+multiple users working together, this has been ommitted from the semantics
+in this paper for space reasons. The annotated user information is used to build
+an interface specific to the user, only displaying actions that she can take.
+
+Resouce analysis and automatic end-user feedback for \TOPHAT is left for future
+work.
+
+
 % For now, we only concentrate on appointing tasks to users,
 % which is common in workflow modelling.
 %
