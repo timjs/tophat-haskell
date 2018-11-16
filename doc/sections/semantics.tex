@@ -243,16 +243,12 @@ When all required conditions are fulfilled, \refrule{S-ThenCont} allows stepping
 \paragraph{Principles of choosing}
 \label{sub:choosing-principles}
 
-Making a choice between two tasks $t_1$ and $t_2$ can only be done when
-$t_1$ or $t_2$ has an observable value ($\Value(t_1) = v_1 \lor \Value(t_2) = v_2$).
-To make the semantics deterministic,
-we prefer the left over the right if both tasks have values.
-Therefore, as long as tasks do not have an observable value ($\Value(t) = \bot$),
-
-These principles lead to the three rules \refrule{S-OrLeft}, \refrule{S-OrRight}, and \refrule{S-OrNone}.
-They resprectively pick the left task if it has a value;
-pick the right is the left task does not have a value and the right has;
-or does nothing when both task do not have values.
+Choosing between two tasks $t_1$ and $t_2$ can only be done when
+at least one of them has a value: $\Value(t_1) = v_1 \lor \Value(t_2) = v_2$.
+When both have a value, the left task is chosen.
+When none has a value, none can be chosen.
+These principles lead to the rules \refrule{S-OrLeft}, \refrule{S-OrRight}, and \refrule{S-OrNone},
+which encode that the choice operator picks the leftmost task that has a value.
 
 
 
