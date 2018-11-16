@@ -320,18 +320,12 @@ It is a task which takes another task as parameter.
 
 \subsection{Annotations}
 
-Lastly, pretasks can be annotated with additional information.
-This information can then be used to modify the user interface, or for analysis
-purposes like resource analysis, or automatic end-user feedback. In the case of
-user interface, one could think of labelling information for buttons,
-or with descriptions of tasks.
-We have implemented annotating pretasks with user information to support
-multiple users working together, this has been ommitted from the semantics
-in this paper for space reasons. The annotated user information is used to build
-an interface specific to the user, only displaying actions that she can take.
-
-Resouce analysis and automatic end-user feedback for \TOPHAT is left for future
-work.
+Tasks can be annotated with additional information.
+The system can use this information in various ways.
+Possible use cases are labels for the user interface, resource consumption information for static resource analysis, or messages for automatic end-user feedback.
+Annotations are not covered in this paper.
+Our Haskell implementation of \TOPHAT supports annotating tasks with user IDs, so that individual tasks in a large workflow can be assigned to different users.
+These annotations are used to filter the user interfaces for each user so that they can only see their part of the workflow.
 
 
 % For now, we only concentrate on appointing tasks to users,
