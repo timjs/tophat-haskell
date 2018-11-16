@@ -232,9 +232,9 @@ On top of that, $t_2$ must not be failing: $\neg\Failing(t_2)$.
 
 These principles lead to the stepping rules in \cref{fig:striding-semantics}.
 \refrule{S-ThenStay} does nothing,
-because the lhs does not have a value.
+because the left side does not have a value.
 \refrule{S-ThenFail} covers the case that
-the lhs has a value but the calculated successor task is failing.
+the left side has a value but the calculated successor task is failing.
 This rule uses the semantics of the host language to evaluate the application $e_2 v_1$.
 When all required conditions are fulfilled, \refrule{S-ThenCont} allows stepping to the successor task.
 
@@ -360,7 +360,7 @@ Note that the conditions to the right of the editing rules take care of typing.
 Only when the entered value $v'$ has the same type $\tau$ as the original value $v$ we can change the value of an editor.
 
 To proceed with an external step, users send the $\Continue$(ontinue) action.
-As with internal stepping, this is only possible when the lhs has a value and the continuation is not failing.
+As with internal stepping, this is only possible when the left side has a value and the continuation is not failing.
 $\Left$ and $\Right$ are used to pick the left or right option of an external choice.
 Inputs $\First$(irst) and $\Second$(econd) are only used to direct inputs to the correct branch of parallel combinations.
 Additionally, there are two rules to pass any event on to the left of a step, to be able to reach other nested tasks.

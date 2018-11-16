@@ -168,7 +168,7 @@ We study sequential composition first, and after that combining and choosing.
 \paragraph{Internal and external step $(t \Then e, t \Next e)$}
 \label{sub:steps}
 
-Sequential composition has a task $t$ on the left hand side and a continuation $e$ on the right.
+Sequential composition has a task $t$ on the left and a continuation $e$ on the right.
 The accompanying typing rules are \refrule{T-Then} and \refrule{T-Next}.
 According to these rules, the left hand side must be a task $t : \Task \tau_1$, and the right hand side $e : \tau_1 \to \Task \tau_2$ must be a function that, given the task value of $t$, calculates the task with which to continue.
 
