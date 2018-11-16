@@ -135,19 +135,13 @@ The step combinator represents data flow that follows control flow, and shared d
 The step combinator in $t \Then e$ passes the value of $t$ to the continuation $e$.
 Shared data sources are assignable references, whose changes in value are immediately visible to all tasks interested in them.
 %
-The semantics of \TOP requires all updates to shared data and all enabled internal steps to be processed before any further communication with the environment can take place.
+The semantics of \TOPHAT requires all updates to shared data and all enabled internal steps to be processed before any further communication with the environment can take place.
 This introduces the possibility of diverging computations, where a cyclic dependency between shared data causes internal steps to be taken continuously without ever being able to engage in external communication.
 
-\todo{These two paragraphs could be shorter --TS}
 \CSP uses prefixing for both internal and external communication.
-Parallel processes that all eventually are willing to engage in some action must wait for the others and then progress in one synchronised step.
-This step is still visible to the environment, which means the processes can not engage in this action unless the environment is also willing to.
-Communication becomes internal by using \emph{concealment}.
-
-Concealment is an operator that hides a given set of actions from the environment, which changes the semantics of prefixing for the concealed actions.
-Processes do not have to wait for the environment, they can just step on their own.
-In fact, processes must take any concealed steps as soon as possible, before any further communication with the environment can take place.
-This means internal steps have priority over external communication.
+Prefixing becomes internal by using \emph{concealment}.
+Processes must take any concealed steps as soon as possible, before any further communication with the environment can take place.
+This means concealed actions have priority over exposed ones.
 This introduces the possibility of diverging computations, that is processes which continuously take internal steps without ever being able to engage in external communication.
 
 
