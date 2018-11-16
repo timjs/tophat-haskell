@@ -6,7 +6,7 @@
 \label{sec:semantics}
 
 In this section we formalise the semantics of the language constructs described in \cref{sec:language}.
-We organize this by following the structure of the language.
+We organise this by following the structure of the language.
 
 Firstly, the task language is embedded in a simply typed lambda calculus.
 This requires a specification of the evaluation of terms in the host language, and how it handles the task language.
@@ -14,7 +14,7 @@ This requires a specification of the evaluation of terms in the host language, a
 Secondly, there are two ways to drive evaluation of task expressions, internally by the system itself, and externally by the user.
 This is done in two additional semantics, one for the internal normalisation of tasks, and another for the interaction with the end user.
 
-One of our explicit goals is to keep the semantics for evaluation and normalization separate.
+One of our explicit goals is to keep the semantics for evaluation and normalisation separate.
 This is achieved by letting tasks be values in the host language.
 
 The three main layers of semantics are thus \emph{evaluation}, \emph{normalisation}, and \emph{interaction}.
@@ -104,7 +104,7 @@ External choice does not have a value because it waits for user input.
 In \cref{sub:fail} we introduced $\Fail$ to stand for an impossible task.
 Combinations of tasks can also be impossible.
 Take for example the parallel composition of two fails ($\Fail \And \Fail$).
-This expression is equivalent to $\Fail$, because it can not handle input and can not be further normalized.
+This expression is equivalent to $\Fail$, because it can not handle input and can not be further normalised.
 
 This intuition is formalised by the function $\Failing$ in \cref{fig:observation-failing}.
 It determines whether a task is impossible.
@@ -258,7 +258,7 @@ which encode that the choice operator picks the leftmost task that has a value.
 The handling semantics is the outermost layer of the stack of semantics.
 It is responsible for performing external steps and choices, and for changing the values of editors.
 The rules of the interaction semantics are given in \cref{fig:interaction-semantics}.
-The semantics is only applicable to normalized $t$.
+The semantics is only applicable to normalised $t$.
 Sending an input event $i$ to a task $t$ first handles the event and then prepares the resulting task for the next input by normalising it.
 
 \begin{figure}[h]
