@@ -5,7 +5,7 @@
 \section{Intuition}
 \label{sec:comparison}
 
-This section gives an overview over the essential concepts of \TOP and how they are represented in \TOPHAT.
+This section gives an overview of the essential concepts of \TOP and how they are represented in \TOPHAT.
 While \TOP is focussed on collaboration, it gives rise to concepts like communication and multiprogramming.
 % These concepts are: communication with the environment, communication between subsystems, sequential composition, concurrency, and synchronisation.
 These concepts can also be found in process algebras, which raises the question how \TOPHAT and process algebras relate.
@@ -24,15 +24,15 @@ Instead, we point out how the systems emphasize certain points of view by choosi
 
 \paragraph{Scope}
 
-The central objective of \TOP is to coordinate the collaboration between people
+The central objective of \TOP is to coordinate collaboration.
 Therefore it has combinators to express ways in which people can work together to reach a common goal.
-\TOP is a language to specify workflows.
 Tasks can be executed after each other, at the same time, or conditionally.
 This motivates the task combinators for steps, parallel combination, and choice.
 To employ these patterns of collaboration, users need to communicate.
 This motivates the different forms of communication: with the environment, along control flow, and across control flow.
+\TOPHAT is a language to specify workflows.
 
-The central objective of \CSP is to model the patters of behaviour of processes.
+The central objective of \CSP is to model the patterns of behaviour of processes.
 These patterns of behaviour manifest themselves in sequences of actions that processes can engage in.
 \CSP is a language to specify synchronisation patterns.
 
@@ -120,7 +120,7 @@ can be expressed in \TOP.
 The task asks the user to enter an amount of money.
 This editor stands for a coin slot in a real machine that freely accepts and returns coins.
 There is a continue button that is initially disabled.
-When the user has input exactly 1 or 2 coins, the continue button becomes enabled.
+When the user has inserted exactly 1 or 2 coins, the continue button becomes enabled.
 When the user presses the continue button, the machine dispenses either a large or a small biscuit, depending on the amount of money.
 
 \end{example}
