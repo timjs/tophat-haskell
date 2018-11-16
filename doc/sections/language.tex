@@ -19,6 +19,7 @@ It has abstractions, applications, variables, and constants for booleans, intege
 The symbol $\star$ stands for binary operators.
 For the result of parallel tasks we need pairs.
 Conditionals come in handy for defining guards.
+%
 References will be used to implement shared editors.
 Our treatment of references closely follows the one by \citet{books/Pierce02TAPL}.
 Creating a reference using the keyword $\Ref$ yields a location $l$.
@@ -38,7 +39,7 @@ Integers are denoted by their decimal representation, and booleans are written $
 We freely make use of the logic operators $\Not$, $\land$, and $\lor$, arithmetic operators $+$, $-$, $\times$, and the string append operator $\pp$.
 Furthermore, we use standard comparison operations $<$, $\le$, $\equiv$, $\not\equiv$, $\ge$, and $>$.
 The symbol $\star$ stands for any of those.
-
+%
 \label{sub:abbreviations}
 The notation $e_1; e_2$ is an abbreviation for $(\lambda x:\Unit.\ e_2)\ e_1$, where $x$ is a fresh variable.
 The notation $\Let x:\tau = e_1 \In e_2$ is an abbreviation for $(\lambda x:\tau.\ e_2)\ e_1$.
@@ -46,7 +47,7 @@ The notation $\Let x:\tau = e_1 \In e_2$ is an abbreviation for $(\lambda x:\tau
 \label{sub:pretasks}
 The grammar in \cref{fig:task-grammar} specifies the syntactic category of \emph{pretasks}.
 Pretasks are tasks that have unevaluated subexpressions.
-Pretasks are discussed in more detail in the following sections.
+Each pretask will be discussed in more detail in the following subsections.
 We use open symbols ($\Edit, \Enter, \Next, \Xor$) for tasks that require user input, and closed symbols ($\Update, \Then, \Or$) for tasks that can be evaluated without user input.
 
 \begin{figure}[h]
