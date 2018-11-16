@@ -100,8 +100,8 @@ The typing rules for pretasks are given in \cref{fig:typing-rules}.
 Programs in \TOPHAT model interactive workflows.
 Interaction means communication with end users.
 End users should be able to enter information into the system, change it, clear it, reenter it, and so on.
-To do this, we introduce the concept of editors.
-
+To do this, we introduce the concept of \emph{editors}.
+%
 Editors are typed containers that either hold a value or are empty.
 Editors that have a value can be \emph{changed} or \emph{emptied}.
 Empty editors can be \emph{filled}.
@@ -118,11 +118,11 @@ This is depicted as a state diagram in \cref{fig:editor-state} below.
 \end{figure}
 
 Editors stand for various forms of input and output, for example widgets in a \GUI, form fields on a webpage, sensors, or network connections.
-
+%
 Consider the editor for a person's age from \cref{exm:flight-booking}.
 Users can change the value until they are satisfied with it.
 Editors are meant capture this constantly changing nature of user input.
-
+%
 The user interface of an editor depends on its type.
 This could be an input field for strings, a toggle switch for booleans, or even a map with a pin for locations.
 It could also be a parser that tries to parse a line of text to match the type of the editor.
@@ -142,7 +142,7 @@ Shared editors cannot be cleared, only changed.
 
 Changes to a shared editor are immediately visible to all shared editors watching the same reference.
 Imagine two users, Marco and Christopher, both watching shared editors of the same coordinate.
-The editors are visualized as a map with a pin.
+The editors are visualised as a pin on a map.
 When Marco moves his pin, he updates the value of the shared editor, thereby changing the value of the reference.
 This change is immediately reflected on Christopher's screen: The pin changes its position on his map.
 This way Marco and Christopher can work together to edit the same information.
@@ -150,7 +150,7 @@ This way Marco and Christopher can work together to edit the same information.
 \label{sub:time}
 Two other important use cases for shared editors are sensors and time.
 Sensors can be represented as external entities that periodically update a shared editor with their current sensor value.
-Similarly, the current time can be stored in a shared editor which is periodically updated by a clock.
+Similarly, the current time can be stored in a shared editor (\TS{update time}) which is periodically updated by a clock.
 The actual sensor and the clock are not modelled in \TOPHAT.
 We assume that they exist as external users that send update events to the system.
 This allows programmers to write tasks that react to sensor values or timeouts.
@@ -159,8 +159,8 @@ This allows programmers to write tasks that react to sensor values or timeouts.
 \subsection{Steps}
 
 Editors represent atomic units of work.
-In this section we look at ways to combine smaller tasks into bigger ones.
-Combining tasks can be done in two ways, sequential and parallel.
+In this section we look at ways to compose smaller tasks into bigger ones.
+Composing tasks can be done in two ways, sequential and parallel.
 Parallel composition comes in two variants: combining two tasks (\emph{and}-parallel) and choosing between two tasks (\emph{or}-parallel).
 We study sequential composition first, and after that combining and choosing.
 
@@ -203,7 +203,7 @@ Programmers can use $\Fail$ to tell steps that no sensible successor task can be
 
 \begin{example}[Guarded stepping]
 
-Consider the following program.
+Consider this slight variation on \cref{exm:steps}.
 \begin{TASK}
   enter Int >>= \n. if n == 42 then edit "Good" else fail
 \end{TASK}
@@ -217,19 +217,19 @@ As soon as the value of the left hand side is $42$, the right hand side evaluate
 
 \begin{example}[Waiting]\label{exm:wait}
 
-\lstset{emph={delay,start,now}}
-With the language constructs seen so far it is possible to create a task that delays execution for a specified delay of time.
+\lstset{emph={amount,start,now}}
+With the language constructs seen so far it is possible to create a task that waits for a specified amount of time.
 To do this,
 we make use of a shared editor holding the current time (see \cref{sub:time}),
 and a guarded internal step.
 \begin{TASK}
-  let wait : Int -> Task Unit = \delay : Int.
+  let wait : Int -> Task Unit = \amount : Int.
     update time >>= \start : Int.
     update time >>= \now : Int.
-      if now >= start + delay then edit <<>> else fail
+      if now >= start + amount then edit <<>> else fail
 \end{TASK}
 The first step is immediately taken, resulting in \TS{start} to be the time at the moment \TS{wait} is executed.
-The second step is guarded until the current time is greater or equal to the start time plus the requested delay.
+The second step is guarded until the current time is greater or equal to the start time plus the requested amount.
 
 \end{example}
 
@@ -272,7 +272,7 @@ When it steps, the continuation uses the pair of integer and string to calculate
 
 \paragraph{Internal and external choice $(e_1 \Or e_2, e_1 \Xor e_2)$}
 
-Internal choice ($\Or$) is a parallel \emph{or}.
+\hfill Internal \\ choice ($\Or$) is a parallel \emph{or}.
 It picks the leftmost branch that has a value.
 Its typing rule \refrule{T-Or} states that both branches must have the same type $\Task \tau$.
 For example $\Enter \Int \Or \Edit 37$ normalizes to $\Edit 37$, because $\Enter \Int$ doesn't have a value.
@@ -325,7 +325,7 @@ Tasks can be annotated with additional information.
 The system can use this information in various ways.
 Possible use cases are labels for the user interface, resource consumption information for static resource analysis, or messages for automatic end-user feedback.
 Annotations are not covered in this paper.
-Our Haskell implementation of \TOPHAT supports annotating tasks with user IDs, so that individual tasks in a large workflow can be assigned to different users.
+Our Idris implementation of \TOPHAT supports annotating tasks with user \ID{}s, so that individual tasks in a large workflow can be assigned to different users.
 These annotations are used to filter the user interfaces for each user so that they can only see their part of the workflow.
 
 
