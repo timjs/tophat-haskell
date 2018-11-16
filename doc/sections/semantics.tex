@@ -270,55 +270,16 @@ Sending an input event $i$ to a task $t$ first handles the event and then prepar
   \caption{Interaction semantics} \label{fig:interaction-semantics}
 \end{figure}
 
+Inputs $i$ are formed according to the grammar in \cref{fig:input-grammar}.
 Handling input is done by the \emph{handling} semantics shown in \cref{fig:handling-semantics}.
 It is a small step semantics with labelled transitions.
 It takes a task $t$ in a state $s$ and an input $i$, and yields a new task $t'$ in a new state $s'$.
-Inputs $i$ are formed according to the grammar in \cref{fig:input-grammar}.
 
 \begin{figure}[h]
   \small
   \usemacro{G-Inputs-Compact}
   \caption{Input grammar} \label{fig:input-grammar}
 \end{figure}
-
-% As we already discussed before,
-% there are three actions that can be handled by editors:
-% \begin{enumerate*}
-%   \item filling in an unvalued editor;
-%   \item changing the value; or
-%   \item clearing the value.
-% \end{enumerate*}
-% We choose to merge the first two, filling and changing, into one action.
-% The value of an editor, empty or not, can be changed to a value $v$ by just sending the value as an action.
-% To empty a valued editor, we send the $\Empty$(mpty) action.
-
-% To change values in an editor,
-% systems should interact with the user by some kind of interface.
-% In a graphical setting,
-% we can present the user an input box.
-% The user can then change and clear values continuously.
-% In a text oriented world,
-% we can print out the current value of an editor
-% and prompt the user for a new value
-% or a command to empty the editor.
-% To abstract away from the user interface,
-% we introduce an event system.
-% It does not matter how these events are sent to the application.
-% This can be by pushing a button,
-% entering text in an input box,
-% committing some text on a command line,
-% sending it over a web socket,
-% etc.
-
-% In a previous attempt to build a semantics for \TOP,
-% \textcite{theses/radboud/VinterHviid18} also used the notion of events.
-% However, \citeauthor{theses/radboud/VinterHviid18} made events part of the task layer.
-% This means the programmer has access to events using a \texttt{getEvent} function call.
-%
-% In this work,
-% we deviate from above idea.
-% We use labeled transitions in the same way as \textcite{school/maktoberdorf/PeytonJones01},
-% who gives denotational semantics to the Haskell \IO monad.
 
 \begin{figure}[h]
   \small
@@ -353,22 +314,34 @@ Inputs $i$ are formed according to the grammar in \cref{fig:input-grammar}.
   \caption{Handling semantics} \label{fig:handling-semantics}
 \end{figure}
 
-Inputs can be simple actions which interact with editors, external steps and external choices.
-Corresponding to \cref{fig:editor-state}, the value of any editor can be changed by sending a new value $v$.
-Valued editors can be emptied by sending the special action $\Empty$(mpty).
-Note that the conditions to the right of the editing rules take care of typing.
-Only when the entered value $v'$ has the same type $\tau$ as the original value $v$ we can change the value of an editor.
+\smallcaps{H-Change},
+\smallcaps{H-Empty},
+\smallcaps{H-Fill},
+\smallcaps{H-Update}:
+Input events $v$ and $\Empty$ are used to change the value of editors and empty them.
+Editors only accept values of the correct type.
 
-To proceed with an external step, users send the $\Continue$(ontinue) action.
-As with internal stepping, this is only possible when the left side has a value and the continuation is not failing.
+\smallcaps{H-Next}:
+The $\Continue$(ontinue) action triggers an external step.
+As with internal stepping, this is only possible if the lhs has a value and the continuation is not failing.
+
+\smallcaps{H-PickLeft},
+\smallcaps{H-PickRight}:
 $\Left$ and $\Right$ are used to pick the left or right option of an external choice.
-Inputs $\First$(irst) and $\Second$(econd) are only used to direct inputs to the correct branch of parallel combinations.
-Additionally, there are two rules to pass any event on to the left of a step, to be able to reach other nested tasks.
-The notable exception is off course $\Continue$, which has to be handled by the external step itself.
 
-In order to know which inputs a task expects, we have constructed a function that calculates a set of all possible inputs that can be handled.
-This function called inputs, denoted with $\Inputs$, takes the current normalised expression and state, and returns a set of inputs that can be handled.
-The definition of this function is listed in Figure~\ref{fig:observation-input}.
+\smallcaps{H-PassThen},
+\smallcaps{H-PassNext}:
+The step combinators pass all events other than $\Continue$ to the lhs.
+
+\smallcaps{H-FirstAnd},
+\smallcaps{H-SecondAnd},
+\smallcaps{H-FirstOr},
+\smallcaps{H-SecondOr}:
+Inputs $\First$(irst) and $\Second$(econd) are used to direct inputs to the correct branch of parallel combinations.
+
+There is a function $\Inputs$ which calculates the possible input events a given task expects.
+It takes a normalised task and a state and returns a set of inputs that can be handled.
+The definition of this function is listed in \cref{fig:observation-input}.
 
 \begin{figure}[h]
   \small
