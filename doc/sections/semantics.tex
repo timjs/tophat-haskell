@@ -141,18 +141,14 @@ When the guard condition of a step is not fulfilled, the button is disabled.
 \subsection{Normalising tasks}
 \label{sec:normalise}
 
-Normalisation prepares tasks to handle any given input by the end user.
-It is a big-step semantics which makes use of evaluation of the underlying host language.
+The normalisation semantics is responsible for reducing expressions of type $\Task$ until they are ready to handle input.
+It is a big-step semantics, and makes use of evaluation of the host language.
 We write $\RelationN$ to describe that
 an expression $e$ in state $s$ normalises to task $t$ in state $s'$.
-It is a semantic relation that acts on the task level
-and only accepts expressions of type $\Task \tau$.
 
 Normalisation rules are given in \cref{fig:normalisation-semantics}.
-Both rules ensure expressions $e$ are first evaluated by the host language ($\evaluate$).
-Then it will delegate work to the stride semantics ($\stride$) we will discuss below.
-These two actions are repeated by \refrule{N-Repeat} till the resulting state and task stabilise,
-which is expressed by \refrule{N-Done}.
+Both rules ensure that expressions are first evaluated by the host language ($\evaluate$), and then by the stride semantics ($\stride$).
+These two actions are repeated until the resulting state and task stabilise.
 
 \begin{figure}[h]
   \small
@@ -166,8 +162,7 @@ which is expressed by \refrule{N-Done}.
 
 \end{figure}
 
-The reason to split out striding from normalisation have to do with state.
-% This would be quite straight-forward, if we did not have to deal with state.
+The split between striding and normalisation is due to mutable references.
 Consider the following example
 \begin{TASK}
   (update l >>= \x:Bool. if x then e else fail) <&> (l := True; edit <<>>)
