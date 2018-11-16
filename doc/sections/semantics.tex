@@ -14,7 +14,8 @@ This requires a specification of the evaluation of terms in the host language, a
 Secondly, there are two ways to drive evaluation of task expressions, internally by the system itself, and externally by the user.
 This is done in two additional semantics, one for the internal normalisation of tasks, and another for the interaction with the end user.
 
-One of our explicit goals is to keep the semantics for evaluation and normalisation separate.
+One of our explicit goals is to keep the semantics for evaluation and normalisation separate,
+to not mix general purpose programming notions with workflow specific semantics.
 This is achieved by letting tasks be values in the host language.
 
 The three main layers of semantics are thus \emph{evaluation}, \emph{normalisation}, and \emph{interaction}.
@@ -235,7 +236,7 @@ These principles lead to the stepping rules in \cref{fig:striding-semantics}.
 because the left side does not have a value.
 \refrule{S-ThenFail} covers the case that
 the left side has a value but the calculated successor task is failing.
-This rule uses the semantics of the host language to evaluate the application $e_2 v_1$.
+This rule uses the semantics of the host language to evaluate the application $e_2\ v_1$.
 When all required conditions are fulfilled, \refrule{S-ThenCont} allows stepping to the successor task.
 
 
