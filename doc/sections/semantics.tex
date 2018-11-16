@@ -399,12 +399,11 @@ the double arrow $\drive{i}$ uses the single arrow $\handle{i}$.
 
 \subsection{Implementation}
 
-Above semantics have been implemented using the Idris programming language \cite{journals/jfp/Brady13}.
+The semantics have been implemented in the Idris programming language \cite{journals/jfp/Brady13}.
 We use techniques presented by \textcite{journals/entcs/JaskelioffGH11}, \textcite{journals/jfp/Swierstra08}, and \textcite{school/maktoberdorf/PeytonJones01}.
-Having such an implementation gives us an opportunity to gain confidence in the correctness and completeness of our semantics.
-The code can be found on GitHub.\footnote{\url{http://github.com/XXX/XXX}}
-A proof of concept Haskell implementation is also available, showing \TOPHAT is also implementable in programming languages without dependent types.
+Such an implementation increases the confidence in the correctness and completeness of the semantics.
+The source code can be found on GitHub.\footnote{\url{http://github.com/XXX/XXX}}
+A proof of concept implementation in Haskell is also available, showing that \TOPHAT can be implemented without dependent types.
 
-A textual user interface is part of this implementation.
-It prompts users to explicitly type in values and other inputs,
-which then get parsed and processed by the interaction semantics.
+A command-line interface is part of this implementation.
+It prompts users to type input events, which get parsed and processed by the interaction semantics.
