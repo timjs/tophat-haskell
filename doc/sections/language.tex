@@ -233,15 +233,14 @@ The second step is guarded until the current time is greater or equal to the sta
 
 \subsection{Parallel}
 
-Next to sequential composition,
-a main pattern in workflow design is splitting up work in two or more tasks
-that can be worked on simultaneously.
-Both branches can progress over time by users' input.
-This input needs to be addressed to the first or second task by tagging.
-One could wait for all tasks to produce results and combine those,
-or pick the first possible result available.
-Both ways of parallelisation introduce explicit forks and implicit joins in our language.
+A common pattern in workflow design is splitting up work into multiple tasks that can be executed simultaneously.
+In \TOPHAT, all parallel branches can progress independently, driven by input events.
+This requires input events to be tagged in order to reach the intended task.
 
+There are two ways to proceed after a parallel composition.
+One way is to wait for all tasks to produce results and combine those,
+the other to pick the first available result.
+Both ways introduce explicit forks and implicit joins in \TOPHAT.
 
 
 \paragraph{Combination $(e_1 \And e_2)$}
