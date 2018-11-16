@@ -286,20 +286,18 @@ This means users cannot work on the branches of an external choice before pickin
 
 \lstset{emph={proceed}}
 
-To illustrate the usage of internal and external choices,
-we will create an example that will ask users explicitly to proceed with a task or to cancel.
-When users do not make a choice within a given amount of time,
-we will automatically proceed.
-To do this,
-we will make use of the \TS{wait}-task from \cref{exm:wait}.
+We illustrate the use of internal and external choice by means of
+an example that asks users to proceed with a given task or to cancel.
+If the user does not make a choice within a given time frame, the program proceeds automatically.
+The example makes use of the task \TS{wait} from \cref{exm:wait}.
 \begin{TASK}
   let cancel : Task Unit = edit <<>> in
   let delay : Int -> Task Unit -> Task Unit =
     \n : Int. \proceed : Task Unit.
     (proceed <?> cancel) <|> (wait n >>= \u : Unit. proceed)
 \end{TASK}
-Note this task is higher-order:
-it is a task which takes another task as a parameter.
+Note that \TS{delay} is higher-order.
+It is a task which takes another task as parameter.
 
 \end{example}
 
