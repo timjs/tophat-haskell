@@ -132,7 +132,7 @@ When the user presses the continue button, the machine dispenses either a large 
 \TOP has two methods for internal communication, both different from its meth\-od for external communication.
 The step combinator represents data flow that follows control flow, and shared data represents data flow across control flow.
 
-The step combinator in $t \Then e$ passes the value of $t$ to the continuation $e$.
+The step combinators in $t \Then e$ and $t \Next e$ pass the value of $t$ to the continuation $e$.
 Shared data sources are assignable references, whose changes in value are immediately visible to all tasks interested in them.
 %
 The semantics of \TOPHAT requires all updates to shared data and all enabled internal steps to be processed before any further communication with the environment can take place.
@@ -199,7 +199,7 @@ Actions that occur in both alphabets are nondeterministically taken by either $P
 
 
 
-\paragraph{Synchronization}
+\paragraph{Synchronisation}
 
 Synchronisation means that an agent has to pause execution until some condition is met.
 The need for synchronisation arises quite naturally in countless variations in situations involving concurrency.
@@ -264,8 +264,8 @@ A similar effort as in Downey's solution must be made in order to solve the prob
 This is because in \CSP, processes can only synchronise on one action at a time.
 
 \TOP allows a simple solution to this problem, using guarded steps.
-Steps can be guarded with arbitrary expressions, and the parallel combinator can be used to watch two shared data sources at the same time.
-Let \TS{match}, \TS{paper}, and \TS{tobacco} be shared Booleans.
+Steps can be guarded with arbitrary expressions, and the parallel combinator can be used to watch two shared editors ($\Update$) at the same time.
+Let \TS{match}, \TS{paper}, and \TS{tobacco} be references to Booleans.
 The smokers are defined as follows.
 \begin{TASK}
   let continue = \<<x,y>>. if x /\ y then smoke else fail in

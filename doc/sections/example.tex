@@ -20,6 +20,8 @@ The application works as follows.
   \item Multiple users should be able to book tickets at the same time.
 \end{enumerate*}
 For this example we assume that the host language has lists and four functions on them: all, any, intersect, and difference.
+%%NOTE: After Peter's comments symbols are not clear --TS
+We also make use of string equality ($\equiv$), dereferencing ($!$), reference assignment ($:=$), and expression sequencing ($;$).
 For brevity, we omit the type annotations of variable bindings.
 
 
@@ -42,8 +44,8 @@ The list of free seats is stored in a reference called \TS{freeSeats}.
 \end{TASK}
 
 Now we develop our workflow in a top down way.
-A flight booking starts with the task of entering a valid list of passengers,
-denoted by \TS{enter (List Passenger)}.
+A flight booking starts with an interactive task \TS{enter (List Passenger)}
+where users can enter a list of passengers.
 A passenger is valid if the name is not empty and the age is at least 0.
 A list of passengers is valid if each passenger is valid, and at least one of the passengers is an adult.
 When the user has entered a valid list of passengers, the step after \TS{>>?} becomes enabled,
