@@ -1,0 +1,224 @@
+%% For double-blind review submission
+% \documentclass[sigplan,review,anonymous]{acmart}
+%% For single-blind review submission
+%\documentclass[sigplan,review]{acmart}
+%% For proofreading
+% \documentclass[sigplan,authordraft]{acmart}
+%% For final camera-ready submission
+\documentclass[10pt,acmtog]{acmart}
+%% For booklet
+% \documentclass[acmsmall]{acmart}
+
+\input{macros/imports}
+\input{macros/setups}
+\input{macros/general}
+\input{macros/languages}
+\input{macros/abbreviations}
+\input{commands}
+\input{rules}
+\input{grammars}
+\input{maps}
+
+
+
+
+
+\acmConference[ICT.open'19]
+  {ICT.open 2019}
+  {19--20 March 2019}
+  {Hilversum, the Netherlands}
+\acmYear{2019}
+
+%\acmISBN{978-x-xxxx-xxxx-x/YY/MM}
+%\acmDOI{10.1145/nnnnnnn.nnnnnnn}
+
+%\startPage{1}
+
+\settopmatter{printfolios=true,printccs=false,printacmref=false}
+\setcopyright{none}             %% For review submission
+%\setcopyright{acmcopyright}
+%\setcopyright{acmlicensed}
+%\setcopyright{rightsretained}
+%\copyrightyear{2017}           %% If different from \acmYear
+
+
+%% Bibliography style
+\bibliographystyle{ACM-Reference-Format}
+%% Citation style
+\citestyle{acmauthoryear}  %% For author/year citations
+%\citestyle{acmnumeric}      %% For numeric citations
+%\setcitestyle{nosort}      %% With 'acmnumeric', to disable automatic
+                            %% sorting of references within a single citation;
+                            %% e.g., \cite{Smith99,Carpenter05,Baker12}
+                            %% rendered as [14,5,2] rather than [2,5,14].
+%\setcitesyle{nocompress}   %% With 'acmnumeric', to disable automatic
+                            %% compression of sequential references within a
+                            %% single citation;
+                            %% e.g., \cite{Baker12,Baker14,Baker16}
+                            %% rendered as [2,3,4] rather than [2-4].
+
+
+
+\begin{document}
+
+%% Title information
+\title{TopHat: A calculus for modular interactive workflows}
+                                        %% [Short Title] is optional;
+                                        %% when present, will be used in
+                                        %% header instead of Full Title.
+%\titlenote{with title note}             %% \titlenote is optional;
+                                        %% can be repeated if necessary;
+                                        %% contents suppressed with 'anonymous'
+%\subtitle{Revisited edition}            %% \subtitle is optional
+%\subtitlenote{with subtitle note}       %% \subtitlenote is optional;
+                                        %% can be repeated if necessary;
+                                        %% contents suppressed with 'anonymous'
+
+
+%% Author information
+%% Contents and number of authors suppressed with 'anonymous'.
+%% Each author should be introduced by \author, followed by
+%% \authornote (optional), \orcid (optional), \affiliation, and
+%% \email.
+%% An author may have multiple affiliations and/or emails; repeat the
+%% appropriate command.
+%% Many elements are not rendered, but should be provided for metadata
+%% extraction tools.
+
+\author{Tim Steenvoorden}
+%\authornote{with author1 note}          %% \authornote is optional; can be repeated if necessary
+%\orcid{nnnn-nnnn-nnnn-nnnn}             %% \orcid is optional
+\affiliation{
+  %\position{PhD}
+  \department{Software Science}
+  %\department{Institute for Computing and Information Sciences}
+                                        %% \department is recommended
+  \institution{Radboud University}      %% \institution is required
+  \streetaddress{Toernooiveld 212}
+  \postcode{6525 EC}
+  \city{Nijmegen}
+  %\state{State1}
+  \country{The Netherlands}
+}
+\email{tim@cs.ru.nl}                     %% \email is recommended
+
+\author{Markus Klinik}
+%\authornote{with author1 note}          %% \authornote is optional; can be repeated if necessary
+%\orcid{nnnn-nnnn-nnnn-nnnn}             %% \orcid is optional
+\affiliation{
+  %\position{PhD}
+  \department{Software Science}
+  %\department{Institute for Computing and Information Sciences}
+                                        %% \department is recommended
+  \institution{Radboud University}
+                                        %% \institution is required
+  \streetaddress{Toernooiveld 212}
+  \postcode{6525 EC}
+  \city{Nijmegen}
+  %\state{State1}
+  \country{The Netherlands}
+}
+\email{m.klinik@cs.ru.nl}               %% \email is recommended
+
+\author{Nico Naus}
+%\authornote{with author1 note}          %% \authornote is optional; can be repeated if necessary
+%\orcid{nnnn-nnnn-nnnn-nnnn}             %% \orcid is optional
+\affiliation{
+  %\position{PhD}
+  \department{Information and Computing Sciences}
+                                        %% \department is recommended
+  \institution{Utrecht University}      %% \institution is required
+  \streetaddress{Princetonplein 5}
+  \postcode{3584 CC}
+  \city{Utrecht}
+  %\state{State1}
+  \country{The Netherlands}
+}
+\email{n.naus@uu.nl}                    %% \email is recommended
+
+% \author{Rinus Plasmeijer}
+% %\authornote{with author2 note}       %% \authornote is optional; can be repeated if necessary
+% %\orcid{nnnn-nnnn-nnnn-nnnn}             %% \orcid is optional
+% \affiliation{
+%   %\position{prof.}
+%   % \department{Department of Software Science}
+%   \department{Institute for Computing and Information Sciences}
+%                                         %% \department is recommended
+%   \institution{Radboud University}
+%                                         %% \institution is required
+%   \streetaddress{Toernooiveld 212}
+%   \city{Nijmegen}
+%   %\state{State1}
+%   \postcode{6525 EC}
+%   \country{The Netherlands}
+% }
+% \email{rinus@cs.ru.nl}                  %% \email is recommended
+
+
+%% Paper note
+%% The \thanks command may be used to create a "paper note" ---
+%% similar to a title note or an author note, but not explicitly
+%% associated with a particular element.  It will appear immediately
+%% above the permission/copyright statement.
+%\thanks{with paper note}                %% \thanks is optional
+                                        %% can be repeated if necesary
+                                        %% contents suppressed with 'anonymous'
+
+
+%% Abstract
+%% Must come before \maketitle command
+% \begin{abstract}
+%   \input{sections/abstract}
+% \end{abstract}
+
+% \begin{teaserfigure}
+%    \includegraphics[width=\textwidth]{figures/declrequest-part.pdf}
+%    \caption{This is a teaser}
+%    \label{fig:teaser}
+% \end{teaserfigure}
+
+%% 2012 ACM Computing Classification System (CSS) concepts
+%% Generate at 'http://dl.acm.org/ccs/ccs.cfm'.
+
+%% End of generated code
+
+
+%% Keywords
+%% comma separated list, optional
+%\keywords{workflow, dataflow, visual programming, program generation}
+
+
+%% Note: \maketitle command must come after title commands, author
+%% commands, abstract environment, Computing Classification System
+%% environment and commands, and keywords command.
+\maketitle
+\statefultrue
+
+\input{sections/introduction}
+\input{sections/contributions}
+\input{sections/example}
+
+
+%% Acknowledgments
+% \begin{acks}                            %% acks environment is optional
+%                                         %% contents suppressed with 'anonymous'
+%   %% Commands \grantsponsor{<sponsorID>}{<name>}{<url>} and
+%   %% \grantnum[<url>]{<sponsorID>}{<number>} should be used to
+%   %% acknowledge financial support and will be used by metadata
+%   %% extraction tools.
+%   \small
+%   \input{sections/acknowledgements}
+% \end{acks}
+
+
+%% Bibliography
+\bibliography{bibliography}
+
+
+% \pagebreak
+% %% Appendix
+%
+% \input{sections/appendix}
+
+
+\end{document}
