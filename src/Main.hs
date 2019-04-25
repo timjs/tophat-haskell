@@ -328,4 +328,4 @@ empties = do
 
 main :: IO ()
 main =
-  run parallel
+  run parallelStep'
