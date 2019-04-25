@@ -63,35 +63,36 @@ watching = \case
   Next this _   -> watching this
 
 
+choices :: TaskT m a -> List Path
+choices = \case
+  Xor Fail Fail -> []
+  Xor _    Fail -> [ GoLeft ]
+  Xor Fail _    -> [ GoRight ]
+  Xor _    _    -> [ GoLeft, GoRight ]
+  _             -> []
+
+
 inputs :: forall m l a. MonadRef l m => TaskT m a -> m (List (Input Dummy))
 inputs = \case
-  Edit _ -> pure [ ToHere (AChange tau), ToHere AEmpty ]
-    where
-      tau = Proxy :: Proxy a
-  Store _ -> pure [ ToHere (AChange tau) ]
-    where
-      tau = Proxy :: Proxy a
-  And left rght -> (\l r -> map ToFirst l ++ map ToSecond r) <$> inputs left <*> inputs rght
-  Or  left rght -> (\l r -> map ToFirst l ++ map ToSecond r) <$> inputs left <*> inputs rght
-  Xor left rght -> pure $ map (ToHere << APick) choices
-    where
-      choices = case ( left, rght ) of
-        ( Fail, Fail ) -> []
-        ( _,    Fail ) -> [ GoLeft ]
-        ( Fail, _ ) -> [ GoRight ]
-        ( _,    _ ) -> [ GoLeft, GoRight ]
-  Fail -> pure []
-  Then this _ -> inputs this
+  Edit _         -> pure [ ToHere (AChange tau), ToHere AEmpty ]
+  Store _        -> pure [ ToHere (AChange tau) ]
+  And left rght  -> (\l r -> map ToFirst l ++ map ToSecond r) <$> inputs left <*> inputs rght
+  Or  left rght  -> (\l r -> map ToFirst l ++ map ToSecond r) <$> inputs left <*> inputs rght
+  Xor left rght  -> pure $ map (ToHere << APick) (choices $ Xor left rght)
+  Fail           -> pure []
+  Then this _    -> inputs this
   Next this next -> do
     always <- inputs this
     val <- value this
     case val of
       Nothing -> pure always
-      Just v -> do
+      Just v  -> do
         cont <- normalise (next v)
         if not $ failing cont
           then pure $ ToHere AContinue : always
           else pure always
+  where
+    tau = Proxy :: Proxy a
 
 
 
