@@ -1,26 +1,24 @@
 module Control.Monad.Ref
-  ( MonadRef(..)
-  , ($=)
+  ( MonadRef(..), ($=)
+  , Someref, pack, unpack
   ) where
-
-
-import Protolude
-
-import Data.Basic
-import Data.IORef
 
 
 
 -- Interface -------------------------------------------------------------------
 
 
-class Monad m => MonadRef l m | m -> l where
-  ref    :: Basic a => a -> m (l a)
-  deref  :: Basic a => l a -> m a
-  assign :: Basic a => l a -> a -> m ()
+class ( Monad m, Typeable l, forall a. Eq (l a) ) => MonadRef l m | m -> l where
+  ref    :: a -> m (l a)
+  deref  :: l a -> m a
+  assign :: l a -> a -> m ()
 
 
--- Instances -------------------------------------------------------------------
+infix 4 $=
+($=) :: MonadRef l m => l a -> (a -> a) -> m ()
+l $= f = do
+  x <- deref l
+  assign l (f x)
 
 
 instance MonadRef IORef IO where
@@ -30,11 +28,26 @@ instance MonadRef IORef IO where
 
 
 
--- Helpers ---------------------------------------------------------------------
+-- Existential packing ---------------------------------------------------------
 
 
-infix 4 $=
-($=) :: MonadRef l m => Basic a => l a -> (a -> a) -> m ()
-($=) l f = do
-  x <- deref l
-  assign l (f x)
+data Someref (m :: Type -> Type) where
+  Someref :: MonadRef l m => TypeRep (l a) -> l a -> Someref m
+
+
+pack :: forall m l a. ( MonadRef l m, Typeable a ) => l a -> Someref m
+pack = Someref typeRep
+
+
+unpack :: forall m l a. ( MonadRef l m, Typeable a ) => Someref m -> Maybe (l a)
+unpack (Someref r x)
+  | Just Refl <- r ~~ r' = Just x
+  | otherwise = Nothing
+  where
+    r' = typeRep :: TypeRep (l a)
+
+
+instance Eq (Someref m) where
+  Someref rx x == Someref ry y
+    | Just Refl <- rx ~~ ry = x == y
+    | otherwise = False

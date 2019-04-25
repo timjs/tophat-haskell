@@ -4,59 +4,50 @@ module Data.Basic
   ) where
 
 
-import Preload
-
-import Type.Reflection
-
-import Test.QuickCheck (Arbitrary)
-
-import qualified GHC.Show as Show
-
-
 
 -- Class -----------------------------------------------------------------------
 
 
-type Basic a = ( Show a, Read a, Eq a, Typeable a, Arbitrary a ) -- Coarbitrary a )
+type Basic a = ( Pretty a, Read a, Eq a, Typeable a ) --, Arbitrary a ) --, Coarbitrary a )
 
 
 
 -- Packing and unpacking -------------------------------------------------------
 
 
-data Somebasic :: Type where
-  Somebasic :: forall a. Basic a => TypeRep a -> a -> Somebasic
+data Somebasic where
+  Somebasic :: forall a. Basic a => a -> Somebasic
 
 
 pack :: forall a. Basic a => a -> Somebasic
-pack x = Somebasic typeRep x
+pack = Somebasic
 
 
 unpack :: forall a. Basic a => Somebasic -> Maybe a
-unpack (Somebasic r x)
-  | Just HRefl <- eqTypeRep r r' = Just x
+unpack (Somebasic x)
+  | Just Refl <- typeOf x ~~ r = Just x
   | otherwise = Nothing
   where
-    r' = typeRep :: TypeRep a
+    r = typeRep :: TypeRep a
 
 
 unsafeUnpack :: forall a. Basic a => Somebasic -> a
-unsafeUnpack (Somebasic r x)
-  | Just HRefl <- eqTypeRep r r' = x
-  | otherwise = panic $ "Data.Basic.unsafeUnpack: Types '" <> show r <> "' and '" <> show r' <> "' did not match"
+unsafeUnpack (Somebasic x)
+  | Just Refl <- typeOf x ~~ r = x
+  | otherwise = error $ "Data.Basic.unsafeUnpack: Types '" <> show (typeOf x) <> "' and '" <> show r <> "' did not match"
   where
-    r' = typeRep :: TypeRep a
+    r = typeRep :: TypeRep a
 
 
 
 -- Instances -------------------------------------------------------------------
 
 
-instance Show Somebasic where
-  show (Somebasic _ x) = Show.show x
+instance Pretty Somebasic where
+  pretty (Somebasic x) = pretty x
 
 
 instance Eq Somebasic where
-  (Somebasic r x) == (Somebasic s y)
-    | Just HRefl <- eqTypeRep r s = x == y
+  Somebasic x == Somebasic y
+    | Just Refl <- x ~= y = x == y
     | otherwise = False

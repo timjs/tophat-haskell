@@ -1,14 +1,11 @@
 module Control.Monad.Trace where
 
 
-import Preload
-
-
 
 -- Class -----------------------------------------------------------------------
 
 
-class ( Show s, Monad m ) => MonadTrace s m where
+class ( Pretty s, Monad m ) => MonadTrace s m where
   trace :: s -> a -> m a
 
 
@@ -16,7 +13,7 @@ class ( Show s, Monad m ) => MonadTrace s m where
 -- Instances -------------------------------------------------------------------
 
 
-instance Show s => MonadTrace s IO where
+instance Pretty s => MonadTrace s IO where
   trace s x = do
-    putStrLn $ "** " ++ show s
+    putStrLn $ "** " ++ show (pretty s)
     pure x
