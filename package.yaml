@@ -1,16 +1,16 @@
-name:                tasks
+name:                tophat
 version:             0.1.0.0
 #synopsis:
-#description:
-homepage:            https://github.com/timjs/tasks#readme
+description:         Please see the README on GitHub at <https://github.com/timjs/tophat-haskell#readme>
+github:              "timjs/tophat-haskell"
 license:             BSD3
 author:              Tim Steenvoorden
 maintainer:          tim.steenvoorden@gmail.com
 copyright:           BSD3
-category:            Web
+# category:            Web
+
 extra-source-files:
 - README.md
-
 
 dependencies:
   - base
@@ -20,7 +20,6 @@ dependencies:
   - quickcheck-instances
   - mtl
   - containers
-
 
 default-extensions:
   # Lifting limitations:
@@ -84,11 +83,14 @@ default-extensions:
   - DataKinds
   - PolyKinds
 
-
-ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
-
+ghc-options:
+  - -Wall
+  - -Wcompat
+  - -Wincomplete-record-updates
+  - -Wincomplete-uni-patterns
+  - -Wredundant-constraints
 
 executables:
-  tasks:
-    source-dirs:      src-haskell
+  tophat:
+    source-dirs:      src
     main:             Main.hs
