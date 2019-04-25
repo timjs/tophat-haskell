@@ -178,10 +178,10 @@ parse :: List Text -> Either (Doc a) (Input Action)
 parse [ "change", val ]
   | Just v <- read val :: Maybe Unit      = ok $ ToHere $ Change v
   | Just v <- read val :: Maybe Bool      = ok $ ToHere $ Change v
-  | Just v <- read val :: Maybe Integer   = ok $ ToHere $ Change v
+  | Just v <- read val :: Maybe Int       = ok $ ToHere $ Change v
   | Just v <- read val :: Maybe String    = ok $ ToHere $ Change v
   | Just v <- read val :: Maybe [Bool]    = ok $ ToHere $ Change v
-  | Just v <- read val :: Maybe [Integer] = ok $ ToHere $ Change v
+  | Just v <- read val :: Maybe [Int]     = ok $ ToHere $ Change v
   | Just v <- read val :: Maybe [String]  = ok $ ToHere $ Change v
   | otherwise                             = throw $ "!! Error parsing value " <> dquotes (pretty val)
 parse [ "empty" ]                         = ok $ ToHere Empty
