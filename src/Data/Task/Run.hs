@@ -304,7 +304,3 @@ run :: Task a -> IO ()
 run task = do
   task' <- initialise task
   loop task'
-
-
--- main :: IO ()
--- main = run empties
