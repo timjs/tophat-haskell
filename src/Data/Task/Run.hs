@@ -3,7 +3,6 @@ module Data.Task.Run where
 
 import Control.Monad.Ref
 import Control.Monad.Trace
-import Control.Monad.Zero
 
 import Data.List (union)
 import Data.Task
@@ -64,7 +63,7 @@ watching = \case
   Next this _   -> watching this
 
 
-inputs :: forall m l a. MonadZero m => MonadRef l m => TaskT m a -> m (List (Input Dummy))
+inputs :: forall m l a. MonadRef l m => TaskT m a -> m (List (Input Dummy))
 inputs = \case
   Edit _ -> pure [ ToHere (AChange tau), ToHere AEmpty ]
     where
@@ -83,10 +82,16 @@ inputs = \case
         ( _,    _ ) -> [ GoLeft, GoRight ]
   Fail -> pure []
   Then this _ -> inputs this
-  Next this next -> (++) <$> inputs this <*>
-    [ [ToHere AContinue]
-    | Just v <- value this, cont <- normalise (next v), not $ failing cont
-    ]
+  Next this next -> do
+    always <- inputs this
+    val <- value this
+    case val of
+      Nothing -> pure always
+      Just v -> do
+        cont <- normalise (next v)
+        if not $ failing cont
+          then pure $ ToHere AContinue : always
+          else pure always
 
 
 
