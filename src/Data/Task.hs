@@ -1,7 +1,7 @@
 module Data.Task
   ( TaskT(..), Task
   , edit, enter, view, update, watch
-  , tmap, (-&&-), (&&-), (-&&), (-||-), (-??-), fail, (>>-), (>>?)
+  , tmap, tapply, (-&&-), (&&-), (-&&), (-||-), (-??-), fail, (>>-), (>>?)
   , module Control.Monad.Ref
   , module Data.Basic
   ) where
@@ -117,8 +117,8 @@ x -&& y = tmap fst $ x -&&- y
 x &&- y = tmap snd $ x -&&- y
 
 
--- apply' :: TaskT m (a -> b) -> TaskT m a -> TaskT m b
--- apply' ff fx = tmap (\(Tuple f x) -> f x) $ ff <&> fx
+tapply :: Basic b => TaskT m (a -> b) -> TaskT m a -> TaskT m b
+tapply ff fx = tmap (\( f, x ) -> f x) $ ff -&&- fx
 
 
 
