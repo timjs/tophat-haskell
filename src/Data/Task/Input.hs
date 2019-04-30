@@ -24,9 +24,10 @@ instance Pretty Path where
 
 
 parsePath :: Text -> Either (Doc a) Path
-parsePath "l"   = ok GoLeft
-parsePath "r"   = ok GoRight
-parsePath other = throw $ "!! " <> dquotes (pretty other) <> " is not a valid path, type `help` for more info"
+parsePath = \case
+  "l"   -> ok GoLeft
+  "r"   -> ok GoRight
+  other -> throw $ sep [ "!!", dquotes (pretty other), "is not a valid path, type `help` for more info" ]
 
 
 
@@ -54,9 +55,9 @@ instance Eq Action where
 
 instance Pretty Action where
   pretty = \case
-    Change x -> "change " <> pretty x
+    Change x -> sep [ "change", pretty x ]
     Empty    -> "empty"
-    Pick p   -> "pick" <> pretty p
+    Pick p   -> sep [ "pick", pretty p ]
     Continue -> "cont"
 
 
@@ -69,13 +70,11 @@ data Dummy :: Type where
   AEmpty        :: Dummy
   APick         :: Path -> Dummy
   AContinue     :: Dummy
-  -- APickWith     :: Label -> Dummy
-  -- AContinueWith :: Label -> Dummy
 
 
 instance Eq Dummy where
   AChange x == AChange y
-    -- We're comparing proxies, they are always equal when the types are equal.
+    -- NOTE: We're comparing proxies, they are always equal when the types are equal.
     | Just Refl <- x ~= y = True
     | otherwise           = False
   AEmpty    == AEmpty     = True
@@ -88,7 +87,7 @@ instance Pretty Dummy where
   pretty = \case
     AChange _ -> "change <val>"
     AEmpty    -> "empty"
-    APick p   -> "pick" <> pretty p
+    APick p   -> sep [ "pick", pretty p ]
     AContinue -> "cont"
 
 
@@ -112,9 +111,10 @@ data Input a
 
 
 instance Pretty a => Pretty (Input a) where
-  pretty (ToFirst e)  = "f " <> pretty e
-  pretty (ToHere a)   = pretty a
-  pretty (ToSecond e) = "s " <> pretty e
+  pretty = \case
+    ToFirst e  -> sep [ "f", pretty e ]
+    ToHere a   -> pretty a
+    ToSecond e -> sep [ "s", pretty e ]
 
 
 
@@ -149,15 +149,13 @@ strip = map dummyfy
 
 usage :: Doc a
 usage = vcat
-  [ ":: Possible events are:"
+  [ ":: Possible inputs are:"
   , "    change <value> : change current editor to <value> "
   , "    empty          : empty current editor"
   , "    pick <path>    : pick amongst the possible options"
-  -- , "    pick <label>   : pick the option labeld with <label>"
   , "    cont           : continue with the next task"
-  -- , "    cont <label>   : continue with the task labeld <label>"
-  , "    f <event>      : send <event> to the first task"
-  , "    s <event>      : send <event> to the second task"
+  , "    f <input>      : send <input> to the first task"
+  , "    s <input>      : send <input> to the second task"
   , "    help           : show this message"
   , ""
   , "where values can be:"
@@ -169,8 +167,6 @@ usage = vcat
   , "paths are of the form:"
   , "   l : go left"
   , "   r : go right"
-  -- , ""
-  -- , "and labels always start with a Capital letter"
   ]
 
 
@@ -183,11 +179,11 @@ parse [ "change", val ]
   | Just v <- read val :: Maybe [Bool]    = ok $ ToHere $ Change v
   | Just v <- read val :: Maybe [Int]     = ok $ ToHere $ Change v
   | Just v <- read val :: Maybe [String]  = ok $ ToHere $ Change v
-  | otherwise                             = throw $ "!! Error parsing value " <> dquotes (pretty val)
+  | otherwise                             = throw $ sep [ "!! Error parsing value", dquotes (pretty val) ]
 parse [ "empty" ]                         = ok $ ToHere Empty
 parse [ "pick", next ]                    = map (ToHere << Pick) $ parsePath next
 parse [ "cont" ]                          = ok $ ToHere Continue
 parse ("f" : rest)                        = map ToFirst $ parse rest
 parse ("s" : rest)                        = map ToSecond $ parse rest
 parse [ "help" ]                          = throw usage
-parse other                               = throw $ "!! " <> dquotes (sep $ map pretty other) <> " is not a valid command, type `help` for more info"
+parse other                               = throw $ sep [ "!!", dquotes (sep $ map pretty other), "is not a valid command, type `help` for more info" ]
