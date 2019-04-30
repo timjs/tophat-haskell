@@ -9,7 +9,7 @@ module Data.Task
 
 import Control.Monad.Ref
 
-import Data.Basic (Basic)
+import Data.Basic (Basic, Prim)
 
 
 infixl 5 -&&-, -&&, &&-
@@ -21,12 +21,15 @@ infixl 2 >>-, >>?
 -- Tasks -----------------------------------------------------------------------
 
 
+-- | Task monad transformer build on top of a monad `m`.
+-- |
+-- | To use references, `m` shoud be a `MonadRef` with locations `l`.
 data TaskT (m :: Type -> Type) (r :: Type) where
   -- | Editors, valued or unvalued
   Edit :: Basic r => Maybe r -> TaskT m r
 
   -- | Stores referring to some shared value of type `r`
-  Store :: ( MonadRef l m, Basic r ) => l r -> TaskT m r
+  Store :: ( MonadRef l m, Prim r ) => l r -> TaskT m r
 
   -- | Composition of two tasks.
   And :: TaskT m a -> TaskT m b -> TaskT m ( a, b )
@@ -63,14 +66,14 @@ type Task = TaskT IO
 instance Pretty (TaskT m t) where
   pretty = \case
     Edit (Just x) -> cat [ "□(", pretty x, ")" ]
-    Edit Nothing -> "□(_)"
-    Store _ -> "■(_)"
-    And x y -> sep [ pretty x, "⋈", pretty y ]
-    Or x y -> sep [ pretty x, "◆", pretty y ]
-    Xor x y -> sep [ pretty x, "◇", pretty y ]
-    Fail -> "↯"
-    Then x _ -> sep [ pretty x, "▶…" ]
-    Next x _ -> sep [ pretty x, "▷…" ]
+    Edit Nothing  -> "□(_)"
+    Store _       -> "■(_)"
+    And x y       -> sep [ pretty x, "⋈", pretty y ]
+    Or x y        -> sep [ pretty x, "◆", pretty y ]
+    Xor x y       -> sep [ pretty x, "◇", pretty y ]
+    Fail          -> "↯"
+    Then x _      -> sep [ pretty x, "▶…" ]
+    Next x _      -> sep [ pretty x, "▷…" ]
 
 
 
@@ -97,11 +100,11 @@ view :: Basic a => a -> TaskT m a
 view = edit
 
 
-update :: MonadRef l m => Basic a => l a -> TaskT m a
+update :: MonadRef l m => Prim a => l a -> TaskT m a
 update = Store
 
 
-watch :: MonadRef l m => Basic a => l a -> TaskT m a
+watch :: MonadRef l m => Prim a => l a -> TaskT m a
 watch = update
 
 

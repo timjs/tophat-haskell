@@ -1,11 +1,11 @@
 module Data.Basic
-  ( Basic
+  ( Basic, Prim
   , Somebasic, pack, unpack, unsafeUnpack
   ) where
 
 
 
--- Class -----------------------------------------------------------------------
+-- Basics ----------------------------------------------------------------------
 
 
 type Basic a = ( Pretty a, Read a, Eq a, Typeable a ) --, Arbitrary a ) --, Coarbitrary a )
@@ -40,7 +40,7 @@ unsafeUnpack (Somebasic x)
 
 
 
--- Instances -------------------------------------------------------------------
+-- Instances --
 
 
 instance Pretty Somebasic where
@@ -51,3 +51,17 @@ instance Eq Somebasic where
   Somebasic x == Somebasic y
     | Just Refl <- x ~= y = x == y
     | otherwise = False
+
+
+
+-- Primitives ------------------------------------------------------------------
+
+
+class Basic a => Prim a
+
+
+instance Prim Int
+instance Prim Bool
+instance Prim String
+
+instance ( Prim a, Prim b ) => Prim ( a, b )
