@@ -80,6 +80,7 @@ default-extensions:
   - FunctionalDependencies
   - GADTs
   # - ExistentialQuantification
+  - UndecidableInstances
 
   # Advanced type extensions:
   - DataKinds

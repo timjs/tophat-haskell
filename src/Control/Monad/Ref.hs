@@ -1,25 +1,25 @@
 module Control.Monad.Ref
-  ( MonadRef(..), ($=)
-  , Someref, pack, unpack
+  ( MonadRef(..), (<<-)
+  -- , Someref, pack, unpack
   ) where
 
+import Data.Editable
 
 
--- Interface -------------------------------------------------------------------
+infixl 7 <<-
 
+class Monad m => MonadRef l m | m -> l where
+  ref    :: Storable a => a -> m (l a)
+  deref  :: Storable a => l a -> m a
+  assign :: Storable a => l a -> a -> m ()
 
-class ( Monad m, Typeable l, forall a. Eq (l a) ) => MonadRef l m | m -> l where
-  ref    :: a -> m (l a)
-  deref  :: l a -> m a
-  assign :: l a -> a -> m ()
+(<<-) :: MonadRef l m => Storable a => l a -> a -> m ()
+(<<-) = assign
 
-
-infix 4 $=
-($=) :: MonadRef l m => l a -> (a -> a) -> m ()
-l $= f = do
-  x <- deref l
-  assign l (f x)
-
+-- modify :: MonadRef l m => Storable a => l a -> (a -> a) -> m ()
+-- modify l f = do
+--   x <- deref l
+--   assign l (f x)
 
 instance MonadRef IORef IO where
   ref    = newIORef
@@ -28,7 +28,7 @@ instance MonadRef IORef IO where
 
 
 
--- Existential packing ---------------------------------------------------------
+{- Existential packing ---------------------------------------------------------
 
 
 data Someref (m :: Type -> Type) where
@@ -51,3 +51,5 @@ instance Eq (Someref m) where
   Someref rx x == Someref ry y
     | Just Refl <- rx ~~ ry = x == y
     | otherwise = False
+
+-}
