@@ -12,14 +12,16 @@ module Prelude
   , Selective(branch, select, biselect), check, when
   , lift1, lift2, lift3
   , ok, throw, catch
+  , clear
   , (~=), (~~), proxyOf, typeOf, someTypeOf, typeRep, TypeRep, SomeTypeRep
   ) where
 
 
-import Relude hiding ((.), (>>), (&), (<&>), (<$>), (<*), (*>), map, when, trace, readMaybe, liftA2, liftA3)
+import Relude hiding ((.), (>>), (&), (<&>), (<$>), map, when, pass, trace, readMaybe, liftA2, liftA3)
 import qualified Relude
 
 import Control.Monad.Except (MonadError(..))
+import Control.Monad.Writer (MonadWriter(..))
 
 import Data.Text (unpack)
 import Data.Text.Prettyprint.Doc hiding (group)
@@ -111,7 +113,12 @@ infixl 5 -<
 infixr 5 >-
 
 
-lift1 :: Functor f => (a -> b) -> f a -> f b
+lift0 :: Applicative f => a -> f a
+lift0 = pure
+{-# INLINE lift0 #-}
+
+
+lift1 :: Applicative f => (a -> b) -> f a -> f b
 lift1 = fmap
 {-# INLINE lift1 #-}
 
@@ -217,7 +224,7 @@ when p t = check p t (pure ())
 
 -- Monads ----------------------------------------------------------------------
 
--- Errors --
+-- Error --
 
 
 ok :: MonadError e m => a -> m a
@@ -233,6 +240,13 @@ throw = throwError
 catch :: MonadError e m => m a -> (e -> m a) -> m a
 catch = catchError
 {-# INLINE catch #-}
+
+
+-- Writer --
+
+
+clear :: MonadWriter w m => m ()
+clear = pass $ lift0 ((), const neutral)
 
 
 

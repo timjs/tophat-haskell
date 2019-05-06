@@ -3,8 +3,9 @@ module Data.Task.Run where
 
 import Control.Monad.Ref
 import Control.Monad.Trace
+import Control.Monad.Writer
 
-import Data.List (union)
+import Data.List (union, intersect)
 import Data.Task
 import Data.Task.Input
 
@@ -38,7 +39,7 @@ value = \case
   Pick _ _   -> pure Nothing
   Empty      -> pure Nothing
   Bind _ _   -> pure Nothing
-  Ref _      -> pure (Just undefined) --FIXME: wrong!
+  Ref v      -> pure Just <*> ref v
   Deref l    -> pure Just <*> deref l
   Assign _ _ -> pure (Just ())
 
@@ -68,7 +69,7 @@ watching = \case
   Pick _ _   -> []
   Empty      -> []
   Bind x _   -> watching x
-  Ref _      -> [] --FIXME: probably correct
+  Ref _      -> []
   Deref l    -> [ pack l ]
   Assign l _ -> [ pack l ]
 
@@ -103,7 +104,7 @@ inputs = \case
 -- Normalisation ---------------------------------------------------------------
 
 
-stride :: MonadRef l m => TaskT m a -> m (TaskT m a)
+stride :: MonadRef l m => MonadWriter (List (Someref m)) m => TaskT m a -> m (TaskT m a)
 stride = \case
   -- * Step
   Bind x c -> do
@@ -133,7 +134,7 @@ stride = \case
   Pair x y   -> pure Pair <*> stride x <*> stride y
   Ref v      -> pure $ ref v
   Deref l    -> pure $ deref l
-  Assign l v -> pure $ l <<- v
+  Assign l v -> tell [ pack l ] *> pure (l <<- v)
   -- * Ready
   x@(Done _)   -> pure x
   x@(Edit _)   -> pure x
@@ -142,12 +143,17 @@ stride = \case
   x@(Empty)    -> pure x
 
 
-normalise :: MonadRef l m => TaskT m a -> m (TaskT m a)
--- TODO: stride till state changes
-normalise = stride
+normalise :: MonadRef l m => MonadWriter (List (Someref m)) m => TaskT m a -> m (TaskT m a)
+normalise x = do
+  ( x', ds ) <- listen $ stride x
+  clear
+  let ws = watching x'
+  case ds `intersect` ws of
+    [] -> pure x'
+    _  -> normalise x'
 
 
-initialise :: MonadRef l m => TaskT m a -> m (TaskT m a)
+initialise :: MonadRef l m => MonadWriter (List (Someref m)) m => TaskT m a -> m (TaskT m a)
 initialise = normalise
 
 
