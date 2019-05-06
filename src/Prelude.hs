@@ -182,6 +182,11 @@ skipDefault :: Applicative f => f ()
 skipDefault = pure ()
 
 
+instance Monoidal Maybe where
+  (<&>) = pairDefault
+  skip  = skipDefault
+
+
 
 -- Selective functors ----------------------------------------------------------
 
