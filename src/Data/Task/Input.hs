@@ -5,7 +5,7 @@ module Data.Task.Input
   ) where
 
 
-import Data.Task
+import Data.Editable
 
 
 
@@ -37,28 +37,28 @@ parsePath = \case
 
 
 data Action :: Type where
-  Change   :: Basic b => b -> Action
-  Empty    :: Action
-  Pick     :: Path -> Action
-  Continue :: Action
+  IChange   :: Editable b => b -> Action
+  IEmpty    :: Action
+  IPick     :: Path -> Action
+  IContinue :: Action
 
 
 instance Eq Action where
-  Change x == Change y
+  IChange x == IChange y
     | Just Refl <- x ~= y = x == y
     | otherwise           = False
-  Empty    == Empty       = True
-  Pick x   == Pick y      = x == y
-  Continue == Continue    = True
-  _        == _           = False
+  IEmpty    == IEmpty     = True
+  IPick x   == IPick y    = x == y
+  IContinue == IContinue  = True
+  _         == _          = False
 
 
 instance Pretty Action where
   pretty = \case
-    Change x -> sep [ "change", pretty x ]
-    Empty    -> "empty"
-    Pick p   -> sep [ "pick", pretty p ]
-    Continue -> "cont"
+    IChange x -> sep [ "change", pretty x ]
+    IEmpty    -> "empty"
+    IPick p   -> sep [ "pick", pretty p ]
+    IContinue -> "cont"
 
 
 
@@ -66,10 +66,10 @@ instance Pretty Action where
 
 
 data Dummy :: Type where
-  AChange       :: Basic b => Proxy b -> Dummy
-  AEmpty        :: Dummy
-  APick         :: Path -> Dummy
-  AContinue     :: Dummy
+  AChange   :: Editable b => Proxy b -> Dummy
+  AEmpty    :: Dummy
+  APick     :: Path -> Dummy
+  AContinue :: Dummy
 
 
 instance Eq Dummy where
@@ -96,7 +96,7 @@ instance Pretty Dummy where
 
 
 data Symbolic :: Type where
-  SChange :: Basic b => Proxy b -> Symbolic
+  SChange :: Editable b => Proxy b -> Symbolic
 
 
 
@@ -123,17 +123,17 @@ instance Pretty a => Pretty (Input a) where
 
 dummyfy :: Action -> Dummy
 dummyfy = \case
-  Change x -> AChange (proxyOf x)
-  Empty    -> AEmpty
-  Pick p   -> APick p
-  Continue -> AContinue
+  IChange x -> AChange (proxyOf x)
+  IEmpty    -> AEmpty
+  IPick p   -> APick p
+  IContinue -> AContinue
 
 
 -- reify :: Dummy -> Gen (List Action)
--- reify (AChange p) = map Change <$> vectorOf 5 (arbitraryOf p)
--- reify (AEmpty)    = pure [ Empty ]
--- reify (APick p)   = pure [ Pick p ]
--- reify (AContinue) = pure [ Continue ]
+-- reify (AChange p) = map IChange <$> vectorOf 5 (arbitraryOf p)
+-- reify (AEmpty)    = pure [ IEmpty ]
+-- reify (APick p)   = pure [ IPick p ]
+-- reify (AContinue) = pure [ IContinue ]
 
 
 strip :: Input Action -> Input Dummy
@@ -172,17 +172,17 @@ usage = vcat
 
 parse :: List Text -> Either (Doc a) (Input Action)
 parse [ "change", val ]
-  | Just v <- read val :: Maybe Unit      = ok $ ToHere $ Change v
-  | Just v <- read val :: Maybe Bool      = ok $ ToHere $ Change v
-  | Just v <- read val :: Maybe Int       = ok $ ToHere $ Change v
-  | Just v <- read val :: Maybe String    = ok $ ToHere $ Change v
-  | Just v <- read val :: Maybe [Bool]    = ok $ ToHere $ Change v
-  | Just v <- read val :: Maybe [Int]     = ok $ ToHere $ Change v
-  | Just v <- read val :: Maybe [String]  = ok $ ToHere $ Change v
+  | Just v <- read val :: Maybe Unit      = ok $ ToHere $ IChange v
+  | Just v <- read val :: Maybe Bool      = ok $ ToHere $ IChange v
+  | Just v <- read val :: Maybe Int       = ok $ ToHere $ IChange v
+  | Just v <- read val :: Maybe String    = ok $ ToHere $ IChange v
+  | Just v <- read val :: Maybe [Bool]    = ok $ ToHere $ IChange v
+  | Just v <- read val :: Maybe [Int]     = ok $ ToHere $ IChange v
+  | Just v <- read val :: Maybe [String]  = ok $ ToHere $ IChange v
   | otherwise                             = throw $ sep [ "!! Error parsing value", dquotes (pretty val) ]
-parse [ "empty" ]                         = ok $ ToHere Empty
-parse [ "pick", next ]                    = map (ToHere << Pick) $ parsePath next
-parse [ "cont" ]                          = ok $ ToHere Continue
+parse [ "empty" ]                         = ok $ ToHere IEmpty
+parse [ "pick", next ]                    = map (ToHere << IPick) $ parsePath next
+parse [ "cont" ]                          = ok $ ToHere IContinue
 parse ("f" : rest)                        = map ToFirst $ parse rest
 parse ("s" : rest)                        = map ToSecond $ parse rest
 parse [ "help" ]                          = throw usage
