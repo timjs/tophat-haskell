@@ -8,7 +8,7 @@ module Prelude
   , (<<), (>>) --, (<|), (|>)
   , map
   , (<-<), (>->) --, (-<), (>-)
-  , Monoidal((<&>), skip, (<&), (&>)), applyDefault, pureDefault, pairDefault, skipDefault
+  , Monoidal((<&>), skip, (<&), (&>)), applyDefault, pureDefault
   , Selective(branch, select, biselect), check, when
   , lift1, lift2, lift3
   , ok, throw, catch
@@ -162,9 +162,12 @@ infixl 6 <&
 infixl 6 &>
 
 
-class Functor f => Monoidal f where
+class Applicative f => Monoidal f where
   (<&>) :: f a -> f b -> f ( a, b )
-  skip  :: f ()
+  (<&>) x y = pure (,) -< x -< y
+
+  skip :: f ()
+  skip = pure ()
 
   (<&) :: f a -> f b -> f a
   (<&) x y = map fst <| x <&> y
@@ -181,17 +184,7 @@ pureDefault :: Monoidal f => a -> f a
 pureDefault x = map (const x) skip
 
 
-pairDefault :: Applicative f => f a -> f b -> f ( a, b )
-pairDefault x y = pure (,) -< x -< y
-
-
-skipDefault :: Applicative f => f ()
-skipDefault = pure ()
-
-
 instance Monoidal Maybe where
-  (<&>) = pairDefault
-  skip  = skipDefault
 
 
 
