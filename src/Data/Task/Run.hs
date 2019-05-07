@@ -77,9 +77,9 @@ watching = \case
 choices :: TaskT m a -> List Path
 choices = \case
   Pick Empty Empty -> []
-  Pick _    Empty  -> [ GoLeft ]
+  Pick _     Empty -> [ GoLeft ]
   Pick Empty _     -> [ GoRight ]
-  Pick _    _      -> [ GoLeft, GoRight ]
+  Pick _     _     -> [ GoLeft, GoRight ]
   _                -> []
 
 
@@ -94,7 +94,7 @@ inputs = \case
   Empty      -> pure []
   Bind x _   -> inputs x
   Ref _      -> pure []
-  Deref _    -> pure [ ToHere (AChange tau) ]
+  Deref _    -> pure []
   Assign _ _ -> pure [ ToHere (AChange tau) ]
   where
     tau = Proxy :: Proxy a
