@@ -20,7 +20,7 @@ Semantics, including all observations, can be found in [Data.Task.Run](https://g
 Clone the repository and build it by running Stack:
 
 ```sh
-> git clone ehttps://github.com/timjs/tophat-haskell.git
+> git clone https://github.com/timjs/tophat-haskell.git
 > cd tophat-haskell
 > stack build
 > stack run
