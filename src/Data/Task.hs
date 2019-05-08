@@ -106,8 +106,8 @@ instance Monad (TaskT m) where
   (>>=) = Bind
 
 instance MonadRef l m => MonadRef l (TaskT m) where
-  ref = Ref
-  deref = Deref
+  ref    = Ref
+  deref  = Deref
   assign = Assign
 
 

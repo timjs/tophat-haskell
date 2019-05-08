@@ -6,7 +6,7 @@ module Control.Monad.Trace where
 
 
 class ( Pretty s, Monad m ) => MonadTrace s m where
-  trace :: s -> a -> m a
+  trace :: s -> m a -> m a
 
 
 
@@ -16,4 +16,4 @@ class ( Pretty s, Monad m ) => MonadTrace s m where
 instance Pretty s => MonadTrace s IO where
   trace s x = do
     putStrLn $ "** " <> show (pretty s)
-    pure x
+    x

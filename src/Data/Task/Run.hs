@@ -143,17 +143,30 @@ stride = \case
   x@(Empty)    -> pure x
 
 
-normalise :: MonadRef l m => MonadWriter (List (Someref m)) m => TaskT m a -> m (TaskT m a)
+data Dirties m
+  = Watched (List (Someref m))
+
+instance Pretty (Dirties m) where
+  pretty = \case
+    Watched is -> sep [ "Found", pretty (length is), "dirty references" ]
+
+
+normalise
+  :: MonadRef l m => MonadWriter (List (Someref m)) m => MonadTrace (Dirties m) m
+  => TaskT m a -> m (TaskT m a)
 normalise x = do
   ( x', ds ) <- listen $ stride x
   clear
   let ws = watching x'
-  case ds `intersect` ws of
+  let is = ds `intersect` ws
+  case is of
     [] -> pure x'
-    _  -> normalise x'
+    _  -> trace (Watched is) $ normalise x'
 
 
-initialise :: MonadRef l m => MonadWriter (List (Someref m)) m => TaskT m a -> m (TaskT m a)
+initialise
+  :: MonadRef l m => MonadWriter (List (Someref m)) m => MonadTrace (Dirties m) m
+  => TaskT m a -> m (TaskT m a)
 initialise = normalise
 
 
