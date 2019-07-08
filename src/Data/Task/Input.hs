@@ -39,7 +39,6 @@ parsePath = \case
 data Action :: Type where
   IChange   :: Editable b => b -> Action
   IPick     :: Path -> Action
-  IContinue :: Action
 
 
 instance Eq Action where
@@ -47,7 +46,6 @@ instance Eq Action where
     | Just Refl <- x ~= y = x == y
     | otherwise           = False
   IPick x   == IPick y    = x == y
-  IContinue == IContinue  = True
   _         == _          = False
 
 
@@ -55,7 +53,6 @@ instance Pretty Action where
   pretty = \case
     IChange x -> sep [ "change", pretty x ]
     IPick p   -> sep [ "pick", pretty p ]
-    IContinue -> "cont"
 
 
 
@@ -64,9 +61,7 @@ instance Pretty Action where
 
 data Dummy :: Type where
   AChange   :: Editable b => Proxy b -> Dummy
-  AEmpty    :: Dummy
   APick     :: Path -> Dummy
-  AContinue :: Dummy
 
 
 instance Eq Dummy where
@@ -74,18 +69,14 @@ instance Eq Dummy where
     -- NOTE: We're comparing proxies, they are always equal when the types are equal.
     | Just Refl <- x ~= y = True
     | otherwise           = False
-  AEmpty    == AEmpty     = True
   APick x   == APick y    = x == y
-  AContinue == AContinue  = True
   _         == _          = False
 
 
 instance Pretty Dummy where
   pretty = \case
     AChange _ -> "change <val>"
-    AEmpty    -> "empty"
     APick p   -> sep [ "pick", pretty p ]
-    AContinue -> "cont"
 
 
 
@@ -122,13 +113,11 @@ dummyfy :: Action -> Dummy
 dummyfy = \case
   IChange x -> AChange (proxyOf x)
   IPick p   -> APick p
-  IContinue -> AContinue
 
 
 -- reify :: Dummy -> Gen (List Action)
 -- reify (AChange p) = map IChange <$> vectorOf 5 (arbitraryOf p)
 -- reify (APick p)   = pure [ IPick p ]
--- reify (AContinue) = pure [ IContinue ]
 
 
 strip :: Input Action -> Input Dummy
@@ -143,12 +132,10 @@ strip = map dummyfy
 
 
 usage :: Doc a
-usage = vcat
+usage = cat
   [ ":: Possible inputs are:"
   , "    change <value> : change current editor to <value> "
-  , "    empty          : empty current editor"
   , "    pick <path>    : pick amongst the possible options"
-  , "    cont           : continue with the next task"
   , "    f <input>      : send <input> to the first task"
   , "    s <input>      : send <input> to the second task"
   , "    help           : show this message"
@@ -167,16 +154,15 @@ usage = vcat
 
 parse :: List Text -> Either (Doc a) (Input Action)
 parse [ "change", val ]
-  | Just v <- read val :: Maybe Unit      = ok $ ToHere $ IChange v
-  | Just v <- read val :: Maybe Bool      = ok $ ToHere $ IChange v
-  | Just v <- read val :: Maybe Int       = ok $ ToHere $ IChange v
-  | Just v <- read val :: Maybe String    = ok $ ToHere $ IChange v
-  | Just v <- read val :: Maybe [Bool]    = ok $ ToHere $ IChange v
-  | Just v <- read val :: Maybe [Int]     = ok $ ToHere $ IChange v
-  | Just v <- read val :: Maybe [String]  = ok $ ToHere $ IChange v
+  | Just v <- scan val :: Maybe Unit      = ok $ ToHere $ IChange v
+  | Just v <- scan val :: Maybe Bool      = ok $ ToHere $ IChange v
+  | Just v <- scan val :: Maybe Int       = ok $ ToHere $ IChange v
+  | Just v <- scan val :: Maybe String    = ok $ ToHere $ IChange v
+  | Just v <- scan val :: Maybe [Bool]    = ok $ ToHere $ IChange v
+  | Just v <- scan val :: Maybe [Int]     = ok $ ToHere $ IChange v
+  | Just v <- scan val :: Maybe [String]  = ok $ ToHere $ IChange v
   | otherwise                             = throw $ sep [ "!! Error parsing value", dquotes (pretty val) ]
 parse [ "pick", next ]                    = map (ToHere << IPick) $ parsePath next
-parse [ "cont" ]                          = ok $ ToHere IContinue
 parse ("f" : rest)                        = map ToFirst $ parse rest
 parse ("s" : rest)                        = map ToSecond $ parse rest
 parse [ "help" ]                          = throw usage

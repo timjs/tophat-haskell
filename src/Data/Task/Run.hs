@@ -131,15 +131,17 @@ inputs = \case
 
 
 
--- Normalisation ---------------------------------------------------------------
+-- Striding --------------------------------------------------------------------
 
 
-stride :: MonadRef l m => MonadWriter (List (Someref m)) m => TaskT m a -> m (TaskT m a)
+stride ::
+  MonadRef l m =>
+  TaskT m a -> WriterT (List (Someref m)) m (TaskT m a)
 stride = \case
   -- * Step
   Bind x c -> do
     x' <- stride x
-    vx <- value x'
+    vx <- lift $ value x'
     case vx of
       Nothing -> pure $ Bind x' c
       Just v  ->
@@ -151,12 +153,12 @@ stride = \case
   -- * Choose
   Choose x y -> do
     x' <- stride x
-    vx <- value x'
+    vx <- lift $ value x'
     case vx of
       Just _  -> pure x'
       Nothing -> do
         y' <- stride y
-        vy <- value y'
+        vy <- lift $ value y'
         case vy of
           Just _  -> pure y'
           Nothing -> pure $ Choose x' y'
@@ -175,6 +177,10 @@ stride = \case
   x@(Fail)     -> pure x
 
 
+
+-- Normalising -----------------------------------------------------------------
+
+
 data Dirties m
   = Watched (List (Someref m))
 
@@ -183,12 +189,11 @@ instance Pretty (Dirties m) where
     Watched is -> sep [ "Found", pretty (length is), "dirty references" ]
 
 
-normalise
-  :: MonadRef l m => MonadWriter (List (Someref m)) m => MonadTrace (Dirties m) m
-  => TaskT m a -> m (TaskT m a)
+normalise ::
+  MonadRef l m => MonadTrace (Dirties m) m =>
+  TaskT m a -> m (TaskT m a)
 normalise x = do
-  ( x', ds ) <- listen $ stride x
-  clear
+  ( x', ds ) <- runWriterT (stride x)
   let ws = watching x'
   let is = ds `intersect` ws
   case is of
@@ -196,14 +201,14 @@ normalise x = do
     _  -> trace (Watched is) $ normalise x'
 
 
-initialise
-  :: MonadRef l m => MonadWriter (List (Someref m)) m => MonadTrace (Dirties m) m
-  => TaskT m a -> m (TaskT m a)
+initialise ::
+  MonadRef l m => MonadTrace (Dirties m) m =>
+  TaskT m a -> m (TaskT m a)
 initialise = normalise
 
 
 
-{- Handling --------------------------------------------------------------------
+-- Handling --------------------------------------------------------------------
 
 
 data NotApplicable
@@ -224,79 +229,64 @@ instance Pretty NotApplicable where
 
 
 handle :: forall m l a.
-  MonadTrace NotApplicable m => MonadRef l m =>
+  MonadRef l m => MonadTrace NotApplicable m =>
   TaskT m a -> Input Action -> m (TaskT m a)
-
--- Update --
-handle (Update (Just _)) (ToHere Fail) =
-  pure $ Update Nothing
-
-handle x@(Update v) (ToHere (Change val_inp))
-  -- NOTE: Here we check if `v` and `val_new` have the same type.
-  -- If x is the case, it would be inhabited by `Refl :: a :~: b`, where `b` is the type of the value inside `Change`.
-  -- Because we can't acces the type variable `b` directly, we use `~=` as a trick.
-  | Just Refl <- v ~= val_new = pure $ Update val_new
-  | otherwise = trace (CouldNotChangeVal (someTypeOf v) (someTypeOf val_new)) x
-  where
-    --NOTE: `v` is of a maybe type, so we need to wrap `val_new` into a `Just`.
-    val_new = Just val_inp
-
-handle x@(Watch l) (ToHere (Change val_inp))
-  -- NOTE: As in the `Update` case above, we check for type equality.
-  | Just Refl <- (typeRep :: TypeRep a) ~~ typeOf val_inp = do
-      l $= const val_inp
-      pure x
-  | otherwise = trace (CouldNotChangeRef (someTypeOf l) (someTypeOf val_inp)) x
-
--- Interact --
-handle x@(Pick x _) (ToHere (Pick GoLeft)) =
-  if failing x
-    then pure x
-    else pure x
-
-handle x@(Pick _ y) (ToHere (Pick GoRight)) =
-  if failing y
-    then pure x
-    else pure y
-
-handle (Next x c) (ToHere Continue) =
-  -- TODO: When pressed continue, x rewrites to an internal step...
-  pure $ Bind x c
-
--- Pass to x --
-handle (Bind x c) input = do
-  x' <- handle x input
-  pure $ Bind x' c
-
-handle (Next x c) input = do
-  x' <- handle x input
-  pure $ Next x' c
-
--- Pass to x or y --
-handle (Pair x y) (ToFirst input) = do
-  x' <- handle x input
-  pure $ Pair x' y
-
-handle (Pair x y) (ToSecond input) = do
-  y' <- handle y input
-  pure $ Pair x y'
-
-handle (Choose x y) (ToFirst input) = do
-  x' <- handle x input
-  pure $ Choose x' y
-
-handle (Choose x y) (ToSecond input) = do
-  y' <- handle y input
-  pure $ Choose x y'
-
--- Rest --
-handle task input =
-  trace (CouldNotHandle input) task
+handle t i_ = case ( t, i_ ) of
+  -- * Edit
+  ( Enter, ToHere (IChange v) )
+    | Just Refl <- r ~~ typeOf v -> pure $ Update v
+    | otherwise -> trace (CouldNotChangeVal (SomeTypeRep r) (someTypeOf v)) $ pure t
+    where
+      r = typeRep :: TypeRep a
+  ( Update v, ToHere (IChange w) )
+    -- NOTE: Here we check if `v` and `w` have the same type.
+    -- If this is the case, it would be inhabited by `Refl :: a :~: b`, where `b` is the type of the value inside `Change`.
+    | Just Refl <- v ~= w -> pure $ Update w
+    | otherwise -> trace (CouldNotChangeVal (someTypeOf v) (someTypeOf w)) $ pure t
+  ( Change l v, ToHere (IChange w) )
+    -- NOTE: As in the `Update` case above, we check for type equality.
+    | Just Refl <- v ~= w -> do
+        l <<- w
+        pure $ Change l w
+    | otherwise -> trace (CouldNotChangeRef (someTypeOf l) (someTypeOf w)) $ pure t
+  -- * Choosing
+  ( Pick x _, ToHere (IPick GoLeft) ) ->
+    if failing x
+      then pure t
+      else pure x
+  ( Pick _ y, ToHere (IPick GoRight) ) ->
+    if failing y
+      then pure t
+      else pure y
+  -- * Passing
+  ( Bind x y, i ) -> do
+    x' <- handle x i
+    pure $ Bind x' y
+  ( Trans f x, i ) -> do
+    x' <- handle x i
+    pure $ Trans f x'
+  ( Pair x y, ToFirst i ) -> do
+    x' <- handle x i
+    pure $ Pair x' y
+  ( Pair x y, ToSecond i ) -> do
+    y' <- handle y i
+    pure $ Pair x y'
+  ( Choose x y, ToFirst i ) -> do
+    x' <- handle x i
+    pure $ Choose x' y
+  ( Choose x y, ToSecond i ) -> do
+    y' <- handle y i
+    pure $ Choose x y'
+  -- * Rest
+  _ ->
+    trace (CouldNotHandle i_) $ pure t
 
 
-interact :: MonadTrace NotApplicable m => MonadRef l m => TaskT m a -> Input Action -> m (TaskT m a)
-interact task input =
-  handle task input >>= normalise
+interact ::
+  MonadRef l m => MonadTrace NotApplicable m => MonadTrace (Dirties m) m =>
+  TaskT m a -> Input Action -> m (TaskT m a)
+interact t i =
+  handle t i >>= normalise
 
 
 
@@ -306,13 +296,13 @@ interact task input =
 getUserInput :: IO (Input Action)
 getUserInput = do
   putText ">> "
-  input <- getLine
-  case input of
+  line <- getLine
+  case line of
     "quit" -> exitSuccess
-    _ -> case parse (words input) of
-      Right i -> pure i
-      Left msg -> do
-        print msg
+    _ -> case parse (words line) of
+      Right input -> pure input
+      Left message -> do
+        print message
         getUserInput
 
 
@@ -331,5 +321,3 @@ run :: Task a -> IO ()
 run task = do
   task' <- initialise task
   loop task'
-
--}
