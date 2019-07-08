@@ -16,62 +16,86 @@ import Data.Task.Input
 
 ui :: MonadRef l m => TaskT m a -> m (Doc b)
 ui = \case
-  Done _     -> pure $ "⧇(_)"
-  Update v   -> pure $ sep [ "□(", pretty v, ")" ]
+  Trans _ x  -> ui x
+
+  Done _     -> pure "■(_)"
   Enter      -> pure "⊠(_)"
-  Pair x y   -> pure (\l r -> sep [ l, " ⋈ ", r ]) <*> ui x <*> ui y
+  Update v   -> pure $ sep [ "□(", pretty v, ")" ]
+  View v     -> pure $ sep [ "⧇(", pretty v, ")" ]
+
+  Pair x y   -> pure (\l r -> sep [ l, " ⧓ ", r ]) <*> ui x <*> ui y
   Choose x y -> pure (\l r -> sep [ l, " ◆ ", r ]) <*> ui x <*> ui y
   Pick x y   -> pure (\l r -> sep [ l, " ◇ ", r ]) <*> ui x <*> ui y
   Fail       -> pure "↯"
+
   Bind x _   -> pure (<> " ▶…") <*> ui x
-  Ref v      -> pure $ sep [ "ref", pretty v ]
-  Deref l    -> pure (\x -> sep [ "■(", pretty x, ")" ]) <*> deref l
-  Assign _ v -> pure $ sep [ "_", ":=", pretty v ]
+
+  New v      -> pure $ sep [ "ref", pretty v ]
+  Watch l    -> pure (\x -> sep [ "⧈", pretty x ]) <*> deref l
+  Change _ v -> pure $ sep [ "⊟", pretty v ]
 
 
 value :: MonadRef l m => TaskT m a -> m (Maybe a)
 value = \case
+  Trans f x  -> pure (map f) <*> value x
+
   Done v     -> pure (Just v)
-  Update v   -> pure (Just v)
   Enter      -> pure Nothing
+  Update v   -> pure (Just v)
+  View v     -> pure (Just v)
+
   Pair x y   -> pure (<&>) <*> value x <*> value y
   Choose x y -> pure (<|>) <*> value x <*> value y
   Pick _ _   -> pure Nothing
   Fail       -> pure Nothing
+
   Bind _ _   -> pure Nothing
-  Ref v      -> pure Just <*> ref v
-  Deref l    -> pure Just <*> deref l
-  Assign _ _ -> pure (Just ())
+
+  New v      -> pure Just <*> ref v
+  Watch l    -> pure Just <*> deref l
+  Change _ _ -> pure (Just ())
 
 
 failing :: TaskT m a -> Bool
 failing = \case
+  Trans _ x  -> failing x
+
   Done _     -> False
-  Update _   -> False
   Enter      -> False
+  Update _   -> False
+  View _     -> False
+
   Pair x y   -> failing x && failing y
   Choose x y -> failing x && failing y
   Pick x y   -> failing x && failing y
   Fail       -> True
+
   Bind x _   -> failing x
-  Ref _      -> False
-  Deref _    -> False
-  Assign _ _ -> False
+
+  New _      -> False
+  Watch _    -> False
+  Change _ _ -> False
 
 
 watching :: MonadRef l m => TaskT m a -> List (Someref m)
 watching = \case
+  Trans _ x  -> watching x
+
   Done _     -> []
-  Update _   -> []
   Enter      -> []
+  Update _   -> []
+  View _     -> []
+
   Pair x y   -> watching x `union` watching y
   Choose x y -> watching x `union` watching y
   Pick _ _   -> []
   Fail       -> []
+
   Bind x _   -> watching x
-  Ref _      -> []
-  Deref l    -> [ pack l ]
-  Assign l _ -> [ pack l ]
+
+  New _      -> []
+  Watch l    -> [ pack l ]
+  Change l _ -> [ pack l ]
 
 
 choices :: TaskT m a -> List Path
@@ -85,17 +109,23 @@ choices = \case
 
 inputs :: forall m l a. MonadRef l m => TaskT m a -> m (List (Input Dummy))
 inputs = \case
+  Trans _ x  -> inputs x
+
   Done _     -> pure []
-  Update _   -> pure [ ToHere (AChange tau), ToHere AEmpty ]
   Enter      -> pure [ ToHere (AChange tau) ]
+  Update _   -> pure [ ToHere (AChange tau) ]
+  View _     -> pure []
+
   Pair x y   -> pure (\l r -> map ToFirst l <> map ToSecond r) <*> inputs x <*> inputs y
   Choose x y -> pure (\l r -> map ToFirst l <> map ToSecond r) <*> inputs x <*> inputs y
   Pick x y   -> pure $ map (ToHere << APick) (choices $ Pick x y)
   Fail       -> pure []
+
   Bind x _   -> inputs x
-  Ref _      -> pure []
-  Deref _    -> pure []
-  Assign _ _ -> pure [ ToHere (AChange tau) ]
+
+  New _      -> pure []
+  Watch _    -> pure []
+  Change _ _ -> pure [ ToHere (AChange tau) ]
   where
     tau = Proxy :: Proxy a
 
@@ -131,14 +161,16 @@ stride = \case
           Just _  -> pure y'
           Nothing -> pure $ Choose x' y'
   -- * Evaluate
+  Trans f x  -> pure (Trans f) <*> stride x
   Pair x y   -> pure Pair <*> stride x <*> stride y
-  Ref v      -> pure $ ref v
-  Deref l    -> pure $ deref l
-  Assign l v -> tell [ pack l ] *> pure (l <<- v)
+  New v      -> pure $ ref v
+  Watch l    -> pure $ deref l
+  Change l v -> tell [ pack l ] *> pure (l <<- v)
   -- * Ready
   x@(Done _)   -> pure x
-  x@(Update _) -> pure x
   x@(Enter)    -> pure x
+  x@(Update _) -> pure x
+  x@(View _)   -> pure x
   x@(Pick _ _) -> pure x
   x@(Fail)     -> pure x
 
@@ -209,7 +241,7 @@ handle x@(Update v) (ToHere (Change val_inp))
     --NOTE: `v` is of a maybe type, so we need to wrap `val_new` into a `Just`.
     val_new = Just val_inp
 
-handle x@(Deref l) (ToHere (Change val_inp))
+handle x@(Watch l) (ToHere (Change val_inp))
   -- NOTE: As in the `Update` case above, we check for type equality.
   | Just Refl <- (typeRep :: TypeRep a) ~~ typeOf val_inp = do
       l $= const val_inp

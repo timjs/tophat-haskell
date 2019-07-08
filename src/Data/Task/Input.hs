@@ -38,7 +38,6 @@ parsePath = \case
 
 data Action :: Type where
   IChange   :: Editable b => b -> Action
-  IEmpty    :: Action
   IPick     :: Path -> Action
   IContinue :: Action
 
@@ -47,7 +46,6 @@ instance Eq Action where
   IChange x == IChange y
     | Just Refl <- x ~= y = x == y
     | otherwise           = False
-  IEmpty    == IEmpty     = True
   IPick x   == IPick y    = x == y
   IContinue == IContinue  = True
   _         == _          = False
@@ -56,7 +54,6 @@ instance Eq Action where
 instance Pretty Action where
   pretty = \case
     IChange x -> sep [ "change", pretty x ]
-    IEmpty    -> "empty"
     IPick p   -> sep [ "pick", pretty p ]
     IContinue -> "cont"
 
@@ -124,14 +121,12 @@ instance Pretty a => Pretty (Input a) where
 dummyfy :: Action -> Dummy
 dummyfy = \case
   IChange x -> AChange (proxyOf x)
-  IEmpty    -> AEmpty
   IPick p   -> APick p
   IContinue -> AContinue
 
 
 -- reify :: Dummy -> Gen (List Action)
 -- reify (AChange p) = map IChange <$> vectorOf 5 (arbitraryOf p)
--- reify (AEmpty)    = pure [ IEmpty ]
 -- reify (APick p)   = pure [ IPick p ]
 -- reify (AContinue) = pure [ IContinue ]
 
@@ -180,7 +175,6 @@ parse [ "change", val ]
   | Just v <- read val :: Maybe [Int]     = ok $ ToHere $ IChange v
   | Just v <- read val :: Maybe [String]  = ok $ ToHere $ IChange v
   | otherwise                             = throw $ sep [ "!! Error parsing value", dquotes (pretty val) ]
-parse [ "empty" ]                         = ok $ ToHere IEmpty
 parse [ "pick", next ]                    = map (ToHere << IPick) $ parsePath next
 parse [ "cont" ]                          = ok $ ToHere IContinue
 parse ("f" : rest)                        = map ToFirst $ parse rest

@@ -18,13 +18,18 @@ import Data.Editable (Editable, Storable)
 -- |
 -- | To use references, `m` shoud be a `MonadRef` with locations `l`.
 data TaskT (m :: Type -> Type) (r :: Type) where
+  -- * Transform
+  Trans :: (a -> r) -> TaskT m a -> TaskT m r
+
   -- * Editors
   -- | Internal, unrestricted and hidden editor
   Done :: r -> TaskT m r
-  -- | Valued editors
-  Update :: Editable r => r -> TaskT m r
-  -- | Unvalued editors
+  -- | Unvalued editor
   Enter :: Editable r => TaskT m r
+  -- | Valued editor
+  Update :: Editable r => r -> TaskT m r
+  -- | Valued, view only editor
+  View :: Editable r => r -> TaskT m r
 
   -- * Parallels
   -- | Composition of two tasks.
@@ -42,14 +47,15 @@ data TaskT (m :: Type -> Type) (r :: Type) where
 
   -- * References
   -- | Create new reference of type `r`
-  Ref :: ( MonadRef l m, Storable r ) => r -> TaskT m (l r)
-  -- | Deref a reference of type `r`
-  Deref :: ( MonadRef l m, Storable r ) => l r -> TaskT m r
-  -- | Assign to a reference of type `r`
-  Assign :: ( MonadRef l m, Storable a ) => l a -> a -> TaskT m ()
-  -- FIXME: use assign as update?
+  New :: ( MonadRef l m, Storable r ) => r -> TaskT m (l r)
+  -- | Watch a reference of type `r`
+  Watch :: ( MonadRef l m, Storable r ) => l r -> TaskT m r
+  -- | Change to a reference of type `r` to a value
+  Change :: ( MonadRef l m, Storable a ) => l a -> a -> TaskT m ()
 
-  --FIXME: add labels
+  -- * Loops
+  -- Forever :: TaskT m r -> TaskT m Void
+
 
 type Task = TaskT IO
 
@@ -58,26 +64,27 @@ type Task = TaskT IO
 
 instance Pretty (TaskT m t) where
   pretty = \case
+    Trans _ x  -> cat [ "Trans _", pretty x ]
     Done _     -> "Done"
-    Update x     -> cat [ "Update", pretty x ]
     Enter      -> "Enter"
+    Update x   -> cat [ "Update", pretty x ]
+    View x     -> cat [ "View", pretty x ]
     Pair x y   -> sep [ pretty x, "<&>", pretty y ]
     Choose x y -> sep [ pretty x, "<|>", pretty y ]
     Pick x y   -> sep [ pretty x, "<?>", pretty y ]
-    Fail      -> "Fail"
+    Fail       -> "Fail"
     Bind x _   -> sep [ pretty x, ">>=", "_" ]
-    Ref x      -> sep [ "Ref", pretty x ]
-    Deref _    -> sep [ "Deref", "_" ]
-    Assign _ x -> sep [ "_", "<<-", pretty x ]
+    New x      -> sep [ "New", pretty x ]
+    Watch _    -> sep [ "Watch", "_" ]
+    Change _ x -> sep [ "_", "<<-", pretty x ]
 
 instance Functor (TaskT m) where
-  fmap g t = do
-    x <- t
-    pure $ g x
+  fmap = Trans
 
 instance Interactive (TaskT m) where
+  enter  = Enter
   update = Update
-  enter = Enter
+  view   = View
 
 instance Monoidal (TaskT m) where
   (<&>) = Pair
@@ -101,9 +108,9 @@ instance Monad (TaskT m) where
   (>>=) = Bind
 
 instance MonadRef l m => MonadRef l (TaskT m) where
-  ref    = Ref
-  deref  = Deref
-  assign = Assign
+  ref    = New
+  deref  = Watch
+  assign = Change
 
 
 -- update :: MonadRef l m => Storable a => l a -> TaskT m a
