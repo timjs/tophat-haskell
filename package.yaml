@@ -81,7 +81,7 @@ default-extensions:
 
   # Intermediate type extensions:
   - FunctionalDependencies
-  # - UndecidableInstances
+  - UndecidableInstances
   - GADTs
   - ExistentialQuantification
 
@@ -103,6 +103,7 @@ ghc-options:
   - -Wpartial-fields
   - -Wredundant-constraints
 
+
 library:
   source-dirs: src
 
@@ -115,4 +116,4 @@ executable:
     - -rtsopts
     - -with-rtsopts=-N
   dependencies:
-  - symbolic-tophat
+  - tophat

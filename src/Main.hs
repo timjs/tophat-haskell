@@ -5,7 +5,7 @@ import Data.Task
 import Data.Task.Run
 
 
-
+{-
 -- Examples --------------------------------------------------------------------
 --
 -- NOTE: Tasks ending with a quote need user input
@@ -329,3 +329,8 @@ empties = do
 main :: IO ()
 main =
   run parallelStep'
+-}
+
+main :: IO ()
+main =
+  putStrLn "Hello!"
