@@ -16,86 +16,86 @@ import Data.Task.Input
 
 ui :: MonadRef l m => TaskT m a -> m (Doc b)
 ui = \case
-  Trans _ x  -> ui x
+  Trans _ t    -> ui t
 
-  Done _     -> pure "■(_)"
-  Enter      -> pure "⊠(_)"
-  Update v   -> pure $ sep [ "□(", pretty v, ")" ]
-  View v     -> pure $ sep [ "⧇(", pretty v, ")" ]
+  Done _       -> pure "■(_)"
+  Enter        -> pure "⊠(_)"
+  Update v     -> pure $ sep [ "□(", pretty v, ")" ]
+  View v       -> pure $ sep [ "⧇(", pretty v, ")" ]
 
-  Pair x y   -> pure (\l r -> sep [ l, " ⧓ ", r ]) <*> ui x <*> ui y
-  Choose x y -> pure (\l r -> sep [ l, " ◆ ", r ]) <*> ui x <*> ui y
-  Pick x y   -> pure (\l r -> sep [ l, " ◇ ", r ]) <*> ui x <*> ui y
-  Fail       -> pure "↯"
+  Pair t1 t2   -> pure (\l r -> sep [ l, " ⧓ ", r ]) <*> ui t1 <*> ui t2
+  Choose t1 t2 -> pure (\l r -> sep [ l, " ◆ ", r ]) <*> ui t1 <*> ui t2
+  Pick t1 t2   -> pure (\l r -> sep [ l, " ◇ ", r ]) <*> ui t1 <*> ui t2
+  Fail         -> pure "↯"
 
-  Bind x _   -> pure (<> " ▶…") <*> ui x
+  Bind t1 _    -> pure (<> " ▶…") <*> ui t1
 
-  New v      -> pure $ sep [ "ref", pretty v ]
-  Watch l    -> pure (\x -> sep [ "⧈", pretty x ]) <*> deref l
-  Change _ v -> pure $ sep [ "⊟", pretty v ]
+  New v        -> pure $ sep [ "ref", pretty v ]
+  Watch l      -> pure (\x   -> sep [ "⧈", pretty x ]) <*> deref l
+  Change _ v   -> pure $ sep [ "⊟", pretty v ]
 
 
 value :: MonadRef l m => TaskT m a -> m (Maybe a)
 value = \case
-  Trans f x  -> pure (map f) <*> value x
+  Trans f t    -> pure (map f) <*> value t
 
-  Done v     -> pure (Just v)
-  Enter      -> pure Nothing
-  Update v   -> pure (Just v)
-  View v     -> pure (Just v)
+  Done v       -> pure (Just v)
+  Enter        -> pure Nothing
+  Update v     -> pure (Just v)
+  View v       -> pure (Just v)
 
-  Pair x y   -> pure (<&>) <*> value x <*> value y
-  Choose x y -> pure (<|>) <*> value x <*> value y
-  Pick _ _   -> pure Nothing
-  Fail       -> pure Nothing
+  Pair t1 t2   -> pure (<&>) <*> value t1 <*> value t2
+  Choose t1 t2 -> pure (<|>) <*> value t1 <*> value t2
+  Pick _ _     -> pure Nothing
+  Fail         -> pure Nothing
 
-  Bind _ _   -> pure Nothing
+  Bind _ _     -> pure Nothing
 
-  New v      -> pure Just <*> ref v
-  Watch l    -> pure Just <*> deref l
-  Change _ _ -> pure (Just ())
+  New v        -> pure Just <*> ref v
+  Watch l      -> pure Just <*> deref l
+  Change _ _   -> pure (Just ())
 
 
 failing :: TaskT m a -> Bool
 failing = \case
-  Trans _ x  -> failing x
+  Trans _ t    -> failing t
 
-  Done _     -> False
-  Enter      -> False
-  Update _   -> False
-  View _     -> False
+  Done _       -> False
+  Enter        -> False
+  Update _     -> False
+  View _       -> False
 
-  Pair x y   -> failing x && failing y
-  Choose x y -> failing x && failing y
-  Pick x y   -> failing x && failing y
-  Fail       -> True
+  Pair t1 t2   -> failing t1 && failing t2
+  Choose t1 t2 -> failing t1 && failing t2
+  Pick t1 t2   -> failing t1 && failing t2
+  Fail         -> True
 
-  Bind x _   -> failing x
+  Bind t _     -> failing t
 
-  New _      -> False
-  Watch _    -> False
-  Change _ _ -> False
+  New _        -> False
+  Watch _      -> False
+  Change _ _   -> False
 
 
 watching :: MonadRef l m => TaskT m a -> List (Someref m)
 watching = \case
-  Trans _ x  -> watching x
+  Trans _ t    -> watching t
 
-  Done _     -> []
-  Enter      -> []
-  Update _   -> []
-  View _     -> []
+  Done _       -> []
+  Enter        -> []
+  Update _     -> []
+  View _       -> []
 
-  Pair x y   -> watching x `union` watching y
-  Choose x y -> watching x `union` watching y
-  Pick _ _   -> []
-  Fail       -> []
+  Pair t1 t2   -> watching t1 `union` watching t2
+  Choose t1 t2 -> watching t1 `union` watching t2
+  Pick _ _     -> []
+  Fail         -> []
 
-  Bind x _   -> watching x
+  Bind t _     -> watching t
 
-  New _      -> []
-  Watch l    -> [ pack l ]
-  Change l _ -> [ pack l ]
+  New _        -> []
+  Watch l      -> [ pack l ]
+  Change l _   -> [ pack l ]
 
 
 choices :: TaskT m a -> List Path
@@ -109,23 +109,23 @@ choices = \case
 
 inputs :: forall m l a. MonadRef l m => TaskT m a -> m (List (Input Dummy))
 inputs = \case
-  Trans _ x  -> inputs x
+  Trans _ t    -> inputs t
 
-  Done _     -> pure []
-  Enter      -> pure [ ToHere (AChange tau) ]
-  Update _   -> pure [ ToHere (AChange tau) ]
-  View _     -> pure []
+  Done _       -> pure []
+  Enter        -> pure [ ToHere (AChange tau) ]
+  Update _     -> pure [ ToHere (AChange tau) ]
+  View _       -> pure []
 
-  Pair x y   -> pure (\l r -> map ToFirst l <> map ToSecond r) <*> inputs x <*> inputs y
-  Choose x y -> pure (\l r -> map ToFirst l <> map ToSecond r) <*> inputs x <*> inputs y
-  Pick x y   -> pure $ map (ToHere << APick) (choices $ Pick x y)
-  Fail       -> pure []
+  Pair t1 t2   -> pure (\l r -> map ToFirst l <> map ToSecond r) <*> inputs t1 <*> inputs t2
+  Choose t1 t2 -> pure (\l r -> map ToFirst l <> map ToSecond r) <*> inputs t1 <*> inputs t2
+  Pick t1 t2   -> pure $ map (ToHere << APick) (choices $ Pick t1 t2)
+  Fail         -> pure []
 
-  Bind x _   -> inputs x
+  Bind t _     -> inputs t
 
-  New _      -> pure []
-  Watch _    -> pure []
-  Change _ _ -> pure [ ToHere (AChange tau) ]
+  New _        -> pure []
+  Watch _      -> pure []
+  Change _ _   -> pure [ ToHere (AChange tau) ]
   where
     tau = Proxy :: Proxy a
 
@@ -139,42 +139,42 @@ stride ::
   TaskT m a -> WriterT (List (Someref m)) m (TaskT m a)
 stride = \case
   -- * Step
-  Bind x c -> do
-    x' <- stride x
-    vx <- lift $ value x'
+  Bind t c -> do
+    t' <- stride t
+    vx <- lift $ value t'
     case vx of
-      Nothing -> pure $ Bind x' c
+      Nothing -> pure $ Bind t' c
       Just v  ->
-        let y = c v in
-        if failing y
-          then pure $ Bind x' c
+        let t2 = c v in
+        if failing t2
+          then pure $ Bind t' c
           --NOTE: We return just the next task. Normalisation should handle the next stride.
-          else pure y
+          else pure t2
   -- * Choose
-  Choose x y -> do
-    x' <- stride x
-    vx <- lift $ value x'
+  Choose t1 t2 -> do
+    t1' <- stride t1
+    vx <- lift $ value t1'
     case vx of
-      Just _  -> pure x'
+      Just _  -> pure t1'
       Nothing -> do
-        y' <- stride y
-        vy <- lift $ value y'
+        t2' <- stride t2
+        vy <- lift $ value t2'
         case vy of
-          Just _  -> pure y'
-          Nothing -> pure $ Choose x' y'
+          Just _  -> pure t2'
+          Nothing -> pure $ Choose t1' t2'
   -- * Evaluate
-  Trans f x  -> pure (Trans f) <*> stride x
-  Pair x y   -> pure Pair <*> stride x <*> stride y
+  Trans f t  -> pure (Trans f) <*> stride t
+  Pair t1 t2 -> pure Pair <*> stride t1 <*> stride t2
   New v      -> pure $ ref v
   Watch l    -> pure $ deref l
   Change l v -> tell [ pack l ] *> pure (l <<- v)
   -- * Ready
-  x@(Done _)   -> pure x
-  x@(Enter)    -> pure x
-  x@(Update _) -> pure x
-  x@(View _)   -> pure x
-  x@(Pick _ _) -> pure x
-  x@(Fail)     -> pure x
+  t@(Done _)   -> pure t
+  t@(Enter)    -> pure t
+  t@(Update _) -> pure t
+  t@(View _)   -> pure t
+  t@(Pick _ _) -> pure t
+  t@(Fail)     -> pure t
 
 
 
@@ -192,13 +192,13 @@ instance Pretty (Dirties m) where
 normalise ::
   MonadRef l m => MonadTrace (Dirties m) m =>
   TaskT m a -> m (TaskT m a)
-normalise x = do
-  ( x', ds ) <- runWriterT (stride x)
-  let ws = watching x'
+normalise t = do
+  ( t', ds ) <- runWriterT (stride t)
+  let ws = watching t'
   let is = ds `intersect` ws
   case is of
-    [] -> pure x'
-    _  -> trace (Watched is) $ normalise x'
+    [] -> pure t'
+    _  -> trace (Watched is) $ normalise t'
 
 
 initialise ::
@@ -250,33 +250,33 @@ handle t i_ = case ( t, i_ ) of
         pure $ Change l w
     | otherwise -> trace (CouldNotChangeRef (someTypeOf l) (someTypeOf w)) $ pure t
   -- * Choosing
-  ( Pick x _, ToHere (IPick GoLeft) ) ->
-    if failing x
+  ( Pick t1 _, ToHere (IPick GoLeft) ) ->
+    if failing t1
       then pure t
-      else pure x
-  ( Pick _ y, ToHere (IPick GoRight) ) ->
-    if failing y
+      else pure t1
+  ( Pick _ t2, ToHere (IPick GoRight) ) ->
+    if failing t2
       then pure t
-      else pure y
+      else pure t2
   -- * Passing
-  ( Bind x y, i ) -> do
-    x' <- handle x i
-    pure $ Bind x' y
-  ( Trans f x, i ) -> do
-    x' <- handle x i
-    pure $ Trans f x'
-  ( Pair x y, ToFirst i ) -> do
-    x' <- handle x i
-    pure $ Pair x' y
-  ( Pair x y, ToSecond i ) -> do
-    y' <- handle y i
-    pure $ Pair x y'
-  ( Choose x y, ToFirst i ) -> do
-    x' <- handle x i
-    pure $ Choose x' y
-  ( Choose x y, ToSecond i ) -> do
-    y' <- handle y i
-    pure $ Choose x y'
+  ( Bind t1 t2, i ) -> do
+    t1' <- handle t1 i
+    pure $ Bind t1' t2
+  ( Trans f t1, i ) -> do
+    t1' <- handle t1 i
+    pure $ Trans f t1'
+  ( Pair t1 t2, ToFirst i ) -> do
+    t1' <- handle t1 i
+    pure $ Pair t1' t2
+  ( Pair t1 t2, ToSecond i ) -> do
+    t2' <- handle t2 i
+    pure $ Pair t1 t2'
+  ( Choose t1 t2, ToFirst i ) -> do
+    t1' <- handle t1 i
+    pure $ Choose t1' t2
+  ( Choose t1 t2, ToSecond i ) -> do
+    t2' <- handle t2 i
+    pure $ Choose t1 t2'
   -- * Rest
   _ ->
     trace (CouldNotHandle i_) $ pure t

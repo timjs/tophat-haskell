@@ -64,19 +64,19 @@ type Task = TaskT IO
 
 instance Pretty (TaskT m t) where
   pretty = \case
-    Trans _ x  -> cat [ "Trans _", pretty x ]
-    Done _     -> "Done"
-    Enter      -> "Enter"
-    Update x   -> cat [ "Update", pretty x ]
-    View x     -> cat [ "View", pretty x ]
-    Pair x y   -> sep [ pretty x, "<&>", pretty y ]
-    Choose x y -> sep [ pretty x, "<|>", pretty y ]
-    Pick x y   -> sep [ pretty x, "<?>", pretty y ]
-    Fail       -> "Fail"
-    Bind x _   -> sep [ pretty x, ">>=", "_" ]
-    New x      -> sep [ "New", pretty x ]
-    Watch _    -> sep [ "Watch", "_" ]
-    Change _ x -> sep [ "_", "<<-", pretty x ]
+    Trans _ t    -> cat [ "Trans _", pretty t ]
+    Done _       -> "Done"
+    Enter        -> "Enter"
+    Update v     -> cat [ "Update", pretty v ]
+    View v       -> cat [ "View", pretty v ]
+    Pair t1 t2   -> sep [ pretty t1, "<&>", pretty t2 ]
+    Choose t1 t2 -> sep [ pretty t1, "<|>", pretty t2 ]
+    Pick t1 t2   -> sep [ pretty t1, "<?>", pretty t2 ]
+    Fail         -> "Fail"
+    Bind t _     -> sep [ pretty t, ">>=", "_" ]
+    New v        -> sep [ "New", pretty v ]
+    Watch _      -> sep [ "Watch", "_" ]
+    Change _ v   -> sep [ "_", "<<-", pretty v ]
 
 instance Functor (TaskT m) where
   fmap = Trans
@@ -95,10 +95,10 @@ instance Applicative (TaskT m) where
   (<*>) = applyDefault
 
 instance Selective (TaskT m) where
-  branch p x y = go =<< p
+  branch p t1 t2 = go =<< p
     where
-      go (Left  a) = map ($ a) x
-      go (Right b) = map ($ b) y
+      go (Left  a) = map ($ a) t1
+      go (Right b) = map ($ b) t2
 
 instance Alternative (TaskT m) where
   (<|>) = Choose
@@ -111,10 +111,3 @@ instance MonadRef l m => MonadRef l (TaskT m) where
   ref    = New
   deref  = Watch
   assign = Change
-
-
--- update :: MonadRef l m => Storable a => l a -> TaskT m a
--- update l = do
---   x <- deref l
---   l <<- x
---   deref l
