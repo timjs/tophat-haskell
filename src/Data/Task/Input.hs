@@ -60,8 +60,8 @@ instance Pretty Action where
 
 
 data Dummy :: Type where
-  AChange   :: Editable b => Proxy b -> Dummy
-  APick     :: Path -> Dummy
+  AChange :: Editable b => Proxy b -> Dummy
+  APick   :: Path -> Dummy
 
 
 instance Eq Dummy where

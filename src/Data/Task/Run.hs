@@ -16,8 +16,6 @@ import Data.Task.Input
 
 ui :: MonadRef l m => TaskT m a -> m (Doc b)
 ui = \case
-  Trans _ t    -> ui t
-
   Done _       -> pure "■(_)"
   Enter        -> pure "⊠(_)"
   Update v     -> pure $ sep [ "□(", pretty v, ")" ]
@@ -28,7 +26,8 @@ ui = \case
   Pick t1 t2   -> pure (\l r -> sep [ l, " ◇ ", r ]) <*> ui t1 <*> ui t2
   Fail         -> pure "↯"
 
-  Bind t1 _    -> pure (<> " ▶…") <*> ui t1
+  Trans _ t    -> ui t
+  Step t1 _    -> pure (<> " ▶…") <*> ui t1
 
   New v        -> pure $ sep [ "ref", pretty v ]
   Watch l      -> pure (\x   -> sep [ "⧈", pretty x ]) <*> deref l
@@ -37,8 +36,6 @@ ui = \case
 
 value :: MonadRef l m => TaskT m a -> m (Maybe a)
 value = \case
-  Trans f t    -> pure (map f) <*> value t
-
   Done v       -> pure (Just v)
   Enter        -> pure Nothing
   Update v     -> pure (Just v)
@@ -49,7 +46,8 @@ value = \case
   Pick _ _     -> pure Nothing
   Fail         -> pure Nothing
 
-  Bind _ _     -> pure Nothing
+  Trans f t    -> pure (map f) <*> value t
+  Step _ _     -> pure Nothing
 
   New v        -> pure Just <*> ref v
   Watch l      -> pure Just <*> deref l
@@ -58,8 +56,6 @@ value = \case
 
 failing :: TaskT m a -> Bool
 failing = \case
-  Trans _ t    -> failing t
-
   Done _       -> False
   Enter        -> False
   Update _     -> False
@@ -70,7 +66,8 @@ failing = \case
   Pick t1 t2   -> failing t1 && failing t2
   Fail         -> True
 
-  Bind t _     -> failing t
+  Trans _ t    -> failing t
+  Step t _     -> failing t
 
   New _        -> False
   Watch _      -> False
@@ -79,8 +76,6 @@ failing = \case
 
 watching :: MonadRef l m => TaskT m a -> List (Someref m)
 watching = \case
-  Trans _ t    -> watching t
-
   Done _       -> []
   Enter        -> []
   Update _     -> []
@@ -91,7 +86,8 @@ watching = \case
   Pick _ _     -> []
   Fail         -> []
 
-  Bind t _     -> watching t
+  Trans _ t    -> watching t
+  Step t _     -> watching t
 
   New _        -> []
   Watch l      -> [ pack l ]
@@ -109,8 +105,6 @@ choices = \case
 
 inputs :: forall m l a. MonadRef l m => TaskT m a -> m (List (Input Dummy))
 inputs = \case
-  Trans _ t    -> inputs t
-
   Done _       -> pure []
   Enter        -> pure [ ToHere (AChange tau) ]
   Update _     -> pure [ ToHere (AChange tau) ]
@@ -121,7 +115,8 @@ inputs = \case
   Pick t1 t2   -> pure $ map (ToHere << APick) (choices $ Pick t1 t2)
   Fail         -> pure []
 
-  Bind t _     -> inputs t
+  Trans _ t    -> inputs t
+  Step t _     -> inputs t
 
   New _        -> pure []
   Watch _      -> pure []
@@ -139,27 +134,27 @@ stride ::
   TaskT m a -> WriterT (List (Someref m)) m (TaskT m a)
 stride = \case
   -- * Step
-  Bind t c -> do
-    t' <- stride t
-    vx <- lift $ value t'
-    case vx of
-      Nothing -> pure $ Bind t' c
+  Step t1 c -> do
+    t1' <- stride t1
+    v1 <- lift $ value t1'
+    case v1 of
+      Nothing -> pure $ Step t1' c
       Just v  ->
         let t2 = c v in
         if failing t2
-          then pure $ Bind t' c
+          then pure $ Step t1' c
           --NOTE: We return just the next task. Normalisation should handle the next stride.
           else pure t2
   -- * Choose
   Choose t1 t2 -> do
     t1' <- stride t1
-    vx <- lift $ value t1'
-    case vx of
+    v1 <- lift $ value t1'
+    case v1 of
       Just _  -> pure t1'
       Nothing -> do
         t2' <- stride t2
-        vy <- lift $ value t2'
-        case vy of
+        v2 <- lift $ value t2'
+        case v2 of
           Just _  -> pure t2'
           Nothing -> pure $ Choose t1' t2'
   -- * Evaluate
@@ -259,12 +254,12 @@ handle t i_ = case ( t, i_ ) of
       then pure t
       else pure t2
   -- * Passing
-  ( Bind t1 t2, i ) -> do
-    t1' <- handle t1 i
-    pure $ Bind t1' t2
   ( Trans f t1, i ) -> do
     t1' <- handle t1 i
     pure $ Trans f t1'
+  ( Step t1 t2, i ) -> do
+    t1' <- handle t1 i
+    pure $ Step t1' t2
   ( Pair t1 t2, ToFirst i ) -> do
     t1' <- handle t1 i
     pure $ Pair t1' t2

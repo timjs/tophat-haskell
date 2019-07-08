@@ -18,9 +18,6 @@ import Data.Editable (Editable, Storable)
 -- |
 -- | To use references, `m` shoud be a `MonadRef` with locations `l`.
 data TaskT (m :: Type -> Type) (r :: Type) where
-  -- * Transform
-  Trans :: (a -> r) -> TaskT m a -> TaskT m r
-
   -- * Editors
   -- | Internal, unrestricted and hidden editor
   Done :: r -> TaskT m r
@@ -41,9 +38,13 @@ data TaskT (m :: Type -> Type) (r :: Type) where
   -- | The failing task
   Fail :: TaskT m r
 
-  -- * Steps
+  -- * Transform
+  -- | Internal value transformation
+  Trans :: (a -> r) -> TaskT m a -> TaskT m r
+
+  -- * Step
   -- | Internal, or system step.
-  Bind :: TaskT m a -> (a -> TaskT m r) -> TaskT m r
+  Step :: TaskT m a -> (a -> TaskT m r) -> TaskT m r
 
   -- * References
   -- | Create new reference of type `r`
@@ -73,7 +74,7 @@ instance Pretty (TaskT m t) where
     Choose t1 t2 -> sep [ pretty t1, "<|>", pretty t2 ]
     Pick t1 t2   -> sep [ pretty t1, "<?>", pretty t2 ]
     Fail         -> "Fail"
-    Bind t _     -> sep [ pretty t, ">>=", "_" ]
+    Step t _     -> sep [ pretty t, ">>=", "_" ]
     New v        -> sep [ "New", pretty v ]
     Watch _      -> sep [ "Watch", "_" ]
     Change _ v   -> sep [ "_", "<<-", pretty v ]
@@ -105,7 +106,7 @@ instance Alternative (TaskT m) where
   empty = Fail
 
 instance Monad (TaskT m) where
-  (>>=) = Bind
+  (>>=) = Step
 
 instance MonadRef l m => MonadRef l (TaskT m) where
   ref    = New
