@@ -1,51 +1,117 @@
-{-# OPTIONS_GHC -Wno-orphans #-}
+{-# OPTIONS_GHC -Wno-orphans -Wno-deprecations #-}
 module Prelude
   ( module Relude
-  , module Data.Text.Prettyprint.Doc
   , module Data.Type.Equality
-  , List, Unit
-  , Pretty(..), read
+  , List, Unit, Nat, nat
+  -- , Vector, only, index, update
+  , Pretty(..), Doc, sep, cat, split, indent, dquotes, parens, angles
+  , scan, pretty', tracePretty
   , neutral
   , (<<), (>>), (#), map
   , (<-<), (>->)
   , Monoidal((<&>), skip, (<&), (&>)), applyDefault, pureDefault
   , Selective(branch, select, biselect), check, when
-  , lift1, lift2, lift3
+  , lift0, lift1, lift2, lift3
+  , MonadZero
   , ok, throw, catch
-  , clear, evalWriterT
-  , (~=), (~~), proxyOf, typeOf, someTypeOf, typeRep, TypeRep, someTypeRep, SomeTypeRep
+  , evalWriterT
+  , (~=), (~~), proxyOf, typeOf, someTypeOf, typeRep, TypeRep, someTypeRep, SomeTypeRep(..)
   ) where
 
 
-import Relude hiding ((.), (>>), (&), (<&>), (<$>), map, when, pass, trace, readMaybe, liftA2, liftA3)
-import qualified Relude
-
-import Control.Monad.Except (MonadError(..))
-import Control.Monad.Writer (MonadWriter(..), WriterT, runWriterT)
-
-import Data.Text (unpack)
-import Data.Text.Prettyprint.Doc hiding (group)
+import Relude hiding ((.), (>>), (&), (<&>), (<$>), map, when, pass, trace, readMaybe, liftA2, liftA3, Nat, Any)
 import Data.Type.Equality
 
-import Type.Reflection (typeOf, typeRep, someTypeRep, TypeRep, SomeTypeRep)
+import Control.Monad.Except (MonadError(..))
+import Control.Monad.List (ListT)
+import Control.Monad.Writer.Strict (WriterT, runWriterT)
+
+import Data.Text (unpack)
+import Data.Text.Prettyprint.Doc (Pretty(..), Doc, indent, dquotes, parens, angles)
+-- import Data.Vector (Vector)
+
+import Type.Reflection (typeOf, typeRep, someTypeRep, TypeRep, SomeTypeRep(..))
+
+import qualified Data.Text.Prettyprint.Doc as Pretty
+import qualified Relude
+-- import qualified Data.Vector as Vector
+
 
 
 
 -- Synonyms --------------------------------------------------------------------
 
 
-type List a = [a]
+type List = []
 
 
 type Unit = ()
 
 
+newtype Nat = Nat Int
+  deriving ( Eq, Ord, Num, Show, Read, Enum, Pretty, Hashable ) via Int
 
--- Reading & Showing -----------------------------------------------------------
+
+nat :: Int -> Nat
+nat i
+  | i >= 0    = Nat i
+  | otherwise = error "Prelude.nat: argument is negative"
 
 
-read :: Read a => Text -> Maybe a
-read = Relude.readMaybe << unpack
+
+-- Vectors ---------------------------------------------------------------------
+
+
+-- only :: a -> Vector a
+-- only = Vector.singleton
+
+
+-- index :: Nat -> Vector a -> Maybe a
+-- index (Nat i) xs = (Vector.!?) xs i
+
+
+-- update :: Nat -> a -> Vector a -> Vector a
+-- update (Nat i) x xs = (Vector.//) xs [ ( i, x ) ]
+
+
+-- instance ( Pretty a ) => Pretty (Vector a) where
+--   pretty = Pretty.angles << fold << intersperse ", " << map pretty << Vector.toList
+
+
+
+-- Scanning & Printing ---------------------------------------------------------
+
+
+scan :: Read a => Text -> Maybe a
+scan = Relude.readMaybe << unpack
+
+
+sep :: List (Doc n) -> Doc n
+sep = Pretty.hsep
+
+
+cat :: List (Doc n) -> Doc n
+cat = Pretty.hcat
+
+
+split :: List (Doc n) -> Doc n
+split = Pretty.vsep
+
+
+tracePretty :: Pretty a => a -> a
+tracePretty x = traceShow (pretty x) x
+
+
+pretty' :: Pretty a => a -> Pretty.SimpleDocStream n
+pretty' = Pretty.layoutPretty (Pretty.LayoutOptions Pretty.Unbounded) << pretty
+
+
+instance ( Pretty a, Pretty b, Pretty c, Pretty d ) => Pretty ( a, b, c, d ) where
+   pretty ( x1, x2, x3, x4 ) = Pretty.tupled [ pretty x1, pretty x2, pretty x3, pretty x4 ]
+
+
+instance ( Pretty a, Pretty b, Pretty c, Pretty d, Pretty e ) => Pretty ( a, b, c, d, e ) where
+   pretty ( x1, x2, x3, x4, x5 ) = Pretty.tupled [ pretty x1, pretty x2, pretty x3, pretty x4, pretty x5 ]
 
 
 
@@ -201,6 +267,24 @@ when p t = check p t (pure ())
 
 -- Monads ----------------------------------------------------------------------
 
+-- Zero --
+
+-- | A safe alternative for MonadFail.
+-- |
+-- | Be sure only types that have a sensible, non-throwing,
+-- | `Alternative` instance are instances of `MonadZero`!
+-- |
+-- | Laws:
+-- |   * fail == empty
+class ( Monad m, MonadFail m, Alternative m ) => MonadZero m
+
+instance MonadZero Maybe
+instance MonadZero List
+instance Monad m => MonadZero (ListT m)
+instance ( MonadFail m, MonadPlus m ) => MonadZero (StateT s m)
+
+
+
 -- Error --
 
 
@@ -222,8 +306,8 @@ catch = catchError
 -- Writer --
 
 
-clear :: MonadWriter w m => m ()
-clear = pass $ lift0 ((), const neutral)
+-- clear :: MonadWriter w m => m ()
+-- clear = pass $ lift0 ((), const neutral)
 
 
 evalWriterT :: Monad m => WriterT w m a -> m a
@@ -258,5 +342,8 @@ someTypeOf = someTypeRep << proxyOf
 {-# INLINE someTypeOf #-}
 
 
+instance Pretty (TypeRep a) where
+  pretty = Pretty.viaShow
+
 instance Pretty SomeTypeRep where
-  pretty = viaShow
+  pretty = Pretty.viaShow
