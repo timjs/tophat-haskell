@@ -9,16 +9,19 @@ maintainer:          tim.steenvoorden@gmail.com
 copyright:           BSD3
 # category:            Web
 
+
 extra-source-files:
 - README.md
 
+
 dependencies:
-  - base-noprelude
-  - relude
+  - base-noprelude >= 4.12 && < 5
+  - relude >= 0.5 && < 1
   - prettyprinter
   - mtl
   - text
   - containers
+
 
 default-extensions:
   # Lifting limitations:
@@ -78,23 +81,38 @@ default-extensions:
 
   # Intermediate type extensions:
   - FunctionalDependencies
+  # - UndecidableInstances
   - GADTs
-  # - ExistentialQuantification
-  - UndecidableInstances
+  - ExistentialQuantification
 
   # Advanced type extensions:
   - DataKinds
   - PolyKinds
+  # - TypeFamilies
+  # - TypeFamilyDependencies
   - QuantifiedConstraints
+
 
 ghc-options:
   - -Wall
   - -Wcompat
+
+  - -Widentities
   - -Wincomplete-record-updates
   - -Wincomplete-uni-patterns
+  - -Wpartial-fields
   - -Wredundant-constraints
 
-executables:
-  tophat:
-    source-dirs:      src
-    main:             Main.hs
+library:
+  source-dirs: src
+
+
+executable:
+  main: Main.hs
+  source-dirs: src
+  ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+  dependencies:
+  - symbolic-tophat
