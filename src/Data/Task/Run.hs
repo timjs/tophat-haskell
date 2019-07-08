@@ -17,12 +17,12 @@ import Data.Task.Input
 ui :: MonadRef l m => TaskT m a -> m (Doc b)
 ui = \case
   Done _     -> pure $ "⧇(_)"
-  Edit v     -> pure $ sep [ "□(", pretty v, ")" ]
+  Update v   -> pure $ sep [ "□(", pretty v, ")" ]
   Enter      -> pure "⊠(_)"
   Pair x y   -> pure (\l r -> sep [ l, " ⋈ ", r ]) <*> ui x <*> ui y
   Choose x y -> pure (\l r -> sep [ l, " ◆ ", r ]) <*> ui x <*> ui y
   Pick x y   -> pure (\l r -> sep [ l, " ◇ ", r ]) <*> ui x <*> ui y
-  Empty      -> pure "↯"
+  Fail       -> pure "↯"
   Bind x _   -> pure (<> " ▶…") <*> ui x
   Ref v      -> pure $ sep [ "ref", pretty v ]
   Deref l    -> pure (\x -> sep [ "■(", pretty x, ")" ]) <*> deref l
@@ -32,12 +32,12 @@ ui = \case
 value :: MonadRef l m => TaskT m a -> m (Maybe a)
 value = \case
   Done v     -> pure (Just v)
-  Edit v     -> pure (Just v)
+  Update v   -> pure (Just v)
   Enter      -> pure Nothing
   Pair x y   -> pure (<&>) <*> value x <*> value y
   Choose x y -> pure (<|>) <*> value x <*> value y
   Pick _ _   -> pure Nothing
-  Empty      -> pure Nothing
+  Fail       -> pure Nothing
   Bind _ _   -> pure Nothing
   Ref v      -> pure Just <*> ref v
   Deref l    -> pure Just <*> deref l
@@ -47,12 +47,12 @@ value = \case
 failing :: TaskT m a -> Bool
 failing = \case
   Done _     -> False
-  Edit _     -> False
+  Update _   -> False
   Enter      -> False
   Pair x y   -> failing x && failing y
   Choose x y -> failing x && failing y
   Pick x y   -> failing x && failing y
-  Empty      -> True
+  Fail       -> True
   Bind x _   -> failing x
   Ref _      -> False
   Deref _    -> False
@@ -62,12 +62,12 @@ failing = \case
 watching :: MonadRef l m => TaskT m a -> List (Someref m)
 watching = \case
   Done _     -> []
-  Edit _     -> []
+  Update _   -> []
   Enter      -> []
   Pair x y   -> watching x `union` watching y
   Choose x y -> watching x `union` watching y
   Pick _ _   -> []
-  Empty      -> []
+  Fail       -> []
   Bind x _   -> watching x
   Ref _      -> []
   Deref l    -> [ pack l ]
@@ -76,22 +76,22 @@ watching = \case
 
 choices :: TaskT m a -> List Path
 choices = \case
-  Pick Empty Empty -> []
-  Pick _     Empty -> [ GoLeft ]
-  Pick Empty _     -> [ GoRight ]
-  Pick _     _     -> [ GoLeft, GoRight ]
-  _                -> []
+  Pick Fail Fail -> []
+  Pick _    Fail -> [ GoLeft ]
+  Pick Fail _    -> [ GoRight ]
+  Pick _    _    -> [ GoLeft, GoRight ]
+  _              -> []
 
 
 inputs :: forall m l a. MonadRef l m => TaskT m a -> m (List (Input Dummy))
 inputs = \case
   Done _     -> pure []
-  Edit _     -> pure [ ToHere (AChange tau), ToHere AEmpty ]
+  Update _   -> pure [ ToHere (AChange tau), ToHere AEmpty ]
   Enter      -> pure [ ToHere (AChange tau) ]
   Pair x y   -> pure (\l r -> map ToFirst l <> map ToSecond r) <*> inputs x <*> inputs y
   Choose x y -> pure (\l r -> map ToFirst l <> map ToSecond r) <*> inputs x <*> inputs y
   Pick x y   -> pure $ map (ToHere << APick) (choices $ Pick x y)
-  Empty      -> pure []
+  Fail       -> pure []
   Bind x _   -> inputs x
   Ref _      -> pure []
   Deref _    -> pure []
@@ -137,10 +137,10 @@ stride = \case
   Assign l v -> tell [ pack l ] *> pure (l <<- v)
   -- * Ready
   x@(Done _)   -> pure x
-  x@(Edit _)   -> pure x
+  x@(Update _) -> pure x
   x@(Enter)    -> pure x
   x@(Pick _ _) -> pure x
-  x@(Empty)    -> pure x
+  x@(Fail)     -> pure x
 
 
 data Dirties m
@@ -195,22 +195,22 @@ handle :: forall m l a.
   MonadTrace NotApplicable m => MonadRef l m =>
   TaskT m a -> Input Action -> m (TaskT m a)
 
--- Edit --
-handle (Edit (Just _)) (ToHere Empty) =
-  pure $ Edit Nothing
+-- Update --
+handle (Update (Just _)) (ToHere Fail) =
+  pure $ Update Nothing
 
-handle x@(Edit v) (ToHere (Change val_inp))
+handle x@(Update v) (ToHere (Change val_inp))
   -- NOTE: Here we check if `v` and `val_new` have the same type.
   -- If x is the case, it would be inhabited by `Refl :: a :~: b`, where `b` is the type of the value inside `Change`.
   -- Because we can't acces the type variable `b` directly, we use `~=` as a trick.
-  | Just Refl <- v ~= val_new = pure $ Edit val_new
+  | Just Refl <- v ~= val_new = pure $ Update val_new
   | otherwise = trace (CouldNotChangeVal (someTypeOf v) (someTypeOf val_new)) x
   where
     --NOTE: `v` is of a maybe type, so we need to wrap `val_new` into a `Just`.
     val_new = Just val_inp
 
 handle x@(Deref l) (ToHere (Change val_inp))
-  -- NOTE: As in the `Edit` case above, we check for type equality.
+  -- NOTE: As in the `Update` case above, we check for type equality.
   | Just Refl <- (typeRep :: TypeRep a) ~~ typeOf val_inp = do
       l $= const val_inp
       pure x

@@ -1,9 +1,12 @@
 module Main where
 
 
-import Data.Task
-import Data.Task.Run
+-- import Data.Task
+-- import Data.Task.Run
 
+main :: IO ()
+main =
+  putStrLn "Hello!"
 
 {-
 -- Examples --------------------------------------------------------------------
@@ -330,7 +333,3 @@ main :: IO ()
 main =
   run parallelStep'
 -}
-
-main :: IO ()
-main =
-  putStrLn "Hello!"

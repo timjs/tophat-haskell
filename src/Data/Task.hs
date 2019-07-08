@@ -12,11 +12,6 @@ import Control.Monad.Ref
 import Data.Editable (Editable, Storable)
 
 
--- infixl 5 -&&-, -&&, &&-
--- infixl 3 -||-, -??-
--- infixl 2 >>-, >>?
-
-
 -- Tasks -----------------------------------------------------------------------
 
 -- | Task monad transformer build on top of a monad `m`.
@@ -27,7 +22,7 @@ data TaskT (m :: Type -> Type) (r :: Type) where
   -- | Internal, unrestricted and hidden editor
   Done :: r -> TaskT m r
   -- | Valued editors
-  Edit :: Editable r => r -> TaskT m r
+  Update :: Editable r => r -> TaskT m r
   -- | Unvalued editors
   Enter :: Editable r => TaskT m r
 
@@ -39,7 +34,7 @@ data TaskT (m :: Type -> Type) (r :: Type) where
   -- | External choice between two tasks.
   Pick :: TaskT m r -> TaskT m r -> TaskT m r
   -- | The failing task
-  Empty :: TaskT m r
+  Fail :: TaskT m r
 
   -- * Steps
   -- | Internal, or system step.
@@ -64,12 +59,12 @@ type Task = TaskT IO
 instance Pretty (TaskT m t) where
   pretty = \case
     Done _     -> "Done"
-    Edit x     -> cat [ "Edit", pretty x ]
+    Update x     -> cat [ "Update", pretty x ]
     Enter      -> "Enter"
     Pair x y   -> sep [ pretty x, "<&>", pretty y ]
     Choose x y -> sep [ pretty x, "<|>", pretty y ]
     Pick x y   -> sep [ pretty x, "<?>", pretty y ]
-    Empty      -> "Empty"
+    Fail      -> "Fail"
     Bind x _   -> sep [ pretty x, ">>=", "_" ]
     Ref x      -> sep [ "Ref", pretty x ]
     Deref _    -> sep [ "Deref", "_" ]
@@ -81,7 +76,7 @@ instance Functor (TaskT m) where
     pure $ g x
 
 instance Interactive (TaskT m) where
-  edit = Edit
+  update = Update
   enter = Enter
 
 instance Monoidal (TaskT m) where
@@ -100,7 +95,7 @@ instance Selective (TaskT m) where
 
 instance Alternative (TaskT m) where
   (<|>) = Choose
-  empty = Empty
+  empty = Fail
 
 instance Monad (TaskT m) where
   (>>=) = Bind
