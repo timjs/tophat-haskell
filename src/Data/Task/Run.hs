@@ -103,11 +103,11 @@ watching = \case
 
 choices :: TaskT m a -> List Path
 choices = \case
-  Pick Fail Fail -> []
-  Pick _    Fail -> [ GoLeft ]
-  Pick Fail _    -> [ GoRight ]
-  Pick _    _    -> [ GoLeft, GoRight ]
-  _              -> []
+  Pick t1 t2 -> ls <> rs
+    where
+      ls = if failing t1 then [] else map GoLeft (GoHere : choices t1)
+      rs = if failing t2 then [] else map GoRight (GoHere : choices t2)
+  _ -> []
 
 
 inputs :: forall m l a.
@@ -125,7 +125,16 @@ inputs = \case
   Fail         -> pure []
 
   Trans _ t    -> inputs t
-  Step t _     -> inputs t
+  Step t1 e2   -> pure (<>) <*> inputs t1 <*> do
+    mv1 <- value t1
+    case mv1 of
+      Nothing -> pure []
+      Just v1 -> do
+        -- t2 <- normalise (e2 v1)  --XXX: Do we need to normalise here??
+        let t2 = e2 v1
+        if failing t2
+          then pure []
+          else pure $ map (ToHere << AContinue) (choices t2)
 
   New _        -> pure []
   Watch _      -> pure []
@@ -153,8 +162,10 @@ stride = \case
       Just v1 ->
         let t2 = e2 v1 in
         if failing t2
-          else pure t2
           then pure stay -- S-ThenFail
+          else if not $ null $ choices t2
+            then pure stay  -- S-ThenWait
+            else pure t2 -- S-ThenCont
   -- * Choose
   Choose t1 t2 -> do
     t1' <- stride t1
@@ -255,14 +266,14 @@ handle t i_ = case ( t, i_ ) of
         pure $ Change l w
     | otherwise -> trace (CouldNotChangeRef (someTypeOf l) (someTypeOf w)) $ pure t
   -- * Choosing
-  ( Pick t1 _, ToHere (IPick GoLeft) ) ->
+  ( Pick t1 _, ToHere (IPick (GoLeft p)) ) ->
     if failing t1
       then pure t
-      else pure t1
-  ( Pick _ t2, ToHere (IPick GoRight) ) ->
+      else handle t1 (ToHere (IPick p))
+  ( Pick _ t2, ToHere (IPick (GoRight p)) ) ->
     if failing t2
       then pure t
-      else pure t2
+      else handle t2 (ToHere (IPick p))
   -- * Passing
   ( Trans f t1, i ) -> do
     t1' <- handle t1 i

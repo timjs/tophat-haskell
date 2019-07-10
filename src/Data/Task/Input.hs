@@ -13,21 +13,25 @@ import Data.Editable
 
 
 data Path
-  = GoLeft
-  | GoRight
+  = GoLeft Path
+  | GoHere
+  | GoRight Path
   deriving ( Eq, Show )
 
 
 instance Pretty Path where
-  pretty GoLeft  = "l"
-  pretty GoRight = "r"
+  pretty = \case
+    GoLeft p  -> sep [ "l", pretty p ]
+    GoHere    -> ""
+    GoRight p -> sep [ "r", pretty p ]
 
 
-parsePath :: Text -> Either (Doc a) Path
+parsePath :: List Text -> Either (Doc a) Path
 parsePath = \case
-  "l"   -> ok GoLeft
-  "r"   -> ok GoRight
-  other -> throw $ sep [ "!!", dquotes (pretty other), "is not a valid path, type `help` for more info" ]
+  "l" : rest -> map GoLeft $ parsePath rest
+  []         -> ok GoHere
+  "r" : rest -> map GoRight $ parsePath rest
+  other      -> throw $ sep [ "!!", dquotes (pretty other), "is not a valid path, type `help` for more info" ]
 
 
 
@@ -39,20 +43,23 @@ parsePath = \case
 data Action :: Type where
   IChange   :: Editable b => b -> Action
   IPick     :: Path -> Action
+  IContinue :: Path -> Action
 
 
 instance Eq Action where
-  IChange x == IChange y
-    | Just Refl <- x ~= y = x == y
-    | otherwise           = False
-  IPick x   == IPick y    = x == y
-  _         == _          = False
+  IChange x   == IChange y
+    | Just Refl <- x ~= y    = x == y
+    | otherwise              = False
+  IPick x     == IPick y     = x == y
+  IContinue x == IContinue y = x == y
+  _           == _           = False
 
 
 instance Pretty Action where
   pretty = \case
-    IChange x -> sep [ "change", pretty x ]
-    IPick p   -> sep [ "pick", pretty p ]
+    IChange x   -> sep [ "change", pretty x ]
+    IPick p     -> sep [ "pick", pretty p ]
+    IContinue p -> sep [ "cont", pretty p ]
 
 
 
@@ -60,23 +67,26 @@ instance Pretty Action where
 
 
 data Dummy :: Type where
-  AChange :: Editable b => Proxy b -> Dummy
-  APick   :: Path -> Dummy
+  AChange   :: Editable b => Proxy b -> Dummy
+  APick     :: Path -> Dummy
+  AContinue :: Path -> Dummy
 
 
 instance Eq Dummy where
-  AChange x == AChange y
+  AChange x   == AChange y
     -- NOTE: We're comparing proxies, they are always equal when the types are equal.
-    | Just Refl <- x ~= y = True
-    | otherwise           = False
-  APick x   == APick y    = x == y
-  _         == _          = False
+    | Just Refl <- x ~= y    = True
+    | otherwise              = False
+  APick x     == APick y     = x == y
+  AContinue x == AContinue y = x == y
+  _           == _           = False
 
 
 instance Pretty Dummy where
   pretty = \case
-    AChange _ -> "change <val>"
-    APick p   -> sep [ "pick", pretty p ]
+    AChange _   -> "change <val>"
+    APick p     -> sep [ "pick", pretty p ]
+    AContinue p -> sep [ "cont", pretty p ]
 
 
 
@@ -111,8 +121,9 @@ instance Pretty a => Pretty (Input a) where
 
 dummyfy :: Action -> Dummy
 dummyfy = \case
-  IChange x -> AChange (proxyOf x)
-  IPick p   -> APick p
+  IChange x   -> AChange (proxyOf x)
+  IPick p     -> APick p
+  IContinue p -> AContinue p
 
 
 -- reify :: Dummy -> Gen (List Action)
@@ -162,7 +173,7 @@ parse [ "change", val ]
   | Just v <- scan val :: Maybe [Int]     = ok $ ToHere $ IChange v
   | Just v <- scan val :: Maybe [String]  = ok $ ToHere $ IChange v
   | otherwise                             = throw $ sep [ "!! Error parsing value", dquotes (pretty val) ]
-parse [ "pick", next ]                    = map (ToHere << IPick) $ parsePath next
+parse ("pick" : next)                     = map (ToHere << IPick) $ parsePath next
 parse ("f" : rest)                        = map ToFirst $ parse rest
 parse ("s" : rest)                        = map ToSecond $ parse rest
 parse [ "help" ]                          = throw usage
