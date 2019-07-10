@@ -20,20 +20,20 @@ ui ::
 ui = \case
   Done _       -> pure "■(_)"
   Enter        -> pure "⊠(_)"
-  Update v     -> pure $ sep [ "□(", pretty v, ")" ]
-  View v       -> pure $ sep [ "⧇(", pretty v, ")" ]
+  Update v     -> pure <| sep [ "□(", pretty v, ")" ]
+  View v       -> pure <| sep [ "⧇(", pretty v, ")" ]
 
-  Pair t1 t2   -> pure (\l r -> sep [ l, " ⧓ ", r ]) <*> ui t1 <*> ui t2
-  Choose t1 t2 -> pure (\l r -> sep [ l, " ◆ ", r ]) <*> ui t1 <*> ui t2
-  Pick t1 t2   -> pure (\l r -> sep [ l, " ◇ ", r ]) <*> ui t1 <*> ui t2
+  Pair t1 t2   -> pure (\l r -> sep [ l, " ⧓ ", r ]) -< ui t1 -< ui t2
+  Choose t1 t2 -> pure (\l r -> sep [ l, " ◆ ", r ]) -< ui t1 -< ui t2
+  Pick t1 t2   -> pure (\l r -> sep [ l, " ◇ ", r ]) -< ui t1 -< ui t2
   Fail         -> pure "↯"
 
   Trans _ t    -> ui t
-  Step t1 _    -> pure (<> " ▶…") <*> ui t1
+  Step t1 _    -> pure (<> " ▶…") -< ui t1
 
-  New v        -> pure $ sep [ "ref", pretty v ]
-  Watch l      -> pure (\x   -> sep [ "⧈", pretty x ]) <*> deref l
-  Change _ v   -> pure $ sep [ "⊟", pretty v ]
+  New v        -> pure <| sep [ "ref", pretty v ]
+  Watch l      -> pure (\x   -> sep [ "⧈", pretty x ]) -< deref l
+  Change _ v   -> pure <| sep [ "⊟", pretty v ]
 
 
 value ::
@@ -45,16 +45,16 @@ value = \case
   Update v     -> pure (Just v)
   View v       -> pure (Just v)
 
-  Pair t1 t2   -> pure (<&>) <*> value t1 <*> value t2
-  Choose t1 t2 -> pure (<|>) <*> value t1 <*> value t2
+  Pair t1 t2   -> pure (<&>) -< value t1 -< value t2
+  Choose t1 t2 -> pure (<|>) -< value t1 -< value t2
   Pick _ _     -> pure Nothing
   Fail         -> pure Nothing
 
-  Trans f t    -> pure (map f) <*> value t
+  Trans f t    -> pure (map f) -< value t
   Step _ _     -> pure Nothing
 
-  New v        -> pure Just <*> ref v
-  Watch l      -> pure Just <*> deref l
+  New v        -> pure Just -< ref v
+  Watch l      -> pure Just -< deref l
   Change _ _   -> pure (Just ())
 
 
@@ -120,13 +120,13 @@ inputs = \case
   Update _     -> pure [ ToHere (AChange tau) ]
   View _       -> pure []
 
-  Pair t1 t2   -> pure (\l r -> map ToFirst l <> map ToSecond r) <*> inputs t1 <*> inputs t2
-  Choose t1 t2 -> pure (\l r -> map ToFirst l <> map ToSecond r) <*> inputs t1 <*> inputs t2
-  Pick t1 t2   -> pure $ map (ToHere << APick) (choices $ Pick t1 t2)
+  Pair t1 t2   -> pure (\l r -> map ToFirst l <> map ToSecond r) -< inputs t1 -< inputs t2
+  Choose t1 t2 -> pure (\l r -> map ToFirst l <> map ToSecond r) -< inputs t1 -< inputs t2
+  Pick t1 t2   -> pure <| map (ToHere << APick) (choices <| Pick t1 t2)
   Fail         -> pure []
 
   Trans _ t    -> inputs t
-  Step t1 e2   -> pure (<>) <*> inputs t1 <*> do
+  Step t1 e2   -> pure (<>) -< inputs t1 -< do
     mv1 <- value t1
     case mv1 of
       Nothing -> pure []
@@ -135,7 +135,7 @@ inputs = \case
         let t2 = e2 v1
         if failing t2
           then pure []
-          else pure $ map (ToHere << AContinue) (choices t2)
+          else pure <| map (ToHere << AContinue) (choices t2)
 
   New _        -> pure []
   Watch _      -> pure []
@@ -157,34 +157,38 @@ stride = \case
   Step t1 e2 -> do
     t1' <- stride t1
     let stay = Step t1' e2
-    mv1 <- lift $ value t1'
+    mv1 <- lift <| value t1'
     case mv1 of
       Nothing -> pure stay  -- S-ThenNone
       Just v1 ->
         let t2 = e2 v1 in
         if failing t2
           then pure stay -- S-ThenFail
-          else if not $ null $ choices t2
+          else if not <| null <| choices t2
             then pure stay  -- S-ThenWait
             else pure t2 -- S-ThenCont
   -- * Choose
   Choose t1 t2 -> do
     t1' <- stride t1
-    mv1 <- lift $ value t1'
+    mv1 <- lift <| value t1'
     case mv1 of
       Just _  -> pure t1'  -- S-OrLeft
       Nothing -> do
         t2' <- stride t2
-        mv2 <- lift $ value t2'
+        mv2 <- lift <| value t2'
         case mv2 of
           Just _  -> pure t2'  -- S-OrRight
-          Nothing -> pure $ Choose t1' t2'  -- S-OrNone
+          Nothing -> pure <| Choose t1' t2'  -- S-OrNone
   -- * Evaluate
-  Trans f t  -> pure (Trans f) <*> stride t
-  Pair t1 t2 -> pure Pair <*> stride t1 <*> stride t2
-  New v      -> pure $ ref v
-  Watch l    -> tell [ pack l ] *> pure (deref l)
-  Change l v -> tell [ pack l ] *> pure (l <<- v)
+  Trans f t  -> pure (Trans f) -< stride t
+  Pair t1 t2 -> pure Pair -< stride t1 -< stride t2
+  New v      -> pure <| ref v
+  Watch l    -> do
+    tell [ pack l ]
+    pure (deref l)
+  Change l v -> do
+    tell [ pack l ]
+    pure (l <<- v)
   -- * Ready
   t@(Done _)   -> pure t
   t@(Enter)    -> pure t
@@ -215,7 +219,7 @@ normalise t = do
   let is = ds `intersect` ws
   case is of
     [] -> pure t'
-    _  -> trace (Watched is) $ normalise t'
+    _  -> trace (Watched is) <| normalise t'
 
 
 initialise ::
@@ -238,11 +242,11 @@ data NotApplicable
 
 instance Pretty NotApplicable where
   pretty = \case
-    CouldNotChangeVal v c -> sep [ "Could not change value because types", dquotes $ pretty v, "and", dquotes $ pretty c, "do not match" ]
-    CouldNotChangeRef r c -> sep [ "Could not change value because cell", dquotes $ pretty r, "does not contain", dquotes $ pretty c ]
+    CouldNotChangeVal v c -> sep [ "Could not change value because types", dquotes <| pretty v, "and", dquotes <| pretty c, "do not match" ]
+    CouldNotChangeRef r c -> sep [ "Could not change value because cell", dquotes <| pretty r, "does not contain", dquotes <| pretty c ]
     -- CouldNotFind l   -> "Could not find label `" <> l <> "`"
     -- CouldNotContinue -> "Could not continue because there is no value to continue with"
-    CouldNotHandle i -> sep [ "Could not handle input", dquotes $ pretty i ]
+    CouldNotHandle i -> sep [ "Could not handle input", dquotes <| pretty i ]
 
 
 handle :: forall m l a.
@@ -251,21 +255,21 @@ handle :: forall m l a.
 handle t i_ = case ( t, i_ ) of
   -- * Edit
   ( Enter, ToHere (IChange w) )
-    | Just Refl <- r ~~ typeOf w -> pure $ Update w
-    | otherwise -> trace (CouldNotChangeVal (SomeTypeRep r) (someTypeOf w)) $ pure t
+    | Just Refl <- r ~~ typeOf w -> pure <| Update w
+    | otherwise -> trace (CouldNotChangeVal (SomeTypeRep r) (someTypeOf w)) <| pure t
     where
       r = typeRep :: TypeRep a
   ( Update v, ToHere (IChange w) )
     -- NOTE: Here we check if `v` and `w` have the same type.
     -- If this is the case, it would be inhabited by `Refl :: a :~: b`, where `b` is the type of the value inside `Change`.
-    | Just Refl <- v ~= w -> pure $ Update w
-    | otherwise -> trace (CouldNotChangeVal (someTypeOf v) (someTypeOf w)) $ pure t
+    | Just Refl <- v ~= w -> pure <| Update w
+    | otherwise -> trace (CouldNotChangeVal (someTypeOf v) (someTypeOf w)) <| pure t
   ( Change l v, ToHere (IChange w) )
     -- NOTE: As in the `Update` case above, we check for type equality.
     | Just Refl <- v ~= w -> do
         l <<- w
-        pure $ Change l w
-    | otherwise -> trace (CouldNotChangeRef (someTypeOf l) (someTypeOf w)) $ pure t
+        pure <| Change l w
+    | otherwise -> trace (CouldNotChangeRef (someTypeOf l) (someTypeOf w)) <| pure t
   -- * Pick
   ( Pick t1 _, ToHere (IPick (GoLeft p)) ) ->
     if failing t1
@@ -283,25 +287,25 @@ handle t i_ = case ( t, i_ ) of
   -- * Passing
   ( Trans f t1, i ) -> do
     t1' <- handle t1 i
-    pure $ Trans f t1'
+    pure <| Trans f t1'
   ( Step t1 t2, i ) -> do
     t1' <- handle t1 i
-    pure $ Step t1' t2
+    pure <| Step t1' t2
   ( Pair t1 t2, ToFirst i ) -> do
     t1' <- handle t1 i
-    pure $ Pair t1' t2
+    pure <| Pair t1' t2
   ( Pair t1 t2, ToSecond i ) -> do
     t2' <- handle t2 i
-    pure $ Pair t1 t2'
+    pure <| Pair t1 t2'
   ( Choose t1 t2, ToFirst i ) -> do
     t1' <- handle t1 i
-    pure $ Choose t1' t2
+    pure <| Choose t1' t2
   ( Choose t1 t2, ToSecond i ) -> do
     t2' <- handle t2 i
-    pure $ Choose t1 t2'
+    pure <| Choose t1 t2'
   -- * Rest
   _ ->
-    trace (CouldNotHandle i_) $ pure t
+    trace (CouldNotHandle i_) <| pure t
 
 
 interact ::
@@ -333,7 +337,7 @@ loop task = do
   interface <- ui task
   print interface
   events <- inputs task
-  print $ "Possibilities: " <> pretty events
+  print <| "Possibilities: " <> pretty events
   input <- getUserInput
   task' <- interact task input
   loop task'

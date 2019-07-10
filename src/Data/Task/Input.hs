@@ -29,10 +29,10 @@ instance Pretty Path where
 
 parsePath :: List Text -> Either (Doc a) Path
 parsePath = \case
-  "l" : rest -> map GoLeft $ parsePath rest
+  "l" : rest -> map GoLeft <| parsePath rest
   []         -> ok GoHere
-  "r" : rest -> map GoRight $ parsePath rest
-  other      -> throw $ sep [ "!!", dquotes (pretty other), "is not a valid path, type `help` for more info" ]
+  "r" : rest -> map GoRight <| parsePath rest
+  other      -> throw <| sep [ "!!", dquotes (pretty other), "is not a valid path, type `help` for more info" ]
 
 
 
@@ -168,17 +168,17 @@ usage = cat
 
 parse :: List Text -> Either (Doc a) (Input Action)
 parse [ "change", val ]
-  | Just v <- scan val :: Maybe Unit      = ok $ ToHere $ IChange v
-  | Just v <- scan val :: Maybe Bool      = ok $ ToHere $ IChange v
-  | Just v <- scan val :: Maybe Int       = ok $ ToHere $ IChange v
-  | Just v <- scan val :: Maybe String    = ok $ ToHere $ IChange v
-  | Just v <- scan val :: Maybe [Bool]    = ok $ ToHere $ IChange v
-  | Just v <- scan val :: Maybe [Int]     = ok $ ToHere $ IChange v
-  | Just v <- scan val :: Maybe [String]  = ok $ ToHere $ IChange v
-  | otherwise                             = throw $ sep [ "!! Error parsing value", dquotes (pretty val) ]
-parse ("pick" : path)                     = map (ToHere << IPick) $ parsePath path
-parse ("cont" : path)                     = map (ToHere << IContinue) $ parsePath path
-parse ("f" : rest)                        = map ToFirst $ parse rest
-parse ("s" : rest)                        = map ToSecond $ parse rest
+  | Just v <- scan val :: Maybe Unit      = ok <| ToHere <| IChange v
+  | Just v <- scan val :: Maybe Bool      = ok <| ToHere <| IChange v
+  | Just v <- scan val :: Maybe Int       = ok <| ToHere <| IChange v
+  | Just v <- scan val :: Maybe String    = ok <| ToHere <| IChange v
+  | Just v <- scan val :: Maybe [Bool]    = ok <| ToHere <| IChange v
+  | Just v <- scan val :: Maybe [Int]     = ok <| ToHere <| IChange v
+  | Just v <- scan val :: Maybe [String]  = ok <| ToHere <| IChange v
+  | otherwise                             = throw <| sep [ "!! Error parsing value", dquotes (pretty val) ]
+parse ("pick" : path)                     = map (ToHere << IPick) <| parsePath path
+parse ("cont" : path)                     = map (ToHere << IContinue) <| parsePath path
+parse ("f" : rest)                        = map ToFirst <| parse rest
+parse ("s" : rest)                        = map ToSecond <| parse rest
 parse [ "help" ]                          = throw usage
-parse other                               = throw $ sep [ "!!", dquotes (sep $ map pretty other), "is not a valid command, type `help` for more info" ]
+parse other                               = throw <| sep [ "!!", dquotes (sep <| map pretty other), "is not a valid command, type `help` for more info" ]

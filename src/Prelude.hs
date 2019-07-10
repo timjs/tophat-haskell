@@ -7,8 +7,8 @@ module Prelude
   , Pretty(..), Doc, sep, cat, split, indent, dquotes, parens, angles
   , scan, pretty', tracePretty
   , neutral
-  , (<<), (>>), (#), map
-  , (<-<), (>->)
+  , (<|), (|>), (<<), (>>), map
+  , (-<), (>-), (<-<), (>->)
   , Monoidal((<&>), skip, (<&), (&>)), applyDefault, pureDefault
   , Selective(branch, select, biselect), check, when
   , lift0, lift1, lift2, lift3
@@ -19,7 +19,7 @@ module Prelude
   ) where
 
 
-import Relude hiding ((.), (>>), (&), (<&>), (<$>), map, when, pass, trace, readMaybe, liftA2, liftA3, Nat, Any)
+import Relude hiding ((.), (>>), ($), (&), (<&>), (<$>), (<*), (*>), map, when, pass, trace, readMaybe, liftA2, liftA3, Nat, Any)
 import Data.Type.Equality
 
 import Control.Monad.Except (MonadError(..))
@@ -127,9 +127,20 @@ neutral = mempty
 -- Functions -------------------------------------------------------------------
 
 
+infixr 0 <|
+infixl 1 |>
 infixr 9 <<
 infixr 9 >>
-infixl 1 #
+
+
+(<|) :: (a -> b) -> a -> b
+(<|) f a = f a
+{-# INLINE (<|) #-}
+
+
+(|>) :: a -> (a -> b) -> b
+(|>) = flip (<|)
+{-# INLINE (|>) #-}
 
 
 (<<) :: (b -> c) -> (a -> b) -> a -> c
@@ -142,21 +153,8 @@ f << g = \x -> f (g x)
 {-# INLINE (>>) #-}
 
 
-(#) :: a -> (a -> b) -> b
-(#) = flip ($)
-{-# INLINE (#) #-}
-
-
 
 -- Functors --------------------------------------------------------------------
-
-
--- infixl 1 <#>
-
-
--- (<#>) :: Functor f => f a -> (a -> b) -> f b
--- (<#>) = flip map
--- {-# INLINE (<#>) #-}
 
 
 map :: Functor f => (a -> b) -> f a -> f b
@@ -169,6 +167,30 @@ map = Relude.fmap
 
 infixr 1 <-<
 infixr 1 >->
+-- infixl 4 >>-
+-- infixl 4 -<<
+infixl 5 -<
+infixr 5 >-
+
+
+(-<) :: Applicative f => f (a -> b) -> f a -> f b
+(-<) = (Relude.<*>)
+{-# INLINE (-<) #-}
+
+
+(>-) :: Applicative f => f a -> f (a -> b) -> f b
+(>-) = flip (Relude.<*>)
+{-# INLINE (>-) #-}
+
+
+-- (-<<) :: Applicative f => f b -> f a -> f b
+-- (-<<) = (Relude.<*)
+-- {-# INLINE (-<<) #-}
+
+
+-- (>>-) :: Applicative f => f a -> f b -> f b
+-- (>>-) = (Relude.*>)
+-- {-# INLINE (>>-) #-}
 
 
 lift0 :: Applicative f => a -> f a
@@ -192,7 +214,7 @@ lift3 = Relude.liftA3
 
 
 (<-<) :: Applicative f => f (b -> c) -> f (a -> b) -> f (a -> c)
-f <-< g = pure (<<) <*> f <*> g
+f <-< g = pure (<<) -< f -< g
 {-# INLINE (<-<) #-}
 
 
@@ -212,20 +234,20 @@ infixl 6 &>
 
 class Applicative f => Monoidal f where
   (<&>) :: f a -> f b -> f ( a, b )
-  (<&>) x y = pure (,) <*> x <*> y
+  (<&>) x y = pure (,) -< x -< y
 
   skip :: f ()
   skip = pure ()
 
   (<&) :: f a -> f b -> f a
-  (<&) x y = map fst $ x <&> y
+  (<&) x y = map fst <| x <&> y
 
   (&>) :: f a -> f b -> f b
-  (&>) x y = map snd $ x <&> y
+  (&>) x y = map snd <| x <&> y
 
 
 applyDefault :: Monoidal f => f (a -> b) -> f a -> f b
-applyDefault fg fx = map (\( g, x ) -> g x) $ fg <&> fx
+applyDefault fg fx = map (\( g, x ) -> g x) <| fg <&> fx
 
 
 pureDefault :: Monoidal f => a -> f a
@@ -249,7 +271,7 @@ class Applicative f => Selective f where
   select x y = branch x y (pure identity)
 
   biselect :: f (Either a b) -> f (Either a c) -> f (Either a ( b, c ))
-  biselect x y = select (pure (map Left << swp) <*> x) (pure (\e a -> map ( a, ) e) <*> y)
+  biselect x y = select (pure (map Left << swp) -< x) (pure (\e a -> map ( a, ) e) -< y)
     where
       swp = either Right Left
 
@@ -307,7 +329,7 @@ catch = catchError
 
 
 -- clear :: MonadWriter w m => m ()
--- clear = pass $ lift0 ((), const neutral)
+-- clear = pass <| lift0 ((), const neutral)
 
 
 evalWriterT :: Monad m => WriterT w m a -> m a

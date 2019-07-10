@@ -98,8 +98,8 @@ instance Applicative (TaskT m) where
 instance Selective (TaskT m) where
   branch p t1 t2 = go =<< p
     where
-      go (Left  a) = map ($ a) t1
-      go (Right b) = map ($ b) t2
+      go (Left  a) = map (<| a) t1
+      go (Right b) = map (<| b) t2
 
 instance Alternative (TaskT m) where
   (<|>) = Choose
