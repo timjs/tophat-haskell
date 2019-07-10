@@ -138,34 +138,35 @@ inputs = \case
 -- Striding --------------------------------------------------------------------
 
 
+-- We return just the next task. Normalisation should handle the next stride.
 stride ::
   MonadRef l m =>
   TaskT m a -> WriterT (List (Someref m)) m (TaskT m a)
 stride = \case
   -- * Step
-  Step t1 c -> do
+  Step t1 e2 -> do
     t1' <- stride t1
-    v1 <- lift $ value t1'
-    case v1 of
-      Nothing -> pure $ Step t1' c
-      Just v  ->
-        let t2 = c v in
+    let stay = Step t1' e2
+    mv1 <- lift $ value t1'
+    case mv1 of
+      Nothing -> pure stay  -- S-ThenNone
+      Just v1 ->
+        let t2 = e2 v1 in
         if failing t2
-          then pure $ Step t1' c
-          --NOTE: We return just the next task. Normalisation should handle the next stride.
           else pure t2
+          then pure stay -- S-ThenFail
   -- * Choose
   Choose t1 t2 -> do
     t1' <- stride t1
-    v1 <- lift $ value t1'
-    case v1 of
-      Just _  -> pure t1'
+    mv1 <- lift $ value t1'
+    case mv1 of
+      Just _  -> pure t1'  -- S-OrLeft
       Nothing -> do
         t2' <- stride t2
-        v2 <- lift $ value t2'
-        case v2 of
-          Just _  -> pure t2'
-          Nothing -> pure $ Choose t1' t2'
+        mv2 <- lift $ value t2'
+        case mv2 of
+          Just _  -> pure t2'  -- S-OrRight
+          Nothing -> pure $ Choose t1' t2'  -- S-OrNone
   -- * Evaluate
   Trans f t  -> pure (Trans f) <*> stride t
   Pair t1 t2 -> pure Pair <*> stride t1 <*> stride t2
