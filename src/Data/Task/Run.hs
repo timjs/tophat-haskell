@@ -170,7 +170,7 @@ stride = \case
   Trans f t  -> pure (Trans f) <*> stride t
   Pair t1 t2 -> pure Pair <*> stride t1 <*> stride t2
   New v      -> pure $ ref v
-  Watch l    -> pure $ deref l
+  Watch l    -> tell [ pack l ] *> pure (deref l)
   Change l v -> tell [ pack l ] *> pure (l <<- v)
   -- * Ready
   t@(Done _)   -> pure t
