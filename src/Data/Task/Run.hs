@@ -12,9 +12,12 @@ import Data.Task.Input
 
 
 -- Observations ----------------------------------------------------------------
+-- NOTE: Normalisation should never happen in any observation, they are immediate.
 
 
-ui :: MonadRef l m => TaskT m a -> m (Doc b)
+ui ::
+  MonadRef l m =>
+  TaskT m a -> m (Doc b)  -- We need to deref locations and be in monad `m`
 ui = \case
   Done _       -> pure "■(_)"
   Enter        -> pure "⊠(_)"
@@ -34,7 +37,9 @@ ui = \case
   Change _ v   -> pure $ sep [ "⊟", pretty v ]
 
 
-value :: MonadRef l m => TaskT m a -> m (Maybe a)
+value ::
+  MonadRef l m =>
+  TaskT m a -> m (Maybe a)  -- We need to deref locations and be in monad `m`
 value = \case
   Done v       -> pure (Just v)
   Enter        -> pure Nothing
@@ -63,7 +68,7 @@ failing = \case
 
   Pair t1 t2   -> failing t1 && failing t2
   Choose t1 t2 -> failing t1 && failing t2
-  Pick t1 t2   -> failing t1 && failing t2
+  Pick t1 t2   -> failing t1 && failing t2  --XXX: Do we need to normalise here??
   Fail         -> True
 
   Trans _ t    -> failing t
@@ -74,7 +79,9 @@ failing = \case
   Change _ _   -> False
 
 
-watching :: MonadRef l m => TaskT m a -> List (Someref m)
+watching ::
+  MonadRef l m =>                -- We need MonadRef here to pack locations `l`
+  TaskT m a -> List (Someref m)  -- But there is no need to be in monad `m`
 watching = \case
   Done _       -> []
   Enter        -> []
@@ -103,7 +110,9 @@ choices = \case
   _              -> []
 
 
-inputs :: forall m l a. MonadRef l m => TaskT m a -> m (List (Input Dummy))
+inputs :: forall m l a.
+  MonadRef l m =>
+  TaskT m a -> m (List (Input Dummy))  -- We need to call `value`, therefore we are in `m`
 inputs = \case
   Done _       -> pure []
   Enter        -> pure [ ToHere (AChange tau) ]
@@ -228,9 +237,9 @@ handle :: forall m l a.
   TaskT m a -> Input Action -> m (TaskT m a)
 handle t i_ = case ( t, i_ ) of
   -- * Edit
-  ( Enter, ToHere (IChange v) )
-    | Just Refl <- r ~~ typeOf v -> pure $ Update v
-    | otherwise -> trace (CouldNotChangeVal (SomeTypeRep r) (someTypeOf v)) $ pure t
+  ( Enter, ToHere (IChange w) )
+    | Just Refl <- r ~~ typeOf w -> pure $ Update w
+    | otherwise -> trace (CouldNotChangeVal (SomeTypeRep r) (someTypeOf w)) $ pure t
     where
       r = typeRep :: TypeRep a
   ( Update v, ToHere (IChange w) )
