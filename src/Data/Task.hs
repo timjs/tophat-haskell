@@ -1,22 +1,22 @@
 module Data.Task
   ( TaskT(..), Task
   , module Control.Interactive
-  , module Control.Monad.Ref
+  , module Control.Locative
   , module Data.Editable
   ) where
 
 
 import Control.Interactive
-import Control.Monad.Ref
+import Control.Locative
 
-import Data.Editable (Editable, Storable)
+import Data.Editable (Editable)
 
 
 -- Tasks -----------------------------------------------------------------------
 
 -- | Task monad transformer build on top of a monad `m`.
 -- |
--- | To use references, `m` shoud be a `MonadRef` with locations `l`.
+-- | To use references, `m` shoud be a `Locative` with locations `l`.
 data TaskT (m :: Type -> Type) (r :: Type) where
   -- * Editors
   -- | Internal, unrestricted and hidden editor
@@ -48,11 +48,11 @@ data TaskT (m :: Type -> Type) (r :: Type) where
 
   -- * References
   -- | Create new reference of type `r`
-  New :: ( MonadRef l m, Storable r ) => r -> TaskT m (l r)
+  New :: ( Locative l m, Editable r ) => r -> TaskT m (l r)
   -- | Watch a reference of type `r`
-  Watch :: ( MonadRef l m, Storable r ) => l r -> TaskT m r
+  Watch :: ( Locative l m, Editable r ) => l r -> TaskT m r
   -- | Change to a reference of type `r` to a value
-  Change :: ( MonadRef l m, Storable a ) => l a -> a -> TaskT m ()
+  Change :: ( Locative l m, Editable a ) => l a -> a -> TaskT m ()
 
   -- * Loops
   -- Forever :: TaskT m r -> TaskT m Void
@@ -108,7 +108,7 @@ instance Alternative (TaskT m) where
 instance Monad (TaskT m) where
   (>>=) = Step
 
-instance MonadRef l m => MonadRef l (TaskT m) where
+instance Locative l m => Locative l (TaskT m) where
   ref    = New
   deref  = Watch
   assign = Change

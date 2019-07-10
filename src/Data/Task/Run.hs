@@ -1,7 +1,6 @@
 module Data.Task.Run where
 
 
-import Control.Monad.Ref
 import Control.Monad.Trace
 import Control.Monad.Writer
 
@@ -16,7 +15,7 @@ import Data.Task.Input
 
 
 ui ::
-  MonadRef l m =>
+  Locative l m =>
   TaskT m a -> m (Doc b)  -- We need to deref locations and be in monad `m`
 ui = \case
   Done _       -> pure "■(_)"
@@ -38,7 +37,7 @@ ui = \case
 
 
 value ::
-  MonadRef l m =>
+  Locative l m =>
   TaskT m a -> m (Maybe a)  -- We need to deref locations and be in monad `m`
 value = \case
   Done v       -> pure (Just v)
@@ -59,7 +58,8 @@ value = \case
   Change _ _   -> pure (Just ())
 
 
-failing :: TaskT m a -> Bool
+failing ::
+  TaskT m a -> Bool
 failing = \case
   Done _       -> False
   Enter        -> False
@@ -80,7 +80,7 @@ failing = \case
 
 
 watching ::
-  MonadRef l m =>                -- We need MonadRef here to pack locations `l`
+  Locative l m =>                -- We need Locative here to pack locations `l`
   TaskT m a -> List (Someref m)  -- But there is no need to be in monad `m`
 watching = \case
   Done _       -> []
@@ -101,7 +101,8 @@ watching = \case
   Change l _   -> [ pack l ]
 
 
-choices :: TaskT m a -> List Path
+choices ::
+  TaskT m a -> List Path
 choices = \case
   Pick t1 t2 -> ls <> rs
     where
@@ -111,7 +112,7 @@ choices = \case
 
 
 inputs :: forall m l a.
-  MonadRef l m =>
+  Locative l m =>
   TaskT m a -> m (List (Input Dummy))  -- We need to call `value`, therefore we are in `m`
 inputs = \case
   Done _       -> pure []
@@ -149,7 +150,7 @@ inputs = \case
 
 -- We return just the next task. Normalisation should handle the next stride.
 stride ::
-  MonadRef l m =>
+  Locative l m =>
   TaskT m a -> WriterT (List (Someref m)) m (TaskT m a)
 stride = \case
   -- * Step
@@ -206,7 +207,7 @@ instance Pretty (Dirties m) where
 
 
 normalise ::
-  MonadRef l m => MonadTrace (Dirties m) m =>
+  Locative l m => MonadTrace (Dirties m) m =>
   TaskT m a -> m (TaskT m a)
 normalise t = do
   ( t', ds ) <- runWriterT (stride t)
@@ -218,7 +219,7 @@ normalise t = do
 
 
 initialise ::
-  MonadRef l m => MonadTrace (Dirties m) m =>
+  Locative l m => MonadTrace (Dirties m) m =>
   TaskT m a -> m (TaskT m a)
 initialise = normalise
 
@@ -245,7 +246,7 @@ instance Pretty NotApplicable where
 
 
 handle :: forall m l a.
-  MonadRef l m => MonadTrace NotApplicable m =>
+  Locative l m => MonadTrace NotApplicable m =>
   TaskT m a -> Input Action -> m (TaskT m a)
 handle t i_ = case ( t, i_ ) of
   -- * Edit
@@ -304,7 +305,7 @@ handle t i_ = case ( t, i_ ) of
 
 
 interact ::
-  MonadRef l m => MonadTrace NotApplicable m => MonadTrace (Dirties m) m =>
+  Locative l m => MonadTrace NotApplicable m => MonadTrace (Dirties m) m =>
   TaskT m a -> Input Action -> m (TaskT m a)
 interact t i =
   handle t i >>= normalise

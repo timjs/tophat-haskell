@@ -1,5 +1,5 @@
-module Control.Monad.Ref
-  ( MonadRef(..), (<<-)
+module Control.Locative
+  ( Locative(..), (<<-)
   , Someref, pack, unpack
   ) where
 
@@ -8,20 +8,21 @@ import Data.Editable
 
 infixl 7 <<-
 
-class ( Monad m, Typeable l, forall a. Eq (l a) ) => MonadRef l m | m -> l where
-  ref    :: Storable a => a -> m (l a)
-  deref  :: Storable a => l a -> m a
-  assign :: Storable a => l a -> a -> m ()
+-- | A monad with `Editable` reference cells and pointer equality.
+class ( Monad m, Typeable l, forall a. Eq (l a) ) => Locative l m | m -> l where
+  ref    :: Editable a => a -> m (l a)
+  deref  :: Editable a => l a -> m a
+  assign :: Editable a => l a -> a -> m ()
 
-(<<-) :: MonadRef l m => Storable a => l a -> a -> m ()
+(<<-) :: Locative l m => Editable a => l a -> a -> m ()
 (<<-) = assign
 
--- modify :: MonadRef l m => Storable a => l a -> (a -> a) -> m ()
+-- modify :: Locative l m => Editable a => l a -> (a -> a) -> m ()
 -- modify l f = do
 --   x <- deref l
 --   assign l (f x)
 
-instance MonadRef IORef IO where
+instance Locative IORef IO where
   ref    = newIORef
   deref  = readIORef
   assign = writeIORef
@@ -32,10 +33,10 @@ instance MonadRef IORef IO where
 
 
 data Someref (m :: Type -> Type) where
-  Someref :: ( MonadRef l m, Typeable (l a), Eq (l a) ) => l a -> Someref m
+  Someref :: ( Locative l m, Typeable (l a), Eq (l a) ) => l a -> Someref m
 
 
-pack :: forall m l a. ( MonadRef l m, Typeable (l a), Eq (l a) ) => l a -> Someref m
+pack :: forall m l a. ( Locative l m, Typeable (l a), Eq (l a) ) => l a -> Someref m
 pack = Someref
 
 
