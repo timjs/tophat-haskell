@@ -265,7 +265,7 @@ handle t i_ = case ( t, i_ ) of
         l <<- w
         pure $ Change l w
     | otherwise -> trace (CouldNotChangeRef (someTypeOf l) (someTypeOf w)) $ pure t
-  -- * Choosing
+  -- * Pick
   ( Pick t1 _, ToHere (IPick (GoLeft p)) ) ->
     if failing t1
       then pure t
@@ -274,6 +274,11 @@ handle t i_ = case ( t, i_ ) of
     if failing t2
       then pure t
       else handle t2 (ToHere (IPick p))
+  ( Step t1 e2, ToHere (IContinue p) ) -> do
+    mv1 <- value t1
+    case mv1 of
+      Nothing -> pure t
+      Just v1 -> handle (e2 v1) (ToHere (IPick p))
   -- * Passing
   ( Trans f t1, i ) -> do
     t1' <- handle t1 i

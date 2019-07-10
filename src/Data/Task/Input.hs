@@ -12,6 +12,7 @@ import Data.Editable
 -- Paths -----------------------------------------------------------------------
 
 
+--XXX: Rename to fit letter scheme of grammar...
 data Path
   = GoLeft Path
   | GoHere
@@ -146,20 +147,22 @@ usage :: Doc a
 usage = cat
   [ ":: Possible inputs are:"
   , "    change <value> : change current editor to <value> "
-  , "    pick <path>    : pick amongst the possible options"
+  , "    pick <path>    : pick amongst the possible paths"
+  , "    cont <path>    : continue with a possible path"
   , "    f <input>      : send <input> to the first task"
   , "    s <input>      : send <input> to the second task"
   , "    help           : show this message"
   , ""
   , "where values can be:"
-  , "    ()          : Unit"
-  , "    True, False : Booleans"
-  , "    1, 32, -42  : Integers"
-  , "    \"Hello\"   : Strings"
+  , "    ()           : Unit"
+  , "    True, False  : Booleans"
+  , "    1, 32, -42   : Integers"
+  , "    \"Hello\"    : Strings"
+  , "    [ <value>, ] : List of values"
   , ""
   , "paths are of the form:"
-  , "   l : go left"
-  , "   r : go right"
+  , "   l <path>? : go left"
+  , "   r <path>? : go right"
   ]
 
 
@@ -173,7 +176,8 @@ parse [ "change", val ]
   | Just v <- scan val :: Maybe [Int]     = ok $ ToHere $ IChange v
   | Just v <- scan val :: Maybe [String]  = ok $ ToHere $ IChange v
   | otherwise                             = throw $ sep [ "!! Error parsing value", dquotes (pretty val) ]
-parse ("pick" : next)                     = map (ToHere << IPick) $ parsePath next
+parse ("pick" : path)                     = map (ToHere << IPick) $ parsePath path
+parse ("cont" : path)                     = map (ToHere << IContinue) $ parsePath path
 parse ("f" : rest)                        = map ToFirst $ parse rest
 parse ("s" : rest)                        = map ToSecond $ parse rest
 parse [ "help" ]                          = throw usage
