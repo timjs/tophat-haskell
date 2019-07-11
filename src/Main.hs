@@ -1,9 +1,7 @@
 module Main where
 
-
 import Data.Task
 import Data.Task.Run
-
 
 
 main :: IO ()
@@ -11,83 +9,61 @@ main =
   run (add 3 4)
 
 
-
 -- Examples --------------------------------------------------------------------
 --
 -- NOTE: Tasks ending with a quote need user input
 --
 
-
 -- Basics --
-
 
 fourtytwo :: Task Int
 fourtytwo =
   update 42
 
-
 hello :: Task Text
 hello =
   update "Hello"
-
 
 inc :: Int -> Task Int
 inc x =
   view (x + 1)
 
-
 add :: Int -> Int -> Task Int
 add x y =
   view (x + y)
-
 
 append :: Text -> Text -> Task Text
 append x y =
   view (x <> y)
 
 
-
-{-
 -- Steps --
 
-
 pureStep :: Task Int
-pureStep =
-  fourtytwo >>- \x ->
+pureStep = do
+  x <- fourtytwo
   inc x
-
 
 pureStep' :: Task Int
-pureStep' =
-    fourtytwo >>? \x ->
-    inc x
-
-
-
-pureStep'' :: Task Int
-pureStep'' =
-  fourtytwo >>? \x ->
-  inc x
-
+pureStep' = do
+  x <- fourtytwo
+  inc x <?> empty
 
 oneStep :: Task Int
-oneStep =
-  update 0 >>- \x ->
+oneStep = do
+  x <- update 0
   inc x
-
 
 oneStep' :: Task Int
-oneStep' =
-  update 0 >>? \x ->
-  inc x
-
+oneStep' = do
+  x <- update 0
+  inc x <?> empty
 
 twoSteps :: Task Int
-twoSteps =
-  update 1 >>- \x ->
-  update 2 >>- \y ->
+twoSteps = do
+  x <- update 1
+  y <- update 2
   add x y
-
 
 twoSteps' :: Task Int
 twoSteps' =
@@ -97,6 +73,7 @@ twoSteps' =
 
 
 
+{-
 -- Parallel --
 
 
