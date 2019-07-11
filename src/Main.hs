@@ -152,7 +152,6 @@ branch'' = do
     <?> (if x `mod` 5 == 0 then view "multiple of 5" else empty)
 
 
-{-
 {- Shared Data --
 
 partial
@@ -211,15 +210,29 @@ editList = do
         "Edit" -#- repeat l <?> "Quit" -#- quit
 -}
 
-update1 :: Loc Int -> Task Int
+update1 :: Ref Int -> Task ()
 update1 l = do
-  n <- enter
-  l <<- n
-  m <- enter
+  x <- enter
+  l <<- x
 
-  l <<- ((+) m)
-  update !(deref l)
+update2 :: Ref Int -> Task Int
+update2 l = do
+  x <- enter
+  l <<- x
+  y <- enter
+  l <<- y
+  deref l
 
+update3 :: Ref Int -> Task Int
+update3 l = do
+  x <- enter
+  l <<- x
+  y <- enter
+  z <- deref l
+  l <<- y + z
+  deref l
+
+{-
 update2 :: Loc Int -> Task ()
 update2 l =
   deref l >>= \x ->
@@ -252,17 +265,6 @@ doubleShared = do
     y <- watch l
     if y >= 5 then m $= const 12 else empty
   t2 <&> t1
-
-
-
--- Empty update --
-
-
-empties :: Task Int
-empties = do
-  ( x, y ) <- enter <&> enter
-  update (x + y)
-
 
 
 
