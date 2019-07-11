@@ -8,11 +8,14 @@ import Data.Editable
 
 -- | A monad with `Editable` reference cells and pointer equality.
 class ( Monad m, Typeable l, forall a. Eq (l a) ) => Collaborative l m | m -> l where
-  ref    :: Editable a => a -> m (l a)
-  deref  :: Editable a => l a -> m a
+  store  :: Editable a => a -> m (l a)
+
   assign :: Editable a => l a -> a -> m ()
+
+  watch  :: Editable a => l a -> m a
+
   change :: Editable a => l a -> m a
-  change = deref
+  change = watch
 
 infixl 1 <<-
 
@@ -21,13 +24,13 @@ infixl 1 <<-
 
 -- modify :: Collaborative l m => l a -> (a -> a) -> m ()
 -- modify l f = do
---   x <- deref l
+--   x <- watch l
 --   assign l (f x)
 
 instance Collaborative IORef IO where
-  ref    = newIORef
-  deref  = readIORef
+  store  = newIORef
   assign = writeIORef
+  watch  = readIORef
 
 
 -- Existential packing ---------------------------------------------------------

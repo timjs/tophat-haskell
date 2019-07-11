@@ -173,11 +173,11 @@ editList = do
 
     change :: Loc (LIST Int) -> Task ()
     change l =
-      --NOTE: `deref` should be before the external step,
+      --NOTE: `watch` should be before the external step,
       --      otherwise we'll end up an a state where we show an editor with the list when the user entered an improper index.
       --      Compare this with iTasks though:
-      --      `deref` should be before the external step because you cannot specify the `deref` inside the step list!
-      deref (LIST Int) l >>= \xs ->
+      --      `watch` should be before the external step because you cannot specify the `watch` inside the step list!
+      watch (LIST Int) l >>= \xs ->
       "Give an index" -#- enter >>? \n ->
       let i = the Nat (cast n) in
       if i < List.length xs then
@@ -221,24 +221,24 @@ update2 l = do
   l <<- x
   y <- enter
   l <<- y
-  deref l
+  watch l
 
 update3 :: Ref Int -> Task Int
 update3 l = do
   x <- enter
   l <<- x
   y <- enter
-  z <- deref l
+  z <- watch l
   l <<- y + z
-  deref l
+  watch l
 
 {-
 update2 :: Loc Int -> Task ()
 update2 l =
-  deref l >>= \x ->
+  watch l >>= \x ->
   update (x + 1) >>? \y ->
   l $= const y >>= \() ->
-  deref l >>= \u ->
+  watch l >>= \u ->
   update (u + 2) >>? \v ->
   l $= const v
 

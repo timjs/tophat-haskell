@@ -125,7 +125,7 @@ instance Monad (TaskT m) where
   (>>=) = Step
 
 instance Collaborative l m => Collaborative l (TaskT m) where
-  ref    = Store
+  store  = Store
   assign = Assign
-  deref  = Watch
+  watch  = Watch
   change = Change

@@ -16,7 +16,7 @@ import Data.Task.Input
 
 ui ::
   Collaborative l m =>
-  TaskT m a -> m (Doc b)  -- We need to deref locations and be in monad `m`
+  TaskT m a -> m (Doc b)  -- We need to watch locations and be in monad `m`
 ui = \case
   Done _       -> pure "■(_)"
   Enter        -> pure "⊠(_)"
@@ -39,13 +39,13 @@ ui = \case
 
   Store v      -> pure <| sep [ "store", pretty v ]
   Assign _ v   -> pure <| sep [ "_", ":=", pretty v ]
-  Watch l      -> pure (\v -> cat [ "⧈(", pretty v, ")" ]) -< deref l
-  Change l     -> pure (\v -> cat [ "⊟(", pretty v, ")" ]) -< deref l
+  Watch l      -> pure (\v -> cat [ "⧈(", pretty v, ")" ]) -< watch l
+  Change l     -> pure (\v -> cat [ "⊟(", pretty v, ")" ]) -< watch l
 
 
 value ::
   Collaborative l m =>
-  TaskT m a -> m (Maybe a)  -- We need to deref locations and be in monad `m`
+  TaskT m a -> m (Maybe a)  -- We need to watch locations and be in monad `m`
 value = \case
   Done v       -> pure (Just v)
   Enter        -> pure Nothing
@@ -60,10 +60,10 @@ value = \case
   Trans f t    -> pure (map f) -< value t
   Step _ _     -> pure Nothing
 
-  Store v      -> pure Just -< ref v
+  Store v      -> pure Just -< store v
   Assign _ _   -> pure (Just ())
-  Watch l      -> pure Just -< deref l
-  Change l     -> pure Just -< deref l
+  Watch l      -> pure Just -< watch l
+  Change l     -> pure Just -< watch l
 
 
 failing ::
@@ -194,7 +194,7 @@ normalise = \case
   Pair t1 t2 -> pure Pair -< normalise t1 -< normalise t2
   -- * Internal
   Store v -> do
-    l <- lift <| ref v
+    l <- lift <| store v
     pure <| Done l
   Assign l v -> do
     lift <| l <<- v
