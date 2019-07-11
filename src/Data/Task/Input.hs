@@ -144,7 +144,7 @@ strip = map dummyfy
 
 
 usage :: Doc a
-usage = cat
+usage = split
   [ ":: Possible inputs are:"
   , "    change <value> : change current editor to <value> "
   , "    pick <path>    : pick amongst the possible paths"

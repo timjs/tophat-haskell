@@ -20,8 +20,8 @@ ui ::
 ui = \case
   Done _       -> pure "■(_)"
   Enter        -> pure "⊠(_)"
-  Update v     -> pure <| sep [ "□(", pretty v, ")" ]
-  View v       -> pure <| sep [ "⧇(", pretty v, ")" ]
+  Update v     -> pure <| cat [ "□(", pretty v, ")" ]
+  View v       -> pure <| cat [ "⧇(", pretty v, ")" ]
 
   Pair t1 t2   -> pure (\l r -> sep [ l, " ⧓ ", r ]) -< ui t1 -< ui t2
   Choose t1 t2 -> pure (\l r -> sep [ l, " ◆ ", r ]) -< ui t1 -< ui t2
@@ -32,8 +32,8 @@ ui = \case
   Step t1 _    -> pure (<> " ▶…") -< ui t1
 
   New v        -> pure <| sep [ "ref", pretty v ]
-  Watch l      -> pure (\v -> sep [ "⧈", pretty v ]) -< deref l
-  Change _ v   -> pure <| sep [ "⊟", pretty v ]  --XXX: deref l or just v??
+  Watch l      -> pure (\v -> cat [ "⧈(", pretty v, ")" ]) -< deref l
+  Change _ v   -> pure <| cat [ "⊟(", pretty v, ")" ]  --XXX: deref l or just v??
 
 
 value ::
