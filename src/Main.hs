@@ -72,35 +72,29 @@ twoSteps' =
   add x y
 
 
-
-{-
 -- Parallel --
 
-
 parallel :: Task ( Int, Text )
-parallel = enter -&&- hello
-
+parallel = enter <&> hello
 
 parallelStep :: Task Text
-parallelStep =
-  parallel >>- \( n, m ) ->
-  update (unwords $ replicate n m)
-
+parallelStep = do
+  ( n, m ) <- parallel
+  view (unwords <| replicate n m)
 
 parallelStep' :: Task Text
-parallelStep' =
-  parallel >>? \( n, m ) ->
-  update (unwords $ replicate n m)
+parallelStep' = do
+  ( n, m ) <- parallel
+  view (unwords <| replicate n m) <?> empty
 
-
-
+{-
 -- Normalisation --
 --
 -- FIXME: should these automatically simplify?
 
 
 pair :: Task ( Int, Int )
-pair = update 3 -&&- update 8
+pair = update 3 <&> update 8
 
 
 inner :: Task Int
@@ -122,7 +116,7 @@ partial
 editList :: Task ( (), (LIST Int) )
 editList = do
   l <- ref (LIST Int) []
-  start l -&&- watch l
+  start l <&> watch l
 
   where
 
@@ -196,12 +190,12 @@ update2 l =
 inspect :: Show (typeOf a) -> (Loc Int -> Task a) -> Task ( a, Int )
 inspect f = do
   l <- Int 0
-  f l -&&- watch l
+  f l <&> watch l
 
 -- inspect :: Show (typeOf a) -> Show (typeOf b) -> (Loc b -> Task a) -> Task ( a, b )
 -- inspect {b} f = do
 --   l <- init b
---   f l -&&- watch l
+--   f l <&> watch l
 
 
 doubleShared :: Task ( (), Int )
@@ -214,7 +208,7 @@ doubleShared = do
   let t2 = do
     y <- watch l
     if y >= 5 then m $= const 12 else failure
-  t2 -&&- t1
+  t2 <&> t1
 
 
 
@@ -300,7 +294,7 @@ branch =
 
 empties :: Task Int
 empties = do
-  ( x, y ) <- enter -&&- enter
+  ( x, y ) <- enter <&> enter
   update (x + y)
 
 
