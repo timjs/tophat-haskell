@@ -29,7 +29,13 @@ ui = \case
   Fail         -> pure "↯"
 
   Trans _ t    -> ui t
-  Step t1 _    -> pure (<> " ▶…") -< ui t1
+  Step t1 e2   -> pure (\s n -> cat [ s, " ▶[", pretty n, "]…" ]) -< ui t1 -< count
+    where
+      count = do
+        mv1 <- value t1
+        case mv1 of
+          Nothing -> pure 0
+          Just v1 -> pure <| length <| choices (e2 v1)
 
   New v        -> pure <| sep [ "ref", pretty v ]
   Watch l      -> pure (\v -> cat [ "⧈(", pretty v, ")" ]) -< deref l
