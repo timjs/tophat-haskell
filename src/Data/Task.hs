@@ -1,5 +1,5 @@
 module Data.Task
-  ( TaskT(..), Task
+  ( TaskT(..), Task, (<?>), (>>?)
   , module Control.Interactive
   , module Control.Locative
   , module Data.Editable
@@ -63,13 +63,22 @@ type Task = TaskT IO
 
 -- Instances -------------------------------------------------------------------
 
-instance Pretty (TaskT m t) where
+infixl 3 <?>
+infixl 1 >>?
+
+(<?>) :: TaskT m a -> TaskT m a -> TaskT m a
+(<?>) = Pick
+
+(>>?) :: TaskT m a -> (a -> TaskT m b) -> TaskT m b
+(>>?) t c = t >>= \x -> (c x) <?> empty
+
+instance Pretty (TaskT m r) where
   pretty = \case
-    Trans _ t    -> cat [ "Trans _", pretty t ]
+    Trans _ t    -> sep [ "Trans _", pretty t ]
     Done _       -> "Done"
     Enter        -> "Enter"
-    Update v     -> cat [ "Update", pretty v ]
-    View v       -> cat [ "View", pretty v ]
+    Update v     -> sep [ "Update", pretty v ]
+    View v       -> sep [ "View", pretty v ]
     Pair t1 t2   -> sep [ pretty t1, "<&>", pretty t2 ]
     Choose t1 t2 -> sep [ pretty t1, "<|>", pretty t2 ]
     Pick t1 t2   -> sep [ pretty t1, "<?>", pretty t2 ]
