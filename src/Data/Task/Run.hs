@@ -217,7 +217,7 @@ normalise t = do
   ( t', ds ) <- runWriterT (stride t)
   let ws = watching t'
   let is = ds `intersect` ws
-  case is of
+  case is of  --XXX: Test for equality of tasks...
     [] -> pure t'
     _  -> trace (Watched is) <| normalise t'
 
@@ -235,8 +235,9 @@ initialise = normalise
 data NotApplicable
   = CouldNotChangeVal SomeTypeRep SomeTypeRep
   | CouldNotChangeRef SomeTypeRep SomeTypeRep
-  -- | CouldNotFind Label
-  -- | CouldNotContinue
+  | CouldNotDoPick
+  | CouldNotPick Path
+  | CouldNotContinue
   | CouldNotHandle (Input Action)
 
 
@@ -244,9 +245,21 @@ instance Pretty NotApplicable where
   pretty = \case
     CouldNotChangeVal v c -> sep [ "Could not change value because types", dquotes <| pretty v, "and", dquotes <| pretty c, "do not match" ]
     CouldNotChangeRef r c -> sep [ "Could not change value because cell", dquotes <| pretty r, "does not contain", dquotes <| pretty c ]
-    -- CouldNotFind l   -> "Could not find label `" <> l <> "`"
-    -- CouldNotContinue -> "Could not continue because there is no value to continue with"
-    CouldNotHandle i -> sep [ "Could not handle input", dquotes <| pretty i ]
+    CouldNotDoPick        -> sep [ "Could not pick because there is nothing to pick from this task" ]
+    CouldNotPick p        -> sep [ "Could not pick path", dquotes <| pretty p, "because it leads to an empty task" ]
+    CouldNotContinue      -> sep [ "Could not continue because there is no value to continue with" ]
+    CouldNotHandle i      -> sep [ "Could not handle input", dquotes <| pretty i ]
+
+
+pick :: TaskT m a -> Path -> Either NotApplicable (TaskT m a)
+pick t GoHere = Right t
+pick (Pick t1 _) p@(GoLeft p') = if failing t1
+  then Left <| CouldNotPick p
+  else pick t1 p'
+pick (Pick _ t2) p@(GoRight p') = if failing t2
+  then Left <| CouldNotPick p
+  else pick t2 p'
+pick _ _ = Left <| CouldNotDoPick
 
 
 handle :: forall m l a.
@@ -271,19 +284,22 @@ handle t i_ = case ( t, i_ ) of
         pure <| Change l w
     | otherwise -> trace (CouldNotChangeRef (someTypeOf l) (someTypeOf w)) <| pure t
   -- * Pick
-  ( Pick t1 _, ToHere (IPick (GoLeft p)) ) ->
-    if failing t1
-      then pure t
-      else handle t1 (ToHere (IPick p))
-  ( Pick _ t2, ToHere (IPick (GoRight p)) ) ->
-    if failing t2
-      then pure t
-      else handle t2 (ToHere (IPick p))
+  ( Pick _ _, ToHere (IPick p) ) ->
+    case pick t p of
+      Left e -> trace e <| pure t
+      Right t' -> pure t'
   ( Step t1 e2, ToHere (IContinue p) ) -> do
     mv1 <- value t1
     case mv1 of
-      Nothing -> pure t
-      Just v1 -> handle (e2 v1) (ToHere (IPick p))
+      Nothing -> trace CouldNotContinue <| pure t
+      Just v1 -> case pick (e2 v1) p of
+        Left e -> trace e <| pure t
+        Right t' -> pure t'
+      -- do
+      --   let t2 = e2 v1
+      --   if failing t2
+      --     then trace CouldNotCont <| pure t
+      --     else
   -- * Passing
   ( Trans f t1, i ) -> do
     t1' <- handle t1 i
@@ -334,6 +350,7 @@ getUserInput = do
 
 loop :: Task a -> IO ()
 loop task = do
+  putTextLn ""
   interface <- ui task
   print interface
   events <- inputs task
