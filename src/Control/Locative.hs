@@ -6,7 +6,7 @@ module Control.Locative
 import Data.Editable
 
 
-infixl 7 <<-
+infixl 1 <<-
 
 -- | A monad with `Editable` reference cells and pointer equality.
 class ( Monad m, Typeable l, forall a. Eq (l a) ) => Locative l m | m -> l where
