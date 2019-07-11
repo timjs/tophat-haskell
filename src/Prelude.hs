@@ -2,7 +2,7 @@
 module Prelude
   ( module Relude
   , module Data.Type.Equality
-  , List, Unit, Nat, nat
+  , List, Unit, Nat, nat, chars
   -- , Vector, only, index, update
   , Pretty(..), Doc, sep, cat, split, indent, dquotes, parens, angles
   , scan, pretty', tracePretty
@@ -57,6 +57,9 @@ nat i
   | i >= 0    = Nat i
   | otherwise = error "Prelude.nat: argument is negative"
 
+
+chars :: Text -> List Char
+chars = unpack
 
 
 -- Vectors ---------------------------------------------------------------------

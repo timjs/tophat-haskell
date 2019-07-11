@@ -22,16 +22,16 @@ data Path
 
 instance Pretty Path where
   pretty = \case
-    GoLeft p  -> sep [ "l", pretty p ]
+    GoLeft p  -> cat [ "l", pretty p ]
     GoHere    -> ""
-    GoRight p -> sep [ "r", pretty p ]
+    GoRight p -> cat [ "r", pretty p ]
 
 
-parsePath :: List Text -> Either (Doc a) Path
+parsePath :: List Char -> Either (Doc a) Path
 parsePath = \case
-  "l" : rest -> map GoLeft <| parsePath rest
+  'l' : rest -> map GoLeft <| parsePath rest
   []         -> ok GoHere
-  "r" : rest -> map GoRight <| parsePath rest
+  'r' : rest -> map GoRight <| parsePath rest
   other      -> throw <| sep [ "!!", dquotes (pretty other), "is not a valid path, type `help` for more info" ]
 
 
@@ -161,8 +161,8 @@ usage = split
   , "    [ <value>, ] : List of values"
   , ""
   , "paths are of the form:"
-  , "   l <path>? : go left"
-  , "   r <path>? : go right"
+  , "   l<path>? : go left"
+  , "   r<path>? : go right"
   ]
 
 
@@ -176,8 +176,8 @@ parse [ "change", val ]
   | Just v <- scan val :: Maybe [Int]     = ok <| ToHere <| IChange v
   | Just v <- scan val :: Maybe [String]  = ok <| ToHere <| IChange v
   | otherwise                             = throw <| sep [ "!! Error parsing value", dquotes (pretty val) ]
-parse ("pick" : path)                     = map (ToHere << IPick) <| parsePath path
-parse ("cont" : path)                     = map (ToHere << IContinue) <| parsePath path
+parse [ "pick", path ]                    = map (ToHere << IPick) <| parsePath (chars path)
+parse [ "cont", path ]                    = map (ToHere << IContinue) <| parsePath (chars path)
 parse ("f" : rest)                        = map ToFirst <| parse rest
 parse ("s" : rest)                        = map ToSecond <| parse rest
 parse [ "help" ]                          = throw usage
