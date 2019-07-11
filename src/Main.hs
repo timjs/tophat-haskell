@@ -109,6 +109,43 @@ pick3 :: Task Int
 pick3 = pick2 <?> view 3
 
 
+-- Guards --
+
+auto :: Task Text
+auto = do
+  x <- enter
+  if x >= (10 :: Int)
+    then view "large"
+    else empty
+
+actions :: Task Int
+actions = do
+  _ <- enter :: Task Int
+  pick3
+
+guards :: Task Text
+guards = do
+  x <- enter
+  (if x >= (10 :: Int) then view "large" else empty) <?> (if x >= (100 :: Int) then view "very large" else empty)
+
+{-
+guards' :: Task Text
+guards' = do
+  enter >>? \x ->
+  ("Large" -#- (if x >= 10 then update "large" else empty)
+    <?>
+    "VeryLarge" -#- (if x >= 100 then update "very large" else empty))
+
+branch :: Task Text
+branch =
+  update 1 >>? \x ->
+  if x `mod` 3 == 0 then
+    update "multiple of 3"
+  else if x `mod` 5 == 0 then
+    update "multiple of 5"
+  else
+    empty
+
 
 {- Shared Data --
 
@@ -168,7 +205,6 @@ editList = do
         "Edit" -#- repeat l <?> "Quit" -#- quit
 -}
 
-{-
 update1 :: Loc Int -> Task Int
 update1 l = do
   n <- enter
@@ -210,55 +246,6 @@ doubleShared = do
     y <- watch l
     if y >= 5 then m $= const 12 else empty
   t2 <&> t1
-
-
-
--- Guards --
-
-
-auto :: Task Text
-auto = do
-  x <- enter
-  if x >= 10 then update "large" else empty
-
-
-actions :: Task Int
-actions =
-  enter >>? \x ->
-  pick3
-
-
-actions' :: Task Int
-actions' =
-  enter >>? \x ->
-  pick3'
-
-
-guards :: Task Text
-guards = do
-  x <- enter
-  "Large" -#- (if x >= 10 then update "large" else empty)
-    <?>
-    "VeryLarge" -#- (if x >= 100 then update "very large" else empty)
-
-
-guards' :: Task Text
-guards' = do
-  enter >>? \x ->
-  ("Large" -#- (if x >= 10 then update "large" else empty)
-    <?>
-    "VeryLarge" -#- (if x >= 100 then update "very large" else empty))
-
-
-branch :: Task Text
-branch =
-  update 1 >>? \x ->
-  if x `mod` 3 == 0 then
-    update "multiple of 3"
-  else if x `mod` 5 == 0 then
-    update "multiple of 5"
-  else
-    empty
 
 
 
