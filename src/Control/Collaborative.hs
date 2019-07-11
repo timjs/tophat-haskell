@@ -1,42 +1,43 @@
-module Control.Locative
-  ( Locative(..), (<<-)
+module Control.Collaborative
+  ( Collaborative(..), (<<-) --, modify
   , Someref, pack, unpack
   ) where
 
 import Data.Editable
 
 
-infixl 1 <<-
-
 -- | A monad with `Editable` reference cells and pointer equality.
-class ( Monad m, Typeable l, forall a. Eq (l a) ) => Locative l m | m -> l where
+class ( Monad m, Typeable l, forall a. Eq (l a) ) => Collaborative l m | m -> l where
   ref    :: Editable a => a -> m (l a)
   deref  :: Editable a => l a -> m a
   assign :: Editable a => l a -> a -> m ()
+  change :: Editable a => l a -> m a
+  change = deref
 
-(<<-) :: Locative l m => Editable a => l a -> a -> m ()
+infixl 1 <<-
+
+(<<-) :: Collaborative l m => Editable a => l a -> a -> m ()
 (<<-) = assign
 
--- modify :: Locative l m => Editable a => l a -> (a -> a) -> m ()
+-- modify :: Collaborative l m => l a -> (a -> a) -> m ()
 -- modify l f = do
 --   x <- deref l
 --   assign l (f x)
 
-instance Locative IORef IO where
+instance Collaborative IORef IO where
   ref    = newIORef
   deref  = readIORef
   assign = writeIORef
-
 
 
 -- Existential packing ---------------------------------------------------------
 
 
 data Someref (m :: Type -> Type) where
-  Someref :: ( Locative l m, Typeable (l a), Eq (l a) ) => l a -> Someref m
+  Someref :: ( Collaborative l m, Typeable (l a), Eq (l a) ) => l a -> Someref m
 
 
-pack :: forall m l a. ( Locative l m, Typeable (l a), Eq (l a) ) => l a -> Someref m
+pack :: forall m l a. ( Collaborative l m, Typeable (l a), Eq (l a) ) => l a -> Someref m
 pack = Someref
 
 

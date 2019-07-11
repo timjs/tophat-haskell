@@ -1,13 +1,13 @@
 module Data.Task
   ( TaskT(..), Task, Ref, (<?>), (>>?)
   , module Control.Interactive
-  , module Control.Locative
+  , module Control.Collaborative
   , module Data.Editable
   ) where
 
 
 import Control.Interactive
-import Control.Locative
+import Control.Collaborative
 
 import Data.Editable (Editable)
 
@@ -16,7 +16,7 @@ import Data.Editable (Editable)
 
 -- | Task monad transformer build on top of a monad `m`.
 -- |
--- | To use references, `m` shoud be a `Locative` with locations `l`.
+-- | To use references, `m` shoud be a `Collaborative` with locations `l`.
 data TaskT (m :: Type -> Type) (r :: Type) where
   -- * Editors
   -- | Internal, unrestricted and hidden editor
@@ -48,11 +48,13 @@ data TaskT (m :: Type -> Type) (r :: Type) where
 
   -- * References
   -- | Create new reference of type `r`
-  New :: ( Locative l m, Editable r ) => r -> TaskT m (l r)
+  Store :: ( Collaborative l m, Editable r ) => r -> TaskT m (l r)
+  -- | Assign to a reference of type `r` to a given value
+  Assign :: ( Collaborative l m, Editable a ) => l a -> a -> TaskT m ()
   -- | Watch a reference of type `r`
-  Watch :: ( Locative l m, Editable r ) => l r -> TaskT m r
+  Watch :: ( Collaborative l m, Editable r ) => l r -> TaskT m r
   -- | Change to a reference of type `r` to a value
-  Change :: ( Locative l m, Editable a ) => l a -> a -> TaskT m ()
+  Change :: ( Collaborative l m, Editable r ) => l r -> TaskT m r
 
   -- * Loops
   -- Forever :: TaskT m r -> TaskT m Void
@@ -75,19 +77,23 @@ infixl 1 >>?
 
 instance Pretty (TaskT m r) where
   pretty = \case
-    Trans _ t    -> sep [ "Trans _", pretty t ]
     Done _       -> "Done"
     Enter        -> "Enter"
     Update v     -> sep [ "Update", pretty v ]
     View v       -> sep [ "View", pretty v ]
+
     Pair t1 t2   -> sep [ pretty t1, "<&>", pretty t2 ]
     Choose t1 t2 -> sep [ pretty t1, "<|>", pretty t2 ]
     Pick t1 t2   -> sep [ pretty t1, "<?>", pretty t2 ]
     Fail         -> "Fail"
+
+    Trans _ t    -> sep [ "Trans _", pretty t ]
     Step t _     -> sep [ pretty t, ">>=", "_" ]
-    New v        -> sep [ "New", pretty v ]
+
+    Store v      -> sep [ "Store", pretty v ]
+    Assign _ v   -> sep [ "_", ":=", pretty v ]
     Watch _      -> sep [ "Watch", "_" ]
-    Change _ v   -> sep [ "_", "<<-", pretty v ]
+    Change _     -> sep [ "Change", "_" ]
 
 instance Functor (TaskT m) where
   fmap = Trans
@@ -118,7 +124,8 @@ instance Alternative (TaskT m) where
 instance Monad (TaskT m) where
   (>>=) = Step
 
-instance Locative l m => Locative l (TaskT m) where
-  ref    = New
+instance Collaborative l m => Collaborative l (TaskT m) where
+  ref    = Store
+  assign = Assign
   deref  = Watch
-  assign = Change
+  change = Change

@@ -15,7 +15,7 @@ import Data.Task.Input
 
 
 ui ::
-  Locative l m =>
+  Collaborative l m =>
   TaskT m a -> m (Doc b)  -- We need to deref locations and be in monad `m`
 ui = \case
   Done _       -> pure "■(_)"
@@ -37,13 +37,14 @@ ui = \case
           Nothing -> pure 0
           Just v1 -> pure <| length <| choices (e2 v1)
 
-  New v        -> pure <| sep [ "ref", pretty v ]
+  Store v      -> pure <| sep [ "store", pretty v ]
+  Assign _ v   -> pure <| sep [ "_", ":=", pretty v ]
   Watch l      -> pure (\v -> cat [ "⧈(", pretty v, ")" ]) -< deref l
-  Change _ v   -> pure <| cat [ "⊟(", pretty v, ")" ]  --XXX: deref l or just v??
+  Change l     -> pure (\v -> cat [ "⊟(", pretty v, ")" ]) -< deref l
 
 
 value ::
-  Locative l m =>
+  Collaborative l m =>
   TaskT m a -> m (Maybe a)  -- We need to deref locations and be in monad `m`
 value = \case
   Done v       -> pure (Just v)
@@ -59,9 +60,10 @@ value = \case
   Trans f t    -> pure (map f) -< value t
   Step _ _     -> pure Nothing
 
-  New v        -> pure Just -< ref v
+  Store v      -> pure Just -< ref v
+  Assign _ _   -> pure (Just ())
   Watch l      -> pure Just -< deref l
-  Change _ _   -> pure (Just ())
+  Change l     -> pure Just -< deref l
 
 
 failing ::
@@ -80,13 +82,14 @@ failing = \case
   Trans _ t    -> failing t
   Step t _     -> failing t
 
-  New _        -> False
+  Store _      -> False
+  Assign _ _   -> False
   Watch _      -> False
-  Change _ _   -> False
+  Change _     -> False
 
 
 watching ::
-  Locative l m =>                -- We need Locative here to pack locations `l`
+  Collaborative l m =>           -- We need Collaborative here to pack locations `l`
   TaskT m a -> List (Someref m)  -- But there is no need to be in monad `m`
 watching = \case
   Done _       -> []
@@ -102,9 +105,10 @@ watching = \case
   Trans _ t    -> watching t
   Step t _     -> watching t
 
-  New _        -> []
+  Store _      -> []
+  Assign _ _   -> []
   Watch l      -> [ pack l ]
-  Change l _   -> [ pack l ]
+  Change l     -> [ pack l ]
 
 
 choices ::
@@ -118,7 +122,7 @@ choices = \case
 
 
 inputs :: forall m l a.
-  Locative l m =>
+  Collaborative l m =>
   TaskT m a -> m (List (Input Dummy))  -- We need to call `value`, therefore we are in `m`
 inputs = \case
   Done _       -> pure []
@@ -143,9 +147,10 @@ inputs = \case
           then pure []
           else pure <| map (ToHere << AContinue) (choices t2)
 
-  New _        -> pure []
+  Store _      -> pure []
+  Assign _ _   -> pure []
   Watch _      -> pure []
-  Change _ _   -> pure [ ToHere (AChange tau) ]
+  Change _     -> pure [ ToHere (AChange tau) ]
   where
     tau = Proxy :: Proxy a
 
@@ -155,7 +160,7 @@ inputs = \case
 
 
 normalise ::
-  Locative l m =>
+  Collaborative l m =>
   TaskT m a -> WriterT (List (Someref m)) m (TaskT m a)
 normalise = \case
   -- * Step
@@ -187,19 +192,21 @@ normalise = \case
   -- * Evaluate
   Trans f t  -> pure (Trans f) -< normalise t
   Pair t1 t2 -> pure Pair -< normalise t1 -< normalise t2
-  New v      -> do
+  -- * Internal
+  Store v -> do
     l <- lift <| ref v
     pure <| Done l
-  Change l v -> do
+  Assign l v -> do
     lift <| l <<- v
     tell [ pack l ]
-    pure <| Change l v
+    pure <| Done ()
   -- * Ready
   t@(Done _)   -> pure t
   t@(Enter)    -> pure t
   t@(Update _) -> pure t
   t@(View _)   -> pure t
   t@(Watch _)  -> pure t
+  t@(Change _) -> pure t
   t@(Pick _ _) -> pure t
   t@(Fail)     -> pure t
 
@@ -213,7 +220,7 @@ instance Pretty (Dirties m) where
 
 
 stabalise ::
-  Locative l m => MonadTrace (Dirties m) m =>
+  Collaborative l m => MonadTrace (Dirties m) m =>
   TaskT m a -> m (TaskT m a)
 --NOTE: This has *nothing* to do with iTasks Stable/Unstable values!
 stabalise t = do
@@ -226,7 +233,7 @@ stabalise t = do
 
 
 initialise ::
-  Locative l m => MonadTrace (Dirties m) m =>
+  Collaborative l m => MonadTrace (Dirties m) m =>
   TaskT m a -> m (TaskT m a)
 initialise = stabalise
 
@@ -266,7 +273,7 @@ pick _ _ = Left <| CouldNotDoPick
 
 
 handle :: forall m l a.
-  Locative l m => MonadTrace NotApplicable m =>
+  Collaborative l m => MonadTrace NotApplicable m =>
   TaskT m a -> Input Action -> m (TaskT m a)
 handle t i_ = case ( t, i_ ) of
   -- * Edit
@@ -280,11 +287,13 @@ handle t i_ = case ( t, i_ ) of
     -- If this is the case, it would be inhabited by `Refl :: a :~: b`, where `b` is the type of the value inside `Change`.
     | Just Refl <- v ~= w -> pure <| Update w
     | otherwise -> trace (CouldNotChangeVal (someTypeOf v) (someTypeOf w)) <| pure t
-  ( Change l v, ToHere (IChange w) )
+  ( Change l, ToHere (IChange w) )
     -- NOTE: As in the `Update` case above, we check for type equality.
     -- NOTE: Setting of the reference is done during normalisiation.
-    | Just Refl <- v ~= w -> pure <| Change l w
+    | Just Refl <- r ~~ typeOf w -> pure <| Change l
     | otherwise -> trace (CouldNotChangeRef (someTypeOf l) (someTypeOf w)) <| pure t
+    where
+      r = typeRep :: TypeRep a
   -- * Pick
   ( Pick _ _, ToHere (IPick p) ) ->
     case pick t p of
@@ -327,7 +336,7 @@ handle t i_ = case ( t, i_ ) of
 
 
 interact ::
-  Locative l m => MonadTrace NotApplicable m => MonadTrace (Dirties m) m =>
+  Collaborative l m => MonadTrace NotApplicable m => MonadTrace (Dirties m) m =>
   TaskT m a -> Input Action -> m (TaskT m a)
 interact t i = do
   handle t i >>= stabalise
