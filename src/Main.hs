@@ -87,26 +87,26 @@ parallelStep' = do
   ( n, m ) <- parallel
   view (unwords <| replicate n m) <?> empty
 
-{-
--- Normalisation --
---
--- FIXME: should these automatically simplify?
 
+-- Choices --
 
-pair :: Task ( Int, Int )
-pair = update 3 <&> update 8
+choose1 :: Task Int
+choose1 = empty <|> view 0
 
+choose2 :: Task Int
+choose2 = view 1 <|> view 2
 
-inner :: Task Int
-inner =
-  pair >>- \( x, y ) ->
-  add x y
+choose3 :: Task Int
+choose3 = choose2 <|> view 3
 
+pick1 :: Task Int
+pick1 = empty <?> view 0
 
-inner' :: Task Int
-inner' =
-  pair >>? \( x, y ) ->
-  add x y
+pick2 :: Task Int
+pick2 = view 1 <?> view 2
+
+pick3 :: Task Int
+pick3 = pick2 <?> view 3
 
 
 
@@ -139,9 +139,9 @@ editList = do
       "Give an index" -#- enter >>? \n ->
       let i = the Nat (cast n) in
       if i < List.length xs then
-        "Delete" -#- delete l i -??- "Replace" -#- replace l i
+        "Delete" -#- delete l i <?> "Replace" -#- replace l i
       else
-        failure
+        empty
 
     prepend :: Loc (LIST Int) -> Task ()
     prepend l =
@@ -159,23 +159,24 @@ editList = do
       partial
       repeat :: Loc (LIST Int) -> Task ()
       repeat l = do
-        "Prepend" -#- prepend l -??- "Clear" -#- clear l -??- "Change" -#- change l
+        "Prepend" -#- prepend l <?> "Clear" -#- clear l <?> "Change" -#- change l
         start l
 
       partial
       start :: Loc (LIST Int) -> Task ()
       start l =
-        "Edit" -#- repeat l -??- "Quit" -#- quit
+        "Edit" -#- repeat l <?> "Quit" -#- quit
 -}
 
+{-
 update1 :: Loc Int -> Task Int
 update1 l = do
   n <- enter
-  assign Int l n
+  l <<- n
   m <- enter
-  modify Int l ((+) m)
-  update !(deref l)
 
+  l <<- ((+) m)
+  update !(deref l)
 
 update2 :: Loc Int -> Task ()
 update2 l =
@@ -204,39 +205,11 @@ doubleShared = do
   m <- ref 0
   let t1 = do
     x <- watch m
-    if x >= 10 then update (x * 2) else failure
+    if x >= 10 then update (x * 2) else empty
   let t2 = do
     y <- watch l
-    if y >= 5 then m $= const 12 else failure
+    if y >= 5 then m $= const 12 else empty
   t2 <&> t1
-
-
-
--- Choices --
-
-
-pick1 :: Task Int
-pick1 = failure -||- update 0
-
-
-pick2 :: Task Int
-pick2 = update 1 -||- update 2
-
-
-pick3 :: Task Int
-pick3 = pick2 -||- update 3
-
-
-pick1' :: Task Int
-pick1' = "Fail" -#- failure -??- "Cont" -#- update 0
-
-
-pick2' :: Task Int
-pick2' = "Pick one of two" -#- ("First" -#- update 1 -??- "Second" -#- update 2)
-
-
-pick3' :: Task Int
-pick3' = "Pick one of three" -#- (pick2' -??- "Third" -#- update 3)
 
 
 
@@ -246,7 +219,7 @@ pick3' = "Pick one of three" -#- (pick2' -??- "Third" -#- update 3)
 auto :: Task Text
 auto = do
   x <- enter
-  if x >= 10 then update "large" else failure
+  if x >= 10 then update "large" else empty
 
 
 actions :: Task Int
@@ -264,17 +237,17 @@ actions' =
 guards :: Task Text
 guards = do
   x <- enter
-  "Large" -#- (if x >= 10 then update "large" else failure)
-    -??-
-    "VeryLarge" -#- (if x >= 100 then update "very large" else failure)
+  "Large" -#- (if x >= 10 then update "large" else empty)
+    <?>
+    "VeryLarge" -#- (if x >= 100 then update "very large" else empty)
 
 
 guards' :: Task Text
 guards' = do
   enter >>? \x ->
-  ("Large" -#- (if x >= 10 then update "large" else failure)
-    -??-
-    "VeryLarge" -#- (if x >= 100 then update "very large" else failure))
+  ("Large" -#- (if x >= 10 then update "large" else empty)
+    <?>
+    "VeryLarge" -#- (if x >= 100 then update "very large" else empty))
 
 
 branch :: Task Text
@@ -285,7 +258,7 @@ branch =
   else if x `mod` 5 == 0 then
     update "multiple of 5"
   else
-    failure
+    empty
 
 
 
