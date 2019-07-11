@@ -1,5 +1,5 @@
 module Data.Task
-  ( TaskT(..), Task, (<?>), (>>?)
+  ( TaskT(..), Task, Ref, (<?>), (>>?)
   , module Control.Interactive
   , module Control.Locative
   , module Data.Editable
@@ -59,6 +59,7 @@ data TaskT (m :: Type -> Type) (r :: Type) where
 
 
 type Task = TaskT IO
+type Ref = IORef
 
 
 -- Instances -------------------------------------------------------------------
