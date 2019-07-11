@@ -145,17 +145,16 @@ inputs = \case
 
 
 
--- Striding --------------------------------------------------------------------
+-- Normalising -----------------------------------------------------------------
 
 
--- We return just the next task. Normalisation should handle the next stride.
-stride ::
+normalise ::
   Locative l m =>
   TaskT m a -> WriterT (List (Someref m)) m (TaskT m a)
-stride = \case
+normalise = \case
   -- * Step
   Step t1 e2 -> do
-    t1' <- stride t1
+    t1' <- normalise t1
     let stay = Step t1' e2
     mv1 <- lift <| value t1'
     case mv1 of
@@ -166,22 +165,22 @@ stride = \case
           then pure stay -- S-ThenFail
           else if not <| null <| choices t2
             then pure stay  -- S-ThenWait
-            else pure t2 -- S-ThenCont
+            else normalise t2 -- S-ThenCont
   -- * Choose
   Choose t1 t2 -> do
-    t1' <- stride t1
+    t1' <- normalise t1
     mv1 <- lift <| value t1'
     case mv1 of
       Just _  -> pure t1'  -- S-OrLeft
       Nothing -> do
-        t2' <- stride t2
+        t2' <- normalise t2
         mv2 <- lift <| value t2'
         case mv2 of
           Just _  -> pure t2'  -- S-OrRight
           Nothing -> pure <| Choose t1' t2'  -- S-OrNone
   -- * Evaluate
-  Trans f t  -> pure (Trans f) -< stride t
-  Pair t1 t2 -> pure Pair -< stride t1 -< stride t2
+  Trans f t  -> pure (Trans f) -< normalise t
+  Pair t1 t2 -> pure Pair -< normalise t1 -< normalise t2
   New v      -> pure <| ref v
   Watch l    -> do
     tell [ pack l ]
@@ -198,11 +197,7 @@ stride = \case
   t@(Fail)     -> pure t
 
 
-
--- Normalising -----------------------------------------------------------------
-
-
-data Dirties m
+newtype Dirties m
   = Watched (List (Someref m))
 
 instance Pretty (Dirties m) where
@@ -210,22 +205,23 @@ instance Pretty (Dirties m) where
     Watched is -> sep [ "Found", pretty (length is), "dirty references" ]
 
 
-normalise ::
+stabalise ::
   Locative l m => MonadTrace (Dirties m) m =>
   TaskT m a -> m (TaskT m a)
-normalise t = do
-  ( t', ds ) <- runWriterT (stride t)
+--NOTE: This has *nothing* to do with iTasks Stable/Unstable values!
+stabalise t = do
+  ( t', ds ) <- runWriterT (normalise t)
   let ws = watching t'
   let is = ds `intersect` ws
-  case is of  --XXX: Test for equality of tasks...
+  case is of
     [] -> pure t'
-    _  -> trace (Watched is) <| normalise t'
+    _  -> trace (Watched is) <| stabalise t'
 
 
 initialise ::
   Locative l m => MonadTrace (Dirties m) m =>
   TaskT m a -> m (TaskT m a)
-initialise = normalise
+initialise = stabalise
 
 
 
@@ -279,9 +275,8 @@ handle t i_ = case ( t, i_ ) of
     | otherwise -> trace (CouldNotChangeVal (someTypeOf v) (someTypeOf w)) <| pure t
   ( Change l v, ToHere (IChange w) )
     -- NOTE: As in the `Update` case above, we check for type equality.
-    | Just Refl <- v ~= w -> do
-        l <<- w
-        pure <| Change l w
+    -- NOTE: Setting of the reference is done during normalisiation.
+    | Just Refl <- v ~= w -> pure <| Change l w
     | otherwise -> trace (CouldNotChangeRef (someTypeOf l) (someTypeOf w)) <| pure t
   -- * Pick
   ( Pick _ _, ToHere (IPick p) ) ->
@@ -327,8 +322,8 @@ handle t i_ = case ( t, i_ ) of
 interact ::
   Locative l m => MonadTrace NotApplicable m => MonadTrace (Dirties m) m =>
   TaskT m a -> Input Action -> m (TaskT m a)
-interact t i =
-  handle t i >>= normalise
+interact t i = do
+  handle t i >>= stabalise
 
 
 
