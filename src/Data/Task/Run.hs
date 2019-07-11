@@ -187,18 +187,19 @@ normalise = \case
   -- * Evaluate
   Trans f t  -> pure (Trans f) -< normalise t
   Pair t1 t2 -> pure Pair -< normalise t1 -< normalise t2
-  New v      -> pure <| ref v
-  Watch l    -> do
-    tell [ pack l ]
-    pure <| deref l
+  New v      -> do
+    l <- lift <| ref v
+    pure <| Done l
   Change l v -> do
+    lift <| l <<- v
     tell [ pack l ]
-    pure <| l <<- v
+    pure <| Change l v
   -- * Ready
   t@(Done _)   -> pure t
   t@(Enter)    -> pure t
   t@(Update _) -> pure t
   t@(View _)   -> pure t
+  t@(Watch _)  -> pure t
   t@(Pick _ _) -> pure t
   t@(Fail)     -> pure t
 
@@ -208,7 +209,7 @@ newtype Dirties m
 
 instance Pretty (Dirties m) where
   pretty = \case
-    Watched is -> sep [ "Found", pretty (length is), "dirty references" ]
+    Watched is -> sep [ "Found", pretty (length is), "dirty reference(s)" ]
 
 
 stabalise ::
