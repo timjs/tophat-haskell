@@ -126,27 +126,33 @@ actions = do
 guards :: Task Text
 guards = do
   x <- enter
-  (if x >= (10 :: Int) then view "large" else empty) <?> (if x >= (100 :: Int) then view "very large" else empty)
-
-{-
-guards' :: Task Text
-guards' = do
-  enter >>? \x ->
-  ("Large" -#- (if x >= 10 then update "large" else empty)
-    <?>
-    "VeryLarge" -#- (if x >= 100 then update "very large" else empty))
+  (if x >= (10 :: Int) then view "large" else empty)
+    <?> (if x >= (100 :: Int) then view "very large" else empty)
 
 branch :: Task Text
-branch =
-  update 1 >>? \x ->
+branch = do
+  x <- update (1 :: Int)
   if x `mod` 3 == 0 then
-    update "multiple of 3"
+    view "multiple of 3"
   else if x `mod` 5 == 0 then
-    update "multiple of 5"
+    view "multiple of 5"
   else
     empty
 
+branch' :: Task Text
+branch' = do
+  x <- update (1 :: Int)
+  (if x `mod` 3 == 0 then view "multiple of 3" else empty)
+    <|> (if x `mod` 5 == 0 then view "multiple of 5" else empty)
 
+branch'' :: Task Text
+branch'' = do
+  x <- update (1 :: Int)
+  (if x `mod` 3 == 0 then view "multiple of 3" else empty)
+    <?> (if x `mod` 5 == 0 then view "multiple of 5" else empty)
+
+
+{-
 {- Shared Data --
 
 partial
