@@ -32,8 +32,8 @@ ui = \case
   Step t1 _    -> pure (<> " ▶…") -< ui t1
 
   New v        -> pure <| sep [ "ref", pretty v ]
-  Watch l      -> pure (\x   -> sep [ "⧈", pretty x ]) -< deref l
-  Change _ v   -> pure <| sep [ "⊟", pretty v ]
+  Watch l      -> pure (\v -> sep [ "⧈", pretty v ]) -< deref l
+  Change _ v   -> pure <| sep [ "⊟", pretty v ]  --XXX: deref l or just v??
 
 
 value ::
@@ -185,10 +185,10 @@ stride = \case
   New v      -> pure <| ref v
   Watch l    -> do
     tell [ pack l ]
-    pure (deref l)
+    pure <| deref l
   Change l v -> do
     tell [ pack l ]
-    pure (l <<- v)
+    pure <| l <<- v
   -- * Ready
   t@(Done _)   -> pure t
   t@(Enter)    -> pure t
