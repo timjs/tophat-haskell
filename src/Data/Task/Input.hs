@@ -1,38 +1,14 @@
 module Data.Task.Input
-  ( Path(..), Action(..), Dummy(..), Symbolic(..), Input(..)
+  ( Action(..), Dummy(..), Symbolic(..), Input(..)
   , dummyfy, strip
   , usage, parse
   ) where
 
 
-import Data.Editable
+import Data.Task
 
-
-
--- Paths -----------------------------------------------------------------------
-
-
---XXX: Rename to fit letter scheme of grammar...
-data Path
-  = GoLeft Path
-  | GoHere
-  | GoRight Path
-  deriving ( Eq, Show )
-
-
-instance Pretty Path where
-  pretty = \case
-    GoLeft p  -> cat [ "l", pretty p ]
-    GoHere    -> ""
-    GoRight p -> cat [ "r", pretty p ]
-
-
-parsePath :: List Char -> Either (Doc a) Path
-parsePath = \case
-  'l' : rest -> map GoLeft <| parsePath rest
-  []         -> ok GoHere
-  'r' : rest -> map GoRight <| parsePath rest
-  other      -> throw <| sep [ "!!", dquotes (pretty other), "is not a valid path, type `help` for more info" ]
+import qualified Data.Char as Char
+import qualified Data.Text as Text
 
 
 
@@ -43,8 +19,8 @@ parsePath = \case
 
 data Action :: Type where
   IChange   :: Editable b => b -> Action
-  IPick     :: Path -> Action
-  IContinue :: Path -> Action
+  IPick     :: Label -> Action
+  IContinue :: Label -> Action
 
 
 instance Eq Action where
@@ -69,8 +45,8 @@ instance Pretty Action where
 
 data Dummy :: Type where
   AChange   :: Editable b => Proxy b -> Dummy
-  APick     :: Path -> Dummy
-  AContinue :: Path -> Dummy
+  APick     :: Label -> Dummy
+  AContinue :: Label -> Dummy
 
 
 instance Eq Dummy where
@@ -147,8 +123,8 @@ usage :: Doc a
 usage = split
   [ ":: Possible inputs are:"
   , "    change <value> : change current editor to <value> "
-  , "    pick <path>    : pick amongst the possible paths"
-  , "    cont <path>    : continue with a possible path"
+  , "    pick <label>   : pick amongst the possible options"
+  , "    cont <label>   : continue with a possible option"
   , "    f <input>      : send <input> to the first task"
   , "    s <input>      : send <input> to the second task"
   , "    help           : show this message"
@@ -160,11 +136,13 @@ usage = split
   , "    \"Hello\"    : Strings"
   , "    [ <value>, ] : List of values"
   , ""
-  , "paths are of the form:"
-  , "   l<path>? : go left"
-  , "   r<path>? : go right"
+  , "and labels always start with a Capital letter"
   ]
 
+parseLabel :: Text -> Either (Doc a) Label
+parseLabel t
+  | Just ( c, _ ) <- Text.uncons t, Char.isUpper c = ok t
+  | otherwise = throw <| sep [ "!!", dquotes <| pretty t, "is not a proper label"]
 
 parse :: List Text -> Either (Doc a) (Input Action)
 parse [ "change", val ]
@@ -176,8 +154,8 @@ parse [ "change", val ]
   | Just v <- scan val :: Maybe [Int]     = ok <| ToHere <| IChange v
   | Just v <- scan val :: Maybe [String]  = ok <| ToHere <| IChange v
   | otherwise                             = throw <| sep [ "!! Error parsing value", dquotes (pretty val) ]
-parse [ "pick", path ]                    = map (ToHere << IPick) <| parsePath (chars path)
-parse [ "cont", path ]                    = map (ToHere << IContinue) <| parsePath (chars path)
+parse [ "pick", rest ]                    = map (ToHere << IPick) <| parseLabel rest
+parse [ "cont", rest ]                    = map (ToHere << IContinue) <| parseLabel rest
 parse ("f" : rest)                        = map ToFirst <| parse rest
 parse ("s" : rest)                        = map ToSecond <| parse rest
 parse [ "help" ]                          = throw usage

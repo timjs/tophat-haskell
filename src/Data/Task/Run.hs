@@ -7,6 +7,8 @@ import Data.List (union, intersect)
 import Data.Task
 import Data.Task.Input
 
+import qualified Data.HashMap.Strict as Dict
+import qualified Data.HashSet as Set
 
 
 -- Observations ----------------------------------------------------------------
@@ -24,7 +26,7 @@ ui = \case
 
   Pair t1 t2   -> pure (\l r -> sep [ l, " ⧓ ", r ]) -< ui t1 -< ui t2
   Choose t1 t2 -> pure (\l r -> sep [ l, " ◆ ", r ]) -< ui t1 -< ui t2
-  Pick t1 t2   -> pure (\l r -> sep [ l, " ◇ ", r ]) -< ui t1 -< ui t2
+  Pick ts      -> pure <| cat [ "◇", pretty <| Dict.keysSet ts ]
   Fail         -> pure "↯"
 
   Trans _ t    -> ui t
@@ -35,7 +37,7 @@ ui = \case
         mv1 <- value t1
         case mv1 of
           Nothing -> pure 0
-          Just v1 -> pure <| length <| choices (e2 v1)
+          Just v1 -> pure <| length <| options (e2 v1)
 
   Store v      -> pure <| sep [ "store", pretty v ]
   Assign _ v   -> pure <| sep [ "…", ":=", pretty v ]
@@ -54,7 +56,7 @@ value = \case
 
   Pair t1 t2   -> pure (<&>) -< value t1 -< value t2
   Choose t1 t2 -> pure (<|>) -< value t1 -< value t2
-  Pick _ _     -> pure Nothing
+  Pick _       -> pure Nothing
   Fail         -> pure Nothing
 
   Trans f t    -> pure (map f) -< value t
@@ -77,7 +79,7 @@ failing = \case
 
   Pair t1 t2   -> failing t1 && failing t2
   Choose t1 t2 -> failing t1 && failing t2
-  Pick t1 t2   -> failing t1 && failing t2  --XXX: Do we need to normalise here??
+  Pick ts      -> all failing ts
   Fail         -> True
 
   Trans _ t    -> failing t
@@ -101,7 +103,7 @@ watching = \case
 
   Pair t1 t2   -> watching t1 `union` watching t2
   Choose t1 t2 -> watching t1 `union` watching t2
-  Pick _ _     -> []
+  Pick _       -> []
   Fail         -> []
 
   Trans _ t    -> watching t
@@ -114,20 +116,17 @@ watching = \case
   Change l     -> [ pack l ]
 
 
-choices ::
-  TaskT m a -> List Path
-choices = \case
-  Pick t1 t2 -> ls <> rs
-    where
-      ls = if failing t1 then [] else map GoLeft (GoHere : choices t1)
-      rs = if failing t2 then [] else map GoRight (GoHere : choices t2)
+options ::
+  TaskT m a -> Set Label
+options = \case
+  Pick ts -> Dict.keysSet <| Dict.filter failing ts
   _ -> []
 
 
 inputs :: forall m l a.
   Collaborative l m =>
   TaskT m a -> m (List (Input Dummy))  -- We need to call `value`, therefore we are in `m`
-inputs = \case
+inputs t = case t of
   Done _       -> pure []
   Enter        -> pure [ ToHere (AChange tau) ]
   Update _     -> pure [ ToHere (AChange tau) ]
@@ -135,11 +134,11 @@ inputs = \case
 
   Pair t1 t2   -> pure (\l r -> map ToFirst l <> map ToSecond r) -< inputs t1 -< inputs t2
   Choose t1 t2 -> pure (\l r -> map ToFirst l <> map ToSecond r) -< inputs t1 -< inputs t2
-  Pick t1 t2   -> pure <| map (ToHere << APick) (choices <| Pick t1 t2)
+  Pick _       -> pure <| map (ToHere << APick) <| Set.toList <| options t
   Fail         -> pure []
 
-  Trans _ t    -> inputs t
-  Forever t    -> inputs t
+  Trans _ t1   -> inputs t1
+  Forever t1   -> inputs t1
   Step t1 e2   -> pure (<>) -< inputs t1 -< do
     mv1 <- value t1
     case mv1 of
@@ -149,7 +148,7 @@ inputs = \case
         let t2 = e2 v1
         if failing t2
           then pure []
-          else pure <| map (ToHere << AContinue) (choices t2)
+          else pure <| map (ToHere << AContinue) <| Set.toList <| options t2
 
   Store _      -> pure []
   Assign _ _   -> pure []
@@ -179,7 +178,7 @@ normalise t = case t of
         let t2 = e2 v1 in
         if failing t2
           then pure stay -- S-ThenFail
-          else if not <| null <| choices t2
+          else if not <| null <| options t2
             then pure stay  -- S-ThenWait
             else normalise t2 -- S-ThenCont
   -- * Choose
@@ -213,7 +212,7 @@ normalise t = case t of
   View _   -> pure t
   Watch _  -> pure t
   Change _ -> pure t
-  Pick _ _ -> pure t
+  Pick _   -> pure t
   Fail     -> pure t
 
 
@@ -221,7 +220,7 @@ balance :: TaskT m a -> TaskT m a
 balance t = case t of
   Pair t1 t2   -> Pair (balance t1) (balance t2)
   Choose t1 t2 -> Choose (balance t1) (balance t2)
-  Pick t1 t2   -> Pick (balance t1) (balance t2)
+  Pick ts      -> Pick <| map balance ts
   Trans f t1   -> Trans f (balance t1)
   Forever t1   -> Forever (balance t1)
 
@@ -267,8 +266,9 @@ stabilise t = do
 data NotApplicable
   = CouldNotChangeVal SomeTypeRep SomeTypeRep
   | CouldNotChangeRef SomeTypeRep SomeTypeRep
-  | CouldNotDoPick
-  | CouldNotPick Path
+  | CouldNotGoTo Label
+  | CouldNotFind Label
+  | CouldNotPick
   | CouldNotContinue
   | CouldNotHandle (Input Action)
 
@@ -277,27 +277,35 @@ instance Pretty NotApplicable where
   pretty = \case
     CouldNotChangeVal v c -> sep [ "Could not change value because types", dquotes <| pretty v, "and", dquotes <| pretty c, "do not match" ]
     CouldNotChangeRef r c -> sep [ "Could not change value because cell", dquotes <| pretty r, "does not contain", dquotes <| pretty c ]
-    CouldNotDoPick        -> sep [ "Could not pick because there is nothing to pick from this task" ]
-    CouldNotPick p        -> sep [ "Could not pick path", dquotes <| pretty p, "because it leads to an empty task" ]
+    CouldNotGoTo l        -> sep [ "Could not pick label", dquotes <| pretty l, "because it leads to an empty task" ]
+    CouldNotFind l        -> sep [ "Could not find label", dquotes <| pretty l, "in the possible options", "(this should be impossible)" ]
+    CouldNotPick          -> sep [ "Could not pick because there is nothing to pick from in this task" ]
     CouldNotContinue      -> sep [ "Could not continue because there is no value to continue with" ]
-    CouldNotHandle i      -> sep [ "Could not handle input", dquotes <| pretty i ]
+    CouldNotHandle i      -> sep [ "Could not handle input", dquotes <| pretty i, "(this should only appear when giving an impossible input)" ]
 
 
-pick :: TaskT m a -> Path -> Either NotApplicable (TaskT m a)
-pick t GoHere = Right t
-pick (Pick t1 _) p@(GoLeft p') = if failing t1
-  then Left <| CouldNotPick p
-  else pick t1 p'
-pick (Pick _ t2) p@(GoRight p') = if failing t2
-  then Left <| CouldNotPick p
-  else pick t2 p'
-pick _ _ = Left <| CouldNotDoPick
+handlePick ::
+  MonadTrace NotApplicable m =>
+  Label -> TaskT m a -> TrackingTaskT m a
+handlePick l t = case t of
+  Pick ts -> if Set.member l (options t)
+    then case Dict.lookup l ts of
+      Just t' -> pure t'
+      Nothing -> do  -- This should never happen
+        trace <| CouldNotFind l
+        pure t
+    else do
+      trace <| CouldNotGoTo l
+      pure t
+  _ -> do
+    trace <| CouldNotPick
+    pure t
 
 
 handle :: forall m l a.
   Collaborative l m => MonadTrace NotApplicable m =>
   TaskT m a -> Input Action -> TrackingTaskT m a
-handle t i_ = case ( t, i_ ) of
+handle t i = case ( t, i ) of
   -- * Edit
   ( Enter, ToHere (IChange w) )
     | Just Refl <- r ~~ typeOf w -> pure <| Update w
@@ -325,48 +333,40 @@ handle t i_ = case ( t, i_ ) of
     where
       r = typeRep :: TypeRep a
   -- * Pick
-  ( Pick _ _, ToHere (IPick p) ) ->
-    case pick t p of
-      Left e -> do
-        trace e
-        pure t
-      Right t' -> pure t'
-  ( Step t1 e2, ToHere (IContinue p) ) -> do
-    mv1 <- lift <| value t1
+  ( Pick _, ToHere (IPick l) ) ->
+    handlePick l t
+  ( Step t1 e2, ToHere (IContinue l) ) -> do
+    mv1 <- lift <| value t1  --XXX
     case mv1 of
       Nothing -> do
         trace CouldNotContinue
         pure t
-      Just v1 -> case pick (e2 v1) p of
-        Left e -> do
-          trace e
-          pure t
-        Right t' -> pure t'
+      Just v1 -> handlePick l (e2 v1)
   -- * Passing
-  ( Trans f t1, i ) -> do
-    t1' <- handle t1 i
+  ( Trans f t1, i' ) -> do
+    t1' <- handle t1 i'
     pure <| Trans f t1'
-  ( Forever t1, i ) -> do
-    t1' <- handle t1 i
+  ( Forever t1, i' ) -> do
+    t1' <- handle t1 i'
     pure <| Forever t1'
-  ( Step t1 t2, i ) -> do
-    t1' <- handle t1 i
+  ( Step t1 t2, i' ) -> do
+    t1' <- handle t1 i'
     pure <| Step t1' t2
-  ( Pair t1 t2, ToFirst i ) -> do
-    t1' <- handle t1 i
+  ( Pair t1 t2, ToFirst i' ) -> do
+    t1' <- handle t1 i'
     pure <| Pair t1' t2
-  ( Pair t1 t2, ToSecond i ) -> do
-    t2' <- handle t2 i
+  ( Pair t1 t2, ToSecond i' ) -> do
+    t2' <- handle t2 i'
     pure <| Pair t1 t2'
-  ( Choose t1 t2, ToFirst i ) -> do
-    t1' <- handle t1 i
+  ( Choose t1 t2, ToFirst i' ) -> do
+    t1' <- handle t1 i'
     pure <| Choose t1' t2
-  ( Choose t1 t2, ToSecond i ) -> do
-    t2' <- handle t2 i
+  ( Choose t1 t2, ToSecond i' ) -> do
+    t2' <- handle t2 i'
     pure <| Choose t1 t2'
   -- * Rest
   _ -> do
-    trace <| CouldNotHandle i_
+    trace <| CouldNotHandle i
     pure t
 
 

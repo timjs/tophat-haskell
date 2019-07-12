@@ -1,5 +1,6 @@
 module Data.Task
-  ( TaskT(..), Task, Ref, (<?>), (>>?), forever
+  ( TaskT(..), Task, Ref, Label
+  , (<?>), (>>?), pick, forever
   , module Control.Interactive
   , module Control.Collaborative
   , module Data.Editable
@@ -10,6 +11,8 @@ import Control.Interactive
 import Control.Collaborative
 
 import Data.Editable (Editable)
+
+import qualified Data.HashMap.Strict as Dict
 
 
 -- Tasks -----------------------------------------------------------------------
@@ -34,7 +37,7 @@ data TaskT (m :: Type -> Type) (r :: Type) where
   -- | Internal choice between two tasks.
   Choose :: TaskT m r -> TaskT m r -> TaskT m r
   -- | External choice between two tasks.
-  Pick :: TaskT m r -> TaskT m r -> TaskT m r
+  Pick :: Dict Label (TaskT m r) -> TaskT m r
   -- | The failing task
   Fail :: TaskT m r
 
@@ -63,6 +66,7 @@ data TaskT (m :: Type -> Type) (r :: Type) where
 
 type Task = TaskT IO
 type Ref = IORef
+type Label = Text
 
 
 -- Instances -------------------------------------------------------------------
@@ -71,10 +75,13 @@ infixl 3 <?>
 infixl 1 >>?
 
 (<?>) :: TaskT m a -> TaskT m a -> TaskT m a
-(<?>) = Pick
+(<?>) t1 t2 = pick [ ( "Left", t1 ), ( "Right", t2 ) ]
 
 (>>?) :: TaskT m a -> (a -> TaskT m b) -> TaskT m b
-(>>?) t c = t >>= \x -> (c x) <?> empty
+(>>?) t c = t >>= \x -> pick [ ( "Continue", c x ) ]
+
+pick :: List ( Label, TaskT m a ) -> TaskT m a
+pick = Pick << Dict.fromList
 
 forever :: TaskT m a -> TaskT m Void
 forever = Forever
@@ -88,7 +95,7 @@ instance Pretty (TaskT m r) where
 
     Pair t1 t2   -> parens <| sep [ pretty t1, "<&>", pretty t2 ]
     Choose t1 t2 -> parens <| sep [ pretty t1, "<|>", pretty t2 ]
-    Pick t1 t2   -> parens <| sep [ pretty t1, "<?>", pretty t2 ]
+    Pick ts      -> parens <| sep [ "Pick", pretty ts ]
     Fail         -> "Fail"
 
     Trans _ t    -> sep [ "Trans _", pretty t ]
