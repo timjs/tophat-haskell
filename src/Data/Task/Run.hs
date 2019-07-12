@@ -1,7 +1,7 @@
 module Data.Task.Run where
 
 
-import Control.Monad.Trace
+import Control.Monad.Log
 
 import Data.List (union, intersect)
 import Data.Task
@@ -243,20 +243,20 @@ instance Pretty Steps where
 
 
 stabilise ::
-  Collaborative l m => MonadTrace Steps m =>
+  Collaborative l m => MonadLog Steps m =>
   TaskT m a -> TrackingTaskT m a
 --NOTE: This has *nothing* to do with iTasks Stable/Unstable values!
 stabilise t = do
   ( t', ds ) <- listen <| normalise t
-  trace <| DidNormalise (show <| pretty t')
+  log Info <| DidNormalise (show <| pretty t')
   let ws = watching t'
   let os = ds `intersect` ws
   case os of
     [] -> do
-      trace <| DidStabilise (length ds) (length ws)
+      log Info <| DidStabilise (length ds) (length ws)
       pure <| balance t'
     _  -> do
-      trace <| DidNotStabilise (length ds) (length ws) (length os)
+      log Info <| DidNotStabilise (length ds) (length ws) (length os)
       stabilise t'
 
 
@@ -285,32 +285,32 @@ instance Pretty NotApplicable where
 
 
 handlePick ::
-  MonadTrace NotApplicable m =>
+  MonadLog NotApplicable m =>
   Label -> TaskT m a -> TrackingTaskT m a
 handlePick l t = case t of
   Pick ts -> if Set.member l (options t)
     then case Dict.lookup l ts of
       Just t' -> pure t'
       Nothing -> do  -- This should never happen
-        trace <| CouldNotFind l
+        log Error <| CouldNotFind l
         pure t
     else do
-      trace <| CouldNotGoTo l
+      log Warning <| CouldNotGoTo l
       pure t
   _ -> do
-    trace <| CouldNotPick
+    log Warning <| CouldNotPick
     pure t
 
 
 handle :: forall m l a.
-  Collaborative l m => MonadTrace NotApplicable m =>
+  Collaborative l m => MonadLog NotApplicable m =>
   TaskT m a -> Input Action -> TrackingTaskT m a
 handle t i = case ( t, i ) of
   -- * Edit
   ( Enter, ToHere (IChange w) )
     | Just Refl <- r ~~ typeOf w -> pure <| Update w
     | otherwise -> do
-        trace <| CouldNotChangeVal (SomeTypeRep r) (someTypeOf w)
+        log Warning <| CouldNotChangeVal (SomeTypeRep r) (someTypeOf w)
         pure t
     where
       r = typeRep :: TypeRep a
@@ -319,7 +319,7 @@ handle t i = case ( t, i ) of
     -- If this is the case, it would be inhabited by `Refl :: a :~: b`, where `b` is the type of the value inside `Change`.
     | Just Refl <- v ~= w -> pure <| Update w
     | otherwise -> do
-        trace <| CouldNotChangeVal (someTypeOf v) (someTypeOf w)
+        log Warning <| CouldNotChangeVal (someTypeOf v) (someTypeOf w)
         pure t
   ( Change l, ToHere (IChange w) )
     -- NOTE: As in the `Update` case above, we check for type equality.
@@ -328,7 +328,7 @@ handle t i = case ( t, i ) of
         tell [ pack l ]
         pure <| Change l
     | otherwise -> do
-        trace <| CouldNotChangeRef (someTypeOf l) (someTypeOf w)
+        log Warning <| CouldNotChangeRef (someTypeOf l) (someTypeOf w)
         pure t
     where
       r = typeRep :: TypeRep a
@@ -339,7 +339,7 @@ handle t i = case ( t, i ) of
     mv1 <- lift <| value t1  --XXX
     case mv1 of
       Nothing -> do
-        trace CouldNotContinue
+        log Warning CouldNotContinue
         pure t
       Just v1 -> handlePick l (e2 v1)
   -- * Passing
@@ -366,18 +366,18 @@ handle t i = case ( t, i ) of
     pure <| Choose t1 t2'
   -- * Rest
   _ -> do
-    trace <| CouldNotHandle i
+    log Error <| CouldNotHandle i
     pure t
 
 
 initialise ::
-  Collaborative l m => MonadTrace Steps m =>
+  Collaborative l m => MonadLog Steps m =>
   TaskT m a -> m (TaskT m a)
 initialise = evalWriterT << stabilise
 
 
 interact ::
-  Collaborative l m => MonadTrace NotApplicable m => MonadTrace Steps m =>
+  Collaborative l m => MonadLog NotApplicable m => MonadLog Steps m =>
   TaskT m a -> Input Action -> m (TaskT m a)
 interact t i = evalWriterT (handle t i >>= stabilise)
 
