@@ -232,40 +232,20 @@ update3 l = do
   l <<- y + z
   watch l
 
-{-
-update2 :: Loc Int -> Task ()
-update2 l =
-  watch l >>= \x ->
-  update (x + 1) >>? \y ->
-  l $= const y >>= \() ->
-  watch l >>= \u ->
-  update (u + 2) >>? \v ->
-  l $= const v
-
-
-inspect :: Show (typeOf a) -> (Loc Int -> Task a) -> Task ( a, Int )
+inspect :: (Ref Int -> Task a) -> Task ( a, Int )
 inspect f = do
-  l <- Int 0
+  l <- store 0
   f l <&> watch l
-
--- inspect :: Show (typeOf a) -> Show (typeOf b) -> (Loc b -> Task a) -> Task ( a, b )
--- inspect {b} f = do
---   l <- init b
---   f l <&> watch l
-
 
 doubleShared :: Task ( (), Int )
 doubleShared = do
-  l <- ref 0
-  m <- ref 0
-  let t1 = do
-    x <- watch m
-    if x >= 10 then update (x * 2) else empty
-  let t2 = do
-    y <- watch l
-    if y >= 5 then m $= const 12 else empty
-  t2 <&> t1
-
-
-
--}
+  l <- store (0 :: Int)
+  m <- store (0 :: Int)
+  t2 l m <&> t1 l m
+  where
+    t1 _ m = do
+      x <- change m
+      if x >= 10 then view (x * 2) else empty
+    t2 l m = do
+      y <- change l
+      if y >= 5 then m <<- 12 else empty
