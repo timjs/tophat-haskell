@@ -2,6 +2,7 @@
 module Prelude
   ( module Relude
   , module Data.Type.Equality
+  , module Control.Monad.Writer.Strict
   , List, Unit, Nat, nat, chars
   -- , Vector, only, index, update
   , Pretty(..), Doc, sep, cat, split, indent, dquotes, parens, angles
@@ -14,17 +15,17 @@ module Prelude
   , lift0, lift1, lift2, lift3
   , MonadZero
   , ok, throw, catch
-  , evalWriterT
+  , evalWriterT, clear
   , (~=), (~~), proxyOf, typeOf, someTypeOf, typeRep, TypeRep, someTypeRep, SomeTypeRep(..)
   ) where
 
 
 import Relude hiding ((.), (>>), ($), (&), (<&>), (<$>), (<*), (*>), map, when, pass, trace, readMaybe, liftA2, liftA3, Nat, Any)
 import Data.Type.Equality
+import Control.Monad.Writer.Strict (MonadWriter(..), listens, censor, WriterT, runWriterT, execWriterT, mapWriterT)
 
 import Control.Monad.Except (MonadError(..))
 import Control.Monad.List (ListT)
-import Control.Monad.Writer.Strict (WriterT, runWriterT)
 
 import Data.Text (unpack)
 import Data.Text.Prettyprint.Doc (Pretty(..), Doc, indent, dquotes, parens, angles)
@@ -331,8 +332,8 @@ catch = catchError
 -- Writer --
 
 
--- clear :: MonadWriter w m => m ()
--- clear = pass <| lift0 ((), const neutral)
+clear :: MonadWriter w m => m ()
+clear = pass <| lift0 ( (), const neutral )
 
 
 evalWriterT :: Monad m => WriterT w m a -> m a
