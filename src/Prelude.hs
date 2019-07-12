@@ -3,7 +3,7 @@ module Prelude
   ( module Relude
   , module Data.Type.Equality
   , module Control.Monad.Writer.Strict
-  , List, Unit, Nat, nat, chars
+  , Unit, Nat, nat, List, chars, Set, Dict
   -- , Vector, only, index, update
   , Pretty(..), Doc, sep, cat, split, indent, dquotes, parens, angles
   , scan, pretty', tracePretty
@@ -20,19 +20,22 @@ module Prelude
   ) where
 
 
-import Relude hiding ((.), (>>), ($), (&), (<&>), (<$>), (<*), (*>), map, when, pass, trace, readMaybe, liftA2, liftA3, Nat, Any, forever)
+import Relude hiding ((.), (>>), ($), (&), (<&>), (<$>), (<*), (*>), map, when, pass, trace, readMaybe, liftA2, liftA3, Nat, Any, Set, forever)
 import Data.Type.Equality
 import Control.Monad.Writer.Strict (MonadWriter(..), listens, censor, WriterT, runWriterT, execWriterT, mapWriterT)
 
 import Control.Monad.Except (MonadError(..))
 import Control.Monad.List (ListT)
 
+import Data.HashMap.Strict (HashMap)
 import Data.Text (unpack)
 import Data.Text.Prettyprint.Doc (Pretty(..), Doc, indent, dquotes, parens, angles)
 -- import Data.Vector (Vector)
 
 import Type.Reflection (typeOf, typeRep, someTypeRep, TypeRep, SomeTypeRep(..))
 
+import qualified Data.HashMap.Strict as Dict
+import qualified Data.HashSet as Set
 import qualified Data.Text.Prettyprint.Doc as Pretty
 import qualified Relude
 -- import qualified Data.Vector as Vector
@@ -41,9 +44,6 @@ import qualified Relude
 
 
 -- Synonyms --------------------------------------------------------------------
-
-
-type List = []
 
 
 type Unit = ()
@@ -59,8 +59,24 @@ nat i
   | otherwise = error "Prelude.nat: argument is negative"
 
 
+type List = []
+
+
 chars :: Text -> List Char
 chars = unpack
+
+
+type Set = HashSet
+
+instance ( Pretty v ) => Pretty (HashSet v) where
+  pretty = Pretty.braces << Pretty.cat << Pretty.punctuate ", " << map pretty << Set.toList
+
+
+type Dict = HashMap
+
+instance ( Pretty k, Pretty v ) => Pretty (HashMap k v) where
+  pretty = Pretty.braces << Pretty.cat << Pretty.punctuate ", " << map (\( k, v ) -> cat [ pretty k, ": ", pretty v ]) << Dict.toList
+
 
 
 -- Vectors ---------------------------------------------------------------------

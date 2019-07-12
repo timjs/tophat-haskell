@@ -20,7 +20,7 @@ dependencies:
   - prettyprinter
   - mtl
   - text
-  - containers
+  - unordered-containers
 
 
 default-extensions:
