@@ -1,5 +1,5 @@
 module Control.Collaborative
-  ( Collaborative(..), (<<-) --, modify
+  ( Collaborative(..), (<<-), (<<=)
   , Someref, pack, unpack
   ) where
 
@@ -18,14 +18,15 @@ class ( Monad m, Typeable l, forall a. Eq (l a) ) => Collaborative l m | m -> l 
   change = watch
 
 infixl 1 <<-
+infixl 1 <<=
 
 (<<-) :: Collaborative l m => Editable a => l a -> a -> m ()
 (<<-) = assign
 
--- modify :: Collaborative l m => l a -> (a -> a) -> m ()
--- modify l f = do
---   x <- watch l
---   assign l (f x)
+(<<=) :: Collaborative l m => Editable a => l a -> (a -> a) -> m ()
+(<<=) l f = do
+  x <- watch l
+  assign l (f x)
 
 instance ( Collaborative l m, Monoid w ) => Collaborative l (WriterT w m) where
   store    = lift << store
