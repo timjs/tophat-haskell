@@ -238,8 +238,11 @@ numbers' = do
   forever (edit_ l) <&> watch l
   where
 
-    edit_ l = do
-      prepend_ l <?> clear_ l <?> change_ l
+    edit_ l = do pick
+      [ ( "Prepend", prepend_ l )
+      , ( "Clear", clear_ l )
+      , ( "Change", change_ l )
+      ]
 
     prepend_ l = do
       x <- enter
@@ -251,10 +254,13 @@ numbers' = do
     change_ l = do
       --NOTE: `watch` should be before the external step, otherwise we'll end up an a state where we show an editor with the list when the user entered an improper index.
       -- Compare this with iTasks: `watch` should be before the external step because you cannot specify the `watch` inside the step list!
-      xs <- watch l
+      n <- map length <| watch l
       i <- enter
-      if i < length xs
-        then delete_ l i <?> replace_ l i
+      if i < n
+        then pick
+          [ ( "Delete", delete_ l i )
+          , ( "Replace", replace_ l i )
+          ]
         else empty
 
     delete_ l i =

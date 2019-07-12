@@ -31,7 +31,7 @@ ui = \case
 
   Trans _ t    -> ui t
   Forever t    -> pure (\s -> cat [ "⟲", s ]) -< ui t
-  Step t1 e2   -> pure (\s n -> cat [ s, " ▶[", pretty n, "]…" ]) -< ui t1 -< count
+  Step t1 e2   -> pure (\s n -> cat [ s, " ▶", pretty n, "…" ]) -< ui t1 -< count
     where
       count = do
         mv1 <- value t1
@@ -106,9 +106,9 @@ watching = \case
   Pick _       -> []
   Fail         -> []
 
-  Trans _ t    -> watching t
-  Forever t    -> watching t
-  Step t _     -> watching t
+  Trans _ t1   -> watching t1
+  Forever t1   -> watching t1
+  Step t1 _    -> watching t1
 
   Store _      -> []
   Assign _ _   -> []
@@ -119,7 +119,12 @@ watching = \case
 options ::
   TaskT m a -> Set Label
 options = \case
-  Pick ts -> Dict.keysSet <| Dict.filter failing ts
+  Pick ts    -> Dict.keysSet <| Dict.filter (not << failing) ts
+
+  -- Trans _ t1 -> options t1
+  -- Forever t1 -> options t1
+  -- Step t1 _  -> options t1
+
   _ -> []
 
 
@@ -278,28 +283,10 @@ instance Pretty NotApplicable where
     CouldNotChangeVal v c -> sep [ "Could not change value because types", dquotes <| pretty v, "and", dquotes <| pretty c, "do not match" ]
     CouldNotChangeRef r c -> sep [ "Could not change value because cell", dquotes <| pretty r, "does not contain", dquotes <| pretty c ]
     CouldNotGoTo l        -> sep [ "Could not pick label", dquotes <| pretty l, "because it leads to an empty task" ]
-    CouldNotFind l        -> sep [ "Could not find label", dquotes <| pretty l, "in the possible options", "(this should be impossible)" ]
+    CouldNotFind l        -> sep [ "Could not find label", dquotes <| pretty l, "in the possible options" ]
     CouldNotPick          -> sep [ "Could not pick because there is nothing to pick from in this task" ]
     CouldNotContinue      -> sep [ "Could not continue because there is no value to continue with" ]
     CouldNotHandle i      -> sep [ "Could not handle input", dquotes <| pretty i, "(this should only appear when giving an impossible input)" ]
-
-
-handlePick ::
-  MonadLog NotApplicable m =>
-  Label -> TaskT m a -> TrackingTaskT m a
-handlePick l t = case t of
-  Pick ts -> if Set.member l (options t)
-    then case Dict.lookup l ts of
-      Just t' -> pure t'
-      Nothing -> do  -- This should never happen
-        log Error <| CouldNotFind l
-        pure t
-    else do
-      log Warning <| CouldNotGoTo l
-      pure t
-  _ -> do
-    log Warning <| CouldNotPick
-    pure t
 
 
 handle :: forall m l a.
@@ -336,7 +323,7 @@ handle t i = case ( t, i ) of
   ( Pick _, ToHere (IPick l) ) ->
     handlePick l t
   ( Step t1 e2, ToHere (IContinue l) ) -> do
-    mv1 <- lift <| value t1  --XXX
+    mv1 <- lift <| value t1
     case mv1 of
       Nothing -> do
         log Warning CouldNotContinue
@@ -368,6 +355,22 @@ handle t i = case ( t, i ) of
   _ -> do
     log Error <| CouldNotHandle i
     pure t
+  where
+    handlePick l c = case c of
+      Pick ts -> case Dict.lookup l ts of
+        Nothing -> do
+          log Warning <| CouldNotFind l
+          pure t
+        Just t' -> if Set.member l (options c)
+          then pure t'
+          else do
+            log Warning <| CouldNotGoTo l
+            pure t
+      _ -> do
+        log Warning <| CouldNotPick
+        pure t
+
+
 
 
 initialise ::
