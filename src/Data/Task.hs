@@ -77,7 +77,7 @@ infixl 1 >>?
 
 instance Pretty (TaskT m r) where
   pretty = \case
-    Done _       -> "Done"
+    Done _       -> "Done _"
     Enter        -> "Enter"
     Update v     -> sep [ "Update", pretty v ]
     View v       -> sep [ "View", pretty v ]

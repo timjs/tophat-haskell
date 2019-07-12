@@ -17,8 +17,8 @@ ui ::
   Collaborative l m =>
   TaskT m a -> m (Doc b)  -- We need to watch locations and be in monad `m`
 ui = \case
-  Done _       -> pure "■(_)"
-  Enter        -> pure "⊠(_)"
+  Done _       -> pure "■(…)"
+  Enter        -> pure "⊠()"
   Update v     -> pure <| cat [ "□(", pretty v, ")" ]
   View v       -> pure <| cat [ "⧇(", pretty v, ")" ]
 
@@ -37,7 +37,7 @@ ui = \case
           Just v1 -> pure <| length <| choices (e2 v1)
 
   Store v      -> pure <| sep [ "store", pretty v ]
-  Assign _ v   -> pure <| sep [ "_", ":=", pretty v ]
+  Assign _ v   -> pure <| sep [ "…", ":=", pretty v ]
   Watch l      -> pure (\v -> cat [ "⧈(", pretty v, ")" ]) -< watch l
   Change l     -> pure (\v -> cat [ "⊟(", pretty v, ")" ]) -< watch l
 
@@ -211,32 +211,38 @@ normalise = \case
   t@(Fail)     -> pure t
 
 
-newtype Dirties m
-  = Watched (List (Someref m))
+data Steps
+  = DidStabilise Int Int
+  | DidNotStabilise Int Int Int
+  | DidNormalise Text
 
-instance Pretty (Dirties m) where
+instance Pretty Steps where
   pretty = \case
-    Watched is -> sep [ "Found", pretty (length is), "dirty reference(s)" ]
+    DidNotStabilise d w o -> sep [ "Found", pretty o, "overlap(s) amongst", pretty d, "dirty and", pretty w, "watched reference(s)" ]
+    DidStabilise d w      -> sep [ "Found no overlaps amongst", pretty d, "dirty and", pretty w, "watched reference(s)" ]
+    DidNormalise t        -> sep [ "Normalised to:", pretty t ]
 
 
 stabilise ::
-  Collaborative l m => MonadTrace (Dirties m) m =>
+  Collaborative l m => MonadTrace Steps m =>
   TaskT m a -> TrackingTaskT m a
 --NOTE: This has *nothing* to do with iTasks Stable/Unstable values!
 stabilise t = do
   ( t', ds ) <- listen <| normalise t
-  clear
+  trace <| DidNormalise (show <| pretty t')
   let ws = watching t'
-  let is = ds `intersect` ws
-  case is of
-    [] -> pure t'
+  let os = ds `intersect` ws
+  case os of
+    [] -> do
+      trace <| DidStabilise (length ds) (length ws)
+      pure t'
     _  -> do
-      trace (Watched is)
+      trace <| DidNotStabilise (length ds) (length ws) (length os)
       stabilise t'
 
 
 initialise ::
-  Collaborative l m => MonadTrace (Dirties m) m =>
+  Collaborative l m => MonadTrace Steps m =>
   TaskT m a -> m (TaskT m a)
 initialise = evalWriterT << stabilise
 
@@ -349,7 +355,7 @@ handle t i_ = case ( t, i_ ) of
 
 
 interact ::
-  Collaborative l m => MonadTrace NotApplicable m => MonadTrace (Dirties m) m =>
+  Collaborative l m => MonadTrace NotApplicable m => MonadTrace Steps m =>
   TaskT m a -> Input Action -> m (TaskT m a)
 interact t i = evalWriterT (handle t i >>= stabilise)
 
