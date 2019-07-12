@@ -20,7 +20,7 @@ module Prelude
   ) where
 
 
-import Relude hiding ((.), (>>), ($), (&), (<&>), (<$>), (<*), (*>), map, when, pass, trace, readMaybe, liftA2, liftA3, Nat, Any)
+import Relude hiding ((.), (>>), ($), (&), (<&>), (<$>), (<*), (*>), map, when, pass, trace, readMaybe, liftA2, liftA3, Nat, Any, forever)
 import Data.Type.Equality
 import Control.Monad.Writer.Strict (MonadWriter(..), listens, censor, WriterT, runWriterT, execWriterT, mapWriterT)
 

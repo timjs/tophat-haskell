@@ -1,5 +1,5 @@
 module Data.Task
-  ( TaskT(..), Task, Ref, (<?>), (>>?)
+  ( TaskT(..), Task, Ref, (<?>), (>>?), forever
   , module Control.Interactive
   , module Control.Collaborative
   , module Data.Editable
@@ -46,6 +46,10 @@ data TaskT (m :: Type -> Type) (r :: Type) where
   -- | Internal, or system step.
   Step :: TaskT m a -> (a -> TaskT m r) -> TaskT m r
 
+  -- * Loops
+  -- | Repeat a task indefinitely
+  Forever :: TaskT m r -> TaskT m Void
+
   -- * References
   -- | Create new reference of type `r`
   Store :: ( Collaborative l m, Editable r ) => r -> TaskT m (l r)
@@ -55,9 +59,6 @@ data TaskT (m :: Type -> Type) (r :: Type) where
   Watch :: ( Collaborative l m, Editable r ) => l r -> TaskT m r
   -- | Change to a reference of type `r` to a value
   Change :: ( Collaborative l m, Editable r ) => l r -> TaskT m r
-
-  -- * Loops
-  -- Forever :: TaskT m r -> TaskT m Void
 
 
 type Task = TaskT IO
@@ -75,6 +76,9 @@ infixl 1 >>?
 (>>?) :: TaskT m a -> (a -> TaskT m b) -> TaskT m b
 (>>?) t c = t >>= \x -> (c x) <?> empty
 
+forever :: TaskT m a -> TaskT m Void
+forever = Forever
+
 instance Pretty (TaskT m r) where
   pretty = \case
     Done _       -> "Done _"
@@ -89,6 +93,7 @@ instance Pretty (TaskT m r) where
 
     Trans _ t    -> sep [ "Trans _", pretty t ]
     Step t _     -> sep [ pretty t, ">>=", "_" ]
+    Forever t    -> sep [ "Forever", pretty t ]
 
     Store v      -> sep [ "Store", pretty v ]
     Assign _ v   -> sep [ "_", ":=", pretty v ]

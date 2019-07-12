@@ -152,63 +152,7 @@ branch'' = do
     <?> (if x `mod` 5 == 0 then view "multiple of 5" else empty)
 
 
-{- Shared Data --
-
-partial
-editList :: Task ( (), (LIST Int) )
-editList = do
-  l <- ref (LIST Int) []
-  start l <&> watch l
-
-  where
-
-    delete :: Loc (LIST Int) -> Nat -> Task ()
-    delete l i =
-      modify (LIST Int) l (del i)
-
-    replace :: Loc (LIST Int) -> Nat -> Task ()
-    replace l i =
-      "Give a new value" -#- enter >>? \x ->
-      modify (LIST Int) l (rep i x)
-
-    change :: Loc (LIST Int) -> Task ()
-    change l =
-      --NOTE: `watch` should be before the external step,
-      --      otherwise we'll end up an a state where we show an editor with the list when the user entered an improper index.
-      --      Compare this with iTasks though:
-      --      `watch` should be before the external step because you cannot specify the `watch` inside the step list!
-      watch (LIST Int) l >>= \xs ->
-      "Give an index" -#- enter >>? \n ->
-      let i = the Nat (cast n) in
-      if i < List.length xs then
-        "Delete" -#- delete l i <?> "Replace" -#- replace l i
-      else
-        empty
-
-    prepend :: Loc (LIST Int) -> Task ()
-    prepend l =
-      "Give a new value to prepend" -#- enter >>? \x ->
-      modify (LIST Int) l ((::) x)
-
-    clear :: Loc (LIST Int) -> Task ()
-    clear l =
-      modify (LIST Int) l (const [])
-
-    quit :: Task ()
-    quit = update ()
-
-    mutual
-      partial
-      repeat :: Loc (LIST Int) -> Task ()
-      repeat l = do
-        "Prepend" -#- prepend l <?> "Clear" -#- clear l <?> "Change" -#- change l
-        start l
-
-      partial
-      start :: Loc (LIST Int) -> Task ()
-      start l =
-        "Edit" -#- repeat l <?> "Quit" -#- quit
--}
+-- Shared Data --
 
 update1 :: Ref Int -> Task ()
 update1 l = do
@@ -275,3 +219,63 @@ unstable = do
       l <<- True
       view ()
   t1 <&> t2
+
+
+-- Forever --
+
+numbers :: Task ( Void, List Int )
+numbers = do
+  l <- store ([] :: List Int)
+  forever (edit l) <&> watch l
+  where
+    edit l = do
+      x <- enter
+      xs <- watch l
+      l <<- x : xs
+
+
+{-
+    delete :: Ref (List Int) -> Int -> Task ()
+    delete l i =
+      l <<- del i
+
+    replace :: Ref (List Int) -> Int -> Task ()
+    replace l i =
+      "Give a new value" -#- enter >>? \x ->
+      modify (List Int) l (rep i x)
+
+    change :: Ref (List Int) -> Task ()
+    change l =
+      --NOTE: `watch` should be before the external step,
+      --      otherwise we'll end up an a state where we show an editor with the list when the user entered an improper index.
+      --      Compare this with iTasks though:
+      --      `watch` should be before the external step because you cannot specify the `watch` inside the step list!
+      watch (List Int) l >>= \xs ->
+      "Give an index" -#- enter >>? \n ->
+      let i = the Int (cast n) in
+      if i < List.length xs then
+        "Delete" -#- delete l i <?> "Replace" -#- replace l i
+      else
+        empty
+
+    prepend :: Ref (List Int) -> Task ()
+    prepend l =
+      "Give a new value to prepend" -#- enter >>? \x ->
+      modify (List Int) l ((::) x)
+
+    clear :: Ref (List Int) -> Task ()
+    clear l =
+      modify (List Int) l (const [])
+
+    quit :: Task ()
+    quit = update ()
+
+    repeat :: Ref (List Int) -> Task ()
+    repeat l = do
+      "Prepend" -#- prepend l <?> "Clear" -#- clear l <?> "Change" -#- change l
+      start l
+
+    start :: Ref (List Int) -> Task ()
+    start l =
+      "Edit" -#- repeat l <?> "Quit" -#- quit
+-}

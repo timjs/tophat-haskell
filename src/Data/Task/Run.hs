@@ -28,6 +28,7 @@ ui = \case
   Fail         -> pure "↯"
 
   Trans _ t    -> ui t
+  Forever t    -> pure (\s -> cat [ "⟲", s ]) -< ui t
   Step t1 e2   -> pure (\s n -> cat [ s, " ▶[", pretty n, "]…" ]) -< ui t1 -< count
     where
       count = do
@@ -57,6 +58,7 @@ value = \case
   Fail         -> pure Nothing
 
   Trans f t    -> pure (map f) -< value t
+  Forever _    -> pure Nothing
   Step _ _     -> pure Nothing
 
   Store v      -> pure Just -< store v
@@ -79,6 +81,7 @@ failing = \case
   Fail         -> True
 
   Trans _ t    -> failing t
+  Forever t    -> failing t
   Step t _     -> failing t
 
   Store _      -> False
@@ -102,6 +105,7 @@ watching = \case
   Fail         -> []
 
   Trans _ t    -> watching t
+  Forever t    -> watching t
   Step t _     -> watching t
 
   Store _      -> []
@@ -135,6 +139,7 @@ inputs = \case
   Fail         -> pure []
 
   Trans _ t    -> inputs t
+  Forever t    -> inputs t
   Step t1 e2   -> pure (<>) -< inputs t1 -< do
     mv1 <- value t1
     case mv1 of
@@ -191,6 +196,7 @@ normalise = \case
           Nothing -> pure <| Choose t1' t2'  -- S-OrNone
   -- * Evaluate
   Trans f t  -> pure (Trans f) -< normalise t
+  Forever t  -> normalise <| Step t (\_ -> Forever t)
   Pair t1 t2 -> pure Pair -< normalise t1 -< normalise t2
   -- * Internal
   Store v -> do
@@ -333,6 +339,9 @@ handle t i_ = case ( t, i_ ) of
   ( Trans f t1, i ) -> do
     t1' <- handle t1 i
     pure <| Trans f t1'
+  ( Forever t1, i ) -> do
+    t1' <- handle t1 i
+    pure <| Forever t1'
   ( Step t1 t2, i ) -> do
     t1' <- handle t1 i
     pure <| Step t1' t2
