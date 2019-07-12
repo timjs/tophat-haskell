@@ -158,10 +158,11 @@ inputs = \case
 
 -- Normalising -----------------------------------------------------------------
 
+type TrackingTaskT m a = WriterT (List (Someref m)) m (TaskT m a)
 
 normalise ::
   Collaborative l m =>
-  TaskT m a -> WriterT (List (Someref m)) m (TaskT m a)
+  TaskT m a -> TrackingTaskT m a
 normalise = \case
   -- * Step
   Step t1 e2 -> do
@@ -219,23 +220,23 @@ instance Pretty (Dirties m) where
     Watched is -> sep [ "Found", pretty (length is), "dirty reference(s)" ]
 
 
-stabelise ::
+stabilise ::
   Collaborative l m => MonadTrace (Dirties m) m =>
   TaskT m a -> m (TaskT m a)
 --NOTE: This has *nothing* to do with iTasks Stable/Unstable values!
-stabelise t = do
+stabilise t = do
   ( t', ds ) <- runWriterT (normalise t)
   let ws = watching t'
   let is = ds `intersect` ws
   case is of
     [] -> pure t'
-    _  -> trace (Watched is) <| stabelise t'
+    _  -> trace (Watched is) <| stabilise t'
 
 
 initialise ::
   Collaborative l m => MonadTrace (Dirties m) m =>
   TaskT m a -> m (TaskT m a)
-initialise = stabelise
+initialise = stabilise
 
 
 
@@ -291,6 +292,7 @@ handle t i_ = case ( t, i_ ) of
     -- NOTE: As in the `Update` case above, we check for type equality.
     | Just Refl <- r ~~ typeOf w -> do
         l <<- w
+        -- tell [ pack l ]
         pure <| Change l
     | otherwise -> trace (CouldNotChangeRef (someTypeOf l) (someTypeOf w)) <| pure t
     where
@@ -340,7 +342,7 @@ interact ::
   Collaborative l m => MonadTrace NotApplicable m => MonadTrace (Dirties m) m =>
   TaskT m a -> Input Action -> m (TaskT m a)
 interact t i = do
-  handle t i >>= stabelise
+  handle t i >>= stabilise
 
 
 
