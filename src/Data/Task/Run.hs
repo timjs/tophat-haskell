@@ -217,6 +217,20 @@ normalise t = case t of
   Fail     -> pure t
 
 
+balance :: TaskT m a -> TaskT m a
+balance t = case t of
+  Pair t1 t2   -> Pair (balance t1) (balance t2)
+  Choose t1 t2 -> Choose (balance t1) (balance t2)
+  Pick t1 t2   -> Pick (balance t1) (balance t2)
+  Trans f t1   -> Trans f (balance t1)
+  Forever t1   -> Forever (balance t1)
+
+  -- Monad associativity
+  Step (Step t1 e2) e3 -> Step t1 (\x -> Step (e2 x) e3)
+
+  _ -> t
+
+
 data Steps
   = DidStabilise Int Int
   | DidNotStabilise Int Int Int
@@ -241,7 +255,7 @@ stabilise t = do
   case os of
     [] -> do
       trace <| DidStabilise (length ds) (length ws)
-      pure t'
+      pure <| balance t'
     _  -> do
       trace <| DidNotStabilise (length ds) (length ws) (length os)
       stabilise t'
