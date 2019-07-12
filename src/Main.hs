@@ -226,56 +226,57 @@ unstable = do
 numbers :: Task ( Void, List Int )
 numbers = do
   l <- store ([] :: List Int)
-  forever (edit l) <&> watch l
+  forever (prepend l) <&> watch l
   where
-    edit l = do
+    prepend l = do
       x <- enter
+      l <<= (:) x
+
+numbers' :: Task ( Void, List Int )
+numbers' = do
+  l <- store ([] :: List Int)
+  forever (edit_ l) <&> watch l
+  where
+
+    edit_ l = do
+      prepend_ l <?> clear_ l <?> change_ l
+
+    prepend_ l = do
+      x <- enter
+      l <<= (:) x
+
+    clear_ l = do
+      l <<- []
+
+    change_ l = do
+      --NOTE: `watch` should be before the external step, otherwise we'll end up an a state where we show an editor with the list when the user entered an improper index.
+      -- Compare this with iTasks: `watch` should be before the external step because you cannot specify the `watch` inside the step list!
       xs <- watch l
-      l <<- x : xs
+      i <- enter
+      if i < length xs
+        then delete_ l i <?> replace_ l i
+        else empty
+
+    delete_ l i =
+      l <<= del i
+
+    replace_ l i = do
+      x <- enter
+      l <<= rep i x
 
 
-{-
-    delete :: Ref (List Int) -> Int -> Task ()
-    delete l i =
-      l <<- del i
+-- Helpers ---------------------------------------------------------------------
 
-    replace :: Ref (List Int) -> Int -> Task ()
-    replace l i =
-      "Give a new value" -#- enter >>? \x ->
-      modify (List Int) l (rep i x)
+del :: Int -> List a -> List a
+del _ []       = []
+del 0 (_ : xs) = xs
+del n (x : xs)
+  | n >= 0     = x : del (pred n) xs
+  | otherwise  = []
 
-    change :: Ref (List Int) -> Task ()
-    change l =
-      --NOTE: `watch` should be before the external step,
-      --      otherwise we'll end up an a state where we show an editor with the list when the user entered an improper index.
-      --      Compare this with iTasks though:
-      --      `watch` should be before the external step because you cannot specify the `watch` inside the step list!
-      watch (List Int) l >>= \xs ->
-      "Give an index" -#- enter >>? \n ->
-      let i = the Int (cast n) in
-      if i < List.length xs then
-        "Delete" -#- delete l i <?> "Replace" -#- replace l i
-      else
-        empty
-
-    prepend :: Ref (List Int) -> Task ()
-    prepend l =
-      "Give a new value to prepend" -#- enter >>? \x ->
-      modify (List Int) l ((::) x)
-
-    clear :: Ref (List Int) -> Task ()
-    clear l =
-      modify (List Int) l (const [])
-
-    quit :: Task ()
-    quit = update ()
-
-    repeat :: Ref (List Int) -> Task ()
-    repeat l = do
-      "Prepend" -#- prepend l <?> "Clear" -#- clear l <?> "Change" -#- change l
-      start l
-
-    start :: Ref (List Int) -> Task ()
-    start l =
-      "Edit" -#- repeat l <?> "Quit" -#- quit
--}
+rep :: Int -> a -> List a -> List a
+rep _ _ []       = []
+rep 0 y (_ : xs) = y : xs
+rep n y (x : xs)
+  | n >= 0       = x : rep (pred n) y xs
+  | otherwise    = []
