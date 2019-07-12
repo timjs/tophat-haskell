@@ -133,8 +133,8 @@ inputs :: forall m l a.
   TaskT m a -> m (List (Input Dummy))  -- We need to call `value`, therefore we are in `m`
 inputs t = case t of
   Done _       -> pure []
-  Enter        -> pure [ ToHere (AChange tau) ]
-  Update _     -> pure [ ToHere (AChange tau) ]
+  Enter        -> pure [ ToHere (AEnter tau) ]
+  Update _     -> pure [ ToHere (AEnter tau) ]
   View _       -> pure []
 
   Pair t1 t2   -> pure (\l r -> map ToFirst l <> map ToSecond r) -< inputs t1 -< inputs t2
@@ -158,7 +158,7 @@ inputs t = case t of
   Store _      -> pure []
   Assign _ _   -> pure []
   Watch _      -> pure []
-  Change _     -> pure [ ToHere (AChange tau) ]
+  Change _     -> pure [ ToHere (AEnter tau) ]
   where
     tau = Proxy :: Proxy a
 
@@ -294,21 +294,21 @@ handle :: forall m l a.
   TaskT m a -> Input Action -> TrackingTaskT m a
 handle t i = case ( t, i ) of
   -- * Edit
-  ( Enter, ToHere (IChange w) )
+  ( Enter, ToHere (IEnter w) )
     | Just Refl <- r ~~ typeOf w -> pure <| Update w
     | otherwise -> do
         log Warning <| CouldNotChangeVal (SomeTypeRep r) (someTypeOf w)
         pure t
     where
       r = typeRep :: TypeRep a
-  ( Update v, ToHere (IChange w) )
+  ( Update v, ToHere (IEnter w) )
     -- NOTE: Here we check if `v` and `w` have the same type.
     -- If this is the case, it would be inhabited by `Refl :: a :~: b`, where `b` is the type of the value inside `Change`.
     | Just Refl <- v ~= w -> pure <| Update w
     | otherwise -> do
         log Warning <| CouldNotChangeVal (someTypeOf v) (someTypeOf w)
         pure t
-  ( Change l, ToHere (IChange w) )
+  ( Change l, ToHere (IEnter w) )
     -- NOTE: As in the `Update` case above, we check for type equality.
     | Just Refl <- r ~~ typeOf w -> do
         l <<- w

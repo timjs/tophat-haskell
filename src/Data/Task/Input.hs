@@ -18,13 +18,13 @@ import qualified Data.Text as Text
 
 
 data Action :: Type where
-  IChange   :: Editable b => b -> Action
+  IEnter    :: Editable b => b -> Action
   IPick     :: Label -> Action
   IContinue :: Label -> Action
 
 
 instance Eq Action where
-  IChange x   == IChange y
+  IEnter x    == IEnter y
     | Just Refl <- x ~= y    = x == y
     | otherwise              = False
   IPick x     == IPick y     = x == y
@@ -34,9 +34,9 @@ instance Eq Action where
 
 instance Pretty Action where
   pretty = \case
-    IChange x   -> sep [ "change", pretty x ]
-    IPick p     -> sep [ "pick", pretty p ]
-    IContinue p -> sep [ "cont", pretty p ]
+    IEnter x    -> sep [ "e", pretty x ]
+    IPick l     -> sep [ "p", pretty l ]
+    IContinue l -> sep [ "c", pretty l ]
 
 
 
@@ -44,13 +44,13 @@ instance Pretty Action where
 
 
 data Dummy :: Type where
-  AChange   :: Editable b => Proxy b -> Dummy
+  AEnter    :: Editable b => Proxy b -> Dummy
   APick     :: Label -> Dummy
   AContinue :: Label -> Dummy
 
 
 instance Eq Dummy where
-  AChange x   == AChange y
+  AEnter x    == AEnter y
     -- NOTE: We're comparing proxies, they are always equal when the types are equal.
     | Just Refl <- x ~= y    = True
     | otherwise              = False
@@ -61,9 +61,9 @@ instance Eq Dummy where
 
 instance Pretty Dummy where
   pretty = \case
-    AChange _   -> "change <val>"
-    APick p     -> sep [ "pick", pretty p ]
-    AContinue p -> sep [ "cont", pretty p ]
+    AEnter _    -> sep [ "e", "<value>" ]
+    APick l     -> sep [ "p", pretty l ]
+    AContinue l -> sep [ "c", pretty l ]
 
 
 
@@ -98,14 +98,14 @@ instance Pretty a => Pretty (Input a) where
 
 dummyfy :: Action -> Dummy
 dummyfy = \case
-  IChange x   -> AChange (proxyOf x)
-  IPick p     -> APick p
-  IContinue p -> AContinue p
+  IEnter x    -> AEnter (proxyOf x)
+  IPick l     -> APick l
+  IContinue l -> AContinue l
 
 
 -- reify :: Dummy -> Gen (List Action)
--- reify (AChange p) = map IChange <$> vectorOf 5 (arbitraryOf p)
--- reify (APick p)   = pure [ IPick p ]
+-- reify (AEnter l)  = map IEnter <$> vectorOf 5 (arbitraryOf l)
+-- reify (APick l)   = pure [ IPick l ]
 
 
 strip :: Input Action -> Input Dummy
@@ -122,18 +122,18 @@ strip = map dummyfy
 usage :: Doc a
 usage = split
   [ ":: Possible inputs are:"
-  , "    change <value> : change current editor to <value> "
-  , "    pick <label>   : pick amongst the possible options"
-  , "    cont <label>   : continue with a possible option"
-  , "    f <input>      : send <input> to the first task"
-  , "    s <input>      : send <input> to the second task"
-  , "    help           : show this message"
+  , "    e <value> : enter <value> into the current editor"
+  , "    p <label> : pick amongst the possible options"
+  , "    c <label> : continue with a possible option"
+  , "    f <input> : send <input> to the first task"
+  , "    s <input> : send <input> to the second task"
+  , "    help      : show this message"
   , ""
   , "where values can be:"
   , "    ()           : Unit"
   , "    True, False  : Booleans"
-  , "    1, 32, -42   : Integers"
-  , "    \"Hello\"    : Strings"
+  , "    1, -42, …    : Integers"
+  , "    \"Hello\", … : Strings"
   , "    [ <value>, ] : List of values"
   , ""
   , "and labels always start with a Capital letter"
@@ -145,18 +145,19 @@ parseLabel t
   | otherwise = throw <| sep [ "!!", dquotes <| pretty t, "is not a proper label"]
 
 parse :: List Text -> Either (Doc a) (Input Action)
-parse [ "change", val ]
-  | Just v <- scan val :: Maybe Unit      = ok <| ToHere <| IChange v
-  | Just v <- scan val :: Maybe Bool      = ok <| ToHere <| IChange v
-  | Just v <- scan val :: Maybe Int       = ok <| ToHere <| IChange v
-  | Just v <- scan val :: Maybe String    = ok <| ToHere <| IChange v
-  | Just v <- scan val :: Maybe [Bool]    = ok <| ToHere <| IChange v
-  | Just v <- scan val :: Maybe [Int]     = ok <| ToHere <| IChange v
-  | Just v <- scan val :: Maybe [String]  = ok <| ToHere <| IChange v
+parse [ "e", val ]
+  | Just v <- scan val :: Maybe Unit      = ok <| ToHere <| IEnter v
+  | Just v <- scan val :: Maybe Bool      = ok <| ToHere <| IEnter v
+  | Just v <- scan val :: Maybe Int       = ok <| ToHere <| IEnter v
+  | Just v <- scan val :: Maybe String    = ok <| ToHere <| IEnter v
+  | Just v <- scan val :: Maybe [Bool]    = ok <| ToHere <| IEnter v
+  | Just v <- scan val :: Maybe [Int]     = ok <| ToHere <| IEnter v
+  | Just v <- scan val :: Maybe [String]  = ok <| ToHere <| IEnter v
   | otherwise                             = throw <| sep [ "!! Error parsing value", dquotes (pretty val) ]
-parse [ "pick", rest ]                    = map (ToHere << IPick) <| parseLabel rest
-parse [ "cont", rest ]                    = map (ToHere << IContinue) <| parseLabel rest
+parse [ "p", rest ]                       = map (ToHere << IPick) <| parseLabel rest
+parse [ "c", rest ]                       = map (ToHere << IContinue) <| parseLabel rest
 parse ("f" : rest)                        = map ToFirst <| parse rest
 parse ("s" : rest)                        = map ToSecond <| parse rest
+parse [ "h" ]                             = throw usage
 parse [ "help" ]                          = throw usage
 parse other                               = throw <| sep [ "!!", dquotes (sep <| map pretty other), "is not a valid command, type `help` for more info" ]
