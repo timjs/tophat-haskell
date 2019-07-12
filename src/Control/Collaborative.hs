@@ -27,6 +27,11 @@ infixl 1 <<-
 --   x <- watch l
 --   assign l (f x)
 
+instance ( Collaborative l m, Monoid w ) => Collaborative l (WriterT w m) where
+  store    = lift << store
+  assign l = lift << assign l
+  watch    = lift << watch
+
 instance Collaborative IORef IO where
   store  = newIORef
   assign = writeIORef

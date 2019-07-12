@@ -2,7 +2,6 @@ module Data.Task.Run where
 
 
 import Control.Monad.Trace
-import Control.Monad.Writer
 
 import Data.List (union, intersect)
 import Data.Task
@@ -222,21 +221,24 @@ instance Pretty (Dirties m) where
 
 stabilise ::
   Collaborative l m => MonadTrace (Dirties m) m =>
-  TaskT m a -> m (TaskT m a)
+  TaskT m a -> TrackingTaskT m a
 --NOTE: This has *nothing* to do with iTasks Stable/Unstable values!
 stabilise t = do
-  ( t', ds ) <- runWriterT (normalise t)
+  ( t', ds ) <- listen <| normalise t
+  clear
   let ws = watching t'
   let is = ds `intersect` ws
   case is of
     [] -> pure t'
-    _  -> trace (Watched is) <| stabilise t'
+    _  -> do
+      trace (Watched is)
+      stabilise t'
 
 
 initialise ::
   Collaborative l m => MonadTrace (Dirties m) m =>
   TaskT m a -> m (TaskT m a)
-initialise = stabilise
+initialise = evalWriterT << stabilise
 
 
 
@@ -275,45 +277,52 @@ pick _ _ = Left <| CouldNotDoPick
 
 handle :: forall m l a.
   Collaborative l m => MonadTrace NotApplicable m =>
-  TaskT m a -> Input Action -> m (TaskT m a)
+  TaskT m a -> Input Action -> TrackingTaskT m a
 handle t i_ = case ( t, i_ ) of
   -- * Edit
   ( Enter, ToHere (IChange w) )
     | Just Refl <- r ~~ typeOf w -> pure <| Update w
-    | otherwise -> trace (CouldNotChangeVal (SomeTypeRep r) (someTypeOf w)) <| pure t
+    | otherwise -> do
+        trace <| CouldNotChangeVal (SomeTypeRep r) (someTypeOf w)
+        pure t
     where
       r = typeRep :: TypeRep a
   ( Update v, ToHere (IChange w) )
     -- NOTE: Here we check if `v` and `w` have the same type.
     -- If this is the case, it would be inhabited by `Refl :: a :~: b`, where `b` is the type of the value inside `Change`.
     | Just Refl <- v ~= w -> pure <| Update w
-    | otherwise -> trace (CouldNotChangeVal (someTypeOf v) (someTypeOf w)) <| pure t
+    | otherwise -> do
+        trace <| CouldNotChangeVal (someTypeOf v) (someTypeOf w)
+        pure t
   ( Change l, ToHere (IChange w) )
     -- NOTE: As in the `Update` case above, we check for type equality.
     | Just Refl <- r ~~ typeOf w -> do
         l <<- w
-        -- tell [ pack l ]
+        tell [ pack l ]
         pure <| Change l
-    | otherwise -> trace (CouldNotChangeRef (someTypeOf l) (someTypeOf w)) <| pure t
+    | otherwise -> do
+        trace <| CouldNotChangeRef (someTypeOf l) (someTypeOf w)
+        pure t
     where
       r = typeRep :: TypeRep a
   -- * Pick
   ( Pick _ _, ToHere (IPick p) ) ->
     case pick t p of
-      Left e -> trace e <| pure t
+      Left e -> do
+        trace e
+        pure t
       Right t' -> pure t'
   ( Step t1 e2, ToHere (IContinue p) ) -> do
-    mv1 <- value t1
+    mv1 <- lift <| value t1
     case mv1 of
-      Nothing -> trace CouldNotContinue <| pure t
+      Nothing -> do
+        trace CouldNotContinue
+        pure t
       Just v1 -> case pick (e2 v1) p of
-        Left e -> trace e <| pure t
+        Left e -> do
+          trace e
+          pure t
         Right t' -> pure t'
-      -- do
-      --   let t2 = e2 v1
-      --   if failing t2
-      --     then trace CouldNotCont <| pure t
-      --     else
   -- * Passing
   ( Trans f t1, i ) -> do
     t1' <- handle t1 i
@@ -334,15 +343,15 @@ handle t i_ = case ( t, i_ ) of
     t2' <- handle t2 i
     pure <| Choose t1 t2'
   -- * Rest
-  _ ->
-    trace (CouldNotHandle i_) <| pure t
+  _ -> do
+    trace <| CouldNotHandle i_
+    pure t
 
 
 interact ::
   Collaborative l m => MonadTrace NotApplicable m => MonadTrace (Dirties m) m =>
   TaskT m a -> Input Action -> m (TaskT m a)
-interact t i = do
-  handle t i >>= stabilise
+interact t i = evalWriterT (handle t i >>= stabilise)
 
 
 
