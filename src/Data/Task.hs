@@ -83,16 +83,16 @@ instance Pretty (TaskT m r) where
   pretty = \case
     Done _       -> "Done _"
     Enter        -> "Enter"
-    Update v     -> sep [ "Update", pretty v ]
-    View v       -> sep [ "View", pretty v ]
+    Update v     -> parens <| sep [ "Update", pretty v ]
+    View v       -> parens <| sep [ "View", pretty v ]
 
-    Pair t1 t2   -> sep [ pretty t1, "<&>", pretty t2 ]
-    Choose t1 t2 -> sep [ pretty t1, "<|>", pretty t2 ]
-    Pick t1 t2   -> sep [ pretty t1, "<?>", pretty t2 ]
+    Pair t1 t2   -> parens <| sep [ pretty t1, "<&>", pretty t2 ]
+    Choose t1 t2 -> parens <| sep [ pretty t1, "<|>", pretty t2 ]
+    Pick t1 t2   -> parens <| sep [ pretty t1, "<?>", pretty t2 ]
     Fail         -> "Fail"
 
     Trans _ t    -> sep [ "Trans _", pretty t ]
-    Step t _     -> sep [ pretty t, ">>=", "_" ]
+    Step t _     -> parens <| sep [ pretty t, ">>=", "_" ]
     Forever t    -> sep [ "Forever", pretty t ]
 
     Store v      -> sep [ "Store", pretty v ]
