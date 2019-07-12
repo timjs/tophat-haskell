@@ -167,7 +167,7 @@ type TrackingTaskT m a = WriterT (List (Someref m)) m (TaskT m a)
 normalise ::
   Collaborative l m =>
   TaskT m a -> TrackingTaskT m a
-normalise = \case
+normalise t = case t of
   -- * Step
   Step t1 e2 -> do
     t1' <- normalise t1
@@ -195,8 +195,8 @@ normalise = \case
           Just _  -> pure t2'  -- S-OrRight
           Nothing -> pure <| Choose t1' t2'  -- S-OrNone
   -- * Evaluate
-  Trans f t  -> pure (Trans f) -< normalise t
-  Forever t  -> normalise <| Step t (\_ -> Forever t)
+  Trans f t1 -> pure (Trans f) -< normalise t1
+  Forever t1 -> normalise <| Step t1 (\_ -> Forever t1)
   Pair t1 t2 -> pure Pair -< normalise t1 -< normalise t2
   -- * Internal
   Store v -> do
@@ -207,14 +207,14 @@ normalise = \case
     tell [ pack l ]
     pure <| Done ()
   -- * Ready
-  t@(Done _)   -> pure t
-  t@(Enter)    -> pure t
-  t@(Update _) -> pure t
-  t@(View _)   -> pure t
-  t@(Watch _)  -> pure t
-  t@(Change _) -> pure t
-  t@(Pick _ _) -> pure t
-  t@(Fail)     -> pure t
+  Done _   -> pure t
+  Enter    -> pure t
+  Update _ -> pure t
+  View _   -> pure t
+  Watch _  -> pure t
+  Change _ -> pure t
+  Pick _ _ -> pure t
+  Fail     -> pure t
 
 
 data Steps
