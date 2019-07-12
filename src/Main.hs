@@ -249,3 +249,29 @@ doubleShared = do
     t2 l m = do
       y <- change l
       if y >= 5 then m <<- 12 else empty
+
+atomic :: Task ( () , () )
+atomic = do
+  l <- store (0 :: Int)
+  let
+    t1 = do
+      l <<- 2
+      x <- watch l
+      if x > 2 then view () else empty
+    t2 = do
+      l <<- 3
+      l <<- 1
+      view ()
+  t1 <&> t2
+
+unstable :: Task ( (), () )
+unstable = do
+  l <- store False
+  let
+    t1 = do
+      b <- watch l
+      if b then view () else empty
+    t2 = do
+      l <<- True
+      view ()
+  t1 <&> t2
