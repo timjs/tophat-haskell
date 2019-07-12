@@ -239,12 +239,14 @@ data Steps
   = DidStabilise Int Int
   | DidNotStabilise Int Int Int
   | DidNormalise Text
+  | DidBalance Text
 
 instance Pretty Steps where
   pretty = \case
     DidNotStabilise d w o -> sep [ "Found", pretty o, "overlap(s) amongst", pretty d, "dirty and", pretty w, "watched reference(s)" ]
     DidStabilise d w      -> sep [ "Found no overlaps amongst", pretty d, "dirty and", pretty w, "watched reference(s)" ]
     DidNormalise t        -> sep [ "Normalised to:", pretty t ]
+    DidBalance t          -> sep [ "Balanced to:", pretty t ]
 
 
 stabilise ::
@@ -258,8 +260,10 @@ stabilise t = do
   let os = ds `intersect` ws
   case os of
     [] -> do
+      let t'' = balance t'
       log Info <| DidStabilise (length ds) (length ws)
-      pure <| balance t'
+      log Info <| DidBalance (show <| pretty t'')
+      pure t''
     _  -> do
       log Info <| DidNotStabilise (length ds) (length ws) (length os)
       stabilise t'
