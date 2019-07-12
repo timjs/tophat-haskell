@@ -247,13 +247,6 @@ stabilise t = do
       stabilise t'
 
 
-initialise ::
-  Collaborative l m => MonadTrace Steps m =>
-  TaskT m a -> m (TaskT m a)
-initialise = evalWriterT << stabilise
-
-
-
 -- Handling --------------------------------------------------------------------
 
 
@@ -361,6 +354,12 @@ handle t i_ = case ( t, i_ ) of
   _ -> do
     trace <| CouldNotHandle i_
     pure t
+
+
+initialise ::
+  Collaborative l m => MonadTrace Steps m =>
+  TaskT m a -> m (TaskT m a)
+initialise = evalWriterT << stabilise
 
 
 interact ::
