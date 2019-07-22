@@ -37,7 +37,7 @@ ui = \case
         mv1 <- value t1
         case mv1 of
           Nothing -> pure 0
-          Just v1 -> pure <| length <| options (e2 v1)
+          Just v1 -> pure <| length <| picks (e2 v1)
 
   Store v      -> pure <| sep [ "store", pretty v ]
   Assign _ v   -> pure <| sep [ "…", ":=", pretty v ]
@@ -116,14 +116,14 @@ watching = \case
   Change l     -> [ pack l ]
 
 
-options ::
+picks ::
   TaskT m a -> Set Label
-options = \case
+picks = \case
   Pick ts    -> Dict.keysSet <| Dict.filter (not << failing) ts
 
-  -- Trans _ t1 -> options t1
-  -- Forever t1 -> options t1
-  -- Step t1 _  -> options t1
+  -- Trans _ t1 -> picks t1
+  -- Forever t1 -> picks t1
+  -- Step t1 _  -> picks t1
 
   _ -> []
 
@@ -139,7 +139,7 @@ inputs t = case t of
 
   Pair t1 t2   -> pure (\l r -> map ToFirst l <> map ToSecond r) -< inputs t1 -< inputs t2
   Choose t1 t2 -> pure (\l r -> map ToFirst l <> map ToSecond r) -< inputs t1 -< inputs t2
-  Pick _       -> pure <| map (ToHere << APick) <| Set.toList <| options t
+  Pick _       -> pure <| map (ToHere << APick) <| Set.toList <| picks t
   Fail         -> pure []
 
   Trans _ t1   -> inputs t1
@@ -153,7 +153,7 @@ inputs t = case t of
         let t2 = e2 v1
         if failing t2
           then pure []
-          else pure <| map (ToHere << AContinue) <| Set.toList <| options t2
+          else pure <| map (ToHere << AContinue) <| Set.toList <| picks t2
 
   Store _      -> pure []
   Assign _ _   -> pure []
@@ -183,7 +183,7 @@ normalise t = case t of
         let t2 = e2 v1 in
         if failing t2
           then pure stay -- S-ThenFail
-          else if not <| null <| options t2
+          else if not <| null <| picks t2
             then pure stay  -- S-ThenWait
             else normalise t2 -- S-ThenCont
   -- * Choose
@@ -287,7 +287,7 @@ instance Pretty NotApplicable where
     CouldNotChangeVal v c -> sep [ "Could not change value because types", dquotes <| pretty v, "and", dquotes <| pretty c, "do not match" ]
     CouldNotChangeRef r c -> sep [ "Could not change value because cell", dquotes <| pretty r, "does not contain", dquotes <| pretty c ]
     CouldNotGoTo l        -> sep [ "Could not pick label", dquotes <| pretty l, "because it leads to an empty task" ]
-    CouldNotFind l        -> sep [ "Could not find label", dquotes <| pretty l, "in the possible options" ]
+    CouldNotFind l        -> sep [ "Could not find label", dquotes <| pretty l, "in the possible picks" ]
     CouldNotPick          -> sep [ "Could not pick because there is nothing to pick from in this task" ]
     CouldNotContinue      -> sep [ "Could not continue because there is no value to continue with" ]
     CouldNotHandle i      -> sep [ "Could not handle input", dquotes <| pretty i, "(this should only appear when giving an impossible input)" ]
@@ -365,7 +365,7 @@ handle t i = case ( t, i ) of
         Nothing -> do
           log Warning <| CouldNotFind l
           pure t
-        Just t' -> if Set.member l (options c)
+        Just t' -> if Set.member l (picks c)
           then pure t'
           else do
             log Warning <| CouldNotGoTo l
