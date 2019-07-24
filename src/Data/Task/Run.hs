@@ -341,9 +341,9 @@ handle t i = case ( t, i ) of
     t1' <- handle t1 i'
     pure <| Step t1' (\_ -> Forever t1)
     -- OR: handle (Step t1 (\_ -> Forever t1)) i'
-  ( Step t1 t2, i' ) -> do
+  ( Step t1 e2, i' ) -> do
     t1' <- handle t1 i'
-    pure <| Step t1' t2
+    pure <| Step t1' e2
   ( Pair t1 t2, ToFirst i' ) -> do
     t1' <- handle t1 i'
     pure <| Pair t1' t2
