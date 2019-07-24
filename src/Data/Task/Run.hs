@@ -339,7 +339,8 @@ handle t i = case ( t, i ) of
     pure <| Trans f t1'
   ( Forever t1, i' ) -> do
     t1' <- handle t1 i'
-    pure <| Forever t1'
+    pure <| Step t1' (\_ -> Forever t1)
+    -- OR: handle (Step t1 (\_ -> Forever t1)) i'
   ( Step t1 t2, i' ) -> do
     t1' <- handle t1 i'
     pure <| Step t1' t2
