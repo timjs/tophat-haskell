@@ -33,6 +33,11 @@ instance ( Collaborative l m, Monoid w ) => Collaborative l (WriterT w m) where
   assign l = lift << assign l
   watch    = lift << watch
 
+instance ( Collaborative l m ) => Collaborative l (ExceptT e m) where
+  store    = lift << store
+  assign l = lift << assign l
+  watch    = lift << watch
+
 instance Collaborative IORef IO where
   store  = newIORef
   assign = writeIORef
