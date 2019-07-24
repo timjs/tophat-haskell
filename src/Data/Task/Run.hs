@@ -121,9 +121,9 @@ picks ::
 picks = \case
   Pick ts    -> Dict.keysSet <| Dict.filter (not << failing) ts
 
-  -- Trans _ t1 -> picks t1
-  -- Forever t1 -> picks t1
-  -- Step t1 _  -> picks t1
+  Trans _ t1 -> picks t1
+  Forever t1 -> picks t1
+  Step t1 _  -> picks t1
 
   _ -> []
 
@@ -167,6 +167,7 @@ inputs t = case t of
 -- Normalising -----------------------------------------------------------------
 
 type TrackingTaskT m a = WriterT (List (Someref m)) m (TaskT m a)
+
 
 normalise ::
   Collaborative l m =>
@@ -246,17 +247,19 @@ instance Pretty Steps where
     DidNotStabilise d w o -> sep [ "Found", pretty o, "overlap(s) amongst", pretty d, "dirty and", pretty w, "watched reference(s)" ]
     DidStabilise d w      -> sep [ "Found no overlaps amongst", pretty d, "dirty and", pretty w, "watched reference(s)" ]
     DidNormalise t        -> sep [ "Normalised to:", pretty t ]
-    DidBalance t          -> sep [ "Balanced to:", pretty t ]
+    DidBalance t          -> sep [ "Rebalanced to:", pretty t ]
 
 
 stabilise ::
   Collaborative l m => MonadLog Steps m =>
-  TaskT m a -> TrackingTaskT m a
+  TrackingTaskT m a -> m (TaskT m a)
 --NOTE: This has *nothing* to do with iTasks Stable/Unstable values!
-stabilise t = do
-  ( t', ds ) <- listen <| normalise t
+stabilise tt = do
+  ( t, d ) <- runWriterT tt
+  ( t', d' ) <- runWriterT <| normalise t
   log Info <| DidNormalise (show <| pretty t')
   let ws = watching t'
+  let ds = d `union` d'
   let os = ds `intersect` ws
   case os of
     [] -> do
@@ -266,11 +269,13 @@ stabilise t = do
       pure t''
     _  -> do
       log Info <| DidNotStabilise (length ds) (length ws) (length os)
-      stabilise t'
+      stabilise <| pure t'
 
 
 -- Handling --------------------------------------------------------------------
 
+type PartialTrackingTaskT m a = WriterT (List (Someref m)) (ExceptT NotApplicable  m) (TaskT m a)
+-- type PartialTrackingTaskT m a = ExceptT NotApplicable (WriterT (List (Someref m)) m) (TaskT m a)
 
 data NotApplicable
   = CouldNotChangeVal SomeTypeRep SomeTypeRep
@@ -294,45 +299,40 @@ instance Pretty NotApplicable where
 
 
 handle :: forall m l a.
-  Collaborative l m => MonadLog NotApplicable m =>
-  TaskT m a -> Input Action -> TrackingTaskT m a
+  Collaborative l m =>
+  TaskT m a -> Input Action -> PartialTrackingTaskT m a
 handle t i = case ( t, i ) of
   -- * Edit
   ( Enter, ToHere (IEnter w) )
     | Just Refl <- r ~~ typeOf w -> pure <| Update w
-    | otherwise -> do
-        log Warning <| CouldNotChangeVal (SomeTypeRep r) (someTypeOf w)
-        pure t
+    | otherwise -> throw <| CouldNotChangeVal (SomeTypeRep r) (someTypeOf w)
     where
       r = typeRep :: TypeRep a
   ( Update v, ToHere (IEnter w) )
     -- NOTE: Here we check if `v` and `w` have the same type.
     -- If this is the case, it would be inhabited by `Refl :: a :~: b`, where `b` is the type of the value inside `Change`.
     | Just Refl <- v ~= w -> pure <| Update w
-    | otherwise -> do
-        log Warning <| CouldNotChangeVal (someTypeOf v) (someTypeOf w)
-        pure t
+    | otherwise -> throw <| CouldNotChangeVal (someTypeOf v) (someTypeOf w)
   ( Change l, ToHere (IEnter w) )
     -- NOTE: As in the `Update` case above, we check for type equality.
     | Just Refl <- r ~~ typeOf w -> do
         l <<- w
         tell [ pack l ]
         pure <| Change l
-    | otherwise -> do
-        log Warning <| CouldNotChangeRef (someTypeOf l) (someTypeOf w)
-        pure t
+    | otherwise -> throw <| CouldNotChangeRef (someTypeOf l) (someTypeOf w)
     where
       r = typeRep :: TypeRep a
   -- * Pick
-  ( Pick _, ToHere (IPick l) ) ->
-    handlePick l t
+  ( Pick ts, ToHere (IPick l) ) -> case Dict.lookup l ts of
+      Nothing -> throw <| CouldNotFind l
+      Just t' -> if Set.member l (picks t)
+        then pure t'
+        else throw <| CouldNotGoTo l
   ( Step t1 e2, ToHere (IContinue l) ) -> do
-    mv1 <- lift <| value t1
+    mv1 <- lift <| lift <| value t1
     case mv1 of
-      Nothing -> do
-        log Warning CouldNotContinue
-        pure t
-      Just v1 -> handlePick l (e2 v1)
+      Nothing -> throw CouldNotContinue
+      Just v1 -> handle (e2 v1) (ToHere (IPick l))
   -- * Passing
   ( Trans f t1, i' ) -> do
     t1' <- handle t1 i'
@@ -356,42 +356,29 @@ handle t i = case ( t, i ) of
     t2' <- handle t2 i'
     pure <| Choose t1 t2'
   -- * Rest
-  _ -> do
-    log Error <| CouldNotHandle i
-    pure t
-  where
-    handlePick l c = case c of
-      Pick ts -> case Dict.lookup l ts of
-        Nothing -> do
-          log Warning <| CouldNotFind l
-          pure t
-        Just t' -> if Set.member l (picks c)
-          then pure t'
-          else do
-            log Warning <| CouldNotGoTo l
-            pure t
-      _ -> do
-        log Warning <| CouldNotPick
-        pure t
-
-
+  _ -> throw <| CouldNotHandle i
 
 
 initialise ::
   Collaborative l m => MonadLog Steps m =>
   TaskT m a -> m (TaskT m a)
-initialise = evalWriterT << stabilise
+initialise = stabilise << pure
 
 
 interact ::
   Collaborative l m => MonadLog NotApplicable m => MonadLog Steps m =>
   TaskT m a -> Input Action -> m (TaskT m a)
-interact t i = evalWriterT (handle t i >>= stabilise)
+interact t i = do
+  xt <- runExceptT <| runWriterT <| handle t i
+  case xt of
+    Left e -> do
+        log Warning e
+        pure t
+    Right tt -> stabilise <| WriterT <| pure tt
 
 
 
 -- Running ---------------------------------------------------------------------
-
 
 getUserInput :: IO (Input Action)
 getUserInput = do
