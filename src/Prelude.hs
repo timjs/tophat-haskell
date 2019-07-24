@@ -14,15 +14,15 @@ module Prelude
   , Selective(branch, select, biselect), check, when
   , lift0, lift1, lift2, lift3
   , MonadZero
-  , ok, throw, catch
-  , evalWriterT, clear
+  , MonadError, ok, throw, catch
+  , WriterT(..), evalWriterT, clear
   , (~=), (~~), proxyOf, typeOf, someTypeOf, typeRep, TypeRep, someTypeRep, SomeTypeRep(..)
   ) where
 
 
 import Relude hiding ((.), (>>), ($), (&), (<&>), (<$>), (<*), (*>), map, when, pass, trace, readMaybe, liftA2, liftA3, Nat, Any, Set, forever)
 import Data.Type.Equality
-import Control.Monad.Writer.Strict (MonadWriter(..), listens, censor, WriterT, runWriterT, execWriterT, mapWriterT)
+import Control.Monad.Writer.Strict (MonadWriter(..), listens, censor, WriterT(..), runWriterT, execWriterT, mapWriterT)
 
 import Control.Monad.Except (MonadError(..))
 import Control.Monad.List (ListT)
