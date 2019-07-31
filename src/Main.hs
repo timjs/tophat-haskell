@@ -16,56 +16,56 @@ main =
 
 -- Basics --
 
-fourtytwo :: Task Int
+fourtytwo :: Task IO Int
 fourtytwo =
   update 42
 
-hello :: Task Text
+hello :: Task IO Text
 hello =
   update "Hello"
 
-inc :: Int -> Task Int
+inc :: Int -> Task IO Int
 inc x =
   view (x + 1)
 
-add :: Int -> Int -> Task Int
+add :: Int -> Int -> Task IO Int
 add x y =
   view (x + y)
 
-append :: Text -> Text -> Task Text
+append :: Text -> Text -> Task IO Text
 append x y =
   view (x <> y)
 
 
 -- Steps --
 
-pureStep :: Task Int
+pureStep :: Task IO Int
 pureStep = do
   x <- fourtytwo
   inc x
 
-pureStep' :: Task Int
+pureStep' :: Task IO Int
 pureStep' = do
   x <- fourtytwo
   inc x <?> empty
 
-oneStep :: Task Int
+oneStep :: Task IO Int
 oneStep = do
   x <- update 0
   inc x
 
-oneStep' :: Task Int
+oneStep' :: Task IO Int
 oneStep' = do
   x <- update 0
   inc x <?> empty
 
-twoSteps :: Task Int
+twoSteps :: Task IO Int
 twoSteps = do
   x <- update 1
   y <- update 2
   add x y
 
-twoSteps' :: Task Int
+twoSteps' :: Task IO Int
 twoSteps' =
   update 1 >>? \x ->
   update 2 >>? \y ->
@@ -74,15 +74,15 @@ twoSteps' =
 
 -- Parallel --
 
-parallel :: Task ( Int, Text )
+parallel :: Task IO ( Int, Text )
 parallel = enter <&> hello
 
-parallelStep :: Task Text
+parallelStep :: Task IO Text
 parallelStep = do
   ( n, m ) <- parallel
   view (unwords <| replicate n m)
 
-parallelStep' :: Task Text
+parallelStep' :: Task IO Text
 parallelStep' = do
   ( n, m ) <- parallel
   view (unwords <| replicate n m) <?> empty
@@ -90,46 +90,46 @@ parallelStep' = do
 
 -- Choices --
 
-choose1 :: Task Int
+choose1 :: Task IO Int
 choose1 = empty <|> view 0
 
-choose2 :: Task Int
+choose2 :: Task IO Int
 choose2 = view 1 <|> view 2
 
-choose3 :: Task Int
+choose3 :: Task IO Int
 choose3 = choose2 <|> view 3
 
-pick1 :: Task Int
+pick1 :: Task IO Int
 pick1 = empty <?> view 0
 
-pick2 :: Task Int
+pick2 :: Task IO Int
 pick2 = view 1 <?> view 2
 
-pick3 :: Task Int
+pick3 :: Task IO Int
 pick3 = pick2 <?> view 3
 
 
 -- Guards --
 
-auto :: Task Text
+auto :: Task IO Text
 auto = do
   x <- enter
   if x >= (10 :: Int)
     then view "large"
     else empty
 
-actions :: Task Int
+actions :: Task IO Int
 actions = do
-  _ <- enter :: Task Int
+  _ <- enter :: Task IO Int
   pick3
 
-guards :: Task Text
+guards :: Task IO Text
 guards = do
   x <- enter
   (if x >= (10 :: Int) then view "large" else empty)
     <?> (if x >= (100 :: Int) then view "very large" else empty)
 
-branch :: Task Text
+branch :: Task IO Text
 branch = do
   x <- update (1 :: Int)
   if x `mod` 3 == 0 then
@@ -139,13 +139,13 @@ branch = do
   else
     empty
 
-branch' :: Task Text
+branch' :: Task IO Text
 branch' = do
   x <- update (1 :: Int)
   (if x `mod` 3 == 0 then view "multiple of 3" else empty)
     <|> (if x `mod` 5 == 0 then view "multiple of 5" else empty)
 
-branch'' :: Task Text
+branch'' :: Task IO Text
 branch'' = do
   x <- update (1 :: Int)
   (if x `mod` 3 == 0 then view "multiple of 3" else empty)
@@ -154,12 +154,12 @@ branch'' = do
 
 -- Shared Data --
 
-update1 :: Ref Int -> Task ()
+update1 :: Ref Int -> Task IO ()
 update1 l = do
   x <- enter
   l <<- x
 
-update2 :: Ref Int -> Task Int
+update2 :: Ref Int -> Task IO Int
 update2 l = do
   x <- enter
   l <<- x
@@ -167,7 +167,7 @@ update2 l = do
   l <<- y
   watch l
 
-update3 :: Ref Int -> Task Int
+update3 :: Ref Int -> Task IO Int
 update3 l = do
   x <- enter
   l <<- x
@@ -176,12 +176,12 @@ update3 l = do
   l <<- y + z
   watch l
 
-inspect :: (Ref Int -> Task a) -> Task ( a, Int )
+inspect :: (Ref Int -> Task IO a) -> Task IO ( a, Int )
 inspect f = do
   l <- store 0
   f l <&> watch l
 
-doubleShared :: Task ( (), Int )
+doubleShared :: Task IO ( (), Int )
 doubleShared = do
   l <- store (0 :: Int)
   m <- store (0 :: Int)
@@ -194,7 +194,7 @@ doubleShared = do
       y <- change l
       if y >= 5 then m <<- 12 else empty
 
-atomic :: Task ( () , () )
+atomic :: Task IO ( () , () )
 atomic = do
   l <- store (0 :: Int)
   let
@@ -208,7 +208,7 @@ atomic = do
       view ()
   t1 <&> t2
 
-unstable :: Task ( (), () )
+unstable :: Task IO ( (), () )
 unstable = do
   l <- store False
   let
@@ -223,7 +223,7 @@ unstable = do
 
 -- Forever --
 
-numbers :: Task ( Void, List Int )
+numbers :: Task IO ( Void, List Int )
 numbers = do
   l <- store ([] :: List Int)
   forever (prepend l) <&> watch l
@@ -232,7 +232,7 @@ numbers = do
       x <- enter
       l <<= (:) x
 
-numbers' :: Task ( Void, List Int )
+numbers' :: Task IO ( Void, List Int )
 numbers' = do
   l <- store ([] :: List Int)
   forever (edit_ l) <&> watch l

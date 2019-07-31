@@ -17,7 +17,7 @@ import qualified Data.HashSet as Set
 
 ui ::
   Collaborative l m =>
-  TaskT m a -> m (Doc b)  -- We need to watch locations and be in monad `m`
+  Task m a -> m (Doc b)  -- We need to watch locations and be in monad `m`
 ui = \case
   Done _       -> pure "■(…)"
   Enter        -> pure "⊠()"
@@ -47,7 +47,7 @@ ui = \case
 
 value ::
   Collaborative l m =>
-  TaskT m a -> m (Maybe a)  -- We need to watch locations and be in monad `m`
+  Task m a -> m (Maybe a)  -- We need to watch locations and be in monad `m`
 value = \case
   Done v       -> pure (Just v)
   Enter        -> pure Nothing
@@ -70,7 +70,7 @@ value = \case
 
 
 failing ::
-  TaskT m a -> Bool
+  Task m a -> Bool
 failing = \case
   Done _       -> False
   Enter        -> False
@@ -94,7 +94,7 @@ failing = \case
 
 watching ::
   Collaborative l m =>           -- We need Collaborative here to pack locations `l`
-  TaskT m a -> List (Someref m)  -- But there is no need to be in monad `m`
+  Task m a -> List (Someref m)  -- But there is no need to be in monad `m`
 watching = \case
   Done _       -> []
   Enter        -> []
@@ -117,7 +117,7 @@ watching = \case
 
 
 picks ::
-  TaskT m a -> Set Label
+  Task m a -> Set Label
 picks = \case
   Pick ts    -> Dict.keysSet <| Dict.filter (not << failing) ts
 
@@ -130,7 +130,7 @@ picks = \case
 
 inputs :: forall m l a.
   Collaborative l m =>
-  TaskT m a -> m (List (Input Dummy))  -- We need to call `value`, therefore we are in `m`
+  Task m a -> m (List (Input Dummy))  -- We need to call `value`, therefore we are in `m`
 inputs t = case t of
   Done _       -> pure []
   Enter        -> pure [ ToHere (AEnter tau) ]
@@ -166,12 +166,12 @@ inputs t = case t of
 
 -- Normalising -----------------------------------------------------------------
 
-type TrackingTaskT m a = WriterT (List (Someref m)) m (TaskT m a)
+type TrackingTask m a = WriterT (List (Someref m)) m (Task m a)
 
 
 normalise ::
   Collaborative l m =>
-  TaskT m a -> TrackingTaskT m a
+  Task m a -> TrackingTask m a
 normalise t = case t of
   -- * Step
   Step t1 e2 -> do
@@ -222,7 +222,7 @@ normalise t = case t of
   Fail     -> pure t
 
 
-balance :: TaskT m a -> TaskT m a
+balance :: Task m a -> Task m a
 balance t = case t of
   Pair t1 t2   -> Pair (balance t1) (balance t2)
   Choose t1 t2 -> Choose (balance t1) (balance t2)
@@ -252,7 +252,7 @@ instance Pretty Steps where
 
 stabilise ::
   Collaborative l m => MonadLog Steps m =>
-  TrackingTaskT m a -> m (TaskT m a)
+  TrackingTask m a -> m (Task m a)
 --NOTE: This has *nothing* to do with iTasks Stable/Unstable values!
 stabilise tt = do
   ( t, d ) <- runWriterT tt
@@ -274,8 +274,8 @@ stabilise tt = do
 
 -- Handling --------------------------------------------------------------------
 
-type PartialTrackingTaskT m a = WriterT (List (Someref m)) (ExceptT NotApplicable  m) (TaskT m a)
--- type PartialTrackingTaskT m a = ExceptT NotApplicable (WriterT (List (Someref m)) m) (TaskT m a)
+type PartialTrackingTask m a = WriterT (List (Someref m)) (ExceptT NotApplicable  m) (Task m a)
+-- type PartialTrackingTask m a = ExceptT NotApplicable (WriterT (List (Someref m)) m) (Task m a)
 
 data NotApplicable
   = CouldNotChangeVal SomeTypeRep SomeTypeRep
@@ -300,7 +300,7 @@ instance Pretty NotApplicable where
 
 handle :: forall m l a.
   Collaborative l m =>
-  TaskT m a -> Input Action -> PartialTrackingTaskT m a
+  Task m a -> Input Action -> PartialTrackingTask m a
 handle t i = case ( t, i ) of
   -- * Edit
   ( Enter, ToHere (IEnter w) )
@@ -362,13 +362,13 @@ handle t i = case ( t, i ) of
 
 initialise ::
   Collaborative l m => MonadLog Steps m =>
-  TaskT m a -> m (TaskT m a)
+  Task m a -> m (Task m a)
 initialise = stabilise << pure
 
 
 interact ::
   Collaborative l m => MonadLog NotApplicable m => MonadLog Steps m =>
-  TaskT m a -> Input Action -> m (TaskT m a)
+  Task m a -> Input Action -> m (Task m a)
 interact t i = do
   xt <- runExceptT <| runWriterT <| handle t i
   case xt of
@@ -394,7 +394,7 @@ getUserInput = do
         getUserInput
 
 
-loop :: Task a -> IO ()
+loop :: Task IO a -> IO ()
 loop task = do
   putTextLn ""
   interface <- ui task
@@ -406,7 +406,7 @@ loop task = do
   loop task'
 
 
-run :: Task a -> IO ()
+run :: Task IO a -> IO ()
 run task = do
   task' <- initialise task
   loop task'
