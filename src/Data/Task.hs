@@ -55,7 +55,7 @@ data Task (m :: Type -> Type) (r :: Type) where
 
   -- * References
   -- | Create new reference of type `r`
-  Store :: ( Collaborative l m, Editable r ) => r -> Task m (l r)
+  Share :: ( Collaborative l m, Editable r ) => r -> Task m (l r)
   -- | Assign to a reference of type `r` to a given value
   Assign :: ( Collaborative l m, Editable a ) => l a -> a -> Task m ()
   -- | Watch a reference of type `r`
@@ -101,7 +101,7 @@ instance Pretty (Task m r) where
     Step t _     -> parens <| sep [ pretty t, ">>=", "_" ]
     Forever t    -> sep [ "Forever", pretty t ]
 
-    Store v      -> sep [ "Store", pretty v ]
+    Share v      -> sep [ "Share", pretty v ]
     Assign _ v   -> sep [ "_", ":=", pretty v ]
     Watch _      -> sep [ "Watch", "_" ]
     Change _     -> sep [ "Change", "_" ]
@@ -136,7 +136,7 @@ instance Monad (Task m) where
   (>>=) = Step
 
 instance Collaborative l m => Collaborative l (Task m) where
-  store  = Store
+  share  = Share
   assign = Assign
   watch  = Watch
   change = Change

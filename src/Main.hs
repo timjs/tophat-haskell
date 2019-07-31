@@ -178,13 +178,13 @@ update3 l = do
 
 inspect :: (Ref Int -> Task IO a) -> Task IO ( a, Int )
 inspect f = do
-  l <- store 0
+  l <- share 0
   f l <&> watch l
 
 doubleShared :: Task IO ( (), Int )
 doubleShared = do
-  l <- store (0 :: Int)
-  m <- store (0 :: Int)
+  l <- share (0 :: Int)
+  m <- share (0 :: Int)
   t2 l m <&> t1 l m
   where
     t1 _ m = do
@@ -196,7 +196,7 @@ doubleShared = do
 
 atomic :: Task IO ( () , () )
 atomic = do
-  l <- store (0 :: Int)
+  l <- share (0 :: Int)
   let
     t1 = do
       l <<- 2
@@ -210,7 +210,7 @@ atomic = do
 
 unstable :: Task IO ( (), () )
 unstable = do
-  l <- store False
+  l <- share False
   let
     t1 = do
       b <- watch l
@@ -225,7 +225,7 @@ unstable = do
 
 numbers :: Task IO ( Void, List Int )
 numbers = do
-  l <- store ([] :: List Int)
+  l <- share ([] :: List Int)
   forever (prepend l) <&> watch l
   where
     prepend l = do
@@ -234,7 +234,7 @@ numbers = do
 
 numbers' :: Task IO ( Void, List Int )
 numbers' = do
-  l <- store ([] :: List Int)
+  l <- share ([] :: List Int)
   forever (edit_ l) <&> watch l
   where
 

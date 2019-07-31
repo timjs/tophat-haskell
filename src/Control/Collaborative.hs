@@ -8,7 +8,7 @@ import Data.Editable
 
 -- | A monad with `Editable` reference cells and pointer equality.
 class ( Monad m, Typeable l, forall a. Eq (l a) ) => Collaborative l m | m -> l where
-  store  :: Editable a => a -> m (l a)
+  share  :: Editable a => a -> m (l a)
 
   assign :: Editable a => l a -> a -> m ()
 
@@ -29,17 +29,17 @@ infixl 1 <<=
   assign l (f x)
 
 instance ( Collaborative l m, Monoid w ) => Collaborative l (WriterT w m) where
-  store    = lift << store
+  share    = lift << share
   assign l = lift << assign l
   watch    = lift << watch
 
 instance ( Collaborative l m ) => Collaborative l (ExceptT e m) where
-  store    = lift << store
+  share    = lift << share
   assign l = lift << assign l
   watch    = lift << watch
 
 instance Collaborative IORef IO where
-  store  = newIORef
+  share  = newIORef
   assign = writeIORef
   watch  = readIORef
 

@@ -39,7 +39,7 @@ ui = \case
           Nothing -> pure 0
           Just v1 -> pure <| length <| picks (e2 v1)
 
-  Store v      -> pure <| sep [ "store", pretty v ]
+  Share v      -> pure <| sep [ "share", pretty v ]
   Assign _ v   -> pure <| sep [ "…", ":=", pretty v ]
   Watch l      -> pure (\v -> cat [ "⧈(", pretty v, ")" ]) -< watch l
   Change l     -> pure (\v -> cat [ "⊟(", pretty v, ")" ]) -< watch l
@@ -63,7 +63,7 @@ value = \case
   Forever _    -> pure Nothing
   Step _ _     -> pure Nothing
 
-  Store v      -> pure Just -< store v
+  Share v      -> pure Just -< share v
   Assign _ _   -> pure (Just ())
   Watch l      -> pure Just -< watch l
   Change l     -> pure Just -< watch l
@@ -86,7 +86,7 @@ failing = \case
   Forever t    -> failing t
   Step t _     -> failing t
 
-  Store _      -> False
+  Share _      -> False
   Assign _ _   -> False
   Watch _      -> False
   Change _     -> False
@@ -110,7 +110,7 @@ watching = \case
   Forever t1   -> watching t1
   Step t1 _    -> watching t1
 
-  Store _      -> []
+  Share _      -> []
   Assign _ _   -> []
   Watch l      -> [ pack l ]
   Change l     -> [ pack l ]
@@ -155,7 +155,7 @@ inputs t = case t of
           then pure []
           else pure <| map (ToHere << AContinue) <| Set.toList <| picks t2
 
-  Store _      -> pure []
+  Share _      -> pure []
   Assign _ _   -> pure []
   Watch _      -> pure []
   Change _     -> pure [ ToHere (AEnter tau) ]
@@ -204,8 +204,8 @@ normalise t = case t of
   Forever t1 -> normalise <| Step t1 (\_ -> Forever t1)
   Pair t1 t2 -> pure Pair -< normalise t1 -< normalise t2
   -- * Internal
-  Store v -> do
-    l <- lift <| store v
+  Share v -> do
+    l <- lift <| share v
     pure <| Done l
   Assign l v -> do
     lift <| l <<- v
