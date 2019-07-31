@@ -1,6 +1,6 @@
 module Data.Task
-  ( Task(..), Ref, Label
-  , (<?>), (>>?), pick, forever
+  ( Task(..), Ref
+  , (<?>), (>>?), forever
   , module Control.Interactive
   , module Control.Collaborative
   , module Data.Editable
@@ -11,8 +11,6 @@ import Control.Interactive
 import Control.Collaborative
 
 import Data.Editable (Editable)
-
-import qualified Data.HashMap.Strict as Dict
 
 
 -- Tasks -----------------------------------------------------------------------
@@ -30,14 +28,14 @@ data Task (m :: Type -> Type) (r :: Type) where
   Update :: Editable r => r -> Task m r
   -- | Valued, view only editor
   View :: Editable r => r -> Task m r
+  -- | External choice between two tasks.
+  Pick :: Dict Label (Task m r) -> Task m r
 
   -- * Parallels
   -- | Composition of two tasks.
   Pair :: Task m a -> Task m b -> Task m ( a, b )
   -- | Internal choice between two tasks.
   Choose :: Task m r -> Task m r -> Task m r
-  -- | External choice between two tasks.
-  Pick :: Dict Label (Task m r) -> Task m r
   -- | The failing task
   Fail :: Task m r
 
@@ -58,15 +56,13 @@ data Task (m :: Type -> Type) (r :: Type) where
   Share :: ( Collaborative l m, Editable r ) => r -> Task m (l r)
   -- | Assign to a reference of type `r` to a given value
   Assign :: ( Collaborative l m, Editable a ) => l a -> a -> Task m ()
-  -- | Watch a reference of type `r`
-  Watch :: ( Collaborative l m, Editable r ) => l r -> Task m r
   -- | Change to a reference of type `r` to a value
   Change :: ( Collaborative l m, Editable r ) => l r -> Task m r
+  -- | Watch a reference of type `r`
+  Watch :: ( Collaborative l m, Editable r ) => l r -> Task m r
 
 
 type Ref = IORef
-type Label = Text
-
 
 -- Instances -------------------------------------------------------------------
 
@@ -79,9 +75,6 @@ infixl 1 >>?
 (>>?) :: Task m a -> (a -> Task m b) -> Task m b
 (>>?) t c = t >>= \x -> pick [ ( "Continue", c x ) ]
 
-pick :: List ( Label, Task m a ) -> Task m a
-pick = Pick << Dict.fromList
-
 forever :: Task m a -> Task m Void
 forever = Forever
 
@@ -91,10 +84,10 @@ instance Pretty (Task m r) where
     Enter        -> "Enter"
     Update v     -> parens <| sep [ "Update", pretty v ]
     View v       -> parens <| sep [ "View", pretty v ]
+    Pick ts      -> parens <| sep [ "Pick", pretty ts ]
 
     Pair t1 t2   -> parens <| sep [ pretty t1, "<&>", pretty t2 ]
     Choose t1 t2 -> parens <| sep [ pretty t1, "<|>", pretty t2 ]
-    Pick ts      -> parens <| sep [ "Pick", pretty ts ]
     Fail         -> "Fail"
 
     Trans _ t    -> sep [ "Trans _", pretty t ]
@@ -113,6 +106,7 @@ instance Interactive (Task m) where
   enter  = Enter
   update = Update
   view   = View
+  pick   = Pick
 
 instance Monoidal (Task m) where
   (<&>) = Pair

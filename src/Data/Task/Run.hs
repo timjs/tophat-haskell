@@ -23,10 +23,10 @@ ui = \case
   Enter        -> pure "⊠()"
   Update v     -> pure <| cat [ "□(", pretty v, ")" ]
   View v       -> pure <| cat [ "⧇(", pretty v, ")" ]
+  Pick ts      -> pure <| cat [ "◇", pretty <| Dict.keysSet ts ]
 
   Pair t1 t2   -> pure (\l r -> sep [ l, " ⧓ ", r ]) -< ui t1 -< ui t2
   Choose t1 t2 -> pure (\l r -> sep [ l, " ◆ ", r ]) -< ui t1 -< ui t2
-  Pick ts      -> pure <| cat [ "◇", pretty <| Dict.keysSet ts ]
   Fail         -> pure "↯"
 
   Trans _ t    -> ui t
@@ -41,8 +41,8 @@ ui = \case
 
   Share v      -> pure <| sep [ "share", pretty v ]
   Assign _ v   -> pure <| sep [ "…", ":=", pretty v ]
-  Watch l      -> pure (\v -> cat [ "⧈(", pretty v, ")" ]) -< watch l
   Change l     -> pure (\v -> cat [ "⊟(", pretty v, ")" ]) -< watch l
+  Watch l      -> pure (\v -> cat [ "⧈(", pretty v, ")" ]) -< watch l
 
 
 value ::
@@ -53,10 +53,10 @@ value = \case
   Enter        -> pure Nothing
   Update v     -> pure (Just v)
   View v       -> pure (Just v)
+  Pick _       -> pure Nothing
 
   Pair t1 t2   -> pure (<&>) -< value t1 -< value t2
   Choose t1 t2 -> pure (<|>) -< value t1 -< value t2
-  Pick _       -> pure Nothing
   Fail         -> pure Nothing
 
   Trans f t    -> pure (map f) -< value t
@@ -65,8 +65,8 @@ value = \case
 
   Share v      -> pure Just -< share v
   Assign _ _   -> pure (Just ())
-  Watch l      -> pure Just -< watch l
   Change l     -> pure Just -< watch l
+  Watch l      -> pure Just -< watch l
 
 
 failing ::
@@ -76,10 +76,10 @@ failing = \case
   Enter        -> False
   Update _     -> False
   View _       -> False
+  Pick ts      -> all failing ts
 
   Pair t1 t2   -> failing t1 && failing t2
   Choose t1 t2 -> failing t1 && failing t2
-  Pick ts      -> all failing ts
   Fail         -> True
 
   Trans _ t    -> failing t
@@ -88,8 +88,8 @@ failing = \case
 
   Share _      -> False
   Assign _ _   -> False
-  Watch _      -> False
   Change _     -> False
+  Watch _      -> False
 
 
 watching ::
@@ -100,10 +100,10 @@ watching = \case
   Enter        -> []
   Update _     -> []
   View _       -> []
+  Pick _       -> []
 
   Pair t1 t2   -> watching t1 `union` watching t2
   Choose t1 t2 -> watching t1 `union` watching t2
-  Pick _       -> []
   Fail         -> []
 
   Trans _ t1   -> watching t1
@@ -112,8 +112,8 @@ watching = \case
 
   Share _      -> []
   Assign _ _   -> []
-  Watch l      -> [ pack l ]
   Change l     -> [ pack l ]
+  Watch l      -> [ pack l ]
 
 
 picks ::
@@ -136,10 +136,10 @@ inputs t = case t of
   Enter        -> pure [ ToHere (AEnter tau) ]
   Update _     -> pure [ ToHere (AEnter tau) ]
   View _       -> pure []
+  Pick _       -> pure <| map (ToHere << APick) <| Set.toList <| picks t
 
   Pair t1 t2   -> pure (\l r -> map ToFirst l <> map ToSecond r) -< inputs t1 -< inputs t2
   Choose t1 t2 -> pure (\l r -> map ToFirst l <> map ToSecond r) -< inputs t1 -< inputs t2
-  Pick _       -> pure <| map (ToHere << APick) <| Set.toList <| picks t
   Fail         -> pure []
 
   Trans _ t1   -> inputs t1
@@ -157,8 +157,8 @@ inputs t = case t of
 
   Share _      -> pure []
   Assign _ _   -> pure []
-  Watch _      -> pure []
   Change _     -> pure [ ToHere (AEnter tau) ]
+  Watch _      -> pure []
   where
     tau = Proxy :: Proxy a
 
@@ -216,17 +216,17 @@ normalise t = case t of
   Enter    -> pure t
   Update _ -> pure t
   View _   -> pure t
-  Watch _  -> pure t
-  Change _ -> pure t
   Pick _   -> pure t
+  Change _ -> pure t
+  Watch _  -> pure t
   Fail     -> pure t
 
 
 balance :: Task m a -> Task m a
 balance t = case t of
+  Pick ts      -> Pick <| map balance ts
   Pair t1 t2   -> Pair (balance t1) (balance t2)
   Choose t1 t2 -> Choose (balance t1) (balance t2)
-  Pick ts      -> Pick <| map balance ts
   Trans f t1   -> Trans f (balance t1)
   Forever t1   -> Forever (balance t1)
 
@@ -328,6 +328,7 @@ handle t i = case ( t, i ) of
       Just t' -> if Set.member l (picks t)
         then pure t'
         else throw <| CouldNotGoTo l
+  -- * Step
   ( Step t1 e2, ToHere (IContinue l) ) -> do
     mv1 <- lift <| lift <| value t1
     case mv1 of
