@@ -71,6 +71,11 @@ twoSteps' =
   update 2 >>? \y ->
   add x y
 
+twoSteps'' :: Task IO Int
+twoSteps'' = do
+  x <- enter
+  y <- enter
+  add x y
 
 -- Parallel --
 
