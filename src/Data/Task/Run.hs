@@ -411,3 +411,13 @@ run :: Task IO a -> IO ()
 run task = do
   task' <- initialise task
   loop task'
+
+execute :: Show a => Task IO a -> [Input Action] -> IO ()
+execute task [] = do
+    result <- value task
+    putStrLn (show result)
+execute task (i:is) = do
+    task' <- initialise task
+    task'' <- interact task' i
+    execute task'' is
+
