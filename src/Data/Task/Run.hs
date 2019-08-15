@@ -341,10 +341,10 @@ instance Pretty Steps where
     DidBalance t          -> sep [ "Rebalanced to:", pretty t ]
 
 
-stabilise ::
+fixate ::
   Collaborative l m => MonadLog Steps m =>
   TrackingTask m a -> m (Task m a)
-stabilise tt = do
+fixate tt = do
   ( t, d ) <- runWriterT tt
   ( t', d' ) <- runWriterT <| normalise t
   log Info <| DidNormalise (show <| pretty t')
@@ -359,13 +359,13 @@ stabilise tt = do
       pure t''
     _  -> do
       log Info <| DidNotStabilise (length ds) (length ws) (length os)
-      stabilise <| pure t'
+      fixate <| pure t'
 
 
 initialise ::
   Collaborative l m => MonadLog Steps m =>
   Task m a -> m (Task m a)
-initialise = stabilise << pure
+initialise = fixate << pure
 
 
 interact ::
@@ -377,7 +377,7 @@ interact t i = do
     Left e -> do
         log Warning e
         pure t
-    Right tt -> stabilise <| WriterT <| pure tt
+    Right tt -> fixate <| WriterT <| pure tt
 
 
 execute ::
