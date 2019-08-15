@@ -218,8 +218,8 @@ lift0 = pure
 {-# INLINE lift0 #-}
 
 
-lift1 :: Applicative f => (a -> b) -> f a -> f b
-lift1 = fmap
+lift1 :: Functor f => (a -> b) -> f a -> f b
+lift1 = map
 {-# INLINE lift1 #-}
 
 
