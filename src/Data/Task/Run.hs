@@ -63,7 +63,7 @@ value = \case
   Forever _    -> pure Nothing
   Step _ _     -> pure Nothing
 
-  Share v      -> pure Just -< share v
+  Share v      -> pure Just -< share v  -- Nothing???
   Assign _ _   -> pure (Just ())
   Change l     -> pure Just -< watch l
   Watch l      -> pure Just -< watch l
@@ -106,7 +106,7 @@ watching = \case
   Choose t1 t2 -> watching t1 `union` watching t2
   Fail         -> []
 
-  Trans _ t1   -> watching t1
+  Trans _ t2   -> watching t2
   Forever t1   -> watching t1
   Step t1 _    -> watching t1
 
@@ -121,7 +121,7 @@ picks ::
 picks = \case
   Pick ts    -> Dict.keysSet <| Dict.filter (not << failing) ts
 
-  Trans _ t1 -> picks t1
+  Trans _ t2 -> picks t2
   Forever t1 -> picks t1
   Step t1 _  -> picks t1
 
@@ -142,7 +142,7 @@ inputs t = case t of
   Choose t1 t2 -> pure (\l r -> map ToFirst l <> map ToSecond r) -< inputs t1 -< inputs t2
   Fail         -> pure []
 
-  Trans _ t1   -> inputs t1
+  Trans _ t2   -> inputs t2
   Forever t1   -> inputs t1
   Step t1 e2   -> pure (<>) -< inputs t1 -< do
     mv1 <- value t1
@@ -236,42 +236,6 @@ balance t = case t of
   _ -> t
 
 
-data Steps
-  = DidStabilise Int Int
-  | DidNotStabilise Int Int Int
-  | DidNormalise Text
-  | DidBalance Text
-
-instance Pretty Steps where
-  pretty = \case
-    DidNotStabilise d w o -> sep [ "Found", pretty o, "overlap(s) amongst", pretty d, "dirty and", pretty w, "watched reference(s)" ]
-    DidStabilise d w      -> sep [ "Found no overlaps amongst", pretty d, "dirty and", pretty w, "watched reference(s)" ]
-    DidNormalise t        -> sep [ "Normalised to:", pretty t ]
-    DidBalance t          -> sep [ "Rebalanced to:", pretty t ]
-
-
-stabilise ::
-  Collaborative l m => MonadLog Steps m =>
-  TrackingTask m a -> m (Task m a)
---NOTE: This has *nothing* to do with iTasks Stable/Unstable values!
-stabilise tt = do
-  ( t, d ) <- runWriterT tt
-  ( t', d' ) <- runWriterT <| normalise t
-  log Info <| DidNormalise (show <| pretty t')
-  let ws = watching t'
-  let ds = d `union` d'
-  let os = ds `intersect` ws
-  case os of
-    [] -> do
-      let t'' = balance t'
-      log Info <| DidStabilise (length ds) (length ws)
-      log Info <| DidBalance (show <| pretty t'')
-      pure t''
-    _  -> do
-      log Info <| DidNotStabilise (length ds) (length ws) (length os)
-      stabilise <| pure t'
-
-
 -- Handling --------------------------------------------------------------------
 
 type PartialTrackingTask m a = WriterT (List (Someref m)) (ExceptT NotApplicable  m) (Task m a)
@@ -334,7 +298,7 @@ handle t i = case ( t, i ) of
     case mv1 of
       Nothing -> throw CouldNotContinue
       Just v1 -> handle (e2 v1) (ToHere (IPick l))
-  -- * Passing
+  -- * Pass
   ( Trans f t1, i' ) -> do
     t1' <- handle t1 i'
     pure <| Trans f t1'
@@ -359,6 +323,43 @@ handle t i = case ( t, i ) of
     pure <| Choose t1 t2'
   -- * Rest
   _ -> throw <| CouldNotHandle i
+
+
+-- Interaction -----------------------------------------------------------------
+
+data Steps
+  = DidStabilise Int Int
+  | DidNotStabilise Int Int Int
+  | DidNormalise Text
+  | DidBalance Text
+
+instance Pretty Steps where
+  pretty = \case
+    DidNotStabilise d w o -> sep [ "Found", pretty o, "overlap(s) amongst", pretty d, "dirty and", pretty w, "watched reference(s)" ]
+    DidStabilise d w      -> sep [ "Found no overlaps amongst", pretty d, "dirty and", pretty w, "watched reference(s)" ]
+    DidNormalise t        -> sep [ "Normalised to:", pretty t ]
+    DidBalance t          -> sep [ "Rebalanced to:", pretty t ]
+
+
+stabilise ::
+  Collaborative l m => MonadLog Steps m =>
+  TrackingTask m a -> m (Task m a)
+stabilise tt = do
+  ( t, d ) <- runWriterT tt
+  ( t', d' ) <- runWriterT <| normalise t
+  log Info <| DidNormalise (show <| pretty t')
+  let ws = watching t'
+  let ds = d `union` d'
+  let os = ds `intersect` ws
+  case os of
+    [] -> do
+      let t'' = balance t'
+      log Info <| DidStabilise (length ds) (length ws)
+      log Info <| DidBalance (show <| pretty t'')
+      pure t''
+    _  -> do
+      log Info <| DidNotStabilise (length ds) (length ws) (length os)
+      stabilise <| pure t'
 
 
 initialise ::
