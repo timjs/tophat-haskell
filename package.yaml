@@ -19,6 +19,7 @@ dependencies:
   - relude >= 0.5 && < 1
   - prettyprinter
   - mtl
+  - transformers
   - text
   - unordered-containers
 
