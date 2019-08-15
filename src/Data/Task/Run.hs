@@ -383,14 +383,14 @@ interact t i = do
 execute ::
   Editable a =>
   List (Input Action) -> Task IO a -> IO ()
-execute inputs task = initialise task >>= go inputs
+execute events task = initialise task >>= go events
   where
-    go inputs task = case inputs of
-      input : rest -> do
-        task' <- interact task input
-        go rest task'
+    go events' task' = case events' of
+      event : rest -> do
+        task'' <- interact task' event
+        go rest task''
       [] -> do
-        result <- value task
+        result <- value task'
         putTextLn <| show <| pretty result
 
 
@@ -410,19 +410,18 @@ getUserInput = do
         getUserInput
 
 
-loop :: Task IO a -> IO ()
-loop task = do
-  putTextLn ""
-  interface <- ui task
-  print interface
-  events <- inputs task
-  print <| "Possibilities: " <> pretty events
-  input <- getUserInput
-  task' <- interact task input
-  loop task'
-
-
 run :: Task IO a -> IO ()
 run task = do
   task' <- initialise task
   loop task'
+  where
+    loop :: Task IO a -> IO ()
+    loop task' = do
+      putTextLn ""
+      interface <- ui task'
+      print interface
+      events <- inputs task'
+      print <| "Possibilities: " <> pretty events
+      input <- getUserInput
+      task'' <- interact task' input
+      loop task''
