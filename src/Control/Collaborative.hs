@@ -3,11 +3,12 @@ module Control.Collaborative
   , Someref, pack, unpack
   ) where
 
+import Control.Interactive
 import Data.Editable
 
 
 -- | A monad with `Editable` reference cells and pointer equality.
-class ( Monad m, Typeable l, forall a. Eq (l a) ) => Collaborative l m | m -> l where
+class ( Interactive m, Typeable l, forall a. Eq (l a) ) => Collaborative l m | m -> l where
   share  :: Editable a => a -> m (l a)
 
   assign :: Editable a => l a -> a -> m ()
