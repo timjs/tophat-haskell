@@ -10,21 +10,18 @@ import Control.Lens
 data Store l s t a b = Store (l s) (Lens s t a b)
 type Store' l s a = Store l s s a a
 
-value :: Lens' a a
-value = lens identity (\_ x -> x)
-
 store :: ( MonadRef l m ) => a -> m (Store' l a a)
 store x = do
-  r <- ref x
+  r <- new x
   pure <| Store r value
 
-read :: ( MonadRef l m ) => Store' l s a -> m a
-read (Store r l) = do
-  s <- deref r
+watch :: ( MonadRef l m ) => Store' l s a -> m a
+watch (Store r l) = do
+  s <- read r
   pure <| get l s
 
-write :: ( MonadRef l m ) => a -> Store' l s a -> m ()
-write x (Store r l) = do
+assign :: ( MonadRef l m ) => a -> Store' l s a -> m ()
+assign x (Store r l) = do
   r <<= set l x
 
 focus :: Lens' a b -> Store' l s a -> Store' l s b
