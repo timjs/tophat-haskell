@@ -380,6 +380,20 @@ interact t i = do
     Right tt -> stabilise <| WriterT <| pure tt
 
 
+execute ::
+  Editable a =>
+  List (Input Action) -> Task IO a -> IO ()
+execute inputs task = initialise task >>= go inputs
+  where
+    go inputs task = case inputs of
+      input : rest -> do
+        task' <- interact task input
+        go rest task'
+      [] -> do
+        result <- value task
+        putTextLn <| show <| pretty result
+
+
 
 -- Running ---------------------------------------------------------------------
 
@@ -412,13 +426,3 @@ run :: Task IO a -> IO ()
 run task = do
   task' <- initialise task
   loop task'
-
-execute :: Show a => Task IO a -> [Input Action] -> IO ()
-execute task [] = do
-    result <- value task
-    putStrLn (show result)
-execute task (i:is) = do
-    task' <- initialise task
-    task'' <- interact task' i
-    execute task'' is
-
