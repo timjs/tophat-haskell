@@ -8,26 +8,60 @@ import Data.Functor.Constant
 type Lens s t a b = forall f. ( Functor f ) => (a -> f b) -> s -> f t
 type Lens' s a = Lens s s a a
 
-lens :: (s -> a) -> (s -> b -> t) -> Lens s t a b
-lens getting setting f x = map (setting x) (f (getting x))
+lens :: (s -> a) -> (b -> s -> t) -> Lens s t a b
+lens getting setting f x = map (flip setting x) (f (getting x))
 
 get :: Lens s t a b -> (s -> a)
 get l = getConstant << l Constant
 
-set :: Lens s t a b -> s -> b -> t
-set l s v = runIdentity <| l (const <| Identity v) s
+set :: Lens s t a b -> b -> s -> t
+set l v s = runIdentity <| l (const <| Identity v) s
+
+_1 :: Lens (a, c) (b, c) a b
+_1 f ~(a,b) = map (\a' -> ( a',b )) (f a)
+
+_2 :: Lens (c, a) (c, b) a b
+_2 f ~(a,b) = map (\b' -> ( a,b' )) (f b)
+
+double :: Lens' Double Double
+double f n = map (\n' -> n' / 2) (f (n * 2))
+
+double' :: Lens' Double Double
+double' = lens (\n -> n * 2) (\_ n -> n / 2)
 
 
 -- Monadic lenses --------------------------------------------------------------
 
-type Focus m s a b = forall f. ( Traversable f ) => (a -> f b) -> s -> m (f ())
-type Focus' m s a = Focus m s a a
+type LensM m s a b = forall f. ( Traversable f ) => (a -> f b) -> s -> m (f ())
+type LensM' m s a = LensM m s a a
 
-focus :: ( Monad m ) => (s -> m a) -> (s -> b -> m ()) -> Focus m s a b
-focus reading writing f x = reading x >>= traverse (writing x) << f
+lensM :: ( Monad m ) => (s -> m a) -> (b -> s -> m ()) -> LensM m s a b
+lensM reading writing f x = reading x >>= traverse (flip writing x) << f
 
-read :: ( Monad m ) => Focus m s a b -> s -> m a
-read l s = map getConstant <| l Constant s
+getM :: ( Monad m ) => LensM m s a b -> s -> m a
+getM l s = map getConstant <| l Constant s
 
-write :: ( Monad m ) => Focus m s a b -> s -> b -> m ()
-write l s v = map runIdentity <| l (const <| Identity v) s
+setM :: ( Monad m ) => LensM m s a b -> b -> s -> m ()
+setM l v s = map runIdentity <| l (const <| Identity v) s
+
+
+-- Read/Write lenses -----------------------------------------------------------
+
+type ReadWriteLens s a = LensM' IO (IORef s) a
+
+into :: ReadWriteLens a a
+into = lensM readIORef (flip writeIORef)
+
+into1 :: ReadWriteLens ( a, b ) a
+into1 = into << _1
+
+into2 :: ReadWriteLens ( a, b ) b
+into2 = into << _2
+
+pair :: IO (IORef ( Text, Int ))
+pair = newIORef ( "Hallo", 42 )
+
+test :: IO Int
+test = do
+  r <- pair
+  getM into2 r
