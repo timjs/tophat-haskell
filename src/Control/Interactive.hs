@@ -35,7 +35,6 @@ instance ( Interactive m ) => Interactive (ExceptT e m) where
   -- pick = lift << pick
 
 instance Interactive IO where
-
   enter :: forall a. Editable a => IO a
   enter = do
     putText <| "Enter a " <> show tau <> ":"
