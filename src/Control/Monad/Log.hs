@@ -9,9 +9,9 @@ class ( Pretty a, Monad m ) => MonadLog a m where
 
 instance ( Pretty a ) => MonadLog a IO where
   log s a = do
-    putStr <| show <| pretty s
-    putStr " "
-    putStrLn <| show <| pretty a
+    putText <| show <| pretty s
+    putText " "
+    putTextLn <| show <| pretty a
 
 instance ( Monoid w, Pretty s, MonadLog s m ) => MonadLog s (WriterT w m) where
   log s = lift << log s
