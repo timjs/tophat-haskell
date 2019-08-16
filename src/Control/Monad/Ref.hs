@@ -3,33 +3,33 @@ module Control.Monad.Ref
   ) where
 
 
-class ( Monad m ) => MonadRef l m | m -> l where
-  new   :: a -> m (l a)
-  read  :: l a -> m a
-  write :: l a -> a -> m ()
+class ( Monad m ) => MonadRef r m | m -> r where
+  new   :: a -> m (r a)
+  read  :: r a -> m a
+  write :: r a -> a -> m ()
 
 infixl 1 <<-
 infixl 1 <<=
 
-(<<-) :: MonadRef l m => l a -> a -> m ()
+(<<-) :: MonadRef r m => r a -> a -> m ()
 (<<-) = write
 
-(<<=) :: MonadRef l m => l a -> (a -> a) -> m ()
-(<<=) l f = do
-  x <- read l
-  write l (f x)
+(<<=) :: MonadRef r m => r a -> (a -> a) -> m ()
+(<<=) r f = do
+  x <- read r
+  write r (f x)
 
--- instance ( MonadRef l m, Monoid w ) => MonadRef l (WriterT w m) where
+-- instance ( MonadRef r m, Monoid w ) => MonadRef r (WriterT w m) where
 --   new    = lift << new
---   write l = lift << write l
+--   write r = lift << write r
 --   read    = lift << read
 --
--- instance ( MonadRef l m ) => MonadRef l (ExceptT e m) where
+-- instance ( MonadRef r m ) => MonadRef r (ExceptT e m) where
 --   new    = lift << new
---   write l = lift << write l
+--   write r = lift << write r
 --   read    = lift << read
 
 instance MonadRef IORef IO where
-  new    = newIORef
+  new   = newIORef
   read  = readIORef
   write = writeIORef
