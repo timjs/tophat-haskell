@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2586e63be7500206d13f064aeae99d6d391e88eb0cdc51e245c226ed715c5802
+-- hash: cf64c7113894d705e704eeca0e5d75be845848dc0e019308126bf4fc775513d1
 
 name:           tophat
 version:        0.1.0.0
@@ -32,7 +32,7 @@ library
       Control.Monad.Log
       Control.Monad.Ref
       Data.Editable
-      Data.Store
+      Data.Share
       Data.Task
       Data.Task.Input
       Data.Task.Run
@@ -64,7 +64,7 @@ executable tophat
       Control.Monad.Log
       Control.Monad.Ref
       Data.Editable
-      Data.Store
+      Data.Share
       Data.Task
       Data.Task.Input
       Data.Task.Run
