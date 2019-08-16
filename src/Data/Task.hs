@@ -17,49 +17,49 @@ import Data.Editable (Editable)
 
 -- | Task monad transformer build on top of a monad `m`.
 -- |
--- | To use references, `m` shoud be a `Collaborative` with locations `l`.
-data Task (m :: Type -> Type) (r :: Type) where
+-- | To use references, `m` shoud be a `Collaborative` with locations `r`.
+data Task (m :: Type -> Type) (t :: Type) where
   -- * Editors
   -- | Internal, unrestricted and hidden editor
-  Done :: r -> Task m r
+  Done :: t -> Task m t
   -- | Unvalued editor
-  Enter :: Editable r => Task m r
+  Enter :: Editable t => Task m t
   -- | Valued editor
-  Update :: Editable r => r -> Task m r
+  Update :: Editable t => t -> Task m t
   -- | Valued, view only editor
-  View :: Editable r => r -> Task m r
+  View :: Editable t => t -> Task m t
   -- | External choice between two tasks.
-  Pick :: Dict Label (Task m r) -> Task m r
+  Pick :: Dict Label (Task m t) -> Task m t
 
   -- * Parallels
   -- | Composition of two tasks.
   Pair :: Task m a -> Task m b -> Task m ( a, b )
   -- | Internal choice between two tasks.
-  Choose :: Task m r -> Task m r -> Task m r
+  Choose :: Task m t -> Task m t -> Task m t
   -- | The failing task
-  Fail :: Task m r
+  Fail :: Task m t
 
   -- * Transform
   -- | Internal value transformation
-  Trans :: (a -> r) -> Task m a -> Task m r
+  Trans :: (a -> t) -> Task m a -> Task m t
 
   -- * Step
   -- | Internal, or system step.
-  Step :: Task m a -> (a -> Task m r) -> Task m r
+  Step :: Task m a -> (a -> Task m t) -> Task m t
 
   -- * Loops
   -- | Repeat a task indefinitely
-  Forever :: Task m r -> Task m Void
+  Forever :: Task m t -> Task m Void
 
   -- * References
-  -- | Create new reference of type `r`
-  Share :: ( Collaborative l m, Editable r ) => r -> Task m (l r)
-  -- | Assign to a reference of type `r` to a given value
-  Assign :: ( Collaborative l m, Editable a ) => l a -> a -> Task m ()
-  -- | Change to a reference of type `r` to a value
-  Change :: ( Collaborative l m, Editable r ) => l r -> Task m r
-  -- | Watch a reference of type `r`
-  Watch :: ( Collaborative l m, Editable r ) => l r -> Task m r
+  -- | Create new reference of type `t`
+  Share :: ( Collaborative r m, Editable t ) => t -> Task m (r t)
+  -- | Assign to a reference of type `t` to a given value
+  Assign :: ( Collaborative r m, Editable a ) => r a -> a -> Task m ()
+  -- | Change to a reference of type `t` to a value
+  Change :: ( Collaborative r m, Editable t ) => r t -> Task m t
+  -- | Watch a reference of type `t`
+  Watch :: ( Collaborative r m, Editable t ) => r t -> Task m t
 
 
 type Ref = IORef
@@ -78,7 +78,7 @@ infixl 1 >>?
 forever :: Task m a -> Task m Void
 forever = Forever
 
-instance Pretty (Task m r) where
+instance Pretty (Task m t) where
   pretty = \case
     Done _       -> "Done _"
     Enter        -> "Enter"
@@ -129,7 +129,7 @@ instance Alternative (Task m) where
 instance Monad (Task m) where
   (>>=) = Step
 
-instance Collaborative l m => Collaborative l (Task m) where
+instance Collaborative r m => Collaborative r (Task m) where
   share  = Share
   assign = Assign
   watch  = Watch
