@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: cf64c7113894d705e704eeca0e5d75be845848dc0e019308126bf4fc775513d1
+-- hash: 2a3b3b984db2662db1de0c1d5ca3b59969f415d65ad412e35fc7effbf3d0c3f5
 
 name:           tophat
 version:        0.1.0.0
@@ -28,7 +28,6 @@ library
   exposed-modules:
       Control.Collaborative
       Control.Interactive
-      Control.Lens
       Control.Monad.Log
       Control.Monad.Ref
       Data.Editable
@@ -47,6 +46,7 @@ library
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints
   build-depends:
       base-noprelude >=4.12 && <5
+    , lens-simple
     , mtl
     , prettyprinter
     , relude >=0.5 && <1
@@ -60,7 +60,6 @@ executable tophat
   other-modules:
       Control.Collaborative
       Control.Interactive
-      Control.Lens
       Control.Monad.Log
       Control.Monad.Ref
       Data.Editable
@@ -77,6 +76,7 @@ executable tophat
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base-noprelude >=4.12 && <5
+    , lens-simple
     , mtl
     , prettyprinter
     , relude >=0.5 && <1
