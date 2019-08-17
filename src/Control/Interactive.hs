@@ -10,7 +10,6 @@ class ( Monad m ) => Interactive m where
   update :: Editable a => a -> m a
 
   view :: Editable a => a -> m a
-  view = update
 
   pick :: Dict Label (m a) -> m a
   pick ms = do
@@ -37,7 +36,7 @@ instance ( Interactive m ) => Interactive (ExceptT e m) where
 instance Interactive IO where
   enter :: forall a. Editable a => IO a
   enter = do
-    putText <| "Enter a " <> show tau <> ":"
+    putText <| show tau <> "? "
     t <- getLine
     case scan t of
       Just x -> pure x
@@ -47,13 +46,10 @@ instance Interactive IO where
 
   update :: forall a. Editable a => a -> IO a
   update x = do
-    putText <| "Update " <> show (pretty x) <> ":"
-    t <- getLine
-    case scan t of
-      Just x' -> pure x'
-      Nothing -> update x
+    _ <- view x
+    enter
 
   view :: forall a. Editable a => a -> IO a
   view x = do
-    putText <| "View:" <> show (pretty x)
+    putTextLn <| show (pretty x)
     pure x
