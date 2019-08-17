@@ -1,6 +1,7 @@
 module Guis where
 
 import Data.Task
+import Lens.Simple (iso)
 
 
 -- Counter ---------------------------------------------------------------------
@@ -65,7 +66,7 @@ temperature' ( c, f ) = forever do
 
 -- With shares, we do not need any recursion.
 -- However, we need a way to transform our view on shares: lenses!
-temperature'' :: Collaborative l m => Double -> Task m Double
+temperature'' :: Collaborative l m => Double -> Task m ( Double, Double )
 temperature'' c = do
   r <- share c
-  change r <|> change r -- (iso c2f f2c << r)
+  change r <&> change (focus (iso c2f f2c) r)
