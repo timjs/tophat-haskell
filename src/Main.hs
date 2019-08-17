@@ -159,121 +159,121 @@ branch'' = do
 
 -- Shared Data --
 
-update1 :: Collaborative l m => l Int -> Task m ()
-update1 l = do
+update1 :: Collaborative r m => Store' r Int -> Task m ()
+update1 r = do
   x <- enter
-  l <<- x
+  r <<- x
 
-update2 :: Collaborative l m => l Int -> Task m Int
-update2 l = do
+update2 :: Collaborative r m => Store' r Int -> Task m Int
+update2 r = do
   x <- enter
-  l <<- x
+  r <<- x
   y <- enter
-  l <<- y
-  watch l
+  r <<- y
+  watch r
 
-update3 :: Collaborative l m => l Int -> Task m Int
-update3 l = do
+update3 :: Collaborative r m => Store' r Int -> Task m Int
+update3 r = do
   x <- enter
-  l <<- x
+  r <<- x
   y <- enter
-  z <- watch l
-  l <<- y + z
-  watch l
+  z <- watch r
+  r <<- y + z
+  watch r
 
-inspect :: Collaborative l m => (l Int -> Task m a) -> Task m ( a, Int )
+inspect :: Collaborative r m => (Store' r Int -> Task m a) -> Task m ( a, Int )
 inspect f = do
-  l <- share 0
-  f l <&> watch l
+  r <- share 0
+  f r <&> watch r
 
-doubleShared :: Collaborative l m => Task m ( (), Int )
+doubleShared :: Collaborative r m => Task m ( (), Int )
 doubleShared = do
-  l <- share (0 :: Int)
+  r <- share (0 :: Int)
   m <- share (0 :: Int)
-  t2 l m <&> t1 l m
+  t2 r m <&> t1 r m
   where
     t1 _ m = do
       x <- change m
       if x >= 10 then view (x * 2) else empty
-    t2 l m = do
-      y <- change l
+    t2 r m = do
+      y <- change r
       if y >= 5 then m <<- 12 else empty
 
-atomic :: Collaborative l m => Task m ( () , () )
+atomic :: Collaborative r m => Task m ( () , () )
 atomic = do
-  l <- share (0 :: Int)
+  r <- share (0 :: Int)
   let
     t1 = do
-      l <<- 2
-      x <- watch l
+      r <<- 2
+      x <- watch r
       if x > 2 then view () else empty
     t2 = do
-      l <<- 3
-      l <<- 1
+      r <<- 3
+      r <<- 1
       view ()
   t1 <&> t2
 
-unfixated :: Collaborative l m => Task m ( (), () )
+unfixated :: Collaborative r m => Task m ( (), () )
 unfixated = do
-  l <- share False
+  r <- share False
   let
     t1 = do
-      b <- watch l
+      b <- watch r
       if b then view () else empty
     t2 = do
-      l <<- True
+      r <<- True
       view ()
   t1 <&> t2
 
 
 -- Forever --
 
-numbers :: Collaborative l m => Task m ( Void, List Int )
+numbers :: Collaborative r m => Task m ( Void, List Int )
 numbers = do
-  l <- share ([] :: List Int)
-  forever (prepend l) <&> watch l
+  r <- share ([] :: List Int)
+  forever (prepend r) <&> watch r
   where
-    prepend l = do
+    prepend r = do
       x <- enter
-      l <<= (:) x
+      r <<= (:) x
 
-numbers' :: Collaborative l m => Task m ( Void, List Int )
+numbers' :: Collaborative r m => Task m ( Void, List Int )
 numbers' = do
-  l <- share ([] :: List Int)
-  forever (edit_ l) <&> watch l
+  r <- share ([] :: List Int)
+  forever (edit_ r) <&> watch r
   where
 
-    edit_ l = do pick
-      [ ( "Prepend", prepend_ l )
-      , ( "Clear", clear_ l )
-      , ( "Change", change_ l )
+    edit_ r = do pick
+      [ ( "Prepend", prepend_ r )
+      , ( "Clear", clear_ r )
+      , ( "Change", change_ r )
       ]
 
-    prepend_ l = do
+    prepend_ r = do
       x <- enter
-      l <<= (:) x
+      r <<= (:) x
 
-    clear_ l = do
-      l <<- []
+    clear_ r = do
+      r <<- []
 
-    change_ l = do
+    change_ r = do
       --NOTE: `watch` should be before the external step, otherwise we'll end up an a state where we show an editor with the list when the user entered an improper index.
       -- Compare this with iTasks: `watch` should be before the external step because you cannot specify the `watch` inside the step list!
-      n <- map length <| watch l
+      n <- map length <| watch r
       i <- enter
       if i < n
         then pick
-          [ ( "Delete", delete_ l i )
-          , ( "Replace", replace_ l i )
+          [ ( "Delete", delete_ r i )
+          , ( "Replace", replace_ r i )
           ]
         else empty
 
-    delete_ l i =
-      l <<= del i
+    delete_ r i =
+      r <<= del i
 
-    replace_ l i = do
+    replace_ r i = do
       x <- enter
-      l <<= rep i x
+      r <<= rep i x
 
 
 
