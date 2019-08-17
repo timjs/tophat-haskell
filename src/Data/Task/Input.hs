@@ -149,9 +149,11 @@ parse [ "e", val ]
   | Just v <- scan val :: Maybe Unit      = ok <| ToHere <| IEnter v
   | Just v <- scan val :: Maybe Bool      = ok <| ToHere <| IEnter v
   | Just v <- scan val :: Maybe Int       = ok <| ToHere <| IEnter v
+  | Just v <- scan val :: Maybe Double    = ok <| ToHere <| IEnter v
   | Just v <- scan val :: Maybe String    = ok <| ToHere <| IEnter v
   | Just v <- scan val :: Maybe [Bool]    = ok <| ToHere <| IEnter v
   | Just v <- scan val :: Maybe [Int]     = ok <| ToHere <| IEnter v
+  | Just v <- scan val :: Maybe [Double]  = ok <| ToHere <| IEnter v
   | Just v <- scan val :: Maybe [String]  = ok <| ToHere <| IEnter v
   | otherwise                             = throw <| sep [ "!! Error parsing value", dquotes (pretty val) ]
 parse [ "p", rest ]                       = map (ToHere << IPick) <| parseLabel rest
