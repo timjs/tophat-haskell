@@ -23,11 +23,11 @@ data Task (m :: Type -> Type) (t :: Type) where
   -- | Internal, unrestricted and hidden editor
   Done :: t -> Task m t
   -- | Unvalued editor
-  Enter :: Editable t => Task m t
+  Enter :: ( Editable t ) => Task m t
   -- | Valued editor
-  Update :: Editable t => t -> Task m t
+  Update :: ( Editable t ) => t -> Task m t
   -- | Valued, view only editor
-  View :: Editable t => t -> Task m t
+  View :: ( Editable t ) => t -> Task m t
   -- | External choice between two tasks.
   Pick :: Dict Label (Task m t) -> Task m t
 
@@ -52,14 +52,17 @@ data Task (m :: Type -> Type) (t :: Type) where
   Forever :: Task m t -> Task m Void
 
   -- * References
+  -- The inner monad `m` needs to have the notion of references.
+  -- These references should be `Eq` and `Typeable`,
+  -- because we need to mark them dirty and match those with watched references.
   -- | Create new reference of type `t`
-  Share :: ( Collaborative r m, Editable t ) => t -> Task m (r t)
+  Share :: ( Collaborative r m, Editable t ) => t -> Task m (Store r t t)
   -- | Assign to a reference of type `t` to a given value
-  Assign :: ( Collaborative r m, Editable a ) => r a -> a -> Task m ()
+  Assign :: ( Collaborative r m, Editable s, Editable a ) => Store r s a -> a -> Task m ()
   -- | Change to a reference of type `t` to a value
-  Change :: ( Collaborative r m, Editable t ) => r t -> Task m t
+  Change :: ( Collaborative r m, Editable s, Editable t ) => Store r s t -> Task m t
   -- | Watch a reference of type `t`
-  Watch :: ( Collaborative r m, Editable t ) => r t -> Task m t
+  Watch :: ( Collaborative r m, Editable s, Editable t ) => Store r s t -> Task m t
 
 
 type Ref = IORef

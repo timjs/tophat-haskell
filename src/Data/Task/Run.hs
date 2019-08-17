@@ -16,7 +16,7 @@ import qualified Data.HashSet as Set
 
 
 ui ::
-  Collaborative l m =>
+  Collaborative r m =>
   Task m a -> m (Doc b)  -- We need to watch locations and be in monad `m`
 ui = \case
   Done _       -> pure "■(…)"
@@ -46,7 +46,7 @@ ui = \case
 
 
 value ::
-  Collaborative l m =>
+  Collaborative r m =>
   Task m a -> m (Maybe a)  -- We need to watch locations and be in monad `m`
 value = \case
   Done v       -> pure (Just v)
@@ -93,7 +93,7 @@ failing = \case
 
 
 watching ::
-  Collaborative l m =>           -- We need Collaborative here to pack locations `l`
+  Collaborative r m =>          -- We need Collaborative here to pack references `r`
   Task m a -> List (Someref m)  -- But there is no need to be in monad `m`
 watching = \case
   Done _       -> []
@@ -112,8 +112,8 @@ watching = \case
 
   Share _      -> []
   Assign _ _   -> []
-  Change l     -> [ pack l ]
-  Watch l      -> [ pack l ]
+  Change (Store _ r) -> [ pack r ]
+  Watch (Store _ r)  -> [ pack r ]
 
 
 picks ::
@@ -128,8 +128,8 @@ picks = \case
   _ -> []
 
 
-inputs :: forall m l a.
-  Collaborative l m =>
+inputs :: forall m r a.
+  Collaborative r m =>
   Task m a -> m (List (Input Dummy))  -- We need to call `value`, therefore we are in `m`
 inputs t = case t of
   Done _       -> pure []
@@ -170,7 +170,7 @@ type TrackingTask m a = WriterT (List (Someref m)) m (Task m a)
 
 
 normalise ::
-  Collaborative l m =>
+  Collaborative r m =>
   Task m a -> TrackingTask m a
 normalise t = case t of
   -- * Step
@@ -207,9 +207,9 @@ normalise t = case t of
   Share v -> do
     l <- lift <| share v
     pure <| Done l
-  Assign l v -> do
-    lift <| l <<- v
-    tell [ pack l ]
+  Assign s@(Store _ r) v -> do
+    lift <| s <<- v
+    tell [ pack r ]
     pure <| Done ()
   -- * Ready
   Done _   -> pure t
@@ -262,30 +262,30 @@ instance Pretty NotApplicable where
     CouldNotHandle i      -> sep [ "Could not handle input", dquotes <| pretty i, "(this should only appear when giving an impossible input)" ]
 
 
-handle :: forall m l a.
-  Collaborative l m =>
+handle :: forall m r a.
+  Collaborative r m =>
   Task m a -> Input Action -> PartialTrackingTask m a
 handle t i = case ( t, i ) of
   -- * Edit
   ( Enter, ToHere (IEnter w) )
-    | Just Refl <- r ~~ typeOf w -> pure <| Update w
-    | otherwise -> throw <| CouldNotChangeVal (SomeTypeRep r) (someTypeOf w)
+    | Just Refl <- tau ~~ typeOf w -> pure <| Update w
+    | otherwise -> throw <| CouldNotChangeVal (SomeTypeRep tau) (someTypeOf w)
     where
-      r = typeRep :: TypeRep a
+      tau = typeRep :: TypeRep a
   ( Update v, ToHere (IEnter w) )
     -- NOTE: Here we check if `v` and `w` have the same type.
     -- If this is the case, it would be inhabited by `Refl :: a :~: b`, where `b` is the type of the value inside `Change`.
     | Just Refl <- v ~= w -> pure <| Update w
     | otherwise -> throw <| CouldNotChangeVal (someTypeOf v) (someTypeOf w)
-  ( Change l, ToHere (IEnter w) )
+  ( Change s@(Store _ r), ToHere (IEnter w) )
     -- NOTE: As in the `Update` case above, we check for type equality.
-    | Just Refl <- r ~~ typeOf w -> do
-        l <<- w
-        tell [ pack l ]
-        pure <| Change l
-    | otherwise -> throw <| CouldNotChangeRef (someTypeOf l) (someTypeOf w)
+    | Just Refl <- tau ~~ typeOf w -> do
+        s <<- w
+        tell [ pack r ]
+        pure <| Change s
+    | otherwise -> throw <| CouldNotChangeRef (someTypeOf s) (someTypeOf w)
     where
-      r = typeRep :: TypeRep a
+      tau = typeRep :: TypeRep a
   -- * Pick
   ( Pick ts, ToHere (IPick l) ) -> case Dict.lookup l ts of
       Nothing -> throw <| CouldNotFind l
@@ -342,7 +342,7 @@ instance Pretty Steps where
 
 
 fixate ::
-  Collaborative l m => MonadLog Steps m =>
+  Collaborative r m => MonadLog Steps m =>
   TrackingTask m a -> m (Task m a)
 fixate tt = do
   ( t, d ) <- runWriterT tt
@@ -363,13 +363,13 @@ fixate tt = do
 
 
 initialise ::
-  Collaborative l m => MonadLog Steps m =>
+  Collaborative r m => MonadLog Steps m =>
   Task m a -> m (Task m a)
 initialise = fixate << pure
 
 
 interact ::
-  Collaborative l m => MonadLog NotApplicable m => MonadLog Steps m =>
+  Collaborative r m => MonadLog NotApplicable m => MonadLog Steps m =>
   Task m a -> Input Action -> m (Task m a)
 interact t i = do
   xt <- runExceptT <| runWriterT <| handle t i
