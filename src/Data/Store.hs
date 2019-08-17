@@ -1,20 +1,21 @@
-module Data.Share where
+module Data.Store
+  ( Store(..), Store'
+  , focus, _identity
+  ) where
 
-import Control.Monad.Ref
-import Lens.Simple
+import Lens.Simple (Lens', iso)
 
 
--- Shares ----------------------------------------------------------------------
-
--- data Share r s t a b = Share (r s) (Lens s t a b)
--- type Share' r s a = Share r s s a a
+-- Stores ----------------------------------------------------------------------
 
 -- NOTE:
 -- I think the source and target types always have to be the same,
 -- otherwise you would be able to change the type of the inner reference...
 -- Isn't it?
-data Share r s a = Share (Lens' s a) (r s)
+data Store r s a = Store (Lens' s a) (r s)
+type Store' r a = Store r a a
 
+{-
 share :: ( MonadRef r m ) => a -> m (Share r a a)
 share x = do
   r <- new x
@@ -28,6 +29,7 @@ watch (Share l r) = do
 assign :: ( MonadRef r m ) => a -> Share r s a -> m ()
 assign x (Share l r) = do
   r <<= set l x
+-}
 
 
 -- Focussing -------------------------------------------------------------------
@@ -35,5 +37,5 @@ assign x (Share l r) = do
 _identity :: Lens' a a
 _identity = iso identity identity
 
-focus :: Lens' a b -> Share r s a -> Share r s b
-focus l' (Share l r) = Share (l << l') r
+focus :: Lens' a b -> Store r s a -> Store r s b
+focus l' (Store l r) = Store (l << l') r
