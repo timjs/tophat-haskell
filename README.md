@@ -17,11 +17,11 @@ Semantics, including all observations, can be found in [Data.Task.Run](https://g
 
 ## Building
 
-Clone the repository and build it by running Stack:
+Clone the repository and build it by running Cabal's `new` commands:
 
 ```sh
 git clone https://github.com/timjs/tophat-haskell.git
 cd tophat-haskell
-stack build
-stack run
+cabal new-build
+cabal new-run
 ```
