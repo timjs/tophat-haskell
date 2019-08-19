@@ -4,17 +4,34 @@ module Control.Collaborative
   , Someref, pack, unpack
   ) where
 
-import Control.Interactive
 import Data.Editable
 import Data.Store
 import qualified Lens.Simple as Lens
 
--- | A monad with `Editable` reference cells and pointer equality.
-class ( Interactive m, Typeable r, forall a. Eq (r a) ) => Collaborative r m | m -> r where
-  share  :: ( Editable a ) => a -> m (Store r a a)
-  assign :: ( Editable a, Editable s ) => Store r s a -> a -> m ()
-  watch  :: ( Editable a, Editable s ) => Store r s a -> m a
-  change :: ( Editable a, Editable s ) => Store r s a -> m a
+
+-- Class -----------------------------------------------------------------------
+
+-- | A variation on a monad `m` with references `r`.
+-- |
+-- | References `r` should be typeable, so they can be existentially stored,
+-- | and equatable, so we can compare the pointers to check if they are the same.
+-- | Structures `s` stored in such references should be editable,
+-- | so they can be shown in an editor on screen and edited by an end user.
+-- |
+-- | NOTE: GHC does not let us write this as a type synonym,
+-- | because of the impredicativity of `Eq (r s)`.
+class ( Monad m, Typeable r, forall a. Eq (r a) ) => Collaborative r m | m -> r where
+  share  :: Editable a => a -> m (Store r a a)
+  watch  :: Editable a => Editable s => Store r s a -> m a
+  assign :: Editable a => Editable s => a -> Store r s a -> m ()
+
+  mutate :: Editable a => Editable s => (a -> a) -> Store r s a -> m ()
+  mutate f r = do
+    x <- watch r
+    assign (f x) r
+
+
+-- Operators -------------------------------------------------------------------
 
 infixl 1 <<-
 infixl 1 <<=
@@ -22,46 +39,37 @@ infixl 1 <<=
 (<<-) ::
   Collaborative r m => Editable a => Editable s =>
   Store r s a -> a -> m ()
-(<<-) = assign
+(<<-) = flip assign
 
 (<<=) ::
   Collaborative r m => Editable a => Editable s =>
   Store r s a -> (a -> a) -> m ()
-(<<=) r f = do
-  x <- watch r
-  assign r (f x)
+(<<=) = flip mutate
+
+
+-- Instances -------------------------------------------------------------------
 
 instance ( Collaborative r m, Monoid w ) => Collaborative r (WriterT w m) where
   share    = lift << share
   assign r = lift << assign r
   watch    = lift << watch
-  change   = lift << change
 
 instance ( Collaborative r m ) => Collaborative r (ExceptT e m) where
   share    = lift << share
   assign r = lift << assign r
   watch    = lift << watch
-  change   = lift << change
 
 instance Collaborative IORef IO where
   share x = do
     r <- newIORef x
     pure <| Store _identity r
 
-  assign (Store l r) x = do
+  assign x (Store l r) = do
     modifyIORef r (Lens.set l x)
 
   watch (Store l r) = do
     s <- readIORef r
-    let x = Lens.view l s
-    view x
-
-  change s = do
-    _ <- watch s
-    x <- enter
-    assign s x
-    pure x
-
+    pure <| Lens.view l s
 
 
 -- Existential packing ---------------------------------------------------------

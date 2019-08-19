@@ -40,7 +40,7 @@ ui = \case
           Just v1 -> pure <| length <| picks (e2 v1)
 
   Share v      -> pure <| sep [ "share", pretty v ]
-  Assign _ v   -> pure <| sep [ "…", ":=", pretty v ]
+  Assign v _   -> pure <| sep [ "…", ":=", pretty v ]
   Change l     -> pure (\v -> cat [ "⊟(", pretty v, ")" ]) -< watch l
   Watch l      -> pure (\v -> cat [ "⧈(", pretty v, ")" ]) -< watch l
 
@@ -207,7 +207,7 @@ normalise t = case t of
   Share v -> do
     l <- lift <| share v
     pure <| Done l
-  Assign s@(Store _ r) v -> do
+  Assign v s@(Store _ r) -> do
     lift <| s <<- v
     tell [ pack r ]
     pure <| Done ()

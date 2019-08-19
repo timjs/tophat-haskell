@@ -1,6 +1,6 @@
 module Data.Task
   ( Task(..), Ref
-  , (<?>), (>>?), forever
+  , (<?>), (>>?), forever, change
   , module Control.Interactive
   , module Control.Collaborative
   , module Data.Editable
@@ -58,7 +58,7 @@ data Task (m :: Type -> Type) (t :: Type) where
   -- | Create new reference of type `t`
   Share :: ( Collaborative r m, Editable t ) => t -> Task m (Store r t t)
   -- | Assign to a reference of type `t` to a given value
-  Assign :: ( Collaborative r m, Editable s, Editable a ) => Store r s a -> a -> Task m ()
+  Assign :: ( Collaborative r m, Editable s, Editable a ) => a -> Store r s a -> Task m ()
   -- | Change to a reference of type `t` to a value
   Change :: ( Collaborative r m, Editable s, Editable t ) => Store r s t -> Task m t
   -- | Watch a reference of type `t`
@@ -98,7 +98,7 @@ instance Pretty (Task m t) where
     Forever t    -> sep [ "Forever", pretty t ]
 
     Share v      -> sep [ "Share", pretty v ]
-    Assign _ v   -> sep [ "_", ":=", pretty v ]
+    Assign v _   -> sep [ "_", ":=", pretty v ]
     Watch _      -> sep [ "Watch", "_" ]
     Change _     -> sep [ "Change", "_" ]
 
@@ -136,4 +136,6 @@ instance Collaborative r m => Collaborative r (Task m) where
   share  = Share
   assign = Assign
   watch  = Watch
-  change = Change
+
+change :: ( Collaborative r m, Editable s, Editable t ) => Store r s t -> Task m t
+change = Change

@@ -4,6 +4,7 @@ import Data.Editable
 import qualified Data.HashMap.Strict as Dict
 
 
+-- FIXME: Simplify constraint?
 class ( Monad m ) => Interactive m where
   enter :: Editable a => m a
 
