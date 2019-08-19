@@ -27,7 +27,7 @@ counter start = do
 --       ]
 
 -- Therefore we need a share!
-counter'' :: forall l m. Collaborative l m => Int -> Task m Void
+counter'' :: forall r m. Collaborative r m => Int -> Task m Void
 counter'' start = do
   c <- share start
   forever do
@@ -48,6 +48,8 @@ f2c f' = ((f' - 32.0) * 5.0) / 9.0
 
 -- This is not part of the TopHat language (it uses recursion!)
 -- and will loop indefinitely...
+-- Also, both `c` and `f` have a value, so when updating `f`,
+-- we would always recieve the old `c` value tagged with `Left`...
 temperature :: ( Double, Double ) -> Task m a
 temperature ( c, f ) = do
   n <- map Left (update c) <|> map Right (update f)
@@ -64,9 +66,10 @@ temperature' ( c, f ) = forever do
     Left c' -> pure ( c', c2f c' )
     Right f' -> pure ( f2c f', f' )
 
--- With shares, we do not need any recursion.
+-- with shares, we do not need any recursion.
+-- Recursion on editing is built in.
 -- However, we need a way to transform our view on shares: lenses!
-temperature'' :: Collaborative l m => Double -> Task m ( Double, Double )
+temperature'' :: Collaborative r m => Double -> Task m Double
 temperature'' c = do
   r <- share c
-  change r <&> change (focus (iso c2f f2c) r)
+  map fst <| change r <&> change (focus (iso c2f f2c) r)

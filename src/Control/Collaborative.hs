@@ -25,6 +25,9 @@ class ( Monad m, Typeable r, forall a. Eq (r a) ) => Collaborative r m | m -> r 
   watch  :: Editable a => Editable s => Store r s a -> m a
   assign :: Editable a => Editable s => a -> Store r s a -> m ()
 
+  change :: Editable a => Editable s => Store r s a -> m a
+  change = watch
+
   mutate :: Editable a => Editable s => (a -> a) -> Store r s a -> m ()
   mutate f r = do
     x <- watch r

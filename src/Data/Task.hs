@@ -1,6 +1,6 @@
 module Data.Task
-  ( Task(..), Ref
-  , (<?>), (>>?), forever, change
+  ( Task(..)
+  , (<?>), (>>?), forever
   , module Control.Interactive
   , module Control.Collaborative
   , module Data.Editable
@@ -64,10 +64,16 @@ data Task (m :: Type -> Type) (t :: Type) where
   -- | Watch a reference of type `t`
   Watch :: ( Collaborative r m, Editable s, Editable t ) => Store r s t -> Task m t
 
+  -- NOTE:
+  -- We could choose to replace `Share` and `Assign` and with a general `Lift` constructor,
+  -- taking an arbitrary action in the underlying monad `m`.
+  -- This action would then be performed during normalisation.
+  -- However, for now, we like to constrain the actions one can perform in the `Task` monad.
+  -- This makes actions like logging to stdout, lounching missiles or other effects impossible.
+  -- (Though this would need to be constrained with classes when specifying the task!)
 
-type Ref = IORef
 
--- Instances -------------------------------------------------------------------
+-- Operators -------------------------------------------------------------------
 
 infixl 3 <?>
 infixl 1 >>?
@@ -80,6 +86,9 @@ infixl 1 >>?
 
 forever :: Task m a -> Task m Void
 forever = Forever
+
+
+-- Instances -------------------------------------------------------------------
 
 instance Pretty (Task m t) where
   pretty = \case
@@ -136,6 +145,4 @@ instance Collaborative r m => Collaborative r (Task m) where
   share  = Share
   assign = Assign
   watch  = Watch
-
-change :: ( Collaborative r m, Editable s, Editable t ) => Store r s t -> Task m t
-change = Change
+  change = Change
