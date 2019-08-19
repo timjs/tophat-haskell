@@ -1,23 +1,35 @@
 module Control.Monad.Ref
-  ( MonadRef(..), (<<-), (<<=)
+  ( MonadRef(..)
+  , (<<-), (<<=)
   ) where
 
+
+-- Class -----------------------------------------------------------------------
 
 class ( Monad m ) => MonadRef r m | m -> r where
   new   :: a -> m (r a)
   read  :: r a -> m a
-  write :: r a -> a -> m ()
+  write :: a -> r a -> m ()
+
+  mutate :: (a -> a) -> r a -> m ()
+  mutate f r = do
+    x <- read r
+    r <<- (f x)
+
+
+-- Operators -------------------------------------------------------------------
 
 infixl 1 <<-
 infixl 1 <<=
 
 (<<-) :: MonadRef r m => r a -> a -> m ()
-(<<-) = write
+(<<-) = flip write
 
 (<<=) :: MonadRef r m => r a -> (a -> a) -> m ()
-(<<=) r f = do
-  x <- read r
-  write r (f x)
+(<<=) = flip mutate
+
+
+-- Instances -------------------------------------------------------------------
 
 -- instance ( MonadRef r m, Monoid w ) => MonadRef r (WriterT w m) where
 --   new    = lift << new
@@ -32,4 +44,4 @@ infixl 1 <<=
 instance MonadRef IORef IO where
   new   = newIORef
   read  = readIORef
-  write = writeIORef
+  write = flip writeIORef
