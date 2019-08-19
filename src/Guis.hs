@@ -72,4 +72,4 @@ temperature' ( c, f ) = forever do
 temperature'' :: Collaborative r m => Double -> Task m Double
 temperature'' c = do
   r <- share c
-  map fst <| change r <&> change (focus (iso c2f f2c) r)
+  change r <& change (focus (iso c2f f2c) r)
