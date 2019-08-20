@@ -73,3 +73,21 @@ temperature'' :: Collaborative r m => Double -> Task m Double
 temperature'' c = do
   r <- share c
   change r <& change (focus (iso c2f f2c) r)
+
+
+-- Flight booker ---------------------------------------------------------------
+
+-- We use type synonyms instead of new data types so we do not have to extend
+-- the value parser from terminal input.
+type Date = Int
+type Flight = Either Date ( Date, Date )
+
+book :: Task m Flight
+book = do
+  flight <- enter
+  pick
+    [ ( "Continue", case flight of
+        Left _ -> pure flight
+        Right ( d1, d2 ) -> if d1 < d2 then pure flight else empty
+      )
+    ]
