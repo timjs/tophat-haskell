@@ -75,7 +75,7 @@ temperature'' c = do
   change r <& change (focus (iso c2f f2c) r)
 
 
--- Flight booker ---------------------------------------------------------------
+{- Flight booker ---------------------------------------------------------------
 
 -- We use type synonyms instead of new data types so we do not have to extend
 -- the value parser from terminal input.
@@ -91,3 +91,4 @@ book = do
         Right ( d1, d2 ) -> if d1 < d2 then pure flight else empty
       )
     ]
+-}
