@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 5225a6b3d656c4f4c07eb13c8f93d8b5b7bd767dae4cc917a0c706a295352d6b
+-- hash: 9cf2b2662a61a7dcea73678bec91661d3cb64c5020c05e43580b78b347a51211
 
 name:           tophat
 version:        0.1.0.0
@@ -35,6 +35,7 @@ library
       Data.Task
       Data.Task.Input
       Data.Task.Run
+      Data.Task.Status
       Guis
       Main
       Prelude
@@ -67,6 +68,7 @@ executable tophat
       Data.Task
       Data.Task.Input
       Data.Task.Run
+      Data.Task.Status
       Guis
       Prelude
       Paths_tophat
