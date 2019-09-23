@@ -5,7 +5,7 @@ module Prelude
   , module Control.Monad.Writer.Strict
   , Unit, Nat, nat, List, chars, Set, Dict
   -- , Vector, only, index, update
-  , Pretty(..), Doc, sep, cat, split, indent, dquotes, parens, angles
+  , Pretty(..), Doc, viaShow, sep, cat, split, indent, dquotes, parens, angles
   , scan, pretty', tracePretty
   , neutral
   , (<|), (|>), (<<), (>>), map
@@ -29,7 +29,7 @@ import Control.Monad.List (ListT)
 
 import Data.HashMap.Strict (HashMap)
 import Data.Text (unpack)
-import Data.Text.Prettyprint.Doc (Pretty(..), Doc, indent, dquotes, parens, angles)
+import Data.Text.Prettyprint.Doc (Pretty(..), Doc, viaShow, indent, dquotes, parens, angles)
 -- import Data.Vector (Vector)
 
 import Type.Reflection (typeOf, typeRep, someTypeRep, TypeRep, SomeTypeRep(..))
