@@ -48,7 +48,7 @@ default-extensions:
   - DeriveTraversable
   # - GeneralizedNewtypeDeriving
   - DerivingVia
-  # - StandaloneDeriving
+  - StandaloneDeriving
 
   # Syntactic adjustments:
   - BangPatterns
