@@ -3,68 +3,56 @@ module Data.Task.Status where
 import Data.Task (Task(..), Collaborative(..))
 
 
--- Reason ----------------------------------------------------------------------
+-- Status ----------------------------------------------------------------------
 
-data Reason
+data Status a
   = Failing
   | Looping
   | Stepping
   | Asking
-  deriving ( Show, Eq, Ord )
-
-instance Pretty Reason where
-  pretty = viaShow
-
-instance Semigroup Reason where
-  Failing  <> _        = Failing
-  _        <> Failing  = Failing
-  Looping  <> _        = Looping
-  _        <> Looping  = Looping
-  Stepping <> _        = Stepping
-  _        <> Stepping = Stepping
-  Asking   <> Asking   = Asking
-
-
--- Status ----------------------------------------------------------------------
-
-data Status a where
-  Terminating    :: a -> Status a
-  Nonterminating :: Reason -> Status a
-  Pairing        :: Status a -> Status b -> Status ( a, b )
-
--- deriving instance Show a => Show (Status a)
--- deriving instance Eq a => Eq (Status a)
-
-instance Pretty a => Pretty (Status a) where
-  pretty = \case
-    Terminating x    -> sep [ "Terminating", pretty x ]
-    Nonterminating r -> sep [ "Nonterminating", pretty r ]
-    Pairing _ _      -> undefined
-
-instance Functor Status where
-  fmap f = \case
-    Terminating x    -> Terminating (f x)
-    Nonterminating r -> Nonterminating r
-    Pairing x y      -> map f <| x <&> y
+  | Terminating a
+  deriving ( Show, Eq, Ord, Functor )
 
 instance Monoidal Status where
   skip = Terminating ()
 
-  Terminating x1    <&> Terminating x2    = Terminating ( x1, x2 )
-  Nonterminating r1 <&> Nonterminating r2 = Nonterminating (r1 <> r2)
-  Pairing x1 y1     <&> Pairing x2 y2     = (x1 <&> y1) <&> (x2 <&> y2)
-  s1                <&> s2                = Pairing s1 s2
+  Terminating x <&> Terminating y = Terminating ( x, y )
+  Failing       <&> _             = Failing
+  _             <&> Failing       = Failing
+  Looping       <&> _             = Looping
+  _             <&> Looping       = Looping
+  Stepping      <&> _             = Stepping
+  _             <&> Stepping      = Stepping
+  Asking        <&> _             = Asking
+  _             <&> Asking        = Asking
 
 instance Applicative Status where
   pure  = pureDefault
   (<*>) = applyDefault
 
-instance Alternative Status where
-  empty = Nonterminating Failing
+{-
+instance Applicative Status where
+  Terminating f <*> Terminating x = Terminating (f x)
+  Terminating _ <*> Failing     = Failing
+  Terminating _ <*> Looping     = Looping
+  Terminating _ <*> Stepping    = Stepping
+  Terminating _ <*> Asking      = Asking
+  Failing     <*> _           = Failing
+  Looping     <*> _           = Looping
+  Stepping    <*> _           = Stepping
+  Asking      <*> _           = Asking
 
-  Terminating x1    <|> _                 = Terminating x1
-  _                 <|> Terminating x2    = Terminating x2
-  Nonterminating r1 <|> Nonterminating r2 = Nonterminating (r1 <> r2)
+  pure = Terminating
+
+instance Monoidal Status
+-}
+
+instance Alternative Status where
+  empty = Failing
+
+  Terminating x <|> _             = Terminating x
+  _             <|> Terminating y = Terminating y
+  _             <|> _             = Failing  --XXX
 
 
 -- Observation -----------------------------------------------------------------
@@ -84,14 +72,14 @@ status = \case
   Choose t1 t2 -> pure (<|>) -< status t1 -< status t2
   Trans f t    -> pure (map f) -< status t
 
-  Fail         -> pure (Nonterminating Failing)
+  Fail         -> pure Failing
 
-  Forever _    -> pure (Nonterminating Looping)
+  Forever _    -> pure Looping
 
-  Step _ _     -> pure (Nonterminating Stepping)
-  Pick _       -> pure (Nonterminating Stepping)
+  Step _ _     -> pure Stepping
+  Pick _       -> pure Stepping
 
-  Enter        -> pure (Nonterminating Asking)
+  Enter        -> pure Asking
 
 {-
 instance Eq a => Eq (Task m a) where
@@ -124,21 +112,4 @@ instance Eq a => Eq (Task m a) where
   Watch l1       == Watch l2       = l1 == l2
   -- ...same holds for view only shared editors.
   Change l1      == Change l2      = l1 == l2
--}
-
-{-
-instance Applicative Status where
-  Terminating f <*> Terminating x = Terminating (f x)
-  Terminating _ <*> Failing     = Failing
-  Terminating _ <*> Looping     = Looping
-  Terminating _ <*> Stepping    = Stepping
-  Terminating _ <*> Asking      = Asking
-  Failing     <*> _           = Failing
-  Looping     <*> _           = Looping
-  Stepping    <*> _           = Stepping
-  Asking      <*> _           = Asking
-
-  pure = Terminating
-
-instance Monoidal Status
 -}
