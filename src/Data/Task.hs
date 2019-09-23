@@ -56,13 +56,13 @@ data Task (m :: Type -> Type) (t :: Type) where
   -- These references should be `Eq` and `Typeable`,
   -- because we need to mark them dirty and match those with watched references.
   -- | Create new reference of type `t`
-  Share :: ( Collaborative r m, Editable t ) => t -> Task m (Store r t t)
+  Share :: ( Collaborative r m, Editable t ) => t -> Task m (Store r t)
   -- | Assign to a reference of type `t` to a given value
-  Assign :: ( Collaborative r m, Editable s, Editable a ) => a -> Store r s a -> Task m ()
+  Assign :: ( Collaborative r m, Editable a ) => a -> Store r a -> Task m ()
   -- | Change to a reference of type `t` to a value
-  Change :: ( Collaborative r m, Editable s, Editable t ) => Store r s t -> Task m t
+  Change :: ( Collaborative r m, Editable t ) => Store r t -> Task m t
   -- | Watch a reference of type `t`
-  Watch :: ( Collaborative r m, Editable s, Editable t ) => Store r s t -> Task m t
+  Watch :: ( Collaborative r m, Editable t ) => Store r t -> Task m t
 
   -- NOTE:
   -- We could choose to replace `Share` and `Assign` and with a general `Lift` constructor,

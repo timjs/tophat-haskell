@@ -159,12 +159,12 @@ branch'' = do
 
 -- Shared Data --
 
-update1 :: Collaborative r m => Store' r Int -> Task m ()
+update1 :: Collaborative r m => Store r Int -> Task m ()
 update1 r = do
   x <- enter
   r <<- x
 
-update2 :: Collaborative r m => Store' r Int -> Task m Int
+update2 :: Collaborative r m => Store r Int -> Task m Int
 update2 r = do
   x <- enter
   r <<- x
@@ -172,7 +172,7 @@ update2 r = do
   r <<- y
   watch r
 
-update3 :: Collaborative r m => Store' r Int -> Task m Int
+update3 :: Collaborative r m => Store r Int -> Task m Int
 update3 r = do
   x <- enter
   r <<- x
@@ -181,7 +181,7 @@ update3 r = do
   r <<- y + z
   watch r
 
-inspect :: Collaborative r m => (Store' r Int -> Task m a) -> Task m ( a, Int )
+inspect :: Collaborative r m => (Store r Int -> Task m a) -> Task m ( a, Int )
 inspect f = do
   r <- share 0
   f r <&> watch r

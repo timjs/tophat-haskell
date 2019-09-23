@@ -21,14 +21,14 @@ import qualified Lens.Simple as Lens
 -- | NOTE: GHC does not let us write this as a type synonym,
 -- | because of the impredicativity of `Eq (r s)`.
 class ( Monad m, Typeable r, forall a. Eq (r a) ) => Collaborative r m | m -> r where
-  share  :: Editable a => a -> m (Store r a a)
-  watch  :: Editable a => Editable s => Store r s a -> m a
-  assign :: Editable a => Editable s => a -> Store r s a -> m ()
+  share  :: Editable a => a -> m (Store r a)
+  watch  :: Editable a => Store r a -> m a
+  assign :: Editable a => a -> Store r a -> m ()
 
-  change :: Editable a => Editable s => Store r s a -> m a
+  change :: Editable a => Store r a -> m a
   change = watch
 
-  mutate :: Editable a => Editable s => (a -> a) -> Store r s a -> m ()
+  mutate :: Editable a => (a -> a) -> Store r a -> m ()
   mutate f r = do
     x <- watch r
     assign (f x) r
@@ -40,13 +40,13 @@ infixl 1 <<-
 infixl 1 <<=
 
 (<<-) ::
-  Collaborative r m => Editable a => Editable s =>
-  Store r s a -> a -> m ()
+  Collaborative r m => Editable a =>
+  Store r a -> a -> m ()
 (<<-) = flip assign
 
 (<<=) ::
-  Collaborative r m => Editable a => Editable s =>
-  Store r s a -> (a -> a) -> m ()
+  Collaborative r m => Editable a =>
+  Store r a -> (a -> a) -> m ()
 (<<=) = flip mutate
 
 
