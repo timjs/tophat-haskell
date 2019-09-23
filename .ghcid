@@ -1,1 +1,1 @@
---command=cabal new-repl -o errors.txt
+--command=cabal repl --restart=tophat.cabal --output=errors.txt
