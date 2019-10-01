@@ -25,3 +25,5 @@ cd tophat-haskell
 cabal new-build
 cabal new-run
 ```
+
+You'll need GHC-8.6 or newer.
