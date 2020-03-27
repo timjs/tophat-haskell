@@ -1,5 +1,6 @@
 module Data.Task.Status where
 
+{-
 import Data.Task (Collaborative (..), Task (..))
 
 -- Definition ------------------------------------------------------------------
@@ -67,3 +68,4 @@ status = \case
   Pick _ -> pure Stepping
   Step _ _ -> pure Stepping
   Forever _ -> pure Stepping
+-}

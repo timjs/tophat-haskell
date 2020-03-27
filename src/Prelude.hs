@@ -140,6 +140,7 @@ import qualified Data.Text as Text
 import Data.Text.Prettyprint.Doc (Doc, Pretty (..), angles, dquotes, indent, parens, viaShow)
 import qualified Data.Text.Prettyprint.Doc as Pretty
 import Data.Type.Equality
+import Data.Unique (Unique, hashUnique)
 import Relude hiding
   ( ($),
     ($>),
@@ -218,6 +219,9 @@ instance (Pretty v) => Pretty (HashSet v) where
 
 instance (Pretty k, Pretty v) => Pretty (HashMap k v) where
   pretty = Pretty.braces << Pretty.cat << Pretty.punctuate ", " << map (\(k, v) -> cat [pretty k, ": ", pretty v]) << HashMap.toList
+
+instance Pretty Unique where
+  pretty = pretty << hashUnique
 
 -- Sets --
 

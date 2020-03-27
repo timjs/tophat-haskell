@@ -16,10 +16,6 @@ ui ::
   m (Doc b) -- We need to watch locations and be in monad `m`
 ui = \case
   Done _ -> pure "■(…)"
-  Enter -> pure "⊠()"
-  Update v -> pure <| cat ["□(", pretty v, ")"]
-  View v -> pure <| cat ["⧇(", pretty v, ")"]
-  Pick ts -> pure <| cat ["◇", pretty <| HashMap.keysSet ts]
   Pair t1 t2 -> pure (\l r -> sep [l, " ⧓ ", r]) -< ui t1 -< ui t2
   Choose t1 t2 -> pure (\l r -> sep [l, " ◆ ", r]) -< ui t1 -< ui t2
   Fail -> pure "↯"
@@ -34,8 +30,18 @@ ui = \case
           Just v1 -> pure <| length <| picks (e2 v1)
   Share v -> pure <| sep ["share", pretty v]
   Assign v _ -> pure <| sep ["…", ":=", pretty v]
-  Change l -> pure (\v -> cat ["⊟(", pretty v, ")"]) -< watch l
-  Watch l -> pure (\v -> cat ["⧈(", pretty v, ")"]) -< watch l
+
+ui' ::
+  Collaborative r m =>
+  Editor m a ->
+  m (Doc b) -- We need to watch locations and be in monad `m`
+ui' = \case
+  Enter _ -> pure "⊠()"
+  Update _ v -> pure <| cat ["□(", pretty v, ")"]
+  View _ v -> pure <| cat ["⧇(", pretty v, ")"]
+  Select _ ts -> pure <| cat ["◇", pretty <| HashMap.keysSet ts]
+  Change _ l -> pure (\v -> cat ["⊟(", pretty v, ")"]) -< watch l
+  Watch _ l -> pure (\v -> cat ["⧈(", pretty v, ")"]) -< watch l
 
 value ::
   Collaborative r m =>
@@ -43,10 +49,6 @@ value ::
   m (Maybe a) -- We need to watch locations and be in monad `m`
 value = \case
   Done v -> pure (Just v)
-  Enter -> pure Nothing
-  Update v -> pure (Just v)
-  View v -> pure (Just v)
-  Pick _ -> pure Nothing
   Pair t1 t2 -> pure (><) -< value t1 -< value t2
   Choose t1 t2 -> pure (<|>) -< value t1 -< value t2
   Fail -> pure Nothing
@@ -55,17 +57,23 @@ value = \case
   Step _ _ -> pure Nothing
   Share v -> pure Just -< share v -- Nothing???
   Assign _ _ -> pure (Just ())
-  Change l -> pure Just -< watch l
-  Watch l -> pure Just -< watch l
+
+value' ::
+  Collaborative r m =>
+  Editor m a ->
+  m (Maybe a) -- We need to watch locations and be in monad `m`
+value' = \case
+  Enter _ -> pure Nothing
+  Update _ v -> pure (Just v)
+  View _ v -> pure (Just v)
+  Select _ _ -> pure Nothing
+  Change _ l -> pure Just -< watch l
+  Watch _ l -> pure Just -< watch l
 
 failing ::
   Task m a -> Bool
 failing = \case
   Done _ -> False
-  Enter -> False
-  Update _ -> False
-  View _ -> False
-  Pick ts -> all failing ts
   Pair t1 t2 -> failing t1 && failing t2
   Choose t1 t2 -> failing t1 && failing t2
   Fail -> True
@@ -74,8 +82,16 @@ failing = \case
   Step t _ -> failing t
   Share _ -> False
   Assign _ _ -> False
-  Change _ -> False
-  Watch _ -> False
+
+failing' ::
+  Editor m a -> Bool
+failing' = \case
+  Enter _ -> False
+  Update _ _ -> False
+  View _ _ -> False
+  Select _ ts -> all failing ts
+  Change _ _ -> False
+  Watch _ _ -> False
 
 watching ::
   Collaborative r m => -- We need Collaborative here to pack references `r`
@@ -83,10 +99,6 @@ watching ::
   List (Someref m) -- But there is no need to be in monad `m`
 watching = \case
   Done _ -> []
-  Enter -> []
-  Update _ -> []
-  View _ -> []
-  Pick _ -> []
   Pair t1 t2 -> watching t1 `union` watching t2
   Choose t1 t2 -> watching t1 `union` watching t2
   Fail -> []
@@ -95,17 +107,32 @@ watching = \case
   Step t1 _ -> watching t1
   Share _ -> []
   Assign _ _ -> []
-  Change (Store _ r) -> [pack r]
-  Watch (Store _ r) -> [pack r]
+
+watching' ::
+  -- Collaborative r m => -- We need Collaborative here to pack references `r`
+  Editor m a ->
+  List (Someref m) -- But there is no need to be in monad `m`
+watching' = \case
+  Enter _ -> []
+  Update _ _ -> []
+  View _ _ -> []
+  Select _ _ -> []
+  Change _ (Store _ r) -> [pack r]
+  Watch _ (Store _ r) -> [pack r]
 
 picks ::
   Task m a -> HashSet Label
 picks = \case
-  Pick ts -> HashMap.keysSet <| HashMap.filter (not << failing) ts
+  Editor e -> picks' e
   Trans _ t2 -> picks t2
   Forever t1 -> picks t1
   Step t1 _ -> picks t1
   _ -> []
+
+picks' ::
+  Editor m a -> HashSet Label
+picks' = \case
+  Select _ ts -> HashMap.keysSet <| HashMap.filter (not << failing) ts
 
 inputs ::
   forall m r a.
@@ -114,10 +141,6 @@ inputs ::
   m (List (Input Dummy)) -- We need to call `value`, therefore we are in `m`
 inputs t = case t of
   Done _ -> pure []
-  Enter -> pure [ToHere (AEnter tau)]
-  Update _ -> pure [ToHere (AEnter tau)]
-  View _ -> pure []
-  Pick _ -> pure <| map (ToHere << APick) <| HashSet.toList <| picks t
   Pair t1 t2 -> pure (\l r -> map ToFirst l ++ map ToSecond r) -< inputs t1 -< inputs t2
   Choose t1 t2 -> pure (\l r -> map ToFirst l ++ map ToSecond r) -< inputs t1 -< inputs t2
   Fail -> pure []
@@ -135,19 +158,30 @@ inputs t = case t of
           else pure <| map (ToHere << AContinue) <| HashSet.toList <| picks t2
   Share _ -> pure []
   Assign _ _ -> pure []
-  Change _ -> pure [ToHere (AEnter tau)]
-  Watch _ -> pure []
+
+inputs' ::
+  forall m r a.
+  Collaborative r m =>
+  Editor m a ->
+  m (List (Input Dummy)) -- We need to call `value`, therefore we are in `m`
+inputs' t = case t of
+  Enter _ -> pure [ToHere (AEnter tau)]
+  Update _ _ -> pure [ToHere (AEnter tau)]
+  View _ _ -> pure []
+  Select _ _ -> pure <| map (ToHere << ASelect) <| HashSet.toList <| picks' t
+  Change _ _ -> pure [ToHere (AEnter tau)]
+  Watch _ _ -> pure []
   where
     tau = Proxy :: Proxy a
 
 -- Normalising -----------------------------------------------------------------
 
-type TrackingTask m a = WriterT (List (Someref m)) m (Task m a)
+type Tracking f m a = WriterT (List (Someref m)) m (f m a)
 
 normalise ::
   Collaborative r m =>
   Task m a ->
-  TrackingTask m a
+  Tracking Task m a
 normalise t = case t of
   -- Step --
   Step t1 e2 -> do
@@ -190,17 +224,16 @@ normalise t = case t of
     pure <| Done ()
   -- Ready --
   Done _ -> pure t
-  Enter -> pure t
-  Update _ -> pure t
-  View _ -> pure t
-  Pick _ -> pure t
-  Change _ -> pure t
-  Watch _ -> pure t
+  -- Enter -> pure t
+  -- Update _ -> pure t
+  -- View _ -> pure t
+  -- Select _ -> pure t
+  -- Change _ -> pure t
+  -- Watch _ -> pure t
   Fail -> pure t
 
 balance :: Task m a -> Task m a
 balance t = case t of
-  Pick ts -> Pick <| map balance ts
   Pair t1 t2 -> Pair (balance t1) (balance t2)
   Choose t1 t2 -> Choose (balance t1) (balance t2)
   Trans f t1 -> Trans f (balance t1)
@@ -209,9 +242,13 @@ balance t = case t of
   Step (Step t1 e2) e3 -> Step t1 (\x -> Step (e2 x) e3)
   _ -> t
 
+balance' :: Editor m a -> Editor m a
+balance' = \case
+  Select n ts -> Select n <| map balance ts
+
 -- Handling --------------------------------------------------------------------
 
-type PartialTrackingTask m a = WriterT (List (Someref m)) (ExceptT NotApplicable m) (Task m a)
+type PartialTracking f m a = WriterT (List (Someref m)) (ExceptT NotApplicable m) (f m a)
 
 -- type PartialTrackingTask m a = ExceptT NotApplicable (WriterT (List (Someref m)) m) (Task m a)
 
@@ -220,7 +257,7 @@ data NotApplicable
   | CouldNotChangeRef SomeTypeRep SomeTypeRep
   | CouldNotGoTo Label
   | CouldNotFind Label
-  | CouldNotPick
+  | CouldNotSelect
   | CouldNotContinue
   | CouldNotHandle (Input Action)
 
@@ -230,7 +267,7 @@ instance Pretty NotApplicable where
     CouldNotChangeRef r c -> sep ["Could not change value because cell", dquotes <| pretty r, "does not contain", dquotes <| pretty c]
     CouldNotGoTo l -> sep ["Could not pick label", dquotes <| pretty l, "because it leads to an empty task"]
     CouldNotFind l -> sep ["Could not find label", dquotes <| pretty l, "in the possible picks"]
-    CouldNotPick -> sep ["Could not pick because there is nothing to pick from in this task"]
+    CouldNotSelect -> sep ["Could not pick because there is nothing to pick from in this task"]
     CouldNotContinue -> sep ["Could not continue because there is no value to continue with"]
     CouldNotHandle i -> sep ["Could not handle input", dquotes <| pretty i, "(this should only appear when giving an impossible input)"]
 
@@ -239,30 +276,10 @@ handle ::
   Collaborative r m =>
   Task m a ->
   Input Action ->
-  PartialTrackingTask m a
+  PartialTracking Task m a
 handle t i = case (t, i) of
-  -- Edit --
-  (Enter, ToHere (IEnter w))
-    | Just Refl <- tau ~? typeOf w -> pure <| Update w
-    | otherwise -> throw <| CouldNotChangeVal (SomeTypeRep tau) (someTypeOf w)
-    where
-      tau = typeRep :: TypeRep a
-  (Update v, ToHere (IEnter w))
-    -- NOTE: Here we check if `v` and `w` have the same type.
-    -- If this is the case, it would be inhabited by `Refl :: a :~: b`, where `b` is the type of the value inside `Change`.
-    | Just Refl <- v ~= w -> pure <| Update w
-    | otherwise -> throw <| CouldNotChangeVal (someTypeOf v) (someTypeOf w)
-  (Change s@(Store _ r), ToHere (IEnter w))
-    -- NOTE: As in the `Update` case above, we check for type equality.
-    | Just Refl <- tau ~? typeOf w -> do
-      s <<- w
-      tell [pack r]
-      pure <| Change s
-    | otherwise -> throw <| CouldNotChangeRef (someTypeOf s) (someTypeOf w)
-    where
-      tau = typeRep :: TypeRep a
-  -- Pick --
-  (Pick ts, ToHere (IPick l)) -> case HashMap.lookup l ts of
+  -- Select --
+  (Editor (Select _ ts), ToHere (ISelect l)) -> case HashMap.lookup l ts of
     Nothing -> throw <| CouldNotFind l
     Just t' ->
       if l =< (picks t)
@@ -273,7 +290,7 @@ handle t i = case (t, i) of
     mv1 <- lift <| lift <| value t1
     case mv1 of
       Nothing -> throw CouldNotContinue
-      Just v1 -> handle (e2 v1) (ToHere (IPick l))
+      Just v1 -> handle (e2 v1) (ToHere (ISelect l))
   -- Pass --
   (Trans f t1, i') -> do
     t1' <- handle t1 i'
@@ -300,6 +317,34 @@ handle t i = case (t, i) of
   -- Rest --
   _ -> throw <| CouldNotHandle i
 
+handle' ::
+  forall m r a.
+  Collaborative r m =>
+  Editor m a -> -- `Select` does not return an `Editor`...
+  Input Action ->
+  PartialTracking Editor m a
+handle' e i = case (e, i) of
+  -- Edit --
+  (Enter n, ToHere (IEnter w))
+    | Just Refl <- tau ~? typeOf w -> pure <| Update n w
+    | otherwise -> throw <| CouldNotChangeVal (SomeTypeRep tau) (someTypeOf w)
+    where
+      tau = typeRep :: TypeRep a
+  (Update n v, ToHere (IEnter w))
+    -- NOTE: Here we check if `v` and `w` have the same type.
+    -- If this is the case, it would be inhabited by `Refl :: a :~: b`, where `b` is the type of the value inside `Change`.
+    | Just Refl <- v ~= w -> pure <| Update n w
+    | otherwise -> throw <| CouldNotChangeVal (someTypeOf v) (someTypeOf w)
+  (Change n s@(Store _ r), ToHere (IEnter w))
+    -- NOTE: As in the `Update` case above, we check for type equality.
+    | Just Refl <- tau ~? typeOf w -> do
+      s <<- w
+      tell [pack r]
+      pure <| Change n s
+    | otherwise -> throw <| CouldNotChangeRef (someTypeOf s) (someTypeOf w)
+    where
+      tau = typeRep :: TypeRep a
+
 -- Interaction -----------------------------------------------------------------
 
 data Steps
@@ -318,7 +363,7 @@ instance Pretty Steps where
 fixate ::
   Collaborative r m =>
   MonadLog Steps m =>
-  TrackingTask m a ->
+  Tracking Task m a ->
   m (Task m a)
 fixate tt = do
   (t, d) <- runWriterT tt

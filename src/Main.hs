@@ -234,7 +234,7 @@ numbers' = do
   forever (edit_ r) >< watch r
   where
     edit_ r =
-      do pick
+      do select
         [ ("Prepend", prepend_ r),
           ("Clear", clear_ r),
           ("Change", change_ r)
@@ -251,7 +251,7 @@ numbers' = do
       i <- enter
       if i < n
         then
-          pick
+          select
             [ ("Delete", delete_ r i),
               ("Replace", replace_ r i)
             ]

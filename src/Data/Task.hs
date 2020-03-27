@@ -1,5 +1,6 @@
 module Data.Task
   ( Task (..),
+    Editor (..),
     (<?>),
     (>>?),
     forever,
@@ -12,6 +13,7 @@ where
 import Control.Collaborative
 import Control.Interactive
 import Data.Editable (Editable)
+import Data.Unique (Unique)
 
 -- Tasks -----------------------------------------------------------------------
 
@@ -19,36 +21,35 @@ import Data.Editable (Editable)
 -- |
 -- | To use references, `m` shoud be a `Collaborative` with locations `r`.
 data Task (m :: Type -> Type) (t :: Type) where
+  --
   -- Editors --
+
+  New :: (Unique -> Editor m t) -> Task m t
+  Editor :: Editor m t -> Task m t
+  --
+  -- Parallels --
 
   -- | Internal, unrestricted and hidden editor
   Done :: t -> Task m t
-  -- | Unvalued editor
-  Enter :: (Editable t) => Task m t
-  -- | Valued editor
-  Update :: (Editable t) => t -> Task m t
-  -- | Valued, view only editor
-  View :: (Editable t) => t -> Task m t
-  -- | External choice between two tasks.
-  Select :: HashMap Label (Task m t) -> Task m t
-  -- Parallels --
-
   -- | Composition of two tasks.
   Pair :: Task m a -> Task m b -> Task m (a, b)
   -- | Internal choice between two tasks.
   Choose :: Task m t -> Task m t -> Task m t
   -- | The failing task
   Fail :: Task m t
+  --
   -- Steps --
 
   -- | Internal value transformation
   Trans :: (a -> t) -> Task m a -> Task m t
   -- | Internal, or system step.
   Step :: Task m a -> (a -> Task m t) -> Task m t
+  --
   -- Loops --
 
   -- | Repeat a task indefinitely
   Forever :: Task m t -> Task m Void
+  --
   -- References --
   -- The inner monad `m` needs to have the notion of references.
   -- These references should be `Eq` and `Typeable`,
@@ -58,10 +59,6 @@ data Task (m :: Type -> Type) (t :: Type) where
   Share :: (Collaborative r m, Editable t) => t -> Task m (Store r t)
   -- | Assign to a reference of type `t` to a given value
   Assign :: (Collaborative r m, Editable a) => a -> Store r a -> Task m ()
-  -- | Change to a reference of type `t` to a value
-  Change :: (Collaborative r m, Editable t) => Store r t -> Task m t
-  -- | Watch a reference of type `t`
-  Watch :: (Collaborative r m, Editable t) => Store r t -> Task m t
 
 -- NOTE:
 -- We could choose to replace `Share` and `Assign` and with a general `Lift` constructor,
@@ -70,6 +67,20 @@ data Task (m :: Type -> Type) (t :: Type) where
 -- However, for now, we like to constrain the actions one can perform in the `Task` monad.
 -- This makes actions like logging to stdout, lounching missiles or other effects impossible.
 -- (Though this would need to be constrained with classes when specifying the task!)
+
+data Editor (m :: Type -> Type) (t :: Type) where
+  -- | Unvalued editor
+  Enter :: (Editable t) => Unique -> Editor m t
+  -- | Valued editor
+  Update :: (Editable t) => Unique -> t -> Editor m t
+  -- | Valued, view only editor
+  View :: (Editable t) => Unique -> t -> Editor m t
+  -- | External choice between two Editors.
+  Select :: Unique -> HashMap Label (Task m t) -> Editor m t
+  -- | Change to a reference of type `t` to a value
+  Change :: (Collaborative r m, Editable t) => Unique -> Store r t -> Editor m t
+  -- | Watch a reference of type `t`
+  Watch :: (Collaborative r m, Editable t) => Unique -> Store r t -> Editor m t
 
 -- Operators -------------------------------------------------------------------
 
@@ -90,12 +101,10 @@ forever = Forever
 
 instance Pretty (Task m t) where
   pretty = \case
-    Done _ -> "Done _"
-    Enter -> "Enter"
-    Update v -> parens <| sep ["Update", pretty v]
-    View v -> parens <| sep ["View", pretty v]
-    Select ts -> parens <| sep ["Select", pretty ts]
+    New _ -> "New"
+    Editor e -> pretty e
     Pair t1 t2 -> parens <| sep [pretty t1, "><", pretty t2]
+    Done _ -> "Done _"
     Choose t1 t2 -> parens <| sep [pretty t1, "<|>", pretty t2]
     Fail -> "Fail"
     Trans _ t -> sep ["Trans _", pretty t]
@@ -103,17 +112,24 @@ instance Pretty (Task m t) where
     Forever t -> sep ["Forever", pretty t]
     Share v -> sep ["Share", pretty v]
     Assign v _ -> sep ["_", ":=", pretty v]
-    Watch _ -> sep ["Watch", "_"]
-    Change _ -> sep ["Change", "_"]
+
+instance Pretty (Editor m t) where
+  pretty = \case
+    Enter n -> parens <| sep ["Enter", pretty n]
+    Update n v -> parens <| sep ["Update", pretty n, pretty v]
+    View n v -> parens <| sep ["View", pretty n, pretty v]
+    Select n ts -> parens <| sep ["Select", pretty n, pretty ts]
+    Watch n _ -> sep ["Watch", pretty n, "_"]
+    Change n _ -> sep ["Change", pretty n, "_"]
 
 instance Functor (Task m) where
   fmap = Trans
 
 instance Interactive (Task m) where
-  enter = Enter
-  update = Update
-  view = View
-  select = Select
+  enter = New (\n -> Enter n)
+  update v = New (\n -> Update n v)
+  view v = New (\n -> View n v)
+  select ts = New (\n -> Select n ts)
 
 instance Monoidal (Task m) where
   (><) = Pair
@@ -139,5 +155,5 @@ instance Monad (Task m) where
 instance Collaborative r m => Collaborative r (Task m) where
   share = Share
   assign = Assign
-  watch = Watch
-  change = Change
+  watch l = New (\n -> Watch n l)
+  change l = New (\n -> Change n l)

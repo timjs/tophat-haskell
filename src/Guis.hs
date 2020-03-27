@@ -9,7 +9,7 @@ import Lens.Simple (iso)
 counter :: Int -> Task m Void
 counter start = do
   count <- view start
-  pick
+  select
     [ ("Increment", counter <| succ count),
       ("Decrement", counter <| pred count)
     ]
@@ -31,7 +31,7 @@ counter'' start = do
   c <- share start
   forever do
     _ <- watch c
-    pick
+    select
       [ ("Increment", c <<= succ),
         ("Decrement", c <<= pred)
       ]

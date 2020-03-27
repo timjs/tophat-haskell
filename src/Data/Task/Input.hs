@@ -20,28 +20,28 @@ import qualified Data.Text as Text
 
 data Action :: Type where
   IEnter :: Editable b => b -> Action
-  IPick :: Label -> Action
+  ISelect :: Label -> Action
   IContinue :: Label -> Action
 
 instance Eq Action where
   IEnter x == IEnter y
     | Just Refl <- x ~= y = x == y
     | otherwise = False
-  IPick x == IPick y = x == y
+  ISelect x == ISelect y = x == y
   IContinue x == IContinue y = x == y
   _ == _ = False
 
 instance Pretty Action where
   pretty = \case
     IEnter x -> sep ["e", pretty x]
-    IPick l -> sep ["p", pretty l]
+    ISelect l -> sep ["p", pretty l]
     IContinue l -> sep ["c", pretty l]
 
 -- Dummy actions --
 
 data Dummy :: Type where
   AEnter :: Editable b => Proxy b -> Dummy
-  APick :: Label -> Dummy
+  ASelect :: Label -> Dummy
   AContinue :: Label -> Dummy
 
 instance Eq Dummy where
@@ -49,14 +49,14 @@ instance Eq Dummy where
     -- NOTE: We're comparing proxies, they are always equal when the types are equal.
     | Just Refl <- x ~= y = True
     | otherwise = False
-  APick x == APick y = x == y
+  ASelect x == ASelect y = x == y
   AContinue x == AContinue y = x == y
   _ == _ = False
 
 instance Pretty Dummy where
   pretty = \case
     AEnter _ -> sep ["e", "<value>"]
-    APick l -> sep ["p", pretty l]
+    ASelect l -> sep ["p", pretty l]
     AContinue l -> sep ["c", pretty l]
 
 -- Symbolic actions --
@@ -83,12 +83,12 @@ instance Pretty a => Pretty (Input a) where
 dummyfy :: Action -> Dummy
 dummyfy = \case
   IEnter x -> AEnter (proxyOf x)
-  IPick l -> APick l
+  ISelect l -> ASelect l
   IContinue l -> AContinue l
 
 -- reify :: Dummy -> Gen (List Action)
 -- reify (AEnter l)  = map IEnter <$> vectorOf 5 (arbitraryOf l)
--- reify (APick l)   = pure [ IPick l ]
+-- reify (ASelect l)   = pure [ ISelect l ]
 
 strip :: Input Action -> Input Dummy
 strip = map dummyfy
@@ -136,7 +136,7 @@ parse ["e", val]
   | Just v <- scan val :: Maybe [Double] = ok <| ToHere <| IEnter v
   | Just v <- scan val :: Maybe [Text] = ok <| ToHere <| IEnter v
   | otherwise = throw <| sep ["!! Error parsing value", dquotes (pretty val)]
-parse ["p", rest] = map (ToHere << IPick) <| parseLabel rest
+parse ["p", rest] = map (ToHere << ISelect) <| parseLabel rest
 parse ["c", rest] = map (ToHere << IContinue) <| parseLabel rest
 parse ("f" : rest) = map ToFirst <| parse rest
 parse ("s" : rest) = map ToSecond <| parse rest
