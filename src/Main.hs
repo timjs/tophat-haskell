@@ -247,8 +247,8 @@ numbers' = do
     change_ r = do
       --NOTE: `watch` should be before the external step, otherwise we'll end up an a state where we show an editor with the list when the user entered an improper index.
       -- Compare this with iTasks: `watch` should be before the external step because you cannot specify the `watch` inside the step list!
-      n <- map length <| watch r
-      i <- enter
+      n <- map (length >> fromIntegral) <| watch r
+      i <- enter :: Task m Int
       if i < n
         then
           select
@@ -264,14 +264,14 @@ numbers' = do
 
 -- Helpers ---------------------------------------------------------------------
 
-del :: Nat -> List a -> List a
+del :: Int -> List a -> List a
 del _ [] = []
 del 0 (_ : xs) = xs
 del n (x : xs)
   | n >= 0 = x : del (pred n) xs
   | otherwise = []
 
-rep :: Nat -> a -> List a -> List a
+rep :: Int -> a -> List a -> List a
 rep _ _ [] = []
 rep 0 y (_ : xs) = y : xs
 rep n y (x : xs)

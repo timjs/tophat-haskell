@@ -102,7 +102,7 @@ forever = Forever
 instance Pretty (Task m t) where
   pretty = \case
     New _ -> "New"
-    Editor n e -> sep [pretty n, "@", pretty e]
+    Editor n e -> cat [pretty n, "@", pretty e]
     Pair t1 t2 -> parens <| sep [pretty t1, "><", pretty t2]
     Done _ -> "Done _"
     Choose t1 t2 -> parens <| sep [pretty t1, "<|>", pretty t2]
@@ -115,7 +115,7 @@ instance Pretty (Task m t) where
 
 instance Pretty (Editor m a) where
   pretty = \case
-    Enter -> parens <| sep ["Enter"]
+    Enter -> "Enter"
     Update v -> parens <| sep ["Update", pretty v]
     View v -> parens <| sep ["View", pretty v]
     Select ts -> parens <| sep ["Select", pretty ts]

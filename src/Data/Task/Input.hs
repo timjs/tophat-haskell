@@ -108,12 +108,14 @@ usage =
       "    f <input> : send <input> to the first task",
       "    s <input> : send <input> to the second task",
       "    help      : show this message",
-      "",
+      "    quit      : quit"
+        "",
       "where values can be:",
       "    ()           : Unit",
       "    True, False  : Booleans",
+      -- "    0, 1, …      : Naturals",
       "    1, -42, …    : Integers",
-      "    \"Hello\", … : Strings",
+      "    \"Hello\", …   : Strings",
       "    [ <value>, ] : List of values",
       "",
       "and labels always start with a Capital letter"
