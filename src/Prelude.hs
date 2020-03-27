@@ -2,16 +2,49 @@
 
 module Prelude
   ( module Relude,
+    -- module Control.Newtype,
     module Data.Type.Equality,
     module Control.Monad.Writer.Strict,
+
+    -- * Types
     Unit,
     Nat,
-    nat,
+    Nat8,
+    Nat16,
+    Nat32,
+    Nat64,
     List,
+    -- Vector,
+
+    -- * Classes
+    Hash,
+    Group (..),
+    Module (..),
+    Torsor (..),
+
+    -- * Aliases
+    length,
+
+    -- ** Text
     chars,
-    Set,
-    Dict,
-    -- , Vector, only, index, update
+    unchars,
+
+    -- ** Reading
+    scan,
+
+    -- ** Tracing
+    spy,
+
+    -- ** HashSets
+    (=<),
+    (/<),
+    (/\),
+    (\/),
+
+    -- ** Vectors
+    -- Vector, only, index, update
+
+    -- * Pretty printing
     Pretty (..),
     Doc,
     viaShow,
@@ -22,39 +55,69 @@ module Prelude
     dquotes,
     parens,
     angles,
-    scan,
-    pretty',
-    tracePretty,
+
+    -- * Operators
+
+    -- ** Pairs
+    -- pattern (:=),
+
+    -- ** Monoids
     neutral,
-    (<|),
+    (++),
+
+    -- ** Functions
     (|>),
+    (<|),
+    (.),
     (<<),
     (>>),
+
+    -- ** Functors
+    (<||),
+    (||>),
+    -- (<|.),
+    -- (.|>),
     map,
+
+    -- ** Applicatives
     (-<),
     (>-),
-    (<-<),
-    (>->),
-    Monoidal ((<&>), skip, (<&), (&>)),
-    applyDefault,
-    pureDefault,
-    Selective (branch, select, biselect),
-    check,
-    when,
+    (-|),
+    (|-),
     lift0,
     lift1,
     lift2,
     lift3,
+    (<-<),
+    (>->),
+
+    -- ** Monoidals
+    Monoidal ((><), skip, (>|), (|<)),
+    applyDefault,
+    pureDefault,
+
+    -- ** Selectives
+    Selective (branch, select, biselect),
+    check,
+    when,
+
+    -- * Fixes
+
+    -- ** MonadZero
     MonadZero,
     MonadError,
     ok,
     throw,
     catch,
+
+    -- ** Transformers
     WriterT (..),
     evalWriterT,
     clear,
+
+    -- * Type level
     (~=),
-    (~~),
+    (~?),
     proxyOf,
     typeOf,
     someTypeOf,
@@ -65,19 +128,57 @@ module Prelude
   )
 where
 
+-- import Control.Newtype hiding (pack, unpack)
 import Control.Monad.Except (MonadError (..))
 import Control.Monad.List (ListT)
-import Control.Monad.Writer.Strict (MonadWriter (..), WriterT (..), censor, execWriterT, listens, mapWriterT, runWriterT)
-import Data.HashMap.Strict (HashMap)
+import Control.Monad.Writer.Strict (MonadWriter (..), WriterT (..), runWriterT)
 -- import Data.Vector (Vector)
 
-import qualified Data.HashMap.Strict as Dict
-import qualified Data.HashSet as Set
-import Data.Text (unpack)
+import qualified Data.HashMap.Strict as HashMap
+import qualified Data.HashSet as HashSet
+import qualified Data.Text as Text
 import Data.Text.Prettyprint.Doc (Doc, Pretty (..), angles, dquotes, indent, parens, viaShow)
 import qualified Data.Text.Prettyprint.Doc as Pretty
 import Data.Type.Equality
-import Relude hiding (($), (&), (*>), (.), (<$>), (<&>), (<*), (>>), Any, Nat, Set, forever, liftA2, liftA3, map, pass, readMaybe, trace, when)
+import Relude hiding
+  ( ($),
+    ($>),
+    (&),
+    (*>),
+    (++),
+    (++),
+    (.),
+    (<$),
+    (<$>),
+    (<&>),
+    (<*),
+    -- (<>),
+    -- (<*>),
+    (>>),
+    Any,
+    MonadFail (..),
+    Nat,
+    String,
+    Word,
+    Word16,
+    Word32,
+    Word64,
+    Word8,
+    first,
+    forever,
+    length,
+    liftA2,
+    liftA3,
+    map,
+    mempty,
+    pass,
+    readMaybe,
+    second,
+    trace,
+    traceShow,
+    traceShowId,
+    when,
+  )
 import qualified Relude
 import Type.Reflection (SomeTypeRep (..), TypeRep, someTypeRep, typeOf, typeRep)
 
@@ -87,28 +188,58 @@ import Type.Reflection (SomeTypeRep (..), TypeRep, someTypeRep, typeOf, typeRep)
 
 type Unit = ()
 
-newtype Nat = Nat Int
-  deriving (Eq, Ord, Num, Show, Read, Enum, Pretty, Hashable) via Int
+type Nat = Relude.Word
 
-nat :: Int -> Nat
-nat i
-  | i >= 0 = Nat i
-  | otherwise = error "Prelude.nat: argument is negative"
+type Nat8 = Relude.Word8
+
+type Nat16 = Relude.Word16
+
+type Nat32 = Relude.Word32
+
+type Nat64 = Relude.Word64
 
 type List = []
 
-chars :: Text -> List Char
-chars = unpack
+type Hash a = (Eq a, Hashable a)
 
-type Set = HashSet
+chars :: Text -> List Char
+chars = Text.unpack
+
+unchars :: List Char -> Text
+unchars = Text.pack
+
+length :: Foldable f => f a -> Nat
+length = Relude.length >> fromIntegral
+
+-- Pretty printing --
 
 instance (Pretty v) => Pretty (HashSet v) where
-  pretty = Pretty.braces << Pretty.cat << Pretty.punctuate ", " << map pretty << Set.toList
-
-type Dict = HashMap
+  pretty = Pretty.braces << Pretty.cat << Pretty.punctuate ", " << map pretty << HashSet.toList
 
 instance (Pretty k, Pretty v) => Pretty (HashMap k v) where
-  pretty = Pretty.braces << Pretty.cat << Pretty.punctuate ", " << map (\(k, v) -> cat [pretty k, ": ", pretty v]) << Dict.toList
+  pretty = Pretty.braces << Pretty.cat << Pretty.punctuate ", " << map (\(k, v) -> cat [pretty k, ": ", pretty v]) << HashMap.toList
+
+-- Sets --
+
+infix 4 =<
+
+infix 4 /<
+
+infixr 5 \/
+
+infixr 6 /\
+
+(=<) :: Hash a => a -> HashSet a -> Bool
+(=<) = HashSet.member
+
+(/<) :: Hash a => a -> HashSet a -> Bool
+(/<) x = not << HashSet.member x
+
+(\/) :: Hash a => HashSet a -> HashSet a -> HashSet a
+(\/) = HashSet.union
+
+(/\) :: Hash a => HashSet a -> HashSet a -> HashSet a
+(/\) = HashSet.intersection
 
 -- Vectors ---------------------------------------------------------------------
 
@@ -124,10 +255,15 @@ instance (Pretty k, Pretty v) => Pretty (HashMap k v) where
 -- instance ( Pretty a ) => Pretty (Vector a) where
 --   pretty = Pretty.angles << fold << intersperse ", " << map pretty << Vector.toList
 
--- Scanning & Printing ---------------------------------------------------------
+-- Reading & Tracing -----------------------------------------------------------
 
 scan :: Read a => Text -> Maybe a
-scan = Relude.readMaybe << unpack
+scan = Relude.readMaybe << chars
+{-# INLINE scan #-}
+
+spy :: Pretty a => Text -> a -> a
+spy m x = Relude.traceShow (pretty m ++ ": " ++ pretty x) x
+{-# INLINE spy #-}
 
 sep :: List (Doc n) -> Doc n
 sep = Pretty.hsep
@@ -138,11 +274,8 @@ cat = Pretty.hcat
 split :: List (Doc n) -> Doc n
 split = Pretty.vsep
 
-tracePretty :: Pretty a => a -> a
-tracePretty x = traceShow (pretty x) x
-
-pretty' :: Pretty a => a -> Pretty.SimpleDocStream n
-pretty' = Pretty.layoutPretty (Pretty.LayoutOptions Pretty.Unbounded) << pretty
+-- pretty' :: Pretty a => a -> Pretty.SimpleDocStream n
+-- pretty' = Pretty.layoutPretty (Pretty.LayoutOptions Pretty.Unbounded) << pretty
 
 instance (Pretty a, Pretty b, Pretty c, Pretty d) => Pretty (a, b, c, d) where
   pretty (x1, x2, x3, x4) = Pretty.tupled [pretty x1, pretty x2, pretty x3, pretty x4]
@@ -152,9 +285,33 @@ instance (Pretty a, Pretty b, Pretty c, Pretty d, Pretty e) => Pretty (a, b, c, 
 
 -- Monoids ---------------------------------------------------------------------
 
+infixr 5 ++
+
+(++) :: Relude.Semigroup s => s -> s -> s
+(++) = (Relude.<>)
+{-# INLINE (++) #-}
+
 neutral :: Monoid m => m
-neutral = mempty
+neutral = Relude.mempty
 {-# INLINE neutral #-}
+
+-- Groups and more -------------------------------------------------------------
+
+infixr 5 ~~
+
+class Monoid a => Group a where
+  invert :: a -> a
+  invert x = neutral ~~ x
+
+  (~~) :: a -> a -> a
+  (~~) x y = x ++ invert y
+
+class (Group a, Num s) => Module a s | a -> s where
+  scale :: s -> a -> a
+
+class Group d => Torsor a d | a -> d where
+  diff :: a -> a -> d
+  adjust :: d -> a -> a
 
 -- Functions -------------------------------------------------------------------
 
@@ -162,17 +319,23 @@ infixr 0 <|
 
 infixl 1 |>
 
+infixl 8 .
+
 infixr 9 <<
 
 infixr 9 >>
 
 (<|) :: (a -> b) -> a -> b
-(<|) f a = f a
+(<|) f x = f x
 {-# INLINE (<|) #-}
 
 (|>) :: a -> (a -> b) -> b
 (|>) = flip (<|)
 {-# INLINE (|>) #-}
+
+(.) :: a -> (a -> b) -> b
+(.) = flip (<|)
+{-# INLINE (.) #-}
 
 (<<) :: (b -> c) -> (a -> b) -> a -> c
 f << g = \x -> f (g x)
@@ -184,36 +347,63 @@ f << g = \x -> f (g x)
 
 -- Functors --------------------------------------------------------------------
 
+infixl 4 <||
+
+infixl 1 ||>
+
+infixl 4 <|.
+
+infixl 4 .|>
+
 map :: Functor f => (a -> b) -> f a -> f b
 map = Relude.fmap
+{-# INLINE map #-}
 
--- Applicatives ----------------------------------------------------------------
+(<||) :: Functor f => (a -> b) -> f a -> f b
+(<||) = map
+{-# INLINE (<||) #-}
+
+(||>) :: Functor f => f a -> (a -> b) -> f b
+(||>) = flip (Relude.<$>)
+{-# INLINE (||>) #-}
+
+(<|.) :: Functor f => a -> f b -> f a
+(<|.) = (Relude.<$)
+{-# INLINE (<|.) #-}
+
+(.|>) :: Functor f => f a -> b -> f b
+(.|>) = (Relude.$>)
+{-# INLINE (.|>) #-}
+
+-- Applicative functors --------------------------------------------------------
 
 infixr 1 <-<
 
 infixr 1 >->
 
--- infixl 4 >>-
--- infixl 4 -<<
-infixl 5 -<
+infixl 4 >-
 
-infixr 5 >-
+infixl 4 -<
+
+infixl 4 |-
+
+infixl 4 -|
 
 (-<) :: Applicative f => f (a -> b) -> f a -> f b
 (-<) = (Relude.<*>)
 {-# INLINE (-<) #-}
 
 (>-) :: Applicative f => f a -> f (a -> b) -> f b
-(>-) = flip (Relude.<*>)
+(>-) = flip (-<)
 {-# INLINE (>-) #-}
 
--- (-<<) :: Applicative f => f b -> f a -> f b
--- (-<<) = (Relude.<*)
--- {-# INLINE (-<<) #-}
+(-|) :: Applicative f => f a -> f b -> f a
+(-|) = (Relude.<*)
+{-# INLINE (-|) #-}
 
--- (>>-) :: Applicative f => f a -> f b -> f b
--- (>>-) = (Relude.*>)
--- {-# INLINE (>>-) #-}
+(|-) :: Applicative f => f a -> f b -> f b
+(|-) = (Relude.*>)
+{-# INLINE (|-) #-}
 
 lift0 :: Applicative f => a -> f a
 lift0 = pure
@@ -241,27 +431,27 @@ f <-< g = pure (<<) -< f -< g
 
 -- Monoidal functors -----------------------------------------------------------
 
-infixl 6 <&>
+infixl 6 ><
 
-infixl 6 <&
+infixl 6 >|
 
-infixl 6 &>
+infixl 6 |<
 
 class Applicative f => Monoidal f where
-  (<&>) :: f a -> f b -> f (a, b)
-  (<&>) x y = pure (,) -< x -< y
+  (><) :: f a -> f b -> f (a, b)
+  (><) x y = pure (,) -< x -< y
 
   skip :: f ()
   skip = pure ()
 
-  (<&) :: f a -> f b -> f a
-  (<&) x y = map fst <| x <&> y
+  (>|) :: f a -> f b -> f a
+  (>|) x y = pure fst -< x >< y
 
-  (&>) :: f a -> f b -> f b
-  (&>) x y = map snd <| x <&> y
+  (|<) :: f a -> f b -> f b
+  (|<) x y = pure snd -< x >< y
 
 applyDefault :: Monoidal f => f (a -> b) -> f a -> f b
-applyDefault fg fx = map (\(g, x) -> g x) <| fg <&> fx
+applyDefault fg fx = pure (\(g, x) -> g x) -< fg >< fx
 
 pureDefault :: Monoidal f => a -> f a
 pureDefault x = map (const x) skip
@@ -282,7 +472,7 @@ class Applicative f => Selective f where
   select x y = branch x y (pure identity)
 
   biselect :: f (Either a b) -> f (Either a c) -> f (Either a (b, c))
-  biselect x y = select (pure (map Left << swp) -< x) (pure (\e a -> map (a,) e) -< y)
+  biselect x y = select (map Left << swp <|| x) ((\e a -> map (a,) e) <|| y)
     where
       swp = either Right Left
 
@@ -305,7 +495,7 @@ when p t = check p t (pure ())
 -- |
 -- | Laws:
 -- |   * fail == empty
-class (Monad m, MonadFail m, Alternative m) => MonadZero m
+class (Monad m, Relude.MonadFail m, Alternative m) => MonadZero m
 
 instance MonadZero Maybe
 
@@ -313,7 +503,7 @@ instance MonadZero List
 
 instance Monad m => MonadZero (ListT m)
 
-instance (MonadFail m, MonadPlus m) => MonadZero (StateT s m)
+instance (Relude.MonadFail m, MonadPlus m) => MonadZero (StateT s m)
 
 -- Error --
 
@@ -341,21 +531,21 @@ evalWriterT m = lift1 fst (runWriterT m)
 
 infix 4 ~=
 
-infix 4 ~~
+infix 4 ~?
 
 (~=) :: (Typeable a, Typeable b) => a -> b -> Maybe (a :~: b)
-(~=) x y = typeOf x ~~ typeOf y
+(~=) x y = typeOf x ~? typeOf y
 {-# INLINE (~=) #-}
 
-(~~) :: TestEquality f => f a -> f b -> Maybe (a :~: b)
-(~~) = testEquality
-{-# INLINE (~~) #-}
+(~?) :: TestEquality f => f a -> f b -> Maybe (a :~: b)
+(~?) = testEquality
+{-# INLINE (~?) #-}
 
 proxyOf :: a -> Proxy a
 proxyOf _ = Proxy
 {-# INLINE proxyOf #-}
 
-someTypeOf :: forall a. Typeable a => a -> SomeTypeRep
+someTypeOf :: Typeable a => a -> SomeTypeRep
 someTypeOf = someTypeRep << proxyOf
 {-# INLINE someTypeOf #-}
 

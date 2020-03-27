@@ -1,8 +1,8 @@
 module Data.Task.Run where
 
 import Control.Monad.Log
-import qualified Data.HashMap.Strict as Dict
-import qualified Data.HashSet as Set
+import qualified Data.HashMap.Strict as HashMap
+import qualified Data.HashSet as HashSet
 import Data.List (intersect, union)
 import Data.Task
 import Data.Task.Input
@@ -19,7 +19,7 @@ ui = \case
   Enter -> pure "⊠()"
   Update v -> pure <| cat ["□(", pretty v, ")"]
   View v -> pure <| cat ["⧇(", pretty v, ")"]
-  Pick ts -> pure <| cat ["◇", pretty <| Dict.keysSet ts]
+  Pick ts -> pure <| cat ["◇", pretty <| HashMap.keysSet ts]
   Pair t1 t2 -> pure (\l r -> sep [l, " ⧓ ", r]) -< ui t1 -< ui t2
   Choose t1 t2 -> pure (\l r -> sep [l, " ◆ ", r]) -< ui t1 -< ui t2
   Fail -> pure "↯"
@@ -47,7 +47,7 @@ value = \case
   Update v -> pure (Just v)
   View v -> pure (Just v)
   Pick _ -> pure Nothing
-  Pair t1 t2 -> pure (<&>) -< value t1 -< value t2
+  Pair t1 t2 -> pure (><) -< value t1 -< value t2
   Choose t1 t2 -> pure (<|>) -< value t1 -< value t2
   Fail -> pure Nothing
   Trans f t -> pure (map f) -< value t
@@ -99,9 +99,9 @@ watching = \case
   Watch (Store _ r) -> [pack r]
 
 picks ::
-  Task m a -> Set Label
+  Task m a -> HashSet Label
 picks = \case
-  Pick ts -> Dict.keysSet <| Dict.filter (not << failing) ts
+  Pick ts -> HashMap.keysSet <| HashMap.filter (not << failing) ts
   Trans _ t2 -> picks t2
   Forever t1 -> picks t1
   Step t1 _ -> picks t1
@@ -117,13 +117,13 @@ inputs t = case t of
   Enter -> pure [ToHere (AEnter tau)]
   Update _ -> pure [ToHere (AEnter tau)]
   View _ -> pure []
-  Pick _ -> pure <| map (ToHere << APick) <| Set.toList <| picks t
-  Pair t1 t2 -> pure (\l r -> map ToFirst l <> map ToSecond r) -< inputs t1 -< inputs t2
-  Choose t1 t2 -> pure (\l r -> map ToFirst l <> map ToSecond r) -< inputs t1 -< inputs t2
+  Pick _ -> pure <| map (ToHere << APick) <| HashSet.toList <| picks t
+  Pair t1 t2 -> pure (\l r -> map ToFirst l ++ map ToSecond r) -< inputs t1 -< inputs t2
+  Choose t1 t2 -> pure (\l r -> map ToFirst l ++ map ToSecond r) -< inputs t1 -< inputs t2
   Fail -> pure []
   Trans _ t2 -> inputs t2
   Forever t1 -> inputs t1
-  Step t1 e2 -> pure (<>) -< inputs t1 -< do
+  Step t1 e2 -> pure (++) -< inputs t1 -< do
     mv1 <- value t1
     case mv1 of
       Nothing -> pure []
@@ -132,7 +132,7 @@ inputs t = case t of
         let t2 = e2 v1
         if failing t2
           then pure []
-          else pure <| map (ToHere << AContinue) <| Set.toList <| picks t2
+          else pure <| map (ToHere << AContinue) <| HashSet.toList <| picks t2
   Share _ -> pure []
   Assign _ _ -> pure []
   Change _ -> pure [ToHere (AEnter tau)]
@@ -243,7 +243,7 @@ handle ::
 handle t i = case (t, i) of
   -- Edit --
   (Enter, ToHere (IEnter w))
-    | Just Refl <- tau ~~ typeOf w -> pure <| Update w
+    | Just Refl <- tau ~? typeOf w -> pure <| Update w
     | otherwise -> throw <| CouldNotChangeVal (SomeTypeRep tau) (someTypeOf w)
     where
       tau = typeRep :: TypeRep a
@@ -254,7 +254,7 @@ handle t i = case (t, i) of
     | otherwise -> throw <| CouldNotChangeVal (someTypeOf v) (someTypeOf w)
   (Change s@(Store _ r), ToHere (IEnter w))
     -- NOTE: As in the `Update` case above, we check for type equality.
-    | Just Refl <- tau ~~ typeOf w -> do
+    | Just Refl <- tau ~? typeOf w -> do
       s <<- w
       tell [pack r]
       pure <| Change s
@@ -262,10 +262,10 @@ handle t i = case (t, i) of
     where
       tau = typeRep :: TypeRep a
   -- Pick --
-  (Pick ts, ToHere (IPick l)) -> case Dict.lookup l ts of
+  (Pick ts, ToHere (IPick l)) -> case HashMap.lookup l ts of
     Nothing -> throw <| CouldNotFind l
     Just t' ->
-      if Set.member l (picks t)
+      if l =< (picks t)
         then pure t'
         else throw <| CouldNotGoTo l
   -- Step --
@@ -303,8 +303,8 @@ handle t i = case (t, i) of
 -- Interaction -----------------------------------------------------------------
 
 data Steps
-  = DidStabilise Int Int
-  | DidNotStabilise Int Int Int
+  = DidStabilise Nat Nat
+  | DidNotStabilise Nat Nat Nat
   | DidNormalise Text
   | DidBalance Text
 
@@ -399,7 +399,7 @@ run task = do
       interface <- ui task'
       print interface
       events <- inputs task'
-      print <| "Possibilities: " <> pretty events
+      print <| "Possibilities: " ++ pretty events
       input <- getUserInput
       task'' <- interact task' input
       loop task''

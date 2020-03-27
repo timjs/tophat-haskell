@@ -15,7 +15,7 @@ class (Monad m) => MonadRef r m | m -> r where
   mutate :: (a -> a) -> r a -> m ()
   mutate f r = do
     x <- read r
-    r <<- (f x)
+    write (f x) r
 
 -- Operators -------------------------------------------------------------------
 

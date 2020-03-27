@@ -30,7 +30,7 @@ data Task (m :: Type -> Type) (t :: Type) where
   -- | Valued, view only editor
   View :: (Editable t) => t -> Task m t
   -- | External choice between two tasks.
-  Pick :: Dict Label (Task m t) -> Task m t
+  Pick :: HashMap Label (Task m t) -> Task m t
   -- Parallels --
 
   -- | Composition of two tasks.
@@ -97,7 +97,7 @@ instance Pretty (Task m t) where
     Update v -> parens <| sep ["Update", pretty v]
     View v -> parens <| sep ["View", pretty v]
     Pick ts -> parens <| sep ["Pick", pretty ts]
-    Pair t1 t2 -> parens <| sep [pretty t1, "<&>", pretty t2]
+    Pair t1 t2 -> parens <| sep [pretty t1, "><", pretty t2]
     Choose t1 t2 -> parens <| sep [pretty t1, "<|>", pretty t2]
     Fail -> "Fail"
     Trans _ t -> sep ["Trans _", pretty t]
@@ -118,7 +118,7 @@ instance Interactive (Task m) where
   pick = Pick
 
 instance Monoidal (Task m) where
-  (<&>) = Pair
+  (><) = Pair
   skip = Done ()
 
 instance Applicative (Task m) where

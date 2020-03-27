@@ -1,7 +1,7 @@
 module Control.Interactive where
 
 import Data.Editable
-import qualified Data.HashMap.Strict as Dict
+import qualified Data.HashMap.Strict as HashMap
 
 -- | A monad `m` with interactive abilities.
 -- |
@@ -16,11 +16,11 @@ class (Monad m) => Interactive m where
   update :: Editable a => a -> m a
   view :: Editable a => a -> m a
 
-  pick :: Dict Label (m a) -> m a
+  pick :: HashMap Label (m a) -> m a
   pick ms = do
-    _ <- view <| Dict.keys ms
+    _ <- view <| HashMap.keys ms
     l <- enter
-    case Dict.lookup l ms of
+    case HashMap.lookup l ms of
       Just m -> m
       Nothing -> pick ms
 
@@ -47,7 +47,7 @@ instance (Interactive m) => Interactive (ExceptT e m) where
 instance Interactive IO where
   enter :: forall a. Editable a => IO a
   enter = do
-    putText <| show tau <> "? "
+    putText <| show tau ++ "? "
     t <- getLine
     case scan t of
       Just x -> pure x

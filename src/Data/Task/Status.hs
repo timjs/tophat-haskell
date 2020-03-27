@@ -26,10 +26,10 @@ instance Eq a => Eq (Status a) where
 instance Monoidal Status where
   skip = Producing ()
 
-  Producing x <&> Producing y = Producing (x, y)
-  Asking <&> Asking = Asking
-  Failing <&> Failing = Failing
-  _ <&> _ = Stepping
+  Producing x >< Producing y = Producing (x, y)
+  Asking >< Asking = Asking
+  Failing >< Failing = Failing
+  _ >< _ = Stepping
 
 instance Applicative Status where
   pure = pureDefault
@@ -60,7 +60,7 @@ status = \case
   -- Fail is obviously `Failing`... --
   Fail -> pure Failing
   -- Combinations pair or choose one of the possibilities. --
-  Pair t1 t2 -> pure (<&>) -< status t1 -< status t2
+  Pair t1 t2 -> pure (><) -< status t1 -< status t2
   Choose t1 t2 -> pure (<|>) -< status t1 -< status t2
   Trans f t -> pure (map f) -< status t
   -- From the rest we do not know anything. --

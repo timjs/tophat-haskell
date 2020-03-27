@@ -32,7 +32,7 @@ add x y =
 
 append :: Text -> Text -> Task m Text
 append x y =
-  view (x <> y)
+  view (x ++ y)
 
 -- Steps --
 
@@ -77,7 +77,7 @@ twoSteps'' = do
 -- Parallel --
 
 parallel :: Task m (Int, Text)
-parallel = enter <&> hello
+parallel = enter >< hello
 
 parallelStep :: Task m Text
 parallelStep = do
@@ -178,13 +178,13 @@ update3 r = do
 inspect :: Collaborative r m => (Store r Int -> Task m a) -> Task m (a, Int)
 inspect f = do
   r <- share 0
-  f r <&> watch r
+  f r >< watch r
 
 doubleShared :: Collaborative r m => Task m ((), Int)
 doubleShared = do
   r <- share (0 :: Int)
   m <- share (0 :: Int)
-  t2 r m <&> t1 r m
+  t2 r m >< t1 r m
   where
     t1 _ m = do
       x <- change m
@@ -204,7 +204,7 @@ atomic = do
         r <<- 3
         r <<- 1
         view ()
-  t1 <&> t2
+  t1 >< t2
 
 unfixated :: Collaborative r m => Task m ((), ())
 unfixated = do
@@ -215,14 +215,14 @@ unfixated = do
       t2 = do
         r <<- True
         view ()
-  t1 <&> t2
+  t1 >< t2
 
 -- Forever --
 
 numbers :: Collaborative r m => Task m (Void, List Int)
 numbers = do
   r <- share ([] :: List Int)
-  forever (prepend r) <&> watch r
+  forever (prepend r) >< watch r
   where
     prepend r = do
       x <- enter
@@ -231,7 +231,7 @@ numbers = do
 numbers' :: Collaborative r m => Task m (Void, List Int)
 numbers' = do
   r <- share ([] :: List Int)
-  forever (edit_ r) <&> watch r
+  forever (edit_ r) >< watch r
   where
     edit_ r =
       do pick
@@ -264,14 +264,14 @@ numbers' = do
 
 -- Helpers ---------------------------------------------------------------------
 
-del :: Int -> List a -> List a
+del :: Nat -> List a -> List a
 del _ [] = []
 del 0 (_ : xs) = xs
 del n (x : xs)
   | n >= 0 = x : del (pred n) xs
   | otherwise = []
 
-rep :: Int -> a -> List a -> List a
+rep :: Nat -> a -> List a -> List a
 rep _ _ [] = []
 rep 0 y (_ : xs) = y : xs
 rep n y (x : xs)
