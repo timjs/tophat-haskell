@@ -97,9 +97,9 @@ module Prelude
     pureDefault,
 
     -- ** Selectives
-    Selective (branch, select, biselect),
-    check,
-    when,
+    -- Selective (branch, select, biselect),
+    -- check,
+    -- when,
 
     -- * Fixes
 
@@ -462,7 +462,7 @@ instance Monoidal (Either e)
 
 instance Monoidal IO
 
--- Selective functors ----------------------------------------------------------
+{- Selective functors ----------------------------------------------------------
 
 class Applicative f => Selective f where
   branch :: f (Either a b) -> f (a -> c) -> f (b -> c) -> f c
@@ -483,6 +483,7 @@ check p t e = branch (map go p) (map const t) (map const e)
 
 when :: Selective f => f Bool -> f Unit -> f Unit
 when p t = check p t (pure ())
+-}
 
 -- Monads ----------------------------------------------------------------------
 

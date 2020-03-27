@@ -17,13 +17,13 @@ import qualified Lens.Simple as Lens
 
 -- | A variation on a monad `m` with references `r`.
 -- |
--- | References `r` should be typeable, so they can be existentially stored,
--- | and equatable, so we can compare the pointers to check if they are the same.
--- | Structures `s` stored in such references should be editable,
+-- | References `r` should be typeable, so they can be existentially stored.
+-- | Also, they should be equatable, so we can compare the pointers to check if they are the same.
+-- | Data `a` stored in such references should be editable,
 -- | so they can be shown in an editor on screen and edited by an end user.
 -- |
 -- | NOTE: GHC does not let us write this as a type synonym,
--- | because of the impredicativity of `Eq (r s)`.
+-- | because of the impredicativity of `Eq (r a)`.
 class (Monad m, Typeable r, forall a. Eq (r a)) => Collaborative r m | m -> r where
   share :: Editable a => a -> m (Store r a)
   watch :: Editable a => Store r a -> m a
@@ -43,20 +43,10 @@ infixl 1 <<-
 
 infixl 1 <<=
 
-(<<-) ::
-  Collaborative r m =>
-  Editable a =>
-  Store r a ->
-  a ->
-  m ()
+(<<-) :: (Collaborative r m, Editable a) => Store r a -> a -> m ()
 (<<-) = flip assign
 
-(<<=) ::
-  Collaborative r m =>
-  Editable a =>
-  Store r a ->
-  (a -> a) ->
-  m ()
+(<<=) :: (Collaborative r m, Editable a) => Store r a -> (a -> a) -> m ()
 (<<=) = flip mutate
 
 -- Instances -------------------------------------------------------------------

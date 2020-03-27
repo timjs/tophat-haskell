@@ -30,7 +30,7 @@ data Task (m :: Type -> Type) (t :: Type) where
   -- | Valued, view only editor
   View :: (Editable t) => t -> Task m t
   -- | External choice between two tasks.
-  Pick :: HashMap Label (Task m t) -> Task m t
+  Select :: HashMap Label (Task m t) -> Task m t
   -- Parallels --
 
   -- | Composition of two tasks.
@@ -39,12 +39,10 @@ data Task (m :: Type -> Type) (t :: Type) where
   Choose :: Task m t -> Task m t -> Task m t
   -- | The failing task
   Fail :: Task m t
-  -- Transform --
+  -- Steps --
 
   -- | Internal value transformation
   Trans :: (a -> t) -> Task m a -> Task m t
-  -- Step --
-
   -- | Internal, or system step.
   Step :: Task m a -> (a -> Task m t) -> Task m t
   -- Loops --
@@ -80,10 +78,10 @@ infixl 3 <?>
 infixl 1 >>?
 
 (<?>) :: Task m a -> Task m a -> Task m a
-(<?>) t1 t2 = pick [("Left", t1), ("Right", t2)]
+(<?>) t1 t2 = select [("Left", t1), ("Right", t2)]
 
 (>>?) :: Task m a -> (a -> Task m b) -> Task m b
-(>>?) t c = t >>= \x -> pick [("Continue", c x)]
+(>>?) t c = t >>= \x -> select [("Continue", c x)]
 
 forever :: Task m a -> Task m Void
 forever = Forever
@@ -96,7 +94,7 @@ instance Pretty (Task m t) where
     Enter -> "Enter"
     Update v -> parens <| sep ["Update", pretty v]
     View v -> parens <| sep ["View", pretty v]
-    Pick ts -> parens <| sep ["Pick", pretty ts]
+    Select ts -> parens <| sep ["Select", pretty ts]
     Pair t1 t2 -> parens <| sep [pretty t1, "><", pretty t2]
     Choose t1 t2 -> parens <| sep [pretty t1, "<|>", pretty t2]
     Fail -> "Fail"
@@ -115,7 +113,7 @@ instance Interactive (Task m) where
   enter = Enter
   update = Update
   view = View
-  pick = Pick
+  select = Select
 
 instance Monoidal (Task m) where
   (><) = Pair
@@ -125,11 +123,11 @@ instance Applicative (Task m) where
   pure = Done
   (<*>) = applyDefault
 
-instance Selective (Task m) where
-  branch p t1 t2 = go =<< p
-    where
-      go (Left a) = map (<| a) t1
-      go (Right b) = map (<| b) t2
+-- instance Selective (Task m) where
+--   branch p t1 t2 = go =<< p
+--     where
+--       go (Left a) = map (<| a) t1
+--       go (Right b) = map (<| b) t2
 
 instance Alternative (Task m) where
   (<|>) = Choose

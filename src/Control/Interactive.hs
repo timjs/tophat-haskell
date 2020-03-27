@@ -8,7 +8,7 @@ import qualified Data.HashMap.Strict as HashMap
 -- | * `enter` lets the user enter a value
 -- | * `update` lets the user view a value and asks him/her to enter a new one
 -- | * `view` lets the user view a value
--- | * `pick` asks the user to pick one of possible options
+-- | * `select` asks the user to select one of possible options
 -- |
 -- | FIXME: Simplify constraint?
 class (Monad m) => Interactive m where
@@ -16,13 +16,13 @@ class (Monad m) => Interactive m where
   update :: Editable a => a -> m a
   view :: Editable a => a -> m a
 
-  pick :: HashMap Label (m a) -> m a
-  pick ms = do
+  select :: HashMap Label (m a) -> m a
+  select ms = do
     _ <- view <| HashMap.keys ms
     l <- enter
     case HashMap.lookup l ms of
       Just m -> m
-      Nothing -> pick ms
+      Nothing -> select ms
 
 type Label = Text
 
@@ -33,14 +33,14 @@ instance (Interactive m, Monoid w) => Interactive (WriterT w m) where
   update = lift << update
   view = lift << view
 
--- pick = lift << pick
+-- select = lift << select
 
 instance (Interactive m) => Interactive (ExceptT e m) where
   enter = lift enter
   update = lift << update
   view = lift << view
 
--- pick = lift << pick
+-- select = lift << select
 
 -- Example instance for IO -----------------------------------------------------
 
