@@ -24,8 +24,8 @@ data Task (m :: Type -> Type) (t :: Type) where
   --
   -- Editors --
 
-  New :: (Unique -> Editor m t) -> Task m t
-  Editor :: Editor m t -> Task m t
+  New :: Editor m t -> Task m t
+  Editor :: Unique -> Editor m t -> Task m t
   --
   -- Parallels --
 
@@ -70,17 +70,17 @@ data Task (m :: Type -> Type) (t :: Type) where
 
 data Editor (m :: Type -> Type) (t :: Type) where
   -- | Unvalued editor
-  Enter :: (Editable t) => Unique -> Editor m t
+  Enter :: (Editable t) => Editor m t
   -- | Valued editor
-  Update :: (Editable t) => Unique -> t -> Editor m t
+  Update :: (Editable t) => t -> Editor m t
   -- | Valued, view only editor
-  View :: (Editable t) => Unique -> t -> Editor m t
+  View :: (Editable t) => t -> Editor m t
   -- | External choice between two Editors.
-  Select :: Unique -> HashMap Label (Task m t) -> Editor m t
+  Select :: HashMap Label (Task m t) -> Editor m t
   -- | Change to a reference of type `t` to a value
-  Change :: (Collaborative r m, Editable t) => Unique -> Store r t -> Editor m t
+  Change :: (Collaborative r m, Editable t) => Store r t -> Editor m t
   -- | Watch a reference of type `t`
-  Watch :: (Collaborative r m, Editable t) => Unique -> Store r t -> Editor m t
+  Watch :: (Collaborative r m, Editable t) => Store r t -> Editor m t
 
 -- Operators -------------------------------------------------------------------
 
@@ -102,7 +102,7 @@ forever = Forever
 instance Pretty (Task m t) where
   pretty = \case
     New _ -> "New"
-    Editor e -> pretty e
+    Editor n e -> sep [pretty n, "@", pretty e]
     Pair t1 t2 -> parens <| sep [pretty t1, "><", pretty t2]
     Done _ -> "Done _"
     Choose t1 t2 -> parens <| sep [pretty t1, "<|>", pretty t2]
@@ -113,23 +113,23 @@ instance Pretty (Task m t) where
     Share v -> sep ["Share", pretty v]
     Assign v _ -> sep ["_", ":=", pretty v]
 
-instance Pretty (Editor m t) where
+instance Pretty (Editor m a) where
   pretty = \case
-    Enter n -> parens <| sep ["Enter", pretty n]
-    Update n v -> parens <| sep ["Update", pretty n, pretty v]
-    View n v -> parens <| sep ["View", pretty n, pretty v]
-    Select n ts -> parens <| sep ["Select", pretty n, pretty ts]
-    Watch n _ -> sep ["Watch", pretty n, "_"]
-    Change n _ -> sep ["Change", pretty n, "_"]
+    Enter -> parens <| sep ["Enter"]
+    Update v -> parens <| sep ["Update", pretty v]
+    View v -> parens <| sep ["View", pretty v]
+    Select ts -> parens <| sep ["Select", pretty ts]
+    Watch _ -> sep ["Watch", "_"]
+    Change _ -> sep ["Change", "_"]
 
 instance Functor (Task m) where
   fmap = Trans
 
 instance Interactive (Task m) where
-  enter = New (\n -> Enter n)
-  update v = New (\n -> Update n v)
-  view v = New (\n -> View n v)
-  select ts = New (\n -> Select n ts)
+  enter = New Enter
+  update v = New (Update v)
+  view v = New (View v)
+  select ts = New (Select ts)
 
 instance Monoidal (Task m) where
   (><) = Pair
@@ -155,5 +155,5 @@ instance Monad (Task m) where
 instance Collaborative r m => Collaborative r (Task m) where
   share = Share
   assign = Assign
-  watch l = New (\n -> Watch n l)
-  change l = New (\n -> Change n l)
+  watch l = New (Watch l)
+  change l = New (Change l)

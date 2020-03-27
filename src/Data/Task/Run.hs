@@ -15,6 +15,8 @@ ui ::
   Task m a ->
   m (Doc b) -- We need to watch locations and be in monad `m`
 ui = \case
+  New e -> pure (\s -> sep ["ν", s]) -< ui' e
+  Editor _ e -> ui' e
   Done _ -> pure "■(…)"
   Pair t1 t2 -> pure (\l r -> sep [l, " ⧓ ", r]) -< ui t1 -< ui t2
   Choose t1 t2 -> pure (\l r -> sep [l, " ◆ ", r]) -< ui t1 -< ui t2
@@ -36,18 +38,20 @@ ui' ::
   Editor m a ->
   m (Doc b) -- We need to watch locations and be in monad `m`
 ui' = \case
-  Enter _ -> pure "⊠()"
-  Update _ v -> pure <| cat ["□(", pretty v, ")"]
-  View _ v -> pure <| cat ["⧇(", pretty v, ")"]
-  Select _ ts -> pure <| cat ["◇", pretty <| HashMap.keysSet ts]
-  Change _ l -> pure (\v -> cat ["⊟(", pretty v, ")"]) -< watch l
-  Watch _ l -> pure (\v -> cat ["⧈(", pretty v, ")"]) -< watch l
+  Enter -> pure "⊠()"
+  Update v -> pure <| cat ["□(", pretty v, ")"]
+  View v -> pure <| cat ["⧇(", pretty v, ")"]
+  Select ts -> pure <| cat ["◇", pretty <| HashMap.keysSet ts]
+  Change l -> pure (\v -> cat ["⊟(", pretty v, ")"]) -< watch l
+  Watch l -> pure (\v -> cat ["⧈(", pretty v, ")"]) -< watch l
 
 value ::
   Collaborative r m =>
   Task m a ->
   m (Maybe a) -- We need to watch locations and be in monad `m`
 value = \case
+  New _ -> pure Nothing
+  Editor _ e -> value' e
   Done v -> pure (Just v)
   Pair t1 t2 -> pure (><) -< value t1 -< value t2
   Choose t1 t2 -> pure (<|>) -< value t1 -< value t2
@@ -63,16 +67,18 @@ value' ::
   Editor m a ->
   m (Maybe a) -- We need to watch locations and be in monad `m`
 value' = \case
-  Enter _ -> pure Nothing
-  Update _ v -> pure (Just v)
-  View _ v -> pure (Just v)
-  Select _ _ -> pure Nothing
-  Change _ l -> pure Just -< watch l
-  Watch _ l -> pure Just -< watch l
+  Enter -> pure Nothing
+  Update v -> pure (Just v)
+  View v -> pure (Just v)
+  Select _ -> pure Nothing
+  Change l -> pure Just -< watch l
+  Watch l -> pure Just -< watch l
 
 failing ::
   Task m a -> Bool
 failing = \case
+  New e -> failing' e
+  Editor _ e -> failing' e
   Done _ -> False
   Pair t1 t2 -> failing t1 && failing t2
   Choose t1 t2 -> failing t1 && failing t2
@@ -86,18 +92,20 @@ failing = \case
 failing' ::
   Editor m a -> Bool
 failing' = \case
-  Enter _ -> False
-  Update _ _ -> False
-  View _ _ -> False
-  Select _ ts -> all failing ts
-  Change _ _ -> False
-  Watch _ _ -> False
+  Enter -> False
+  Update _ -> False
+  View _ -> False
+  Select ts -> all failing ts
+  Change _ -> False
+  Watch _ -> False
 
 watching ::
   Collaborative r m => -- We need Collaborative here to pack references `r`
   Task m a ->
   List (Someref m) -- But there is no need to be in monad `m`
 watching = \case
+  New _ -> []
+  Editor _ e -> watching' e
   Done _ -> []
   Pair t1 t2 -> watching t1 `union` watching t2
   Choose t1 t2 -> watching t1 `union` watching t2
@@ -113,17 +121,17 @@ watching' ::
   Editor m a ->
   List (Someref m) -- But there is no need to be in monad `m`
 watching' = \case
-  Enter _ -> []
-  Update _ _ -> []
-  View _ _ -> []
-  Select _ _ -> []
-  Change _ (Store _ r) -> [pack r]
-  Watch _ (Store _ r) -> [pack r]
+  Enter -> []
+  Update _ -> []
+  View _ -> []
+  Select _ -> []
+  Change (Store _ r) -> [pack r]
+  Watch (Store _ r) -> [pack r]
 
 picks ::
   Task m a -> HashSet Label
 picks = \case
-  Editor e -> picks' e
+  Editor _ e -> picks' e
   Trans _ t2 -> picks t2
   Forever t1 -> picks t1
   Step t1 _ -> picks t1
@@ -132,7 +140,8 @@ picks = \case
 picks' ::
   Editor m a -> HashSet Label
 picks' = \case
-  Select _ ts -> HashMap.keysSet <| HashMap.filter (not << failing) ts
+  Select ts -> HashMap.keysSet <| HashMap.filter (not << failing) ts
+  _ -> []
 
 inputs ::
   forall m r a.
@@ -140,6 +149,8 @@ inputs ::
   Task m a ->
   m (List (Input Dummy)) -- We need to call `value`, therefore we are in `m`
 inputs t = case t of
+  New _ -> pure []
+  Editor _ e -> inputs' e
   Done _ -> pure []
   Pair t1 t2 -> pure (\l r -> map ToFirst l ++ map ToSecond r) -< inputs t1 -< inputs t2
   Choose t1 t2 -> pure (\l r -> map ToFirst l ++ map ToSecond r) -< inputs t1 -< inputs t2
@@ -165,12 +176,12 @@ inputs' ::
   Editor m a ->
   m (List (Input Dummy)) -- We need to call `value`, therefore we are in `m`
 inputs' t = case t of
-  Enter _ -> pure [ToHere (AEnter tau)]
-  Update _ _ -> pure [ToHere (AEnter tau)]
-  View _ _ -> pure []
-  Select _ _ -> pure <| map (ToHere << ASelect) <| HashSet.toList <| picks' t
-  Change _ _ -> pure [ToHere (AEnter tau)]
-  Watch _ _ -> pure []
+  Enter -> pure [ToHere (AEnter tau)]
+  Update _ -> pure [ToHere (AEnter tau)]
+  View _ -> pure []
+  Select _ -> pure <| map (ToHere << ASelect) <| HashSet.toList <| picks' t
+  Change _ -> pure [ToHere (AEnter tau)]
+  Watch _ -> pure []
   where
     tau = Proxy :: Proxy a
 
@@ -223,13 +234,11 @@ normalise t = case t of
     tell [pack r]
     pure <| Done ()
   -- Ready --
+  -- New e -> do
+  --   n <- supply
+  --   pure <| Editor n e
+  Editor _ _ -> pure t
   Done _ -> pure t
-  -- Enter -> pure t
-  -- Update _ -> pure t
-  -- View _ -> pure t
-  -- Select _ -> pure t
-  -- Change _ -> pure t
-  -- Watch _ -> pure t
   Fail -> pure t
 
 balance :: Task m a -> Task m a
@@ -244,7 +253,8 @@ balance t = case t of
 
 balance' :: Editor m a -> Editor m a
 balance' = \case
-  Select n ts -> Select n <| map balance ts
+  Select ts -> Select <| map balance ts
+  e -> e
 
 -- Handling --------------------------------------------------------------------
 
@@ -278,13 +288,16 @@ handle ::
   Input Action ->
   PartialTracking Task m a
 handle t i = case (t, i) of
-  -- Select --
-  (Editor (Select _ ts), ToHere (ISelect l)) -> case HashMap.lookup l ts of
+  -- Editors --
+  (Editor _ (Select ts), ToHere (ISelect l)) -> case HashMap.lookup l ts of
     Nothing -> throw <| CouldNotFind l
     Just t' ->
       if l =< (picks t)
         then pure t'
         else throw <| CouldNotGoTo l
+  (Editor n e, _) -> do
+    e' <- handle' e i
+    pure <| Editor n e'
   -- Step --
   (Step t1 e2, ToHere (IContinue l)) -> do
     mv1 <- lift <| lift <| value t1
@@ -324,26 +337,27 @@ handle' ::
   Input Action ->
   PartialTracking Editor m a
 handle' e i = case (e, i) of
-  -- Edit --
-  (Enter n, ToHere (IEnter w))
-    | Just Refl <- tau ~? typeOf w -> pure <| Update n w
+  (Enter, ToHere (IEnter w))
+    | Just Refl <- tau ~? typeOf w -> pure <| Update w
     | otherwise -> throw <| CouldNotChangeVal (SomeTypeRep tau) (someTypeOf w)
     where
       tau = typeRep :: TypeRep a
-  (Update n v, ToHere (IEnter w))
+  (Update v, ToHere (IEnter w))
     -- NOTE: Here we check if `v` and `w` have the same type.
     -- If this is the case, it would be inhabited by `Refl :: a :~: b`, where `b` is the type of the value inside `Change`.
-    | Just Refl <- v ~= w -> pure <| Update n w
+    | Just Refl <- v ~= w -> pure <| Update w
     | otherwise -> throw <| CouldNotChangeVal (someTypeOf v) (someTypeOf w)
-  (Change n s@(Store _ r), ToHere (IEnter w))
+  (Change s@(Store _ r), ToHere (IEnter w))
     -- NOTE: As in the `Update` case above, we check for type equality.
     | Just Refl <- tau ~? typeOf w -> do
       s <<- w
       tell [pack r]
-      pure <| Change n s
+      pure <| Change s
     | otherwise -> throw <| CouldNotChangeRef (someTypeOf s) (someTypeOf w)
     where
       tau = typeRep :: TypeRep a
+  -- Rest --
+  _ -> throw <| CouldNotHandle i
 
 -- Interaction -----------------------------------------------------------------
 
