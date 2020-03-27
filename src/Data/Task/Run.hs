@@ -1,6 +1,7 @@
 module Data.Task.Run where
 
 import Control.Monad.Log
+import Control.Monad.Supply
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.HashSet as HashSet
 import Data.List (intersect, union)
@@ -191,6 +192,7 @@ type Tracking f m a = WriterT (List (Someref m)) m (f m a)
 
 normalise ::
   Collaborative r m =>
+  MonadSupply Unique m =>
   Task m a ->
   Tracking Task m a
 normalise t = case t of
@@ -234,9 +236,9 @@ normalise t = case t of
     tell [pack r]
     pure <| Done ()
   -- Ready --
-  -- New e -> do
-  --   n <- supply
-  --   pure <| Editor n e
+  New e -> do
+    n <- supply
+    pure <| Editor n e
   Editor _ _ -> pure t
   Done _ -> pure t
   Fail -> pure t
@@ -376,6 +378,7 @@ instance Pretty Steps where
 
 fixate ::
   Collaborative r m =>
+  MonadSupply Unique m =>
   MonadLog Steps m =>
   Tracking Task m a ->
   m (Task m a)
@@ -398,6 +401,7 @@ fixate tt = do
 
 initialise ::
   Collaborative r m =>
+  MonadSupply Unique m =>
   MonadLog Steps m =>
   Task m a ->
   m (Task m a)
@@ -405,6 +409,7 @@ initialise = fixate << pure
 
 interact ::
   Collaborative r m =>
+  MonadSupply Unique m =>
   MonadLog NotApplicable m =>
   MonadLog Steps m =>
   Task m a ->

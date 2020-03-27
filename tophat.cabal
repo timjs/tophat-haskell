@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.31.2.
+-- This file has been generated from package.yaml by hpack version 0.33.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 9f24852bd92228db9d84cfb5380054e3f7169d3267d6f721e7dadb3bbbfc30db
+-- hash: 64ee269b958d0a3951ff3a678ef79d03c20aa140b01567950b942a4e43a429d3
 
 name:           tophat
 version:        0.1.0.0
@@ -30,6 +30,7 @@ library
       Control.Interactive
       Control.Monad.Log
       Control.Monad.Ref
+      Control.Monad.Supply
       Data.Editable
       Data.Store
       Data.Task
@@ -63,6 +64,7 @@ executable tophat
       Control.Interactive
       Control.Monad.Log
       Control.Monad.Ref
+      Control.Monad.Supply
       Data.Editable
       Data.Store
       Data.Task
