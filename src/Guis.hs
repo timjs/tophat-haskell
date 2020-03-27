@@ -3,7 +3,6 @@ module Guis where
 import Data.Task
 import Lens.Simple (iso)
 
-
 -- Counter ---------------------------------------------------------------------
 
 -- This is not part of the TopHat language (recursion!)
@@ -11,8 +10,8 @@ counter :: Int -> Task m Void
 counter start = do
   count <- view start
   pick
-    [ ( "Increment", counter <| succ count )
-    , ( "Decrement", counter <| pred count )
+    [ ("Increment", counter <| succ count),
+      ("Decrement", counter <| pred count)
     ]
 
 -- `forever` is not a proper (monadic) fixpoint combinator,
@@ -33,10 +32,9 @@ counter'' start = do
   forever do
     _ <- watch c
     pick
-      [ ( "Increment", c <<= succ )
-      , ( "Decrement", c <<= pred )
+      [ ("Increment", c <<= succ),
+        ("Decrement", c <<= pred)
       ]
-
 
 -- Temperature conversion ------------------------------------------------------
 
@@ -50,21 +48,21 @@ f2c f' = ((f' - 32.0) * 5.0) / 9.0
 -- and will loop indefinitely...
 -- Also, both `c` and `f` have a value, so when updating `f`,
 -- we would always recieve the old `c` value tagged with `Left`...
-temperature :: ( Double, Double ) -> Task m a
-temperature ( c, f ) = do
+temperature :: (Double, Double) -> Task m a
+temperature (c, f) = do
   n <- map Left (update c) <|> map Right (update f)
   case n of
-    Left c' -> temperature ( c', c2f c' )
-    Right f' -> temperature ( f2c f', f' )
+    Left c' -> temperature (c', c2f c')
+    Right f' -> temperature (f2c f', f')
 
 -- Because steps do not wait for an event (they fire automatically if there is a value),
 -- this will also loop indefinitely...
-temperature' :: ( Double, Double ) -> Task m Void
-temperature' ( c, f ) = forever do
+temperature' :: (Double, Double) -> Task m Void
+temperature' (c, f) = forever do
   n <- map Left (update c) <|> map Right (update f)
   case n of
-    Left c' -> pure ( c', c2f c' )
-    Right f' -> pure ( f2c f', f' )
+    Left c' -> pure (c', c2f c')
+    Right f' -> pure (f2c f', f')
 
 -- with shares, we do not need any recursion.
 -- Recursion on editing is built in.
@@ -73,8 +71,6 @@ temperature'' :: Collaborative r m => Double -> Task m Double
 temperature'' c = do
   r <- share c
   change r <& change (focus (iso c2f f2c) r)
-
-
 {- Flight booker ---------------------------------------------------------------
 
 -- We use type synonyms instead of new data types so we do not have to extend

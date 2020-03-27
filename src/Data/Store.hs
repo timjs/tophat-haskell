@@ -1,10 +1,11 @@
 module Data.Store
-  ( Store(..)
-  , focus, _identity
-  ) where
+  ( Store (..),
+    focus,
+    _identity,
+  )
+where
 
 import Lens.Simple (Lens', iso)
-
 
 -- Stores ----------------------------------------------------------------------
 
@@ -29,7 +30,6 @@ assign :: ( MonadRef r m ) => a -> Share r s a -> m ()
 assign x (Share l r) = do
   r <<= set l x
 -}
-
 
 -- Focussing -------------------------------------------------------------------
 

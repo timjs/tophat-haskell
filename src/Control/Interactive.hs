@@ -3,7 +3,6 @@ module Control.Interactive where
 import Data.Editable
 import qualified Data.HashMap.Strict as Dict
 
-
 -- | A monad `m` with interactive abilities.
 -- |
 -- | * `enter` lets the user enter a value
@@ -12,7 +11,7 @@ import qualified Data.HashMap.Strict as Dict
 -- | * `pick` asks the user to pick one of possible options
 -- |
 -- | FIXME: Simplify constraint?
-class ( Monad m ) => Interactive m where
+class (Monad m) => Interactive m where
   enter :: Editable a => m a
   update :: Editable a => a -> m a
   view :: Editable a => a -> m a
@@ -27,21 +26,21 @@ class ( Monad m ) => Interactive m where
 
 type Label = Text
 
-
 -- Transformer instances -------------------------------------------------------
 
-instance ( Interactive m, Monoid w ) => Interactive (WriterT w m) where
+instance (Interactive m, Monoid w) => Interactive (WriterT w m) where
   enter = lift enter
   update = lift << update
   view = lift << view
-  -- pick = lift << pick
 
-instance ( Interactive m ) => Interactive (ExceptT e m) where
+-- pick = lift << pick
+
+instance (Interactive m) => Interactive (ExceptT e m) where
   enter = lift enter
   update = lift << update
   view = lift << view
-  -- pick = lift << pick
 
+-- pick = lift << pick
 
 -- Example instance for IO -----------------------------------------------------
 

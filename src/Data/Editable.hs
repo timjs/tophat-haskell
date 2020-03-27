@@ -1,7 +1,7 @@
 module Data.Editable
-  ( Editable
-  ) where
-
+  ( Editable,
+  )
+where
 
 -- | Types `a` which can be edited by an end user.
 -- |
@@ -14,5 +14,6 @@ module Data.Editable
 -- | give better error messges.
 -- |
 -- | FIXME: Maybe also 'Arbitrary' and `Coarbitrary` ?
-class ( Pretty a, Read a, Eq a, Typeable a ) => Editable a
-instance ( Pretty a, Read a, Eq a, Typeable a ) => Editable a
+class (Pretty a, Read a, Eq a, Typeable a) => Editable a
+
+instance (Pretty a, Read a, Eq a, Typeable a) => Editable a

@@ -1,14 +1,15 @@
 module Control.Monad.Ref
-  ( MonadRef(..)
-  , (<<-), (<<=)
-  ) where
-
+  ( MonadRef (..),
+    (<<-),
+    (<<=),
+  )
+where
 
 -- Class -----------------------------------------------------------------------
 
-class ( Monad m ) => MonadRef r m | m -> r where
-  new   :: a -> m (r a)
-  read  :: r a -> m a
+class (Monad m) => MonadRef r m | m -> r where
+  new :: a -> m (r a)
+  read :: r a -> m a
   write :: a -> r a -> m ()
 
   mutate :: (a -> a) -> r a -> m ()
@@ -16,10 +17,10 @@ class ( Monad m ) => MonadRef r m | m -> r where
     x <- read r
     r <<- (f x)
 
-
 -- Operators -------------------------------------------------------------------
 
 infixl 1 <<-
+
 infixl 1 <<=
 
 (<<-) :: MonadRef r m => r a -> a -> m ()
@@ -27,7 +28,6 @@ infixl 1 <<=
 
 (<<=) :: MonadRef r m => r a -> (a -> a) -> m ()
 (<<=) = flip mutate
-
 
 -- Instances -------------------------------------------------------------------
 
@@ -42,6 +42,6 @@ infixl 1 <<=
 --   read    = lift << read
 
 instance MonadRef IORef IO where
-  new   = newIORef
-  read  = readIORef
+  new = newIORef
+  read = readIORef
   write = flip writeIORef

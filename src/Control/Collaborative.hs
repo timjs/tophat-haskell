@@ -1,13 +1,17 @@
 module Control.Collaborative
-  ( module Data.Store
-  , Collaborative(..), (<<-), (<<=)
-  , Someref, pack, unpack
-  ) where
+  ( module Data.Store,
+    Collaborative (..),
+    (<<-),
+    (<<=),
+    Someref,
+    pack,
+    unpack,
+  )
+where
 
 import Data.Editable
 import Data.Store
 import qualified Lens.Simple as Lens
-
 
 -- Class -----------------------------------------------------------------------
 
@@ -20,9 +24,9 @@ import qualified Lens.Simple as Lens
 -- |
 -- | NOTE: GHC does not let us write this as a type synonym,
 -- | because of the impredicativity of `Eq (r s)`.
-class ( Monad m, Typeable r, forall a. Eq (r a) ) => Collaborative r m | m -> r where
-  share  :: Editable a => a -> m (Store r a)
-  watch  :: Editable a => Store r a -> m a
+class (Monad m, Typeable r, forall a. Eq (r a)) => Collaborative r m | m -> r where
+  share :: Editable a => a -> m (Store r a)
+  watch :: Editable a => Store r a -> m a
   assign :: Editable a => a -> Store r a -> m ()
 
   change :: Editable a => Store r a -> m a
@@ -33,34 +37,39 @@ class ( Monad m, Typeable r, forall a. Eq (r a) ) => Collaborative r m | m -> r 
     x <- watch r
     assign (f x) r
 
-
 -- Operators -------------------------------------------------------------------
 
 infixl 1 <<-
+
 infixl 1 <<=
 
 (<<-) ::
-  Collaborative r m => Editable a =>
-  Store r a -> a -> m ()
+  Collaborative r m =>
+  Editable a =>
+  Store r a ->
+  a ->
+  m ()
 (<<-) = flip assign
 
 (<<=) ::
-  Collaborative r m => Editable a =>
-  Store r a -> (a -> a) -> m ()
+  Collaborative r m =>
+  Editable a =>
+  Store r a ->
+  (a -> a) ->
+  m ()
 (<<=) = flip mutate
-
 
 -- Instances -------------------------------------------------------------------
 
-instance ( Collaborative r m, Monoid w ) => Collaborative r (WriterT w m) where
-  share    = lift << share
+instance (Collaborative r m, Monoid w) => Collaborative r (WriterT w m) where
+  share = lift << share
   assign r = lift << assign r
-  watch    = lift << watch
+  watch = lift << watch
 
-instance ( Collaborative r m ) => Collaborative r (ExceptT e m) where
-  share    = lift << share
+instance (Collaborative r m) => Collaborative r (ExceptT e m) where
+  share = lift << share
   assign r = lift << assign r
-  watch    = lift << watch
+  watch = lift << watch
 
 instance Collaborative IORef IO where
   share x = do
@@ -74,25 +83,20 @@ instance Collaborative IORef IO where
     s <- readIORef r
     pure <| Lens.view l s
 
-
 -- Existential packing ---------------------------------------------------------
 
-
 data Someref (m :: Type -> Type) where
-  Someref :: ( Collaborative r m, Typeable (r a), Eq (r a) ) => r a -> Someref m
+  Someref :: (Collaborative r m, Typeable (r a), Eq (r a)) => r a -> Someref m
 
-
-pack :: forall m r a. ( Collaborative r m, Typeable (r a), Eq (r a) ) => r a -> Someref m
+pack :: forall m r a. (Collaborative r m, Typeable (r a), Eq (r a)) => r a -> Someref m
 pack = Someref
 
-
-unpack :: forall m r a. ( Typeable (r a) ) => Someref m -> Maybe (r a)
+unpack :: forall m r a. (Typeable (r a)) => Someref m -> Maybe (r a)
 unpack (Someref x)
   | Just Refl <- typeOf x ~~ r = Just x
   | otherwise = Nothing
   where
     r = typeRep :: TypeRep (r a)
-
 
 instance Eq (Someref m) where
   Someref x == Someref y
