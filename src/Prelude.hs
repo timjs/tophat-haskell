@@ -355,10 +355,6 @@ infixl 4 <||
 
 infixl 1 ||>
 
-infixl 4 <|.
-
-infixl 4 .|>
-
 map :: Functor f => (a -> b) -> f a -> f b
 map = Relude.fmap
 {-# INLINE map #-}
@@ -371,13 +367,17 @@ map = Relude.fmap
 (||>) = flip (Relude.<$>)
 {-# INLINE (||>) #-}
 
-(<|.) :: Functor f => a -> f b -> f a
-(<|.) = (Relude.<$)
-{-# INLINE (<|.) #-}
+-- infixl 4 <|.
 
-(.|>) :: Functor f => f a -> b -> f b
-(.|>) = (Relude.$>)
-{-# INLINE (.|>) #-}
+-- infixl 4 .|>
+
+-- (<|.) :: Functor f => a -> f b -> f a
+-- (<|.) = (Relude.<$)
+-- {-# INLINE (<|.) #-}
+
+-- (.|>) :: Functor f => f a -> b -> f b
+-- (.|>) = (Relude.$>)
+-- {-# INLINE (.|>) #-}
 
 -- Applicative functors --------------------------------------------------------
 
