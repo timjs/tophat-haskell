@@ -105,12 +105,15 @@ module Prelude
 
     -- ** MonadZero
     MonadZero,
+
+    -- ** MonadError
     MonadError,
     ok,
     throw,
     catch,
+    try,
 
-    -- ** Transformers
+    -- ** MonadWriter
     WriterT (..),
     evalWriterT,
     clear,
@@ -167,6 +170,7 @@ import Relude hiding
     Word8,
     first,
     forever,
+    id,
     length,
     liftA2,
     liftA3,
@@ -512,6 +516,14 @@ instance (Relude.MonadFail m, MonadPlus m) => MonadZero (StateT s m)
 
 -- Error --
 
+-- type Result = Either
+
+-- pattern Ok :: a -> Result e a
+-- pattern Ok x = Right x
+
+-- pattern Err :: e -> Result e a
+-- pattern Err e = Left e
+
 ok :: MonadError e m => a -> m a
 ok = pure
 {-# INLINE ok #-}
@@ -523,6 +535,9 @@ throw = throwError
 catch :: MonadError e m => m a -> (e -> m a) -> m a
 catch = catchError
 {-# INLINE catch #-}
+
+try :: MonadError e m => m a -> m (Either e a)
+try a = catch (Right <|| a) (return << Left)
 
 -- Writer --
 
