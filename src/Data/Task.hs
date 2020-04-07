@@ -13,7 +13,6 @@ where
 import Control.Collaborative
 import Control.Interactive
 import Data.Editable (Editable)
-import Data.Unique (Unique)
 
 -- Tasks -----------------------------------------------------------------------
 
@@ -25,7 +24,7 @@ data Task (m :: Type -> Type) (t :: Type) where
   -- Editors --
 
   New :: Editor m t -> Task m t
-  Editor :: Unique -> Editor m t -> Task m t
+  Editor :: Nat -> Editor m t -> Task m t
   --
   -- Parallels --
 

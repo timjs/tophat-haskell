@@ -2,20 +2,19 @@
 -- | See <http://www.haskell.org/haskellwiki/New_monads/MonadSupply> for more details.
 module Control.Monad.Supply
   ( MonadSupply (..),
-    Unique,
   )
 where
 
-import Control.Monad.Writer.Lazy as Lazy
-import Control.Monad.Writer.Strict as Strict
-import Data.Unique (Unique, newUnique)
+import qualified Control.Monad.Writer.Lazy as Lazy
+import qualified Control.Monad.Writer.Strict as Strict
+import Data.Unique (hashUnique, newUnique)
 
 -- | MonadSupply class to support getting the next item from a stream.
 class Monad m => MonadSupply s m | m -> s where
   supply :: m s
 
-instance MonadSupply Unique IO where
-  supply = newUnique
+instance MonadSupply Nat IO where
+  supply = newUnique ||> hashUnique ||> fromIntegral
 
 -- Monad transformer instances --
 

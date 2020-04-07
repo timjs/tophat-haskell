@@ -21,28 +21,24 @@ import qualified Data.Text as Text
 data Action :: Type where
   IEnter :: Editable b => b -> Action
   ISelect :: Label -> Action
-  IContinue :: Label -> Action
 
 instance Eq Action where
   IEnter x == IEnter y
     | Just Refl <- x ~= y = x == y
     | otherwise = False
   ISelect x == ISelect y = x == y
-  IContinue x == IContinue y = x == y
   _ == _ = False
 
 instance Pretty Action where
   pretty = \case
-    IEnter x -> sep ["e", pretty x]
-    ISelect l -> sep ["p", pretty l]
-    IContinue l -> sep ["c", pretty l]
+    IEnter x -> pretty x
+    ISelect l -> pretty l
 
 -- Dummy actions --
 
 data Dummy :: Type where
   AEnter :: Editable b => Proxy b -> Dummy
   ASelect :: Label -> Dummy
-  AContinue :: Label -> Dummy
 
 instance Eq Dummy where
   AEnter x == AEnter y
@@ -50,33 +46,28 @@ instance Eq Dummy where
     | Just Refl <- x ~= y = True
     | otherwise = False
   ASelect x == ASelect y = x == y
-  AContinue x == AContinue y = x == y
   _ == _ = False
 
 instance Pretty Dummy where
   pretty = \case
-    AEnter _ -> sep ["e", "<value>"]
-    ASelect l -> sep ["p", pretty l]
-    AContinue l -> sep ["c", pretty l]
+    AEnter _ -> "<value>"
+    ASelect l -> pretty l
 
 -- Symbolic actions --
 
 data Symbolic :: Type where
-  SChange :: Editable b => Proxy b -> Symbolic
+  SEnter :: Editable b => Proxy b -> Symbolic
+  SSelect :: Label -> Symbolic
 
 -- Inputs ----------------------------------------------------------------------
 
 data Input a
-  = ToFirst (Input a)
-  | ToHere a
-  | ToSecond (Input a)
+  = Input Nat a
   deriving (Eq, Show, Functor, Foldable, Traversable)
 
 instance Pretty a => Pretty (Input a) where
   pretty = \case
-    ToFirst e -> sep ["f", pretty e]
-    ToHere a -> pretty a
-    ToSecond e -> sep ["s", pretty e]
+    Input n a -> cat ["@", pretty n, " ", pretty a]
 
 -- Conformance -----------------------------------------------------------------
 
@@ -84,7 +75,6 @@ dummyfy :: Action -> Dummy
 dummyfy = \case
   IEnter x -> AEnter (proxyOf x)
   ISelect l -> ASelect l
-  IContinue l -> AContinue l
 
 -- reify :: Dummy -> Gen (List Action)
 -- reify (AEnter l)  = map IEnter <$> vectorOf 5 (arbitraryOf l)
@@ -98,50 +88,63 @@ strip = map dummyfy
 
 -- Parsing ---------------------------------------------------------------------
 
-usage :: Doc a
+usage :: Doc n
 usage =
   split
     [ ":: Possible inputs are:",
-      "    e <value> : enter <value> into the current editor",
-      "    p <label> : pick amongst the possible options",
-      "    c <label> : continue with a possible option",
-      "    f <input> : send <input> to the first task",
-      "    s <input> : send <input> to the second task",
-      "    help      : show this message",
-      "    quit      : quit"
-        "",
-      "where values can be:",
+      "    <id> <value> : enter <value> into the current editor",
+      "    <id> <label> : select one of the possible options",
+      "    help         : show this message",
+      "    quit         : quit",
+      "",
+      "where ids have the form:",
+      "    @2, @37, …",
+      "",
+      "and values can be:",
       "    ()           : Unit",
       "    True, False  : Booleans",
-      -- "    0, 1, …      : Naturals",
+      -- "    +0, +1, …    : Naturals",
       "    1, -42, …    : Integers",
       "    \"Hello\", …   : Strings",
       "    [ <value>, ] : List of values",
       "",
-      "and labels always start with a Capital letter"
+      "and labels _always_ start with a Capital letter"
     ]
 
-parseLabel :: Text -> Either (Doc a) Label
+parseId :: Text -> Either (Doc n) Nat
+parseId t
+  | Just (c, n) <- Text.uncons t,
+    c == '@',
+    Just v <- scan n :: Maybe Nat =
+    ok v
+  | otherwise = throw <| sep ["!!", dquotes <| pretty t, "is not a proper id"]
+
+parseLabel :: Text -> Either (Doc n) Action
 parseLabel t
-  | Just (c, _) <- Text.uncons t, Char.isUpper c = ok t
+  | Just (c, _) <- Text.uncons t, Char.isUpper c = ok <| ISelect t
   | otherwise = throw <| sep ["!!", dquotes <| pretty t, "is not a proper label"]
 
-parse :: List Text -> Either (Doc a) (Input Action)
-parse ["e", val]
-  | Just v <- scan val :: Maybe Unit = ok <| ToHere <| IEnter v
-  | Just v <- scan val :: Maybe Bool = ok <| ToHere <| IEnter v
-  | Just v <- scan val :: Maybe Int = ok <| ToHere <| IEnter v
-  | Just v <- scan val :: Maybe Double = ok <| ToHere <| IEnter v
-  | Just v <- scan val :: Maybe Text = ok <| ToHere <| IEnter v
-  | Just v <- scan val :: Maybe [Bool] = ok <| ToHere <| IEnter v
-  | Just v <- scan val :: Maybe [Int] = ok <| ToHere <| IEnter v
-  | Just v <- scan val :: Maybe [Double] = ok <| ToHere <| IEnter v
-  | Just v <- scan val :: Maybe [Text] = ok <| ToHere <| IEnter v
+parseVal :: Text -> Either (Doc n) Action
+parseVal val
+  | Just v <- scan val :: Maybe Unit = ok <| IEnter v
+  | Just v <- scan val :: Maybe Bool = ok <| IEnter v
+  | Just v <- scan val :: Maybe Int = ok <| IEnter v
+  | Just v <- scan val :: Maybe Double = ok <| IEnter v
+  | Just v <- scan val :: Maybe Text = ok <| IEnter v
+  | Just v <- scan val :: Maybe [Bool] = ok <| IEnter v
+  | Just v <- scan val :: Maybe [Int] = ok <| IEnter v
+  | Just v <- scan val :: Maybe [Double] = ok <| IEnter v
+  | Just v <- scan val :: Maybe [Text] = ok <| IEnter v
   | otherwise = throw <| sep ["!! Error parsing value", dquotes (pretty val)]
-parse ["p", rest] = map (ToHere << ISelect) <| parseLabel rest
-parse ["c", rest] = map (ToHere << IContinue) <| parseLabel rest
-parse ("f" : rest) = map ToFirst <| parse rest
-parse ("s" : rest) = map ToSecond <| parse rest
+
+parse :: List Text -> Either (Doc a) (Input Action)
+parse (x : i : _)
+  | Right v <- parseVal x,
+    Right n <- parseId i =
+    ok <| Input n v
+  | Right l <- parseLabel x,
+    Right n <- parseId i =
+    ok <| Input n l
 parse ["h"] = throw usage
 parse ["help"] = throw usage
 parse other = throw <| sep ["!!", dquotes (sep <| map pretty other), "is not a valid command, type `help` for more info"]
