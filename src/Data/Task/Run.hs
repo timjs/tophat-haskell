@@ -30,9 +30,9 @@ ui = \case
         mv1 <- value t1
         case mv1 of
           Nothing -> pure 0
-          Just v1 -> pure <| length <| picks (e2 v1)
-  Share v -> pure <| sep ["share", pretty v]
-  Assign v _ -> pure <| sep ["…", ":=", pretty v]
+          Just v1 -> pure <| length <| options (e2 v1)
+  Share b -> pure <| sep ["share", pretty b]
+  Assign b _ -> pure <| sep ["…", ":=", pretty b]
 
 ui' ::
   Collaborative r m =>
@@ -40,28 +40,28 @@ ui' ::
   m (Doc b) -- We need to watch locations and be in monad `m`
 ui' = \case
   Enter -> pure "⊠()"
-  Update v -> pure <| cat ["□(", pretty v, ")"]
-  View v -> pure <| cat ["⧇(", pretty v, ")"]
+  Update b -> pure <| cat ["□(", pretty b, ")"]
+  View b -> pure <| cat ["⧇(", pretty b, ")"]
   Select ts -> pure <| cat ["◇", pretty <| HashMap.keysSet ts]
-  Change l -> pure (\v -> cat ["⊟(", pretty v, ")"]) -< watch l
-  Watch l -> pure (\v -> cat ["⧈(", pretty v, ")"]) -< watch l
+  Change l -> pure (\b -> cat ["⊟(", pretty b, ")"]) -< watch l
+  Watch l -> pure (\b -> cat ["⧈(", pretty b, ")"]) -< watch l
 
 value ::
   Collaborative r m =>
   Task m a ->
   m (Maybe a) -- We need to watch locations and be in monad `m`
 value = \case
-  New _ -> pure Nothing
   Editor _ e -> value' e
-  Done v -> pure (Just v)
+  Trans f t -> pure (map f) -< value t
   Pair t1 t2 -> pure (><) -< value t1 -< value t2
+  Done b -> pure (Just b)
   Choose t1 t2 -> pure (<|>) -< value t1 -< value t2
   Fail -> pure Nothing
-  Trans f t -> pure (map f) -< value t
-  Forever _ -> pure Nothing
   Step _ _ -> pure Nothing
-  Share v -> pure Just -< share v -- Nothing???
-  Assign _ _ -> pure (Just ())
+  Forever _ -> pure Nothing
+  New _ -> pure Nothing
+  Share b -> pure Just -< share b -- Nothing??
+  Assign _ _ -> pure (Just ()) -- Nothing??
 
 value' ::
   Collaborative r m =>
@@ -69,8 +69,8 @@ value' ::
   m (Maybe a) -- We need to watch locations and be in monad `m`
 value' = \case
   Enter -> pure Nothing
-  Update v -> pure (Just v)
-  View v -> pure (Just v)
+  Update b -> pure (Just b)
+  View b -> pure (Just b)
   Select _ -> pure Nothing
   Change l -> pure Just -< watch l
   Watch l -> pure Just -< watch l
@@ -78,15 +78,15 @@ value' = \case
 failing ::
   Task m a -> Bool
 failing = \case
-  New e -> failing' e
   Editor _ e -> failing' e
-  Done _ -> False
+  Trans _ t -> failing t
   Pair t1 t2 -> failing t1 && failing t2
+  Done _ -> False
   Choose t1 t2 -> failing t1 && failing t2
   Fail -> True
-  Trans _ t -> failing t
-  Forever t -> failing t
   Step t _ -> failing t
+  Forever t -> failing t
+  New e -> failing' e
   Share _ -> False
   Assign _ _ -> False
 
@@ -101,19 +101,19 @@ failing' = \case
   Watch _ -> False
 
 watching ::
-  Collaborative r m => -- We need Collaborative here to pack references `r`
+  -- Collaborative r m => -- We need Collaborative here to pack references `r`
   Task m a ->
   List (Someref m) -- But there is no need to be in monad `m`
 watching = \case
-  New _ -> []
   Editor _ e -> watching' e
-  Done _ -> []
+  Trans _ t2 -> watching t2
   Pair t1 t2 -> watching t1 `union` watching t2
+  Done _ -> []
   Choose t1 t2 -> watching t1 `union` watching t2
   Fail -> []
-  Trans _ t2 -> watching t2
-  Forever t1 -> watching t1
   Step t1 _ -> watching t1
+  Forever t1 -> watching t1
+  New _ -> []
   Share _ -> []
   Assign _ _ -> []
 
@@ -129,60 +129,66 @@ watching' = \case
   Change (Store _ r) -> [pack r]
   Watch (Store _ r) -> [pack r]
 
-picks ::
-  Task m a -> HashSet Label
-picks = \case
-  Editor _ e -> picks' e
-  Trans _ t2 -> picks t2
-  Forever t1 -> picks t1
-  Step t1 _ -> picks t1
+options ::
+  Task m a ->
+  m (HashSet (Input Dummy)) -- We need to call `value`, therefore we are in `m`
+options = \case
+  Editor n e -> pure <| HashSet.map (Input n << ASelect) (options' e)
+  Trans _ t2 -> options t2
+  Pair t1 t2 -> pure (++) -< options t1 -< options t2
+  Choose t1 t2 -> pure (++) -< options t1 -< options t2
+  Step t1 e2 -> pure (++) -< options t1 -< do
+    mv1 <- value t1
+    case mv1 of
+      Nothing -> pure []
+      Just v1 -> do
+        let t2 = e2 v1
+        options t2
+  Forever t1 -> options t1
   _ -> []
 
-picks' ::
-  Editor m a -> HashSet Label
-picks' = \case
+options' ::
+  Editor m a ->
+  HashSet Label
+options' = \case
   Select ts -> HashMap.keysSet <| HashMap.filter (not << failing) ts
   _ -> []
 
 inputs ::
-  forall m r a.
   Collaborative r m =>
   Task m a ->
   m (List (Input Dummy)) -- We need to call `value`, therefore we are in `m`
 inputs t = case t of
-  New _ -> pure []
-  Editor _ e -> inputs' e
-  Done _ -> pure []
-  Pair t1 t2 -> pure (\l r -> map ToFirst l ++ map ToSecond r) -< inputs t1 -< inputs t2
-  Choose t1 t2 -> pure (\l r -> map ToFirst l ++ map ToSecond r) -< inputs t1 -< inputs t2
-  Fail -> pure []
+  Editor n e -> pure <| Input n <|| inputs' e
   Trans _ t2 -> inputs t2
-  Forever t1 -> inputs t1
+  Pair t1 t2 -> pure (++) -< inputs t1 -< inputs t2
+  Done _ -> pure []
+  Choose t1 t2 -> pure (++) -< inputs t1 -< inputs t2
+  Fail -> pure []
   Step t1 e2 -> pure (++) -< inputs t1 -< do
     mv1 <- value t1
     case mv1 of
       Nothing -> pure []
       Just v1 -> do
-        -- t2 <- normalise (e2 v1)  --XXX: Do we need to normalise here??
         let t2 = e2 v1
-        if failing t2
-          then pure []
-          else pure <| map (ToHere << AContinue) <| HashSet.toList <| picks t2
+        toList <|| options t2
+  Forever t1 -> inputs t1
+  New _ -> pure []
   Share _ -> pure []
   Assign _ _ -> pure []
 
 inputs' ::
-  forall m r a.
-  Collaborative r m =>
+  forall m a.
+  -- Collaborative r m =>
   Editor m a ->
-  m (List (Input Dummy)) -- We need to call `value`, therefore we are in `m`
+  List Dummy
 inputs' t = case t of
-  Enter -> pure [ToHere (AEnter tau)]
-  Update _ -> pure [ToHere (AEnter tau)]
-  View _ -> pure []
-  Select _ -> pure <| map (ToHere << ASelect) <| HashSet.toList <| picks' t
-  Change _ -> pure [ToHere (AEnter tau)]
-  Watch _ -> pure []
+  Enter -> [AEnter tau]
+  Update _ -> [AEnter tau]
+  View _ -> []
+  Select _ -> map ASelect <| toList <| options' t
+  Change _ -> [AEnter tau]
+  Watch _ -> []
   where
     tau = Proxy :: Proxy a
 
