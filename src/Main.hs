@@ -52,7 +52,12 @@ oneStep = do
   inc x
 
 oneStep' :: Task m Int
-oneStep' = do
+oneStep' =
+  update 0 >>? \x ->
+    inc x
+
+oneStep'' :: Task m Int
+oneStep'' = do
   x <- update 0
   inc x <?> empty
 
