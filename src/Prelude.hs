@@ -120,7 +120,7 @@ module Prelude
 
     -- * Type level
     (~=),
-    (~?),
+    (~:),
     proxyOf,
     typeOf,
     someTypeOf,
@@ -551,15 +551,21 @@ evalWriterT m = lift1 fst (runWriterT m)
 
 infix 4 ~=
 
-infix 4 ~?
+infix 4 ~:
+
+-- infix 4 ~?
 
 (~=) :: (Typeable a, Typeable b) => a -> b -> Maybe (a :~: b)
-(~=) x y = typeOf x ~? typeOf y
+(~=) x y = typeOf x `testEquality` typeOf y
 {-# INLINE (~=) #-}
 
-(~?) :: TestEquality f => f a -> f b -> Maybe (a :~: b)
-(~?) = testEquality
-{-# INLINE (~?) #-}
+(~:) :: (Typeable a) => a -> TypeRep b -> Maybe (a :~: b)
+(~:) x t = typeOf x `testEquality` t
+{-# INLINE (~:) #-}
+
+-- (~?) :: TestEquality f => f a -> f b -> Maybe (a :~: b)
+-- (~?) = testEquality
+-- {-# INLINE (~?) #-}
 
 proxyOf :: a -> Proxy a
 proxyOf _ = Proxy
