@@ -14,10 +14,10 @@ import Data.Task.Input
 ui ::
   Collaborative r m =>
   Task m a ->
-  m (Doc b) -- We need to watch locations and be in monad `m`
+  m (Doc n) -- We need to watch locations and be in monad `m`
 ui = \case
-  New e -> pure (\s -> sep ["ν", s]) -< ui' e
-  Editor _ e -> ui' e
+  New e -> ui' "*" e
+  Editor n e -> ui' (pretty n) e
   Done _ -> pure "■(…)"
   Pair t1 t2 -> pure (\l r -> sep [l, " ⧓ ", r]) -< ui t1 -< ui t2
   Choose t1 t2 -> pure (\l r -> sep [l, " ◆ ", r]) -< ui t1 -< ui t2
@@ -30,21 +30,24 @@ ui = \case
         mv1 <- value t1
         case mv1 of
           Nothing -> pure 0
-          Just v1 -> pure <| length <| options (e2 v1)
+          Just v1 -> do
+            os <- options (e2 v1)
+            pure <| length os
   Share b -> pure <| sep ["share", pretty b]
   Assign b _ -> pure <| sep ["…", ":=", pretty b]
 
 ui' ::
   Collaborative r m =>
+  Doc n ->
   Editor m a ->
-  m (Doc b) -- We need to watch locations and be in monad `m`
-ui' = \case
-  Enter -> pure "⊠()"
-  Update b -> pure <| cat ["□(", pretty b, ")"]
-  View b -> pure <| cat ["⧇(", pretty b, ")"]
-  Select ts -> pure <| cat ["◇", pretty <| HashMap.keysSet ts]
-  Change l -> pure (\b -> cat ["⊟(", pretty b, ")"]) -< watch l
-  Watch l -> pure (\b -> cat ["⧈(", pretty b, ")"]) -< watch l
+  m (Doc n) -- We need to watch locations and be in monad `m`
+ui' n = \case
+  Enter -> pure <| cat ["⊠", n, "()"]
+  Update b -> pure <| cat ["□", n, "(", pretty b, ")"]
+  View b -> pure <| cat ["⧇", n, "(", pretty b, ")"]
+  Select ts -> pure <| cat ["◇", n, "", pretty <| HashMap.keysSet ts]
+  Change l -> pure (\b -> cat ["⊟", n, "(", pretty b, ")"]) -< watch l
+  Watch l -> pure (\b -> cat ["⧈", n, "(", pretty b, ")"]) -< watch l
 
 value ::
   Collaborative r m =>
@@ -129,11 +132,18 @@ watching' = \case
   Change (Store _ r) -> [pack r]
   Watch (Store _ r) -> [pack r]
 
+-- | Calculate all possible options that can be send to this task,
+-- | i.e. all possible label-name pairs which select a task.
+-- |
+-- | Notes:
+-- | * We need this to pair `Label`s with `Nats`s, because we need to tag all deeper lables with the appropriate editor name.
+-- | * We can't return a `HashMap _ (Task m a)` because deeper tasks can be of different types!
 options ::
+  Collaborative r m =>
   Task m a ->
-  m (HashSet (Input Dummy)) -- We need to call `value`, therefore we are in `m`
+  m (HashSet (Label, Nat)) -- We need to call `value`, therefore we are in `m`
 options = \case
-  Editor n e -> pure <| HashSet.map (Input n << ASelect) (options' e)
+  Editor n e -> pure <| HashSet.map (,n) (options' e)
   Trans _ t2 -> options t2
   Pair t1 t2 -> pure (++) -< options t1 -< options t2
   Choose t1 t2 -> pure (++) -< options t1 -< options t2
@@ -145,7 +155,7 @@ options = \case
         let t2 = e2 v1
         options t2
   Forever t1 -> options t1
-  _ -> []
+  _ -> pure []
 
 options' ::
   Editor m a ->
@@ -153,6 +163,9 @@ options' ::
 options' = \case
   Select ts -> HashMap.keysSet <| HashMap.filter (not << failing) ts
   _ -> []
+
+toInput :: (Label, Nat) -> Input Dummy
+toInput (l, n) = Input n (ASelect l)
 
 inputs ::
   Collaborative r m =>
@@ -171,7 +184,7 @@ inputs t = case t of
       Nothing -> pure []
       Just v1 -> do
         let t2 = e2 v1
-        toList <|| options t2
+        options t2 ||> toList ||> map toInput
   Forever t1 -> inputs t1
   New _ -> pure []
   Share _ -> pure []
@@ -186,7 +199,7 @@ inputs' t = case t of
   Enter -> [AEnter tau]
   Update _ -> [AEnter tau]
   View _ -> []
-  Select _ -> map ASelect <| toList <| options' t
+  Select _ -> options' t |> toList |> map ASelect
   Change _ -> [AEnter tau]
   Watch _ -> []
   where
@@ -198,7 +211,7 @@ type Tracking f m a = WriterT (List (Someref m)) m (f m a)
 
 normalise ::
   Collaborative r m =>
-  MonadSupply Unique m =>
+  MonadSupply Nat m =>
   Task m a ->
   Tracking Task m a
 normalise t = case t of
@@ -208,61 +221,67 @@ normalise t = case t of
     let stay = Step t1' e2
     mv1 <- lift <| value t1'
     case mv1 of
-      Nothing -> pure stay -- S-ThenNone
+      Nothing -> pure stay -- N-StepNone
       Just v1 ->
         let t2 = e2 v1
          in if failing t2
-              then pure stay -- S-ThenFail
-              else
-                if not <| null <| picks t2
-                  then pure stay -- S-ThenWait
-                  else normalise t2 -- S-ThenCont
+              then pure stay -- N-StepFail
+              else do
+                os <- lift <| options t2
+                if not <| null <| os
+                  then pure stay -- N-StepWait
+                  else normalise t2 -- N-StepCont
                       -- Choose --
   Choose t1 t2 -> do
     t1' <- normalise t1
     mv1 <- lift <| value t1'
     case mv1 of
-      Just _ -> pure t1' -- S-OrLeft
+      Just _ -> pure t1' -- N-ChooseLeft
       Nothing -> do
         t2' <- normalise t2
         mv2 <- lift <| value t2'
         case mv2 of
-          Just _ -> pure t2' -- S-OrRight
-          Nothing -> pure <| Choose t1' t2' -- S-OrNone
-                -- Evaluate --
-  Trans f t1 -> pure (Trans f) -< normalise t1
+          Just _ -> pure t2' -- N-ChooseRight
+          Nothing -> pure <| Choose t1' t2' -- N-ChooseNone
+                -- Unfold --
   Forever t1 -> normalise <| Step t1 (\_ -> Forever t1)
+  -- Congruences --
+  Trans f t1 -> pure (Trans f) -< normalise t1
   Pair t1 t2 -> pure Pair -< normalise t1 -< normalise t2
-  -- Internal --
-  Share v -> do
-    l <- lift <| share v
-    pure <| Done l
-  Assign v s@(Store _ r) -> do
-    lift <| s <<- v
-    tell [pack r]
-    pure <| Done ()
   -- Ready --
+  Done _ -> pure t
+  Fail -> pure t
+  -- Editors --
+  Editor _ _ -> pure t
   New e -> do
     n <- supply
     pure <| Editor n e
-  Editor _ _ -> pure t
-  Done _ -> pure t
-  Fail -> pure t
+  -- Assert --
+  -- Assert p -> do
+  --   pure <| Done p
+  -- References --
+  Share b -> do
+    l <- lift <| share b
+    pure <| Done l
+  Assign b s@(Store _ r) -> do
+    lift <| s <<- b
+    tell [pack r]
+    pure <| Done ()
 
-balance :: Task m a -> Task m a
-balance t = case t of
-  Pair t1 t2 -> Pair (balance t1) (balance t2)
-  Choose t1 t2 -> Choose (balance t1) (balance t2)
-  Trans f t1 -> Trans f (balance t1)
-  Forever t1 -> Forever (balance t1)
-  -- Monad associativity
-  Step (Step t1 e2) e3 -> Step t1 (\x -> Step (e2 x) e3)
-  _ -> t
+-- balance :: Task m a -> Task m a
+-- balance t = case t of
+--   Pair t1 t2 -> Pair (balance t1) (balance t2)
+--   Choose t1 t2 -> Choose (balance t1) (balance t2)
+--   Trans f t1 -> Trans f (balance t1)
+--   Forever t1 -> Forever (balance t1)
+--   -- Monad associativity
+--   Step (Step t1 e2) e3 -> Step t1 (\x -> Step (e2 x) e3)
+--   _ -> t
 
-balance' :: Editor m a -> Editor m a
-balance' = \case
-  Select ts -> Select <| map balance ts
-  e -> e
+-- balance' :: Editor m a -> Editor m a
+-- balance' = \case
+--   Select ts -> Select <| map balance ts
+--   e -> e
 
 -- Handling --------------------------------------------------------------------
 
@@ -271,23 +290,26 @@ type PartialTracking f m a = WriterT (List (Someref m)) (ExceptT NotApplicable m
 -- type PartialTrackingTask m a = ExceptT NotApplicable (WriterT (List (Someref m)) m) (Task m a)
 
 data NotApplicable
-  = CouldNotChangeVal SomeTypeRep SomeTypeRep
+  = CouldNotMatch Nat Nat
+  | CouldNotChangeVal SomeTypeRep SomeTypeRep
   | CouldNotChangeRef SomeTypeRep SomeTypeRep
   | CouldNotGoTo Label
   | CouldNotFind Label
   | CouldNotSelect
   | CouldNotContinue
-  | CouldNotHandle (Input Action)
+  | CouldNotHandle Action
 
 instance Pretty NotApplicable where
   pretty = \case
-    CouldNotChangeVal v c -> sep ["Could not change value because types", dquotes <| pretty v, "and", dquotes <| pretty c, "do not match"]
+    CouldNotMatch n m -> sep ["Could not match editor id", dquotes <| pretty n, "with id", dquotes <| pretty m]
+    CouldNotChangeVal b c -> sep ["Could not change value because types", dquotes <| pretty b, "and", dquotes <| pretty c, "do not match"]
     CouldNotChangeRef r c -> sep ["Could not change value because cell", dquotes <| pretty r, "does not contain", dquotes <| pretty c]
     CouldNotGoTo l -> sep ["Could not pick label", dquotes <| pretty l, "because it leads to an empty task"]
-    CouldNotFind l -> sep ["Could not find label", dquotes <| pretty l, "in the possible picks"]
+    CouldNotFind l -> sep ["Could not find label", dquotes <| pretty l, "in the possible options"]
     CouldNotSelect -> sep ["Could not pick because there is nothing to pick from in this task"]
     CouldNotContinue -> sep ["Could not continue because there is no value to continue with"]
-    CouldNotHandle i -> sep ["Could not handle input", dquotes <| pretty i, "(this should only appear when giving an impossible input)"]
+    -- We n
+    CouldNotHandle a -> sep ["Could not handle action", dquotes <| pretty a, "(this should only appear when giving an impossible action on an editor)"]
 
 handle ::
   forall m r a.
@@ -295,77 +317,82 @@ handle ::
   Task m a ->
   Input Action ->
   PartialTracking Task m a
-handle t i = case (t, i) of
+handle t i@(Input m a) = case t of
   -- Editors --
-  (Editor _ (Select ts), ToHere (ISelect l)) -> case HashMap.lookup l ts of
-    Nothing -> throw <| CouldNotFind l
-    Just t' ->
-      if l =< (picks t)
-        then pure t'
-        else throw <| CouldNotGoTo l
-  (Editor n e, _) -> do
-    e' <- handle' e i
-    pure <| Editor n e'
-  -- Step --
-  (Step t1 e2, ToHere (IContinue l)) -> do
-    mv1 <- lift <| lift <| value t1
-    case mv1 of
-      Nothing -> throw CouldNotContinue
-      Just v1 -> handle (e2 v1) (ToHere (ISelect l))
+  Editor n e
+    | n == m -> case (e, a) of
+      (Select ts, ISelect l) -> case HashMap.lookup l ts of
+        Nothing -> throw <| CouldNotFind l
+        Just t' -> do
+          os <- lift <| lift <| options t
+          if (l, n) =< os
+            then pure t'
+            else throw <| CouldNotGoTo l
+      _ -> do
+        e' <- handle' e a
+        pure <| Editor n e'
+    | otherwise -> throw <| CouldNotMatch n m
+  -- (Step t1 e2, ToHere (IContinue l)) -> do
+  --   mv1 <- lift <| lift <| value t1
+  --   case mv1 of
+  --     Nothing -> throw CouldNotContinue
+  --     Just v1 -> handle (e2 v1) (ToHere (ISelect l))
   -- Pass --
-  (Trans f t1, i') -> do
-    t1' <- handle t1 i'
-    pure <| Trans f t1'
-  (Forever t1, i') -> do
-    t1' <- handle t1 i'
-    pure <| Step t1' (\_ -> Forever t1)
-  -- OR: handle (Step t1 (\_ -> Forever t1)) i'
-  (Step t1 e2, i') -> do
-    t1' <- handle t1 i'
+  Trans e1 t2 -> do
+    t2' <- handle t2 i
+    pure <| Trans e1 t2'
+  Step t1 e2 -> do
+    t1' <- handle t1 i
     pure <| Step t1' e2
-  (Pair t1 t2, ToFirst i') -> do
-    t1' <- handle t1 i'
-    pure <| Pair t1' t2
-  (Pair t1 t2, ToSecond i') -> do
-    t2' <- handle t2 i'
-    pure <| Pair t1 t2'
-  (Choose t1 t2, ToFirst i') -> do
-    t1' <- handle t1 i'
-    pure <| Choose t1' t2
-  (Choose t1 t2, ToSecond i') -> do
-    t2' <- handle t2 i'
-    pure <| Choose t1 t2'
+  Forever t1 -> do
+    t1' <- handle t1 i
+    -- XXX or: handle (Step t1 (\_ -> Forever t1)) i'
+    pure <| Step t1' (\_ -> Forever t1)
+  Pair t1 t2 -> do
+    et1' <- try <| handle t1 i
+    case et1' of
+      Right t1' -> pure <| Pair t1' t2
+      Left _ -> do
+        t2' <- handle t2 i
+        pure <| Pair t1 t2'
+  Choose t1 t2 -> do
+    et1' <- try <| handle t1 i
+    case et1' of
+      Right t1' -> pure <| Choose t1' t2
+      Left _ -> do
+        t2' <- handle t2 i
+        pure <| Choose t1 t2'
   -- Rest --
-  _ -> throw <| CouldNotHandle i
+  _ -> throw <| CouldNotHandle a
 
 handle' ::
   forall m r a.
   Collaborative r m =>
   Editor m a -> -- `Select` does not return an `Editor`...
-  Input Action ->
+  Action ->
   PartialTracking Editor m a
-handle' e i = case (e, i) of
-  (Enter, ToHere (IEnter w))
-    | Just Refl <- tau ~? typeOf w -> pure <| Update w
-    | otherwise -> throw <| CouldNotChangeVal (SomeTypeRep tau) (someTypeOf w)
+handle' e a = case (e, a) of
+  (Enter, IEnter b')
+    | Just Refl <- b' ~: beta -> pure <| Update b'
+    | otherwise -> throw <| CouldNotChangeVal (SomeTypeRep beta) (someTypeOf b')
     where
-      tau = typeRep :: TypeRep a
-  (Update v, ToHere (IEnter w))
-    -- NOTE: Here we check if `v` and `w` have the same type.
+      beta = typeRep :: TypeRep a
+  (Update b, IEnter b')
+    -- NOTE: Here we check if `b` and `w` have the same type.
     -- If this is the case, it would be inhabited by `Refl :: a :~: b`, where `b` is the type of the value inside `Change`.
-    | Just Refl <- v ~= w -> pure <| Update w
-    | otherwise -> throw <| CouldNotChangeVal (someTypeOf v) (someTypeOf w)
-  (Change s@(Store _ r), ToHere (IEnter w))
+    | Just Refl <- b ~= b' -> pure <| Update b'
+    | otherwise -> throw <| CouldNotChangeVal (someTypeOf b) (someTypeOf b')
+  (Change s@(Store _ r), IEnter b')
     -- NOTE: As in the `Update` case above, we check for type equality.
-    | Just Refl <- tau ~? typeOf w -> do
-      s <<- w
+    | Just Refl <- b' ~: beta -> do
+      s <<- b'
       tell [pack r]
       pure <| Change s
-    | otherwise -> throw <| CouldNotChangeRef (someTypeOf s) (someTypeOf w)
+    | otherwise -> throw <| CouldNotChangeRef (someTypeOf s) (someTypeOf b')
     where
-      tau = typeRep :: TypeRep a
+      beta = typeRep :: TypeRep a
   -- Rest --
-  _ -> throw <| CouldNotHandle i
+  _ -> throw <| CouldNotHandle a
 
 -- Interaction -----------------------------------------------------------------
 
@@ -384,7 +411,7 @@ instance Pretty Steps where
 
 fixate ::
   Collaborative r m =>
-  MonadSupply Unique m =>
+  MonadSupply Nat m =>
   MonadLog Steps m =>
   Tracking Task m a ->
   m (Task m a)
@@ -396,18 +423,20 @@ fixate tt = do
   let ds = d `union` d'
   let os = ds `intersect` ws
   case os of
+    -- F-Done --
     [] -> do
-      let t'' = balance t'
       log Info <| DidStabilise (length ds) (length ws)
-      log Info <| DidBalance (show <| pretty t'')
-      pure t''
+      -- let t'' = balance t'
+      -- log Info <| DidBalance (show <| pretty t'')
+      pure t'
+    -- F-Loop --
     _ -> do
       log Info <| DidNotStabilise (length ds) (length ws) (length os)
       fixate <| pure t'
 
 initialise ::
   Collaborative r m =>
-  MonadSupply Unique m =>
+  MonadSupply Nat m =>
   MonadLog Steps m =>
   Task m a ->
   m (Task m a)
@@ -415,7 +444,7 @@ initialise = fixate << pure
 
 interact ::
   Collaborative r m =>
-  MonadSupply Unique m =>
+  MonadSupply Nat m =>
   MonadLog NotApplicable m =>
   MonadLog Steps m =>
   Task m a ->
