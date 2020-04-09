@@ -16,14 +16,14 @@ ui ::
   Task m a ->
   m (Doc n) -- We need to watch locations and be in monad `m`
 ui = \case
-  New e -> ui' "*" e
+  New _ -> pure "ν.…"
   Editor n e -> ui' (pretty n) e
   Done _ -> pure "■(…)"
   Pair t1 t2 -> pure (\l r -> sep [l, " ⧓ ", r]) -< ui t1 -< ui t2
   Choose t1 t2 -> pure (\l r -> sep [l, " ◆ ", r]) -< ui t1 -< ui t2
   Fail -> pure "↯"
   Trans _ t -> ui t
-  Forever t -> pure (\s -> cat ["⟲", s]) -< ui t
+  -- Forever t -> pure (\s -> cat ["⟲", s]) -< ui t
   Step t1 e2 -> pure (\s n -> cat [s, " ▶", pretty n, "…"]) -< ui t1 -< count
     where
       count = do
@@ -61,7 +61,7 @@ value = \case
   Choose t1 t2 -> pure (<|>) -< value t1 -< value t2
   Fail -> pure Nothing
   Step _ _ -> pure Nothing
-  Forever _ -> pure Nothing
+  -- Forever _ -> pure Nothing
   New _ -> pure Nothing
   Share b -> pure Just -< share b -- Nothing??
   Assign _ _ -> pure (Just ()) -- Nothing??
@@ -88,8 +88,8 @@ failing = \case
   Choose t1 t2 -> failing t1 && failing t2
   Fail -> True
   Step t _ -> failing t
-  Forever t -> failing t
-  New e -> failing' e
+  -- Forever t -> failing t
+  New _ -> False --XXX Correct? Does not comply with `Select`, but should already be normalised away?
   Share _ -> False
   Assign _ _ -> False
 
@@ -115,7 +115,7 @@ watching = \case
   Choose t1 t2 -> watching t1 `union` watching t2
   Fail -> []
   Step t1 _ -> watching t1
-  Forever t1 -> watching t1
+  -- Forever t1 -> watching t1
   New _ -> []
   Share _ -> []
   Assign _ _ -> []
@@ -154,7 +154,7 @@ options = \case
       Just v1 -> do
         let t2 = e2 v1
         options t2
-  Forever t1 -> options t1
+  -- Forever t1 -> options t1
   _ -> pure []
 
 options' ::
@@ -185,7 +185,7 @@ inputs t = case t of
       Just v1 -> do
         let t2 = e2 v1
         options t2 ||> toList ||> map toInput
-  Forever t1 -> inputs t1
+  -- Forever t1 -> inputs t1
   New _ -> pure []
   Share _ -> pure []
   Assign _ _ -> pure []
@@ -212,6 +212,7 @@ type Tracking f m a = WriterT (List (Someref m)) m (f m a)
 normalise ::
   Collaborative r m =>
   MonadSupply Nat m =>
+  MonadLog Steps m =>
   Task m a ->
   Tracking Task m a
 normalise t = case t of
@@ -222,16 +223,17 @@ normalise t = case t of
     mv1 <- lift <| value t1'
     case mv1 of
       Nothing -> pure stay -- N-StepNone
-      Just v1 ->
+      Just v1 -> do
         let t2 = e2 v1
-         in if failing t2
-              then pure stay -- N-StepFail
-              else do
-                os <- lift <| options t2
-                if not <| null <| os
-                  then pure stay -- N-StepWait
-                  else normalise t2 -- N-StepCont
-                      -- Choose --
+        if failing t2
+          then pure stay -- N-StepFail
+          else do
+            os <- lift <| options t2
+            log Info <| DidCalculateOptions os (pretty t2 |> show)
+            if not <| null <| os
+              then pure stay -- N-StepWait
+              else normalise t2 -- N-StepCont
+                  -- Choose --
   Choose t1 t2 -> do
     t1' <- normalise t1
     mv1 <- lift <| value t1'
@@ -244,8 +246,8 @@ normalise t = case t of
           Just _ -> pure t2' -- N-ChooseRight
           Nothing -> pure <| Choose t1' t2' -- N-ChooseNone
                 -- Unfold --
-  Forever t1 -> normalise <| Step t1 (\_ -> Forever t1)
-  -- Congruences --
+                -- Forever t1 -> normalise <| Step t1 (\_ -> Forever t1)
+                -- Congruences --
   Trans f t1 -> pure (Trans f) -< normalise t1
   Pair t1 t2 -> pure Pair -< normalise t1 -< normalise t2
   -- Ready --
@@ -253,9 +255,9 @@ normalise t = case t of
   Fail -> pure t
   -- Editors --
   Editor _ _ -> pure t
-  New e -> do
+  New f -> do
     n <- supply
-    pure <| Editor n e
+    normalise <| f n
   -- Assert --
   -- Assert p -> do
   --   pure <| Done p
@@ -332,22 +334,25 @@ handle t i@(Input m a) = case t of
         e' <- handle' e a
         pure <| Editor n e'
     | otherwise -> throw <| CouldNotMatch n m
-  -- (Step t1 e2, ToHere (IContinue l)) -> do
-  --   mv1 <- lift <| lift <| value t1
-  --   case mv1 of
-  --     Nothing -> throw CouldNotContinue
-  --     Just v1 -> handle (e2 v1) (ToHere (ISelect l))
   -- Pass --
   Trans e1 t2 -> do
     t2' <- handle t2 i
     pure <| Trans e1 t2'
   Step t1 e2 -> do
-    t1' <- handle t1 i
-    pure <| Step t1' e2
-  Forever t1 -> do
-    t1' <- handle t1 i
-    -- XXX or: handle (Step t1 (\_ -> Forever t1)) i'
-    pure <| Step t1' (\_ -> Forever t1)
+    et1' <- try <| handle t1 i
+    case et1' of
+      Right t1' -> pure <| Step t1' e2 -- H-Step
+      Left _ -> do
+        mv1 <- lift <| lift <| value t1
+        case mv1 of
+          Nothing -> throw CouldNotContinue
+          Just v1 -> do
+            let t2 = e2 v1
+            handle t2 i -- H-Continue
+              -- Forever t1 -> do
+              --   t1' <- handle t1 i
+              --   -- XXX or: handle (Step t1 (\_ -> Forever t1)) i'
+              --   pure <| Step t1' (\_ -> Forever t1)
   Pair t1 t2 -> do
     et1' <- try <| handle t1 i
     case et1' of
@@ -401,6 +406,7 @@ data Steps
   | DidNotStabilise Nat Nat Nat
   | DidNormalise Text
   | DidBalance Text
+  | DidCalculateOptions (HashSet (Label, Nat)) Text
 
 instance Pretty Steps where
   pretty = \case
@@ -408,6 +414,7 @@ instance Pretty Steps where
     DidStabilise d w -> sep ["Found no overlaps amongst", pretty d, "dirty and", pretty w, "watched reference(s)"]
     DidNormalise t -> sep ["Normalised to:", pretty t]
     DidBalance t -> sep ["Rebalanced to:", pretty t]
+    DidCalculateOptions os t -> sep ["Options before normalising", pretty os, "for task", pretty t]
 
 fixate ::
   Collaborative r m =>

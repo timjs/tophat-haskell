@@ -21,9 +21,10 @@ import Data.Editable (Editable)
 -- | To use references, `m` shoud be a `Collaborative` with locations `r`.
 data Task (m :: Type -> Type) (t :: Type) where
   --
+  -- Naming --
+  New :: (Nat -> Task m t) -> Task m t
+  --
   -- Editors --
-
-  New :: Editor m t -> Task m t
   Editor :: Nat -> Editor m t -> Task m t
   --
   -- Parallels --
@@ -43,11 +44,6 @@ data Task (m :: Type -> Type) (t :: Type) where
   Trans :: (a -> t) -> Task m a -> Task m t
   -- | Internal, or system step.
   Step :: Task m a -> (a -> Task m t) -> Task m t
-  --
-  -- Loops --
-
-  -- | Repeat a task indefinitely
-  Forever :: Task m t -> Task m Void
   --
   -- References --
   -- The inner monad `m` needs to have the notion of references.
@@ -85,16 +81,22 @@ data Editor (m :: Type -> Type) (t :: Type) where
 
 infixl 3 <?>
 
-infixl 1 >>?
-
 (<?>) :: Task m a -> Task m a -> Task m a
 (<?>) t1 t2 = select [("Left", t1), ("Right", t2)]
 
+infixl 1 >>?
+
 (>>?) :: Task m a -> (a -> Task m b) -> Task m b
-(>>?) t c = t >>= \x -> select [("Continue", c x)]
+(>>?) t1 e2 = New (\n -> t1 `Step` \x -> Editor n (Select [("Continue", e2 x)]))
 
 forever :: Task m a -> Task m Void
-forever = Forever
+forever t1 = t1 `Step` \_ -> forever t1
+
+-- (>>?) :: Task m a -> (a -> Task m b) -> Task m b
+-- (>>?) t c = t >>= \x -> select [("Continue", c x)]
+
+-- forever :: Task m a -> Task m Void
+-- forever = Forever
 
 -- Instances -------------------------------------------------------------------
 
@@ -108,7 +110,7 @@ instance Pretty (Task m t) where
     Fail -> "Fail"
     Trans _ t -> sep ["Trans _", pretty t]
     Step t _ -> parens <| sep [pretty t, ">>=", "_"]
-    Forever t -> sep ["Forever", pretty t]
+    -- Forever t -> sep ["Forever", pretty t]
     Share v -> sep ["Share", pretty v]
     Assign v _ -> sep ["_", ":=", pretty v]
 
@@ -125,10 +127,10 @@ instance Functor (Task m) where
   fmap = Trans
 
 instance Interactive (Task m) where
-  enter = New Enter
-  update v = New (Update v)
-  view v = New (View v)
-  select ts = New (Select ts)
+  enter = New (\n -> Editor n Enter)
+  update v = New (\n -> Editor n (Update v))
+  view v = New (\n -> Editor n (View v))
+  select ts = New (\n -> Editor n (Select ts))
 
 instance Monoidal (Task m) where
   (><) = Pair
@@ -154,5 +156,5 @@ instance Monad (Task m) where
 instance Collaborative r m => Collaborative r (Task m) where
   share = Share
   assign = Assign
-  watch l = New (Watch l)
-  change l = New (Change l)
+  watch l = New (\n -> Editor n (Watch l))
+  change l = New (\n -> Editor n (Change l))
