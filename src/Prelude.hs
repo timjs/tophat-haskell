@@ -123,6 +123,7 @@ module Prelude
     (~:),
     proxyOf,
     typeOf,
+    typeOfProxy,
     someTypeOf,
     typeRep,
     TypeRep,
@@ -133,10 +134,8 @@ where
 
 -- import Control.Newtype hiding (pack, unpack)
 import Control.Monad.Except (MonadError (..))
-import Control.Monad.List (ListT)
 import Control.Monad.Writer.Strict (MonadWriter (..), WriterT (..), runWriterT)
--- import Data.Vector (Vector)
-
+-- import Control.Monad.List (ListT)
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.HashSet as HashSet
 import qualified Data.Text as Text
@@ -510,7 +509,7 @@ instance MonadZero Maybe
 
 instance MonadZero List
 
-instance Monad m => MonadZero (ListT m)
+-- instance Monad m => MonadZero (ListT m)
 
 instance (Relude.MonadFail m, MonadPlus m) => MonadZero (StateT s m)
 
@@ -538,6 +537,12 @@ catch = catchError
 
 try :: MonadError e m => m a -> m (Either e a)
 try a = catch (Right <|| a) (return << Left)
+
+-- instance Alternative (Either e) where
+--   Left e <|> y = Left e
+--   x <|> _ = x
+
+--   empty = Left neutral
 
 -- Writer --
 
@@ -570,6 +575,9 @@ infix 4 ~:
 proxyOf :: a -> Proxy a
 proxyOf _ = Proxy
 {-# INLINE proxyOf #-}
+
+typeOfProxy :: forall a. Typeable a => Proxy a -> TypeRep a
+typeOfProxy _ = typeRep
 
 someTypeOf :: Typeable a => a -> SomeTypeRep
 someTypeOf = someTypeRep << proxyOf

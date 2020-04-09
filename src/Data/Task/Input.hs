@@ -50,7 +50,9 @@ instance Eq Dummy where
 
 instance Pretty Dummy where
   pretty = \case
-    AEnter _ -> "<value>"
+    AEnter p -> cat ["<", pretty beta, ">"]
+      where
+        beta = typeOfProxy p
     ASelect l -> pretty l
 
 -- Symbolic actions --
@@ -67,7 +69,7 @@ data Input a
 
 instance Pretty a => Pretty (Input a) where
   pretty = \case
-    Input n a -> cat ["@", pretty n, " ", pretty a]
+    Input n a -> cat [pretty a, "@", pretty n]
 
 -- Conformance -----------------------------------------------------------------
 
@@ -92,15 +94,15 @@ usage :: Doc n
 usage =
   split
     [ ":: Possible inputs are:",
-      "    <id> <value> : enter <value> into the current editor",
-      "    <id> <label> : select one of the possible options",
-      "    help         : show this message",
-      "    quit         : quit",
+      "    <value>@<id> : enter <value> into the current editor",
+      "    <label>@<id> : select one of the possible options",
+      "    h(elp)       : show this message",
+      "    q(uit)       : quit",
       "",
       "where ids have the form:",
-      "    @2, @37, …",
+      "    2, 37, …",
       "",
-      "and values can be:",
+      "values can be:",
       "    ()           : Unit",
       "    True, False  : Booleans",
       -- "    +0, +1, …    : Naturals",
@@ -108,15 +110,13 @@ usage =
       "    \"Hello\", …   : Strings",
       "    [ <value>, ] : List of values",
       "",
-      "and labels _always_ start with a Capital letter"
+      "and labels:",
+      "    Start With A Capital Letter"
     ]
 
 parseId :: Text -> Either (Doc n) Nat
 parseId t
-  | Just (c, n) <- Text.uncons t,
-    c == '@',
-    Just v <- scan n :: Maybe Nat =
-    ok v
+  | Just v <- scan t :: Maybe Nat = ok v
   | otherwise = throw <| sep ["!!", dquotes <| pretty t, "is not a proper id"]
 
 parseLabel :: Text -> Either (Doc n) Action
@@ -137,14 +137,12 @@ parseVal val
   | Just v <- scan val :: Maybe [Text] = ok <| IEnter v
   | otherwise = throw <| sep ["!! Error parsing value", dquotes (pretty val)]
 
-parse :: List Text -> Either (Doc a) (Input Action)
-parse (x : i : _)
-  | Right v <- parseVal x,
-    Right n <- parseId i =
-    ok <| Input n v
-  | Right l <- parseLabel x,
-    Right n <- parseId i =
-    ok <| Input n l
-parse ["h"] = throw usage
-parse ["help"] = throw usage
-parse other = throw <| sep ["!!", dquotes (sep <| map pretty other), "is not a valid command, type `help` for more info"]
+parse :: Text -> Either (Doc a) (Input Action)
+parse t = case Text.splitOn "@" t of
+  [x, i] -> do
+    n <- parseId i
+    r <- parseVal x ++ parseLabel x --XXX: should be `<|>`, but we've got some strange import of `Error` getting in the way
+    ok <| Input n r
+  ["help"] -> throw usage
+  ["h"] -> throw usage
+  _ -> throw <| sep ["!!", dquotes (pretty t), "is not a valid command, type `help` for more info"]

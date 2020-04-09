@@ -481,7 +481,8 @@ getUserInput = do
   line <- getLine
   case line of
     "quit" -> exitSuccess
-    _ -> case parse (words line) of
+    "q" -> exitSuccess
+    _ -> case parse line of
       Right input -> pure input
       Left message -> do
         print message

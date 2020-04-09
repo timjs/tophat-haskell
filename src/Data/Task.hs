@@ -101,7 +101,7 @@ forever = Forever
 instance Pretty (Task m t) where
   pretty = \case
     New _ -> "New"
-    Editor n e -> cat [pretty n, "@", pretty e]
+    Editor n e -> cat [pretty e, "^", pretty n]
     Pair t1 t2 -> parens <| sep [pretty t1, "><", pretty t2]
     Done _ -> "Done _"
     Choose t1 t2 -> parens <| sep [pretty t1, "<|>", pretty t2]
