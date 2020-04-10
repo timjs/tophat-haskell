@@ -26,6 +26,10 @@ inc :: Int -> Task m Int
 inc x =
   view (x + 1)
 
+dec :: Int -> Task m Int
+dec x =
+  view (x - 1)
+
 add :: Int -> Int -> Task m Int
 add x y =
   view (x + y)
@@ -59,7 +63,14 @@ oneStep' =
 oneStep'' :: Task m Int
 oneStep'' = do
   x <- update 0
-  inc x <?> empty
+  inc x <?> dec x
+
+oneStep''' :: Task m Int
+oneStep''' =
+  update 0
+    >>* [ "Increase" ~> inc,
+          "Decrease" ~> dec
+        ]
 
 twoSteps :: Task m Int
 twoSteps = do
@@ -79,6 +90,12 @@ twoSteps'' = do
   y <- enter
   add x y
 
+twoSteps''' :: Task m Int
+twoSteps''' =
+  enter >>? \x ->
+    enter >>? \y ->
+      add x y
+
 -- Parallel --
 
 parallel :: Task m (Int, Text)
@@ -93,6 +110,11 @@ parallelStep' :: Task m Text
 parallelStep' = do
   (n, m) <- parallel
   view (unwords <| replicate n m) <?> empty
+
+parallelStep'' :: Task m Text
+parallelStep'' =
+  parallel >>? \(n, m) ->
+    view (unwords <| replicate n m)
 
 -- Choices --
 
@@ -114,6 +136,14 @@ pick2 = view 1 <?> view 2
 pick3 :: Task m Int
 pick3 = pick2 <?> view 3
 
+pick3' :: Task m Int
+pick3' =
+  select
+    [ "A" ~> view 1,
+      "B" ~> view 2,
+      "C" ~> view 3
+    ]
+
 -- Guards --
 
 auto :: Task m Text
@@ -127,6 +157,11 @@ actions :: Task m Int
 actions = do
   _ <- enter :: Task m Int
   pick3
+
+actions' :: Task m Int
+actions' = do
+  _ <- enter :: Task m Int
+  pick3'
 
 guards :: Task m Text
 guards = do
