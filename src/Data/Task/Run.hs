@@ -24,15 +24,17 @@ ui = \case
   Fail -> pure "↯"
   Trans _ t -> ui t
   -- Forever t -> pure (\s -> cat ["⟲", s]) -< ui t
-  Step t1 e2 -> pure (\s n -> cat [s, " ▶", pretty n, "…"]) -< ui t1 -< count
+  Step t1 e2 -> pure go -< ui t1 -< do
+    mv1 <- value t1
+    case mv1 of
+      Nothing -> pure []
+      Just v1 -> do
+        os <- options (e2 v1)
+        pure <| HashSet.map fst os
     where
-      count = do
-        mv1 <- value t1
-        case mv1 of
-          Nothing -> pure 0
-          Just v1 -> do
-            os <- options (e2 v1)
-            pure <| length os
+      go s ls
+        | HashSet.null ls = cat [s, " ▶…"]
+        | otherwise = cat [s, " ▷", pretty ls]
   Share b -> pure <| sep ["share", pretty b]
   Assign b _ -> pure <| sep ["…", ":=", pretty b]
 
