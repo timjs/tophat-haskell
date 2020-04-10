@@ -3,6 +3,7 @@ module Data.Task
     Editor (..),
     (<?>),
     (>>?),
+    (>>*),
     forever,
     module Control.Interactive,
     module Control.Collaborative,
@@ -88,6 +89,11 @@ infixl 1 >>?
 
 (>>?) :: Task m a -> (a -> Task m b) -> Task m b
 (>>?) t1 e2 = New (\n -> t1 `Step` \x -> Editor n (Select [("Continue", e2 x)]))
+
+infixl 1 >>*
+
+(>>*) :: Task m a -> HashMap Label (a -> Task m b) -> Task m b
+(>>*) t1 es = New (\n -> t1 `Step` \x -> Editor n (Select (es ||> \e -> e x)))
 
 forever :: Task m a -> Task m Void
 forever t1 = t1 `Step` \_ -> forever t1
