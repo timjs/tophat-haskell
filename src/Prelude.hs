@@ -24,6 +24,7 @@ module Prelude
 
     -- * Aliases
     length,
+    (~>),
 
     -- ** Text
     chars,
@@ -214,6 +215,11 @@ unchars = Text.pack
 
 length :: Foldable f => f a -> Nat
 length = Relude.length >> fromIntegral
+
+infix 0 ~>
+
+(~>) :: a -> b -> (a, b)
+(~>) = (,)
 
 -- Pretty printing --
 
