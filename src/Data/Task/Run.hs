@@ -406,6 +406,7 @@ data Steps
   | DidNotStabilise Nat Nat Nat
   | DidNormalise Text
   | DidBalance Text
+  | DidStart Text
   | DidCalculateOptions (HashSet (Label, Nat)) Text
 
 instance Pretty Steps where
@@ -414,7 +415,8 @@ instance Pretty Steps where
     DidStabilise d w -> sep ["Found no overlaps amongst", pretty d, "dirty and", pretty w, "watched reference(s)"]
     DidNormalise t -> sep ["Normalised to:", pretty t]
     DidBalance t -> sep ["Rebalanced to:", pretty t]
-    DidCalculateOptions os t -> sep ["Options before normalising", pretty os, "for task", pretty t]
+    DidStart t -> sep ["Started with:", pretty t]
+    DidCalculateOptions os t -> sep ["Future options before normalising", pretty os, "for task", pretty t]
 
 fixate ::
   Collaborative r m =>
@@ -447,7 +449,9 @@ initialise ::
   MonadLog Steps m =>
   Task m a ->
   m (Task m a)
-initialise = fixate << pure
+initialise t = do
+  log Info <| DidStart (show <| pretty t)
+  fixate (pure t)
 
 interact ::
   Collaborative r m =>
