@@ -89,7 +89,7 @@ failing = \case
   Fail -> True
   Step t _ -> failing t
   -- Forever t -> failing t
-  New _ -> False --XXX Correct? Does not comply with `Select`, but should already be normalised away?
+  New f -> failing (f 0)
   Share _ -> False
   Assign _ _ -> False
 
