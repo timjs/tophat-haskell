@@ -19,7 +19,7 @@ ui ::
 ui = \case
   New _ -> pure "ν.…"
   Editor n e -> ui' (pretty n) e
-  Done _ -> pure "■(…)"
+  Done _ -> pure "■ …"
   Pair t1 t2 -> pure (\l r -> sep [l, " ⧓ ", r]) -< ui t1 -< ui t2
   Choose t1 t2 -> pure (\l r -> sep [l, " ◆ ", r]) -< ui t1 -< ui t2
   Fail -> pure "↯"
@@ -39,17 +39,18 @@ ui = \case
   Assign b _ -> pure <| sep ["…", ":=", pretty b]
 
 ui' ::
+  forall r m n b.
   Collaborative r m =>
   Doc n ->
-  Editor m a ->
+  Editor m b ->
   m (Doc n) -- We need to watch locations and be in monad `m`
 ui' n = \case
-  Enter -> pure <| cat ["⊠", n, "()"]
-  Update b -> pure <| cat ["□", n, "(", pretty b, ")"]
-  View b -> pure <| cat ["⧇", n, "(", pretty b, ")"]
-  Select ts -> pure <| cat ["◇", n, "", pretty <| HashMap.keysSet ts]
-  Change l -> pure (\b -> cat ["⊟", n, "(", pretty b, ")"]) -< watch l
-  Watch l -> pure (\b -> cat ["⧈", n, "(", pretty b, ")"]) -< watch l
+  Enter -> pure <| cat ["⊠^", n, " ", pretty (typeRep :: TypeRep b)]
+  Update b -> pure <| cat ["□^", n, " [ ", pretty b, " ]"]
+  View b -> pure <| cat ["⧇^", n, " [ ", pretty b, " ]"]
+  Select ts -> pure <| cat ["◇^", n, " ", pretty <| HashMap.keysSet ts]
+  Change l -> pure (\b -> cat ["⊟^", n, " [ ", pretty b, " ]"]) -< watch l
+  Watch l -> pure (\b -> cat ["⧈^", n, " [ ", pretty b, " ]"]) -< watch l
 
 value ::
   Collaborative r m =>
