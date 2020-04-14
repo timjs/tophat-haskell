@@ -79,7 +79,7 @@ data Editor (m :: Type -> Type) (t :: Type) where
   -- | Watch a reference of type `t`
   Watch :: (Collaborative r m, Editable t) => Store r t -> Editor m t
 
--- Operators -------------------------------------------------------------------
+-- Derived forms ---------------------------------------------------------------
 
 infixl 3 <?>
 
@@ -99,12 +99,6 @@ infixl 1 >>*
 forever :: Task m a -> Task m Void
 forever t1 = t1 `Step` \_ -> forever t1
 
--- (>>?) :: Task m a -> (a -> Task m b) -> Task m b
--- (>>?) t c = t >>= \x -> select [("Continue", c x)]
-
--- forever :: Task m a -> Task m Void
--- forever = Forever
-
 -- Instances -------------------------------------------------------------------
 
 instance Pretty (Task m t) where
@@ -117,7 +111,6 @@ instance Pretty (Task m t) where
     Fail -> "Fail"
     Trans _ t -> sep ["Trans _", pretty t]
     Step t _ -> Pretty.parens <| sep [pretty t, ">>=", "_"]
-    -- Forever t -> sep ["Forever", pretty t]
     Share v -> sep ["Share", pretty v]
     Assign v _ -> sep ["_", ":=", pretty v]
 

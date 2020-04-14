@@ -24,7 +24,6 @@ ui = \case
   Choose t1 t2 -> pure (\l r -> sep [l, " ◆ ", r]) -< ui t1 -< ui t2
   Fail -> pure "↯"
   Trans _ t -> ui t
-  -- Forever t -> pure (\s -> cat ["⟲", s]) -< ui t
   Step t1 e2 -> pure go -< ui t1 -< do
     mv1 <- value t1
     case mv1 of
@@ -64,7 +63,6 @@ value = \case
   Choose t1 t2 -> pure (<|>) -< value t1 -< value t2
   Fail -> pure Nothing
   Step _ _ -> pure Nothing
-  -- Forever _ -> pure Nothing
   New _ -> pure Nothing
   Share b -> pure Just -< share b -- Nothing??
   Assign _ _ -> pure (Just ()) -- Nothing??
@@ -91,7 +89,6 @@ failing = \case
   Choose t1 t2 -> failing t1 && failing t2
   Fail -> True
   Step t _ -> failing t
-  -- Forever t -> failing t
   New f -> failing (f 0)
   Share _ -> False
   Assign _ _ -> False
@@ -118,7 +115,6 @@ watching = \case
   Choose t1 t2 -> watching t1 `union` watching t2
   Fail -> []
   Step t1 _ -> watching t1
-  -- Forever t1 -> watching t1
   New _ -> []
   Share _ -> []
   Assign _ _ -> []
@@ -157,7 +153,6 @@ options = \case
       Just v1 -> do
         let t2 = e2 v1
         options t2
-  -- Forever t1 -> options t1
   _ -> pure []
 
 options' ::
@@ -188,7 +183,6 @@ inputs t = case t of
       Just v1 -> do
         let t2 = e2 v1
         options t2 ||> toList ||> map toInput
-  -- Forever t1 -> inputs t1
   New _ -> pure []
   Share _ -> pure []
   Assign _ _ -> pure []
@@ -236,7 +230,8 @@ normalise t = case t of
             if not <| null <| os
               then pure stay -- N-StepWait
               else normalise t2 -- N-StepCont
-                  -- Choose --
+
+  -- Choose --
   Choose t1 t2 -> do
     t1' <- normalise t1
     mv1 <- lift <| value t1'
@@ -248,9 +243,8 @@ normalise t = case t of
         case mv2 of
           Just _ -> pure t2' -- N-ChooseRight
           Nothing -> pure <| Choose t1' t2' -- N-ChooseNone
-                -- Unfold --
-                -- Forever t1 -> normalise <| Step t1 (\_ -> Forever t1)
-                -- Congruences --
+
+  -- Congruences --
   Trans f t1 -> pure (Trans f) -< normalise t1
   Pair t1 t2 -> pure Pair -< normalise t1 -< normalise t2
   -- Ready --
@@ -352,10 +346,6 @@ handle t i@(Input m a) = case t of
           Just v1 -> do
             let t2 = e2 v1
             handle t2 i -- H-Continue
-              -- Forever t1 -> do
-              --   t1' <- handle t1 i
-              --   -- XXX or: handle (Step t1 (\_ -> Forever t1)) i'
-              --   pure <| Step t1' (\_ -> Forever t1)
   Pair t1 t2 -> do
     et1' <- try <| handle t1 i
     case et1' of
