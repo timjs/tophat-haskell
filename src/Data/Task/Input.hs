@@ -13,6 +13,7 @@ where
 import qualified Data.Char as Char
 import Data.Task
 import qualified Data.Text as Text
+import qualified Data.Text.Prettyprint.Doc as Pretty
 
 -- Actions ---------------------------------------------------------------------
 
@@ -117,12 +118,12 @@ usage =
 parseId :: Text -> Either (Doc n) Nat
 parseId t
   | Just v <- scan t :: Maybe Nat = ok v
-  | otherwise = throw <| sep ["!!", dquotes <| pretty t, "is not a proper id"]
+  | otherwise = throw <| sep ["!!", Pretty.dquotes <| pretty t, "is not a proper id"]
 
 parseLabel :: Text -> Either (Doc n) Action
 parseLabel t
   | Just (c, _) <- Text.uncons t, Char.isUpper c = ok <| ISelect t
-  | otherwise = throw <| sep ["!!", dquotes <| pretty t, "is not a proper label"]
+  | otherwise = throw <| sep ["!!", Pretty.dquotes <| pretty t, "is not a proper label"]
 
 parseVal :: Text -> Either (Doc n) Action
 parseVal val
@@ -135,7 +136,7 @@ parseVal val
   | Just v <- scan val :: Maybe [Int] = ok <| IEnter v
   | Just v <- scan val :: Maybe [Double] = ok <| IEnter v
   | Just v <- scan val :: Maybe [Text] = ok <| IEnter v
-  | otherwise = throw <| sep ["!! Error parsing value", dquotes (pretty val)]
+  | otherwise = throw <| sep ["!! Error parsing value", Pretty.dquotes (pretty val)]
 
 parse :: Text -> Either (Doc a) (Input Action)
 parse t = case Text.splitOn "@" t of
@@ -145,4 +146,4 @@ parse t = case Text.splitOn "@" t of
     ok <| Input n r
   ["help"] -> throw usage
   ["h"] -> throw usage
-  _ -> throw <| sep ["!!", dquotes (pretty t), "is not a valid command, type `help` for more info"]
+  _ -> throw <| sep ["!!", Pretty.dquotes (pretty t), "is not a valid command, type `help` for more info"]
