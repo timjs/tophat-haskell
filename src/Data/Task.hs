@@ -14,6 +14,7 @@ where
 import Control.Collaborative
 import Control.Interactive
 import Data.Editable (Editable)
+import qualified Data.Text.Prettyprint.Doc as Pretty
 
 -- Tasks -----------------------------------------------------------------------
 
@@ -110,12 +111,12 @@ instance Pretty (Task m t) where
   pretty = \case
     New _ -> "New"
     Editor n e -> cat [pretty e, "^", pretty n]
-    Pair t1 t2 -> parens <| sep [pretty t1, "><", pretty t2]
+    Pair t1 t2 -> Pretty.parens <| sep [pretty t1, "><", pretty t2]
     Done _ -> "Done _"
-    Choose t1 t2 -> parens <| sep [pretty t1, "<|>", pretty t2]
+    Choose t1 t2 -> Pretty.parens <| sep [pretty t1, "<|>", pretty t2]
     Fail -> "Fail"
     Trans _ t -> sep ["Trans _", pretty t]
-    Step t _ -> parens <| sep [pretty t, ">>=", "_"]
+    Step t _ -> Pretty.parens <| sep [pretty t, ">>=", "_"]
     -- Forever t -> sep ["Forever", pretty t]
     Share v -> sep ["Share", pretty v]
     Assign v _ -> sep ["_", ":=", pretty v]
@@ -123,9 +124,9 @@ instance Pretty (Task m t) where
 instance Pretty (Editor m a) where
   pretty = \case
     Enter -> "Enter"
-    Update v -> parens <| sep ["Update", pretty v]
-    View v -> parens <| sep ["View", pretty v]
-    Select ts -> parens <| sep ["Select", pretty ts]
+    Update v -> Pretty.parens <| sep ["Update", pretty v]
+    View v -> Pretty.parens <| sep ["View", pretty v]
+    Select ts -> Pretty.parens <| sep ["Select", pretty ts]
     Watch _ -> sep ["Watch", "_"]
     Change _ -> sep ["Change", "_"]
 

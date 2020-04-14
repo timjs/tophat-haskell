@@ -7,6 +7,7 @@ import qualified Data.HashSet as HashSet
 import Data.List (intersect, union)
 import Data.Task
 import Data.Task.Input
+import qualified Data.Text.Prettyprint.Doc as Pretty
 
 -- Observations ----------------------------------------------------------------
 -- NOTE: Normalisation should never happen in any observation, they are immediate.
@@ -305,15 +306,15 @@ data NotApplicable
 
 instance Pretty NotApplicable where
   pretty = \case
-    CouldNotMatch n m -> sep ["Could not match editor id", dquotes <| pretty n, "with id", dquotes <| pretty m]
-    CouldNotChangeVal b c -> sep ["Could not change value because types", dquotes <| pretty b, "and", dquotes <| pretty c, "do not match"]
-    CouldNotChangeRef r c -> sep ["Could not change value because cell", dquotes <| pretty r, "does not contain", dquotes <| pretty c]
-    CouldNotGoTo l -> sep ["Could not pick label", dquotes <| pretty l, "because it leads to an empty task"]
-    CouldNotFind l -> sep ["Could not find label", dquotes <| pretty l, "in the possible options"]
+    CouldNotMatch n m -> sep ["Could not match editor id", Pretty.dquotes <| pretty n, "with id", Pretty.dquotes <| pretty m]
+    CouldNotChangeVal b c -> sep ["Could not change value because types", Pretty.dquotes <| pretty b, "and", Pretty.dquotes <| pretty c, "do not match"]
+    CouldNotChangeRef r c -> sep ["Could not change value because cell", Pretty.dquotes <| pretty r, "does not contain", Pretty.dquotes <| pretty c]
+    CouldNotGoTo l -> sep ["Could not pick label", Pretty.dquotes <| pretty l, "because it leads to an empty task"]
+    CouldNotFind l -> sep ["Could not find label", Pretty.dquotes <| pretty l, "in the possible options"]
     CouldNotSelect -> sep ["Could not pick because there is nothing to pick from in this task"]
     CouldNotContinue -> sep ["Could not continue because there is no value to continue with"]
     -- We n
-    CouldNotHandle a -> sep ["Could not handle action", dquotes <| pretty a, "(this should only appear when giving an impossible action on an editor)"]
+    CouldNotHandle a -> sep ["Could not handle action", Pretty.dquotes <| pretty a, "(this should only appear when giving an impossible action on an editor)"]
 
 handle ::
   forall m r a.

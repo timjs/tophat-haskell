@@ -36,11 +36,12 @@ module Prelude
     -- ** Tracing
     spy,
 
+    -- ** HashMaps
+    forWithKey,
+
     -- ** HashSets
     (=<),
     (/<),
-    (/\),
-    (\/),
 
     -- ** Vectors
     -- Vector, only, index, update
@@ -52,10 +53,6 @@ module Prelude
     sep,
     cat,
     split,
-    indent,
-    dquotes,
-    parens,
-    angles,
 
     -- * Operators
 
@@ -140,7 +137,7 @@ import Control.Monad.Writer.Strict (MonadWriter (..), WriterT (..), runWriterT)
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.HashSet as HashSet
 import qualified Data.Text as Text
-import Data.Text.Prettyprint.Doc (Doc, Pretty (..), angles, dquotes, indent, parens, viaShow)
+import Data.Text.Prettyprint.Doc (Doc, Pretty (..), viaShow)
 import qualified Data.Text.Prettyprint.Doc as Pretty
 import Data.Type.Equality
 import Data.Unique (Unique, hashUnique)
@@ -232,27 +229,22 @@ instance (Pretty k, Pretty v) => Pretty (HashMap k v) where
 instance Pretty Unique where
   pretty = pretty << hashUnique
 
--- Sets --
+-- HashMaps --
+
+forWithKey :: Applicative f => HashMap k v -> (k -> v -> f w) -> f (HashMap k w)
+forWithKey = flip HashMap.traverseWithKey
+
+-- HashSets --
 
 infix 4 =<
 
 infix 4 /<
-
-infixr 5 \/
-
-infixr 6 /\
 
 (=<) :: Hash a => a -> HashSet a -> Bool
 (=<) = HashSet.member
 
 (/<) :: Hash a => a -> HashSet a -> Bool
 (/<) x = not << HashSet.member x
-
-(\/) :: Hash a => HashSet a -> HashSet a -> HashSet a
-(\/) = HashSet.union
-
-(/\) :: Hash a => HashSet a -> HashSet a -> HashSet a
-(/\) = HashSet.intersection
 
 -- Vectors ---------------------------------------------------------------------
 
