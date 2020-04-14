@@ -103,6 +103,7 @@ module Prelude
 
     -- ** MonadZero
     MonadZero,
+    fail,
 
     -- ** MonadError
     MonadError,
@@ -506,6 +507,9 @@ class (Monad m, Relude.MonadFail m, Alternative m) => MonadZero m
 instance MonadZero Maybe
 
 instance MonadZero List
+
+fail :: Alternative m => m a
+fail = empty
 
 -- instance Monad m => MonadZero (ListT m)
 

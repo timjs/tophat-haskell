@@ -4,6 +4,7 @@ module Data.Task
     (<?>),
     (>>?),
     (>>*),
+    (>**),
     forever,
     module Control.Interactive,
     module Control.Collaborative,
@@ -94,7 +95,12 @@ infixl 1 >>?
 infixl 1 >>*
 
 (>>*) :: Task m a -> HashMap Label (a -> Task m b) -> Task m b
-(>>*) t1 es = New (\n -> t1 `Step` \x -> Editor n (Select (es ||> \e -> e x)))
+(>>*) t1 cs = New (\n -> t1 `Step` \x -> Editor n (Select (cs ||> \c -> c x)))
+
+infixl 1 >**
+
+(>**) :: Task m a -> HashMap Label (a -> Bool, a -> Task m b) -> Task m b
+(>**) t1 cs = New (\n -> t1 `Step` \x -> Editor n (Select (cs ||> \(b, c) -> if b x then c x else fail)))
 
 forever :: Task m a -> Task m Void
 forever t1 = t1 `Step` \_ -> forever t1

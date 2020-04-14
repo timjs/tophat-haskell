@@ -48,7 +48,7 @@ pureStep = do
 pureStep' :: Task m Int
 pureStep' = do
   x <- fourtytwo
-  inc x <?> empty
+  inc x <?> fail
 
 oneStep :: Task m Int
 oneStep = do
@@ -109,7 +109,7 @@ parallelStep = do
 parallelStep' :: Task m Text
 parallelStep' = do
   (n, m) <- parallel
-  view (unwords <| replicate n m) <?> empty
+  view (unwords <| replicate n m) <?> fail
 
 parallelStep'' :: Task m Text
 parallelStep'' =
@@ -119,7 +119,7 @@ parallelStep'' =
 -- Choices --
 
 choose1 :: Task m Int
-choose1 = empty <|> view 0
+choose1 = fail <|> view 1
 
 choose2 :: Task m Int
 choose2 = view 1 <|> view 2
@@ -128,7 +128,7 @@ choose3 :: Task m Int
 choose3 = choose2 <|> view 3
 
 pick1 :: Task m Int
-pick1 = empty <?> view 0
+pick1 = fail <?> view 1
 
 pick2 :: Task m Int
 pick2 = view 1 <?> view 2
@@ -151,7 +151,7 @@ auto = do
   x <- enter
   if x >= (10 :: Int)
     then view "large"
-    else empty
+    else fail
 
 actions :: Task m Int
 actions = do
@@ -163,11 +163,20 @@ actions' = do
   _ <- enter :: Task m Int
   pick3'
 
+actions'' :: Task m Int
+actions'' = do
+  enter
+    >>* [ "A" ~> (\x -> view (x * 1 :: Int)),
+          "B" ~> (\x -> view (x * 2 :: Int)),
+          "C" ~> (\x -> view (x * 3 :: Int))
+        ]
+
 guards :: Task m Text
-guards = do
-  x <- enter
-  (if x >= (10 :: Int) then view "large" else empty)
-    <?> (if x >= (100 :: Int) then view "very large" else empty)
+guards =
+  enter
+    >>* [ "A" ~> \x -> if x >= (10 :: Int) then view "large" else fail,
+          "B" ~> \x -> if x >= (100 :: Int) then view "very large" else fail
+        ]
 
 branch :: Task m Text
 branch = do
@@ -177,19 +186,26 @@ branch = do
     else
       if x `mod` 5 == 0
         then view "multiple of 5"
-        else empty
+        else fail
 
 branch' :: Task m Text
 branch' = do
   x <- update (1 :: Int)
-  (if x `mod` 3 == 0 then view "multiple of 3" else empty)
-    <|> (if x `mod` 5 == 0 then view "multiple of 5" else empty)
+  (if x `mod` 3 == 0 then view "multiple of 3" else fail)
+    <|> (if x `mod` 5 == 0 then view "multiple of 5" else fail)
 
 branch'' :: Task m Text
 branch'' = do
   x <- update (1 :: Int)
-  (if x `mod` 3 == 0 then view "multiple of 3" else empty)
-    <?> (if x `mod` 5 == 0 then view "multiple of 5" else empty)
+  (if x `mod` 3 == 0 then view "multiple of 3" else fail)
+    <?> (if x `mod` 5 == 0 then view "multiple of 5" else fail)
+
+branch''' :: Task m Text
+branch''' =
+  update (1 :: Int)
+    >>* [ "Div3" ~> \x -> if x `mod` 3 == 0 then view "multiple of 3" else fail,
+          "Div5" ~> \x -> if x `mod` 5 == 0 then view "multiple of 5" else fail
+        ]
 
 -- Shared Data --
 
@@ -228,10 +244,10 @@ doubleShared = do
   where
     t1 _ m = do
       x <- change m
-      if x >= 10 then view (x * 2) else empty
+      if x >= 10 then view (x * 2) else fail
     t2 r m = do
       y <- change r
-      if y >= 5 then m <<- 12 else empty
+      if y >= 5 then m <<- 12 else fail
 
 atomic :: Collaborative r m => Task m ((), ())
 atomic = do
@@ -239,7 +255,7 @@ atomic = do
   let t1 = do
         r <<- 2
         x <- watch r
-        if x > 2 then view () else empty
+        if x > 2 then view () else fail
       t2 = do
         r <<- 3
         r <<- 1
@@ -251,7 +267,7 @@ unfixated = do
   r <- share False
   let t1 = do
         b <- watch r
-        if b then view () else empty
+        if b then view () else fail
       t2 = do
         r <<- True
         view ()
@@ -295,7 +311,7 @@ numbers' = do
             [ ("Delete", delete_ r i),
               ("Replace", replace_ r i)
             ]
-        else empty
+        else fail
     delete_ r i =
       r <<= del i
     replace_ r i = do
