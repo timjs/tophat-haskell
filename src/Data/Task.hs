@@ -6,6 +6,7 @@ module Data.Task
     (>>*),
     (>**),
     forever,
+    (>>@),
     module Control.Interactive,
     module Control.Collaborative,
     module Data.Editable,
@@ -104,6 +105,9 @@ infixl 1 >**
 
 forever :: Task m a -> Task m Void
 forever t1 = t1 `Step` \_ -> forever t1
+
+(>>@) :: Task m a -> (a -> Task m b) -> Task m b
+(>>@) t1 e2 = New (\n -> t1 `Step` \x -> Editor n (Select ["Repeat" ~> t1 >>@ e2, "Exit" ~> e2 x]))
 
 -- Instances -------------------------------------------------------------------
 

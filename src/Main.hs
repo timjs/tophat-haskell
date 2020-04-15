@@ -144,6 +144,14 @@ pick3' =
       "C" ~> view 3
     ]
 
+parpick :: Task m (Int, Int)
+parpick = pick3' >< pick3'
+
+parpick' :: Task m (Int, Int)
+parpick' = do
+  update (1 :: Int)
+  parpick
+
 -- Guards --
 
 auto :: Task m Text
@@ -284,11 +292,13 @@ numbers = do
       x <- enter
       r <<= (:) x
 
-numbers' :: Collaborative r m => Task m (Void, List Int)
+numbers' :: Collaborative r m => Task m (List Int)
 numbers' = do
   r <- share ([] :: List Int)
-  forever (edit_ r) >< watch r
+  (edit_ r >< watch r) >>@ exit_
   where
+    exit_ ((), ns) =
+      view ns
     edit_ r =
       do select
         [ ("Prepend", prepend_ r),
@@ -303,15 +313,11 @@ numbers' = do
     change_ r = do
       --NOTE: `watch` should be before the external step, otherwise we'll end up an a state where we show an editor with the list when the user entered an improper index.
       -- Compare this with iTasks: `watch` should be before the external step because you cannot specify the `watch` inside the step list!
-      n <- map (length >> fromIntegral) <| watch r
-      i <- enter :: Task m Int
-      if i < n
-        then
-          select
-            [ ("Delete", delete_ r i),
-              ("Replace", replace_ r i)
+      n <- map (length >> fromIntegral) (watch r)
+      enter
+        >>* [ "Delete" ~> \i -> if i < n then delete_ r i else fail,
+              "Replace" ~> \i -> if i < n then replace_ r i else fail
             ]
-        else fail
     delete_ r i =
       r <<= del i
     replace_ r i = do
