@@ -138,18 +138,19 @@ watching' = \case
 options ::
   Collaborative r m =>
   Task m a ->
-  m (List (Input b)) -- We need to call `value`, therefore we are in `m`
+  m (List (Input b)) -- We need to call `value`, therefore we are in `m` => Not any more!
 options = \case
   Editor n (Select ts) -> pure <| map (IOption n) (options' ts)
   Editor _ _ -> pure []
   Trans _ t2 -> options t2
-  Step t1 e2 -> pure (++) -< options t1 -< do
-    mv1 <- value t1
-    case mv1 of
-      Nothing -> pure []
-      Just v1 -> do
-        let t2 = e2 v1 -- XXX Is this needed?
-        options t2
+  Step t1 _ -> options t1
+  -- Step t1 e2 -> pure (++) -< options t1 -< do
+  --   mv1 <- value t1
+  --   case mv1 of
+  --     Nothing -> pure []
+  --     Just v1 -> do
+  --       let t2 = e2 v1 -- XXX Is this needed?
+  --       options t2
   -- Pair t1 t2 -> pure [] --pure (++) -< options t1 -< options t2
   -- Choose t1 t2 -> pure [] --pure (++) -< options t1 -< options t2
   _ -> pure []
