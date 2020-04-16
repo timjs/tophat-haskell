@@ -8,6 +8,8 @@ module Data.Task.Input
     Input (..),
     pattern ISelect,
     pattern IPreselect,
+    Option (..),
+    fromOption,
     usage,
     parse,
   )
@@ -74,8 +76,8 @@ pattern IPreselect l = IOption Unnamed l
 
 instance Pretty b => Pretty (Input b) where
   pretty = \case
-    IEnter n b -> sep [ pretty n, pretty b]
-    ISelect n l -> sep [ pretty n, pretty l]
+    IEnter n b -> sep [pretty n, pretty b]
+    ISelect n l -> sep [pretty n, pretty l]
     IPreselect l -> pretty l
 
 -- -- Action view --
@@ -93,6 +95,18 @@ instance Pretty b => Pretty (Input b) where
 --   IEnter n b -> Just (n, AValue b)
 --   ISelect n l -> Just (n, ALabel l)
 --   IPreselect _ -> Nothing
+
+-- Options ---------------------------------------------------------------------
+
+data Option
+  = Option Name Label
+  deriving (Eq, Ord, Show, Read)
+
+instance Pretty Option where
+  pretty (Option n l) = cat [pretty l, "^", pretty n]
+
+fromOption :: Option -> Input b
+fromOption (Option n l) = IOption n l
 
 -- Conformance -----------------------------------------------------------------
 

@@ -26,9 +26,7 @@ ui = \case
     mv1 <- value t1
     case mv1 of
       Nothing -> pure []
-      Just v1 -> do
-        os <- options (e2 v1)
-        pure <| map (\(IOption _ l) -> l) os --FIXME
+      Just v1 -> pure <| options (e2 v1)
     where
       go s ls
         | null ls = cat [s, " ▶…"]
@@ -138,10 +136,9 @@ watching' = \case
 options ::
   Collaborative r m =>
   Task m a ->
-  m (List (Input b)) -- We need to call `value`, therefore we are in `m` => Not any more!
+  List Option
 options = \case
-  Editor n (Select ts) -> pure <| map (IOption n) (options' ts)
-  Editor _ _ -> pure []
+  Editor n (Select ts) -> options' ts |> map (Option n)
   Trans _ t2 -> options t2
   Step t1 _ -> options t1
   -- Step t1 e2 -> pure (++) -< options t1 -< do
@@ -149,11 +146,11 @@ options = \case
   --   case mv1 of
   --     Nothing -> pure []
   --     Just v1 -> do
-  --       let t2 = e2 v1 -- XXX Is this needed?
+  --       let t2 = e2 v1
   --       options t2
   -- Pair t1 t2 -> pure [] --pure (++) -< options t1 -< options t2
   -- Choose t1 t2 -> pure [] --pure (++) -< options t1 -< options t2
-  _ -> pure []
+  _ -> []
 
 -- | Get all `Label`s out of a `Select` editor.
 -- |
@@ -183,7 +180,7 @@ inputs t = case t of
       Nothing -> pure []
       Just v1 -> do
         let t2 = e2 v1
-        options t2
+        options t2 |> map fromOption |> pure
   Share _ -> pure []
   Assign _ _ -> pure []
 
@@ -225,7 +222,7 @@ normalise t = case t of
         if failing t2
           then pure stay -- N-StepFail
           else do
-            os <- lift <| options t2
+            let os = options t2
             log Info <| DidCalculateOptions os (pretty t2 |> show)
             if not <| null <| os
               then pure stay -- N-StepWait
@@ -325,8 +322,8 @@ handle t i = case t of
         | n == n' -> case HashMap.lookup l ts of
           Nothing -> throw <| CouldNotFind l
           Just t' -> do
-            os <- lift <| lift <| options t
-            if i `elem` os
+            let os = options t
+            if Option n l `elem` os
               then pure t'
               else throw <| CouldNotGoTo l
         | otherwise -> throw <| CouldNotMatch n n'
@@ -405,7 +402,7 @@ data Steps
   | DidNormalise Text
   | DidBalance Text
   | DidStart Text
-  | DidCalculateOptions (List (Input Dummy)) Text
+  | DidCalculateOptions (List Option) Text
 
 instance Pretty Steps where
   pretty = \case
