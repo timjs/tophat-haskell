@@ -14,6 +14,9 @@ main =
 
 -- Basics --
 
+enterInt :: Task m Int
+enterInt = enter
+
 fourtytwo :: Task m Int
 fourtytwo =
   update 42
@@ -150,11 +153,6 @@ pick3' =
 parpick :: Task m (Int, Int)
 parpick = pick3' >< pick3'
 
-parpick' :: Task m (Int, Int)
-parpick' = do
-  _ <- update (1 :: Int)
-  parpick
-
 -- Guards --
 
 auto :: Task m Text
@@ -225,6 +223,39 @@ branch''' = do
   select
     [ "Div3" ~> if x `mod` 3 == 0 then view "multiple of 3" else fail,
       "Div5" ~> if x `mod` 5 == 0 then view "multiple of 5" else fail
+    ]
+
+-- Future --
+
+enterFutureR :: Task m Int
+enterFutureR = enterInt >>= \_ -> (select ["A" ~> view (1 :: Int)] >>= \_ -> select ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)])
+
+enterFutureL :: Task m Int
+enterFutureL = (enterInt >>= \_ -> select ["A" ~> view (1 :: Int)]) >>= \_ -> select ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)]
+
+updateFutureR :: Task m Int
+updateFutureR = fourtytwo >>= \_ -> (select ["A" ~> view (1 :: Int)] >>= \_ -> select ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)])
+
+updateFutureL :: Task m Int
+updateFutureL = (fourtytwo >>= \_ -> select ["A" ~> view (1 :: Int)]) >>= \_ -> select ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)]
+
+mixedFutureR :: Task m Int
+mixedFutureR = (enterInt >>= \_ -> fourtytwo) >>= \_ -> select ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)]
+
+mixedFutureL :: Task m Int
+mixedFutureL = (enterInt >>= \_ -> fourtytwo) >>= \_ -> select ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)]
+
+parallelFuture :: Task m (Int, Int)
+parallelFuture = do
+  _ <- enterInt
+  select ["A" ~> view (1 :: Int)] >< select ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)]
+
+nestedFuture :: Task m Int
+nestedFuture = do
+  _ <- enterInt
+  select
+    [ "A" ~> view (1 :: Int),
+      "B" ~> select ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)]
     ]
 
 -- Shared Data --
