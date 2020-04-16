@@ -3,7 +3,6 @@ module Data.Task.Run where
 import Control.Monad.Log
 import Control.Monad.Supply
 import qualified Data.HashMap.Strict as HashMap
-import qualified Data.HashSet as HashSet
 import Data.List (intersect, union)
 import Data.Task
 import Data.Task.Input
@@ -17,8 +16,7 @@ ui ::
   Task m a ->
   m (Doc n) -- We need to watch locations and be in monad `m`
 ui = \case
-  New _ -> pure "ν.…"
-  Editor n e -> ui' (pretty n) e
+  Editor a e -> ui' a e
   Done _ -> pure "■ …"
   Pair t1 t2 -> pure (\l r -> sep [l, " ⧓ ", r]) -< ui t1 -< ui t2
   Choose t1 t2 -> pure (\l r -> sep [l, " ◆ ", r]) -< ui t1 -< ui t2
@@ -30,10 +28,10 @@ ui = \case
       Nothing -> pure []
       Just v1 -> do
         os <- options (e2 v1)
-        pure <| HashSet.map fst os
+        pure <| map (\(IOption _ l) -> l) os
     where
       go s ls
-        | HashSet.null ls = cat [s, " ▶…"]
+        | null ls = cat [s, " ▶…"]
         | otherwise = cat [s, " ▷", pretty ls]
   Share b -> pure <| sep ["share", pretty b]
   Assign b _ -> pure <| sep ["…", ":=", pretty b]
@@ -41,30 +39,30 @@ ui = \case
 ui' ::
   forall r m n b.
   Collaborative r m =>
-  Doc n ->
+  Name ->
   Editor m b ->
   m (Doc n) -- We need to watch locations and be in monad `m`
-ui' n = \case
-  Enter -> pure <| cat ["⊠^", n, " ", pretty (typeRep :: TypeRep b)]
-  Update b -> pure <| cat ["□^", n, " [ ", pretty b, " ]"]
-  View b -> pure <| cat ["⧇^", n, " [ ", pretty b, " ]"]
-  Select ts -> pure <| cat ["◇^", n, " ", pretty <| HashMap.keysSet ts]
-  Change l -> pure (\b -> cat ["⊟^", n, " [ ", pretty b, " ]"]) -< watch l
-  Watch l -> pure (\b -> cat ["⧈^", n, " [ ", pretty b, " ]"]) -< watch l
+ui' a = \case
+  Enter -> pure <| cat ["⊠^", pretty a, "_", pretty (typeRep :: TypeRep b)]
+  Update b -> pure <| cat ["□^", pretty a, " [ ", pretty b, " ]"]
+  View b -> pure <| cat ["⧇^", pretty a, " [ ", pretty b, " ]"]
+  Select ts -> pure <| cat ["◇^", pretty a, " ", pretty <| HashMap.keysSet ts]
+  Change l -> pure (\b -> cat ["⊟^", pretty a, " [ ", pretty b, " ]"]) -< watch l
+  Watch l -> pure (\b -> cat ["⧈^", pretty a, " [ ", pretty b, " ]"]) -< watch l
 
 value ::
   Collaborative r m =>
   Task m a ->
   m (Maybe a) -- We need to watch locations and be in monad `m`
 value = \case
-  Editor _ e -> value' e
+  Editor Unnamed _ -> pure Nothing
+  Editor (Named _) e -> value' e
   Trans f t -> pure (map f) -< value t
   Pair t1 t2 -> pure (><) -< value t1 -< value t2
   Done b -> pure (Just b)
   Choose t1 t2 -> pure (<|>) -< value t1 -< value t2
   Fail -> pure Nothing
   Step _ _ -> pure Nothing
-  New _ -> pure Nothing
   Share b -> pure Just -< share b -- Nothing??
   Assign _ _ -> pure (Just ()) -- Nothing??
 
@@ -90,7 +88,6 @@ failing = \case
   Choose t1 t2 -> failing t1 && failing t2
   Fail -> True
   Step t _ -> failing t
-  New e -> failing' e
   Share _ -> False
   Assign _ _ -> False
 
@@ -109,14 +106,14 @@ watching ::
   Task m a ->
   List (Someref m) -- But there is no need to be in monad `m`
 watching = \case
-  Editor _ e -> watching' e
+  Editor Unnamed _ -> []
+  Editor (Named _) e -> watching' e
   Trans _ t2 -> watching t2
   Pair t1 t2 -> watching t1 `union` watching t2
   Done _ -> []
   Choose t1 t2 -> watching t1 `union` watching t2
   Fail -> []
   Step t1 _ -> watching t1
-  New _ -> [] --XXX is this correct?
   Share _ -> []
   Assign _ _ -> []
 
@@ -133,45 +130,47 @@ watching' = \case
   Watch (Store _ r) -> [pack r]
 
 -- | Calculate all possible options that can be send to this task,
--- | i.e. all possible label-name pairs which select a task.
+-- | i.e. all possible label-activity pairs which select a task.
 -- |
 -- | Notes:
--- | * We need this to pair `Label`s with `Nats`s, because we need to tag all deeper lables with the appropriate editor name.
+-- | * We need this to pair `Label`s with `Name`s, because we need to tag all deeper lables with the appropriate editor name.
 -- | * We can't return a `HashMap _ (Task m a)` because deeper tasks can be of different types!
 options ::
   Collaborative r m =>
   Task m a ->
-  m (HashSet (Label, Nat)) -- We need to call `value`, therefore we are in `m`
+  m (List (Input b)) -- We need to call `value`, therefore we are in `m`
 options = \case
-  Editor n e -> pure <| HashSet.map (,n) (options' e)
+  Editor n (Select ts) -> pure <| map (IOption n) (options' ts)
+  Editor _ _ -> pure []
   Trans _ t2 -> options t2
   Step t1 e2 -> pure (++) -< options t1 -< do
     mv1 <- value t1
     case mv1 of
       Nothing -> pure []
       Just v1 -> do
-        let t2 = e2 v1
+        let t2 = e2 v1 -- XXX Is this needed?
         options t2
   -- Pair t1 t2 -> pure [] --pure (++) -< options t1 -< options t2
   -- Choose t1 t2 -> pure [] --pure (++) -< options t1 -< options t2
   _ -> pure []
 
+-- | Get all `Label`s out of a `Select` editor.
+-- |
+-- | Notes:
+-- | * Goes one level deep!
 options' ::
-  Editor m a ->
-  HashSet Label
-options' = \case
-  Select ts -> HashMap.keysSet <| HashMap.filter (not << failing) ts
-  _ -> []
-
-toInput :: (Label, Nat) -> Input Dummy
-toInput (l, n) = Input n (ASelect l)
+  HashMap Label (Task m a) ->
+  List Label
+options' = HashMap.keys << HashMap.filter (not << failing)
 
 inputs ::
   Collaborative r m =>
   Task m a ->
   m (List (Input Dummy)) -- We need to call `value`, therefore we are in `m`
 inputs t = case t of
-  Editor n e -> pure <| Input n <|| inputs' e
+  Editor Unnamed _ -> pure []
+  Editor (Named n) (Select ts) -> options' ts |> map (ISelect n) |> pure
+  Editor (Named n) e -> inputs' e |> map (IEnter n) |> pure
   Trans _ t2 -> inputs t2
   Pair t1 t2 -> pure (++) -< inputs t1 -< inputs t2
   Done _ -> pure []
@@ -183,8 +182,7 @@ inputs t = case t of
       Nothing -> pure []
       Just v1 -> do
         let t2 = e2 v1
-        options t2 ||> toList ||> map toInput
-  New _ -> pure []
+        options t2
   Share _ -> pure []
   Assign _ _ -> pure []
 
@@ -194,14 +192,14 @@ inputs' ::
   Editor m a ->
   List Dummy
 inputs' t = case t of
-  Enter -> [AEnter tau]
-  Update _ -> [AEnter tau]
+  Enter -> [dummy beta]
+  Update _ -> [dummy beta]
   View _ -> []
-  Select _ -> options' t |> toList |> map ASelect
-  Change _ -> [AEnter tau]
+  Select _ -> [] --NOTE: selections do not have `IEnter` actions and are handles separately
+  Change _ -> [dummy beta]
   Watch _ -> []
   where
-    tau = Proxy :: Proxy a
+    beta = Proxy :: Proxy a
 
 -- Normalising -----------------------------------------------------------------
 
@@ -252,10 +250,10 @@ normalise t = case t of
   Done _ -> pure t
   Fail -> pure t
   -- Editors --
-  Editor _ _ -> pure t
-  New f -> do
+  Editor Unnamed e -> do
     n <- supply
-    normalise <| f n
+    pure <| Editor (Named n) e
+  Editor (Named _) _ -> pure t
   -- Assert --
   -- Assert p -> do
   --   pure <| Done p
@@ -290,14 +288,15 @@ type PartialTracking f m a = WriterT (List (Someref m)) (ExceptT NotApplicable m
 -- type PartialTrackingTask m a = ExceptT NotApplicable (WriterT (List (Someref m)) m) (Task m a)
 
 data NotApplicable
-  = CouldNotMatch Nat Nat
+  = CouldNotMatch Name Name
   | CouldNotChangeVal SomeTypeRep SomeTypeRep
   | CouldNotChangeRef SomeTypeRep SomeTypeRep
   | CouldNotGoTo Label
   | CouldNotFind Label
   | CouldNotSelect
   | CouldNotContinue
-  | CouldNotHandle Action
+  | CouldNotHandle (Input Concrete)
+  | CouldNotHandleValue Concrete
 
 instance Pretty NotApplicable where
   pretty = \case
@@ -308,30 +307,32 @@ instance Pretty NotApplicable where
     CouldNotFind l -> sep ["Could not find label", Pretty.dquotes <| pretty l, "in the possible options"]
     CouldNotSelect -> sep ["Could not pick because there is nothing to pick from in this task"]
     CouldNotContinue -> sep ["Could not continue because there is no value to continue with"]
-    -- We n
-    CouldNotHandle a -> sep ["Could not handle action", Pretty.dquotes <| pretty a, "(this should only appear when giving an impossible action on an editor)"]
+    CouldNotHandle i -> sep ["Could not handle input", Pretty.dquotes <| pretty i]
+    CouldNotHandleValue b -> sep ["Could not handle new editor value", Pretty.dquotes <| pretty b, "for readonly editor"]
 
 handle ::
   forall m r a.
   Collaborative r m =>
   Task m a ->
-  Input Action ->
+  Input Concrete ->
   PartialTracking Task m a
 handle t i = case t of
   -- Editors --
-  Editor n e
-    | n == m -> case (e, a) of
-      (Select ts, ISelect l) -> case HashMap.lookup l ts of
+  Editor n e -> case (i, e) of
+    (IOption n' l, Select ts)
+      | n == n' -> case HashMap.lookup l ts of
         Nothing -> throw <| CouldNotFind l
         Just t' -> do
           os <- lift <| lift <| options t
-          if (l, n) =< os
+          if i `elem` os
             then pure t'
             else throw <| CouldNotGoTo l
-      _ -> do
-        e' <- handle' e a
+      | otherwise -> throw <| CouldNotMatch n n'
+    (IEnter m b, _)
+      | n == Named m -> do
+        e' <- handle' b e
         pure <| Editor n e'
-    | otherwise -> throw <| CouldNotMatch n m
+      | otherwise -> throw <| CouldNotMatch n (Named m)
   -- Pass --
   Trans e1 t2 -> do
     t2' <- handle t2 i
@@ -346,42 +347,42 @@ handle t i = case t of
           Nothing -> throw CouldNotContinue
           Just v1 -> do
             let t2 = e2 v1
-            handle t2 i -- H-Continue
+            handle t2 i -- H-StepCont
   Pair t1 t2 -> do
     et1' <- try <| handle t1 i
     case et1' of
-      Right t1' -> pure <| Pair t1' t2
+      Right t1' -> pure <| Pair t1' t2 -- H-PairFirst
       Left _ -> do
         t2' <- handle t2 i
-        pure <| Pair t1 t2'
+        pure <| Pair t1 t2' -- H-PairSecond
   Choose t1 t2 -> do
     et1' <- try <| handle t1 i
     case et1' of
-      Right t1' -> pure <| Choose t1' t2
+      Right t1' -> pure <| Choose t1' t2 -- H-ChooseFirst
       Left _ -> do
         t2' <- handle t2 i
-        pure <| Choose t1 t2'
-  -- Rest --
-  _ -> throw <| CouldNotHandle a
+        pure <| Choose t1 t2' -- H-ChoosSecond
+            -- Rest --
+  _ -> throw <| CouldNotHandle i
 
 handle' ::
   forall m r a.
   Collaborative r m =>
+  Concrete ->
   Editor m a -> -- `Select` does not return an `Editor`...
-  Action ->
   PartialTracking Editor m a
-handle' e a = case (e, a) of
-  (Enter, IEnter b')
+handle' c@(Concrete b') = \case
+  Enter
     | Just Refl <- b' ~: beta -> pure <| Update b'
     | otherwise -> throw <| CouldNotChangeVal (SomeTypeRep beta) (someTypeOf b')
     where
       beta = typeRep :: TypeRep a
-  (Update b, IEnter b')
-    -- NOTE: Here we check if `b` and `w` have the same type.
-    -- If this is the case, it would be inhabited by `Refl :: a :~: b`, where `b` is the type of the value inside `Change`.
+  Update b
+    -- NOTE: Here we check if `b` and `b'` have the same type.
+    -- If this is the case, it would be inhabited by `Refl :: a :~: b`, where `b` is the type of the value inside `Update`.
     | Just Refl <- b ~= b' -> pure <| Update b'
     | otherwise -> throw <| CouldNotChangeVal (someTypeOf b) (someTypeOf b')
-  (Change s@(Store _ r), IEnter b')
+  Change s@(Store _ r)
     -- NOTE: As in the `Update` case above, we check for type equality.
     | Just Refl <- b' ~: beta -> do
       s <<- b'
@@ -391,7 +392,7 @@ handle' e a = case (e, a) of
     where
       beta = typeRep :: TypeRep a
   -- Rest --
-  _ -> throw <| CouldNotHandle a
+  _ -> throw <| CouldNotHandleValue c
 
 -- Interaction -----------------------------------------------------------------
 
@@ -401,7 +402,7 @@ data Steps
   | DidNormalise Text
   | DidBalance Text
   | DidStart Text
-  | DidCalculateOptions (HashSet (Label, Nat)) Text
+  | DidCalculateOptions (List (Input Dummy)) Text
 
 instance Pretty Steps where
   pretty = \case
@@ -453,7 +454,7 @@ interact ::
   MonadLog NotApplicable m =>
   MonadLog Steps m =>
   Task m a ->
-  Input Action ->
+  Input Concrete ->
   m (Task m a)
 interact t i = do
   xt <- runExceptT <| runWriterT <| handle t i
@@ -465,7 +466,7 @@ interact t i = do
 
 execute ::
   Editable a =>
-  List (Input Action) ->
+  List (Input Concrete) ->
   Task IO a ->
   IO ()
 execute events task = initialise task >>= go events
@@ -480,7 +481,7 @@ execute events task = initialise task >>= go events
 
 -- Running ---------------------------------------------------------------------
 
-getUserInput :: IO (Input Action)
+getUserInput :: IO (Input Concrete)
 getUserInput = do
   putText ">> "
   line <- getLine
