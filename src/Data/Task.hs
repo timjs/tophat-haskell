@@ -113,7 +113,7 @@ forever t1 = t1 >>= \_ -> forever t1
 
 instance Pretty (Task m t) where
   pretty = \case
-    New _ -> "New"
+    New e -> sep ["New", pretty e]
     Editor n e -> cat [pretty e, "^", pretty n]
     Pair t1 t2 -> Pretty.parens <| sep [pretty t1, "><", pretty t2]
     Done _ -> "Done _"
