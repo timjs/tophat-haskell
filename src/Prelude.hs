@@ -160,6 +160,7 @@ import Relude hiding
     Any,
     MonadFail (..),
     Nat,
+    Option (..),
     String,
     Word,
     Word16,
