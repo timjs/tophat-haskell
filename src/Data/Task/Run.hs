@@ -43,7 +43,7 @@ ui' ::
   Editor m b ->
   m (Doc n) -- We need to watch locations and be in monad `m`
 ui' a = \case
-  Enter -> pure <| cat ["⊠^", pretty a, "_", pretty (typeRep :: TypeRep b)]
+  Enter -> pure <| cat ["⊠^", pretty a, " [ ] "]
   Update b -> pure <| cat ["□^", pretty a, " [ ", pretty b, " ]"]
   View b -> pure <| cat ["⧇^", pretty a, " [ ", pretty b, " ]"]
   Select ts -> pure <| cat ["◇^", pretty a, " ", pretty <| HashMap.keysSet ts]

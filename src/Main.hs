@@ -63,7 +63,10 @@ oneStep' =
 oneStep'' :: Task m Int
 oneStep'' = do
   x <- update 0
-  inc x <?> dec x
+  select
+    [ "Increase" ~> inc x,
+      "Decrease" ~> dec x
+    ]
 
 oneStep''' :: Task m Int
 oneStep''' =
@@ -180,7 +183,15 @@ actions'' = do
         ]
 
 guards :: Task m Text
-guards =
+guards = do
+  x <- enter
+  select
+    [ "A" ~> if x >= (10 :: Int) then view "large" else fail,
+      "B" ~> if x >= (100 :: Int) then view "very large" else fail
+    ]
+
+guards' :: Task m Text
+guards' = do
   enter
     >>* [ "A" ~> \x -> if x >= (10 :: Int) then view "large" else fail,
           "B" ~> \x -> if x >= (100 :: Int) then view "very large" else fail
@@ -209,11 +220,12 @@ branch'' = do
     <?> (if x `mod` 5 == 0 then view "multiple of 5" else fail)
 
 branch''' :: Task m Text
-branch''' =
-  update (1 :: Int)
-    >>* [ "Div3" ~> \x -> if x `mod` 3 == 0 then view "multiple of 3" else fail,
-          "Div5" ~> \x -> if x `mod` 5 == 0 then view "multiple of 5" else fail
-        ]
+branch''' = do
+  x <- update (1 :: Int)
+  select
+    [ "Div3" ~> if x `mod` 3 == 0 then view "multiple of 3" else fail,
+      "Div5" ~> if x `mod` 5 == 0 then view "multiple of 5" else fail
+    ]
 
 -- Shared Data --
 
@@ -268,7 +280,8 @@ atomic = do
         r <<- 3
         r <<- 1
         view ()
-  t1 >< t2
+  -- t1 >< t2
+  t2 >< t1
 
 unfixated :: Collaborative r m => Task m ((), ())
 unfixated = do
@@ -314,10 +327,11 @@ numbers' = do
       --NOTE: `watch` should be before the external step, otherwise we'll end up an a state where we show an editor with the list when the user entered an improper index.
       -- Compare this with iTasks: `watch` should be before the external step because you cannot specify the `watch` inside the step list!
       n <- map (length >> fromIntegral) (watch r)
-      enter
-        >>* [ "Delete" ~> \i -> if i < n then delete_ r i else fail,
-              "Replace" ~> \i -> if i < n then replace_ r i else fail
-            ]
+      i <- enter
+      select
+        [ "Delete" ~> if i < n then delete_ r i else fail,
+          "Replace" ~> if i < n then replace_ r i else fail
+        ]
     delete_ r i =
       r <<= del i
     replace_ r i = do

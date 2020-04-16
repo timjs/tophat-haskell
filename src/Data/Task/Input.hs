@@ -74,8 +74,8 @@ pattern IPreselect l = IOption Unnamed l
 
 instance Pretty b => Pretty (Input b) where
   pretty = \case
-    IEnter n b -> cat [pretty b, "^", pretty n]
-    ISelect n l -> cat [pretty l, "^", pretty n]
+    IEnter n b -> sep [ pretty n, pretty b]
+    ISelect n l -> sep [ pretty n, pretty l]
     IPreselect l -> pretty l
 
 -- -- Action view --
