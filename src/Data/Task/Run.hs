@@ -28,7 +28,7 @@ ui = \case
       Nothing -> pure []
       Just v1 -> do
         os <- options (e2 v1)
-        pure <| map (\(IOption _ l) -> l) os
+        pure <| map (\(IOption _ l) -> l) os --FIXME
     where
       go s ls
         | null ls = cat [s, " ▶…"]
@@ -318,17 +318,19 @@ handle ::
   PartialTracking Task m a
 handle t i = case t of
   -- Editors --
-  Editor n e -> case (i, e) of
-    (IOption n' l, Select ts)
-      | n == n' -> case HashMap.lookup l ts of
-        Nothing -> throw <| CouldNotFind l
-        Just t' -> do
-          os <- lift <| lift <| options t
-          if i `elem` os
-            then pure t'
-            else throw <| CouldNotGoTo l
-      | otherwise -> throw <| CouldNotMatch n n'
-    (IEnter m b, _)
+  Editor n e -> case i of
+    IOption n' l -> case e of
+      Select ts
+        | n == n' -> case HashMap.lookup l ts of
+          Nothing -> throw <| CouldNotFind l
+          Just t' -> do
+            os <- lift <| lift <| options t
+            if i `elem` os
+              then pure t'
+              else throw <| CouldNotGoTo l
+        | otherwise -> throw <| CouldNotMatch n n'
+      _ -> throw <| CouldNotHandle i
+    IEnter m b
       | n == Named m -> do
         e' <- handle' b e
         pure <| Editor n e'

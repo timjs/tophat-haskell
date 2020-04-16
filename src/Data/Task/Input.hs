@@ -29,7 +29,6 @@ instance Eq Concrete where
   Concrete x == Concrete y
     | Just Refl <- x ~= y = x == y
     | otherwise = False
-  _ == _ = False
 
 instance Pretty Concrete where
   pretty = \case
@@ -45,7 +44,6 @@ instance Eq Symbolic where
     -- NOTE: We're comparing proxies, they are always equal when the types are equal.
     | Just Refl <- x ~= y = True
     | otherwise = False
-  _ == _ = False
 
 instance Pretty Symbolic where
   pretty = \case
@@ -166,12 +164,12 @@ parseConcrete val
 
 parse :: Text -> Either (Doc a) (Input Concrete)
 parse t = case Text.words t of
+  ["help"] -> throw usage
+  ["h"] -> throw usage
   [i, x] -> do
     n <- parseId i
     map (ISelect n) (parseLabel x) ++ map (IEnter n) (parseConcrete x) --NOTE: should be `<|>`, but we've got some strange import of `Error` getting in the way
   [x] -> do
     l <- parseLabel x
     ok <| IPreselect l
-  ["help"] -> throw usage
-  ["h"] -> throw usage
   _ -> throw <| sep ["!!", Pretty.dquotes (pretty t), "is not a valid command, type `help` for more info"]

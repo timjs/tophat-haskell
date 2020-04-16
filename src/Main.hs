@@ -149,7 +149,7 @@ parpick = pick3' >< pick3'
 
 parpick' :: Task m (Int, Int)
 parpick' = do
-  update (1 :: Int)
+  _ <- update (1 :: Int)
   parpick
 
 -- Guards --
