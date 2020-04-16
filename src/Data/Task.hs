@@ -1,6 +1,7 @@
 module Data.Task
   ( Task (..),
     Editor (..),
+    Name (..),
     (<?>),
     (>>?),
     (>>*),
@@ -25,11 +26,8 @@ import qualified Data.Text.Prettyprint.Doc as Pretty
 -- | To use references, `m` shoud be a `Collaborative` with locations `r`.
 data Task (m :: Type -> Type) (t :: Type) where
   --
-  -- Naming --
-  New :: Editor m t -> Task m t
-  --
   -- Editors --
-  Editor :: Nat -> Editor m t -> Task m t
+  Editor :: Name -> Editor m t -> Task m t
   --
   -- Parallels --
 
@@ -81,17 +79,25 @@ data Editor (m :: Type -> Type) (t :: Type) where
   -- | Watch a reference of type `t`
   Watch :: (Collaborative r m, Editable t) => Store r t -> Editor m t
 
+data Name
+  = Unnamed
+  | Named Nat
+  deriving (Eq, Ord, Show, Read)
+
+new :: Editor m t -> Task m t
+new e = Editor Unnamed e
+
 -- Derived forms ---------------------------------------------------------------
 
 infixl 3 <?>
 
 (<?>) :: Task m a -> Task m a -> Task m a
-(<?>) t1 t2 = select [("Left", t1), ("Right", t2)]
+(<?>) t1 t2 = select ["Left" ~> t1, "Right" ~> t2]
 
 infixl 1 >>?
 
 (>>?) :: Task m a -> (a -> Task m b) -> Task m b
-(>>?) t1 e2 = t1 >>= \x -> select [("Continue", e2 x)]
+(>>?) t1 e2 = t1 >>= \x -> select ["Continue" ~> e2 x]
 
 infixl 1 >>*
 
@@ -113,34 +119,38 @@ forever t1 = t1 >>= \_ -> forever t1
 
 instance Pretty (Task m t) where
   pretty = \case
-    New e -> sep ["New", pretty e]
-    Editor n e -> cat [pretty e, "^", pretty n]
-    Pair t1 t2 -> Pretty.parens <| sep [pretty t1, "><", pretty t2]
+    Editor n e -> cat [pretty e |> Pretty.parens, "^", pretty n]
+    Pair t1 t2 -> sep [pretty t1, "><", pretty t2] |> Pretty.parens
     Done _ -> "Done _"
-    Choose t1 t2 -> Pretty.parens <| sep [pretty t1, "<|>", pretty t2]
+    Choose t1 t2 -> sep [pretty t1, "<|>", pretty t2] |> Pretty.parens
     Fail -> "Fail"
     Trans _ t -> sep ["Trans _", pretty t]
-    Step t _ -> Pretty.parens <| sep [pretty t, ">>=", "_"]
+    Step t _ -> sep [pretty t, ">>=", "_"] |> Pretty.parens
     Share v -> sep ["Share", pretty v]
     Assign v _ -> sep ["_", ":=", pretty v]
 
 instance Pretty (Editor m a) where
   pretty = \case
     Enter -> "Enter"
-    Update v -> Pretty.parens <| sep ["Update", pretty v]
-    View v -> Pretty.parens <| sep ["View", pretty v]
-    Select ts -> Pretty.parens <| sep ["Select", pretty ts]
+    Update v -> sep ["Update", pretty v] |> Pretty.parens
+    View v -> sep ["View", pretty v] |> Pretty.parens
+    Select ts -> sep ["Select", pretty ts] |> Pretty.parens
     Watch _ -> sep ["Watch", "_"]
     Change _ -> sep ["Change", "_"]
+
+instance Pretty Name where
+  pretty = \case
+    Unnamed -> "ε"
+    Named n -> pretty n
 
 instance Functor (Task m) where
   fmap = Trans
 
 instance Interactive (Task m) where
-  enter = New Enter
-  update v = New (Update v)
-  view v = New (View v)
-  select ts = New (Select ts)
+  enter = new Enter
+  update v = new (Update v)
+  view v = new (View v)
+  select ts = new (Select ts)
 
 instance Monoidal (Task m) where
   (><) = Pair
@@ -166,5 +176,5 @@ instance Monad (Task m) where
 instance Collaborative r m => Collaborative r (Task m) where
   share = Share
   assign = Assign
-  watch l = New (Watch l)
-  change l = New (Change l)
+  watch l = new (Watch l)
+  change l = new (Change l)
