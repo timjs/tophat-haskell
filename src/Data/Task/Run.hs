@@ -427,16 +427,14 @@ fixate tt = do
   let ds = d `union` d'
   let os = ds `intersect` ws
   case os of
-    -- F-Done --
     [] -> do
       log Info <| DidStabilise (length ds) (length ws)
       -- let t'' = balance t'
       -- log Info <| DidBalance (show <| pretty t'')
-      pure t'
-    -- F-Loop --
+      pure t' -- F-Done --
     _ -> do
       log Info <| DidNotStabilise (length ds) (length ws) (length os)
-      fixate <| pure t'
+      fixate <| pure t' -- F-Loop --
 
 initialise ::
   Collaborative r m =>
