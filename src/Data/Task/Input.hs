@@ -1,8 +1,13 @@
+{-# LANGUAGE ViewPatterns #-}
 module Data.Task.Input
   ( Action (..),
     Dummy (..),
     Symbolic (..),
     Input (..),
+    pattern Named,
+    pattern Unnamed,
+    pattern Labeled,
+    pattern Unlabeled,
     dummyfy,
     strip,
     usage,
@@ -65,12 +70,39 @@ data Symbolic :: Type where
 -- Inputs ----------------------------------------------------------------------
 
 data Input a
-  = Input Nat a
+  = Send Nat a
+  | Prepare Label
   deriving (Eq, Show, Functor, Foldable, Traversable)
 
 instance Pretty a => Pretty (Input a) where
   pretty = \case
-    Input n a -> cat [pretty a, "@", pretty n]
+    Send n a -> sep [pretty n, pretty a]
+    Prepare l -> pretty l
+
+{-# COMPLETE Named, Unnamed #-}
+pattern Named :: Nat -> Input Action
+pattern Named n <- (name -> Just n)
+
+pattern Unnamed :: Input Action
+pattern Unnamed <- (name -> Nothing)
+
+name :: Input Action -> Maybe Nat
+name = \case
+  Send n _ -> Just n
+  Prepare _ -> Nothing
+
+{-# COMPLETE Labeled, Unlabeled #-}
+pattern Labeled :: Label -> Input Action
+pattern Labeled l <- (label -> Just l)
+
+pattern Unlabeled :: Input Action
+pattern Unlabeled <- (label -> Nothing)
+
+label :: Input Action -> Maybe Label
+label = \case
+  Send _ (IEnter _) -> Nothing
+  Send _ (ISelect l) -> Just l
+  Prepare l -> Just l
 
 -- Conformance -----------------------------------------------------------------
 
@@ -143,7 +175,7 @@ parse t = case Text.splitOn "@" t of
   [x, i] -> do
     n <- parseId i
     r <- parseVal x ++ parseLabel x --XXX: should be `<|>`, but we've got some strange import of `Error` getting in the way
-    ok <| Input n r
+    ok <| Send n r
   ["help"] -> throw usage
   ["h"] -> throw usage
   _ -> throw <| sep ["!!", Pretty.dquotes (pretty t), "is not a valid command, type `help` for more info"]
