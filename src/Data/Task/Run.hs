@@ -90,7 +90,7 @@ failing = \case
   Choose t1 t2 -> failing t1 && failing t2
   Fail -> True
   Step t _ -> failing t
-  New f -> failing (f 0)
+  New e -> failing' e
   Share _ -> False
   Assign _ _ -> False
 
@@ -116,7 +116,7 @@ watching = \case
   Choose t1 t2 -> watching t1 `union` watching t2
   Fail -> []
   Step t1 _ -> watching t1
-  New _ -> []
+  New _ -> [] --XXX is this correct?
   Share _ -> []
   Assign _ _ -> []
 
@@ -145,8 +145,6 @@ options ::
 options = \case
   Editor n e -> pure <| HashSet.map (,n) (options' e)
   Trans _ t2 -> options t2
-  Pair t1 t2 -> pure (++) -< options t1 -< options t2
-  Choose t1 t2 -> pure (++) -< options t1 -< options t2
   Step t1 e2 -> pure (++) -< options t1 -< do
     mv1 <- value t1
     case mv1 of
@@ -154,6 +152,8 @@ options = \case
       Just v1 -> do
         let t2 = e2 v1
         options t2
+  -- Pair t1 t2 -> pure [] --pure (++) -< options t1 -< options t2
+  -- Choose t1 t2 -> pure [] --pure (++) -< options t1 -< options t2
   _ -> pure []
 
 options' ::
@@ -317,7 +317,7 @@ handle ::
   Task m a ->
   Input Action ->
   PartialTracking Task m a
-handle t i@(Input m a) = case t of
+handle t i = case t of
   -- Editors --
   Editor n e
     | n == m -> case (e, a) of

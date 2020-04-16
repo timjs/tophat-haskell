@@ -26,7 +26,7 @@ import qualified Data.Text.Prettyprint.Doc as Pretty
 data Task (m :: Type -> Type) (t :: Type) where
   --
   -- Naming --
-  New :: (Nat -> Task m t) -> Task m t
+  New :: Editor m t -> Task m t
   --
   -- Editors --
   Editor :: Nat -> Editor m t -> Task m t
@@ -91,23 +91,23 @@ infixl 3 <?>
 infixl 1 >>?
 
 (>>?) :: Task m a -> (a -> Task m b) -> Task m b
-(>>?) t1 e2 = New (\n -> t1 `Step` \x -> Editor n (Select [("Continue", e2 x)]))
+(>>?) t1 e2 = t1 >>= \x -> select [("Continue", e2 x)]
 
 infixl 1 >>*
 
 (>>*) :: Task m a -> HashMap Label (a -> Task m b) -> Task m b
-(>>*) t1 cs = New (\n -> t1 `Step` \x -> Editor n (Select (cs ||> \c -> c x)))
+(>>*) t1 cs = t1 >>= \x -> select (cs ||> \c -> c x)
 
 infixl 1 >**
 
 (>**) :: Task m a -> HashMap Label (a -> Bool, a -> Task m b) -> Task m b
-(>**) t1 cs = New (\n -> t1 `Step` \x -> Editor n (Select (cs ||> \(b, c) -> if b x then c x else fail)))
+(>**) t1 cs = t1 >>= \x -> select (cs ||> \(b, c) -> if b x then c x else fail)
 
 forever :: Task m a -> Task m Void
-forever t1 = t1 `Step` \_ -> forever t1
+forever t1 = t1 >>= \_ -> forever t1
 
 (>>@) :: Task m a -> (a -> Task m b) -> Task m b
-(>>@) t1 e2 = New (\n -> t1 `Step` \x -> Editor n (Select ["Repeat" ~> t1 >>@ e2, "Exit" ~> e2 x]))
+(>>@) t1 e2 = t1 >>= \x -> select ["Repeat" ~> t1 >>@ e2, "Exit" ~> e2 x]
 
 -- Instances -------------------------------------------------------------------
 
@@ -137,10 +137,10 @@ instance Functor (Task m) where
   fmap = Trans
 
 instance Interactive (Task m) where
-  enter = New (\n -> Editor n Enter)
-  update v = New (\n -> Editor n (Update v))
-  view v = New (\n -> Editor n (View v))
-  select ts = New (\n -> Editor n (Select ts))
+  enter = New Enter
+  update v = New (Update v)
+  view v = New (View v)
+  select ts = New (Select ts)
 
 instance Monoidal (Task m) where
   (><) = Pair
@@ -166,5 +166,5 @@ instance Monad (Task m) where
 instance Collaborative r m => Collaborative r (Task m) where
   share = Share
   assign = Assign
-  watch l = New (\n -> Editor n (Watch l))
-  change l = New (\n -> Editor n (Change l))
+  watch l = New (Watch l)
+  change l = New (Change l)
