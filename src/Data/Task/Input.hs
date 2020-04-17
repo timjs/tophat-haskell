@@ -1,5 +1,3 @@
-{-# LANGUAGE ViewPatterns #-}
-
 module Data.Task.Input
   ( Concrete (..),
     Symbolic (..),
@@ -127,7 +125,6 @@ fromOption (Option n l) = IOption n l
 
 -- Parsing ---------------------------------------------------------------------
 
---TODO fix parser
 usage :: Doc n
 usage =
   split
