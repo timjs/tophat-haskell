@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 64ee269b958d0a3951ff3a678ef79d03c20aa140b01567950b942a4e43a429d3
+-- hash: 6dbc22704b9f9c94d4f0936d6ab4cccf73b5a268ebce96eb33d55d88c1fd904d
 
 name:           tophat
 version:        0.1.0.0
@@ -37,8 +37,6 @@ library
       Data.Task.Input
       Data.Task.Run
       Data.Task.Status
-      Guis
-      Main
       Prelude
   other-modules:
       Paths_tophat
@@ -60,22 +58,10 @@ library
 executable tophat
   main-is: Main.hs
   other-modules:
-      Control.Collaborative
-      Control.Interactive
-      Control.Monad.Log
-      Control.Monad.Ref
-      Control.Monad.Supply
-      Data.Editable
-      Data.Store
-      Data.Task
-      Data.Task.Input
-      Data.Task.Run
-      Data.Task.Status
       Guis
-      Prelude
       Paths_tophat
   hs-source-dirs:
-      src
+      app
   default-extensions: EmptyDataDecls EmptyCase FlexibleContexts FlexibleInstances InstanceSigs MultiParamTypeClasses LambdaCase MultiWayIf NamedFieldPuns TupleSections NumericUnderscores DeriveGeneric DeriveFunctor DeriveFoldable DeriveTraversable DerivingVia StandaloneDeriving BangPatterns KindSignatures TypeOperators MonadComprehensions BinaryLiterals NegativeLiterals NoStarIsType BlockArguments ScopedTypeVariables TypeApplications PartialTypeSignatures NamedWildCards OverloadedStrings OverloadedLists ConstraintKinds RankNTypes DefaultSignatures PatternSynonyms PatternGuards FunctionalDependencies UndecidableInstances GADTs ExistentialQuantification DataKinds PolyKinds QuantifiedConstraints
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
