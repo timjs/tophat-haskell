@@ -14,6 +14,8 @@ module Prelude
     Nat32,
     Nat64,
     List,
+    Cons,
+    NonEmpty (..),
     -- Vector,
 
     -- * Classes
@@ -58,6 +60,9 @@ module Prelude
 
     -- ** Pairs
     -- pattern (:=),
+
+    -- ** Foldables
+    foldr1,
 
     -- ** Monoids
     neutral,
@@ -135,6 +140,8 @@ where
 import Control.Monad.Except (MonadError (..))
 import Control.Monad.Writer.Strict (MonadWriter (..), WriterT (..), runWriterT)
 -- import Control.Monad.List (ListT)
+
+import Data.Foldable (foldr1)
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.HashSet as HashSet
 import qualified Data.Text as Text
@@ -203,6 +210,8 @@ type Nat32 = Relude.Word32
 type Nat64 = Relude.Word64
 
 type List = []
+
+type Cons = NonEmpty
 
 type Hash a = (Eq a, Hashable a)
 
