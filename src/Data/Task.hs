@@ -2,6 +2,9 @@ module Data.Task
   ( Task (..),
     Editor (..),
     Name (..),
+    parallel,
+    choose,
+    branch,
     (<?>),
     (>>?),
     (>>*),
@@ -31,10 +34,10 @@ data Task (m :: Type -> Type) (t :: Type) where
   --
   -- Parallels --
 
-  -- | Internal, unrestricted and hidden editor
-  Done :: t -> Task m t
   -- | Composition of two tasks.
   Pair :: Task m a -> Task m b -> Task m (a, b)
+  -- | Internal, unrestricted and hidden editor
+  Done :: t -> Task m t
   -- | Internal choice between two tasks.
   Choose :: Task m t -> Task m t -> Task m t
   -- | The failing task
@@ -88,6 +91,17 @@ new :: Editor m t -> Task m t
 new e = Editor Unnamed e
 
 -- Derived forms ---------------------------------------------------------------
+
+parallel :: List (Task m a) -> Task m (List a)
+parallel [] = pure []
+parallel (t : ts) = t >< parallel ts >>= \(x, xs) -> pure (x : xs)
+
+choose :: List (Task m a) -> Task m a
+choose = foldr (<|>) fail
+
+branch :: List (Bool, Task m a) -> Task m a
+branch [] = fail
+branch ((b, t) : rs) = if b then t else branch rs
 
 infixl 3 <?>
 

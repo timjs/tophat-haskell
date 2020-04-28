@@ -104,23 +104,28 @@ twoSteps''' =
 
 -- Parallel --
 
-parallel :: Task m (Int, Text)
-parallel = enter >< hello
+parallelSimple :: Task m (Int, Text)
+parallelSimple = enter >< hello
 
 parallelStep :: Task m Text
 parallelStep = do
-  (n, m) <- parallel
+  (n, m) <- parallelSimple
   view (unwords <| replicate n m)
 
 parallelStep' :: Task m Text
 parallelStep' = do
-  (n, m) <- parallel
+  (n, m) <- parallelSimple
   view (unwords <| replicate n m) <?> fail
 
 parallelStep'' :: Task m Text
 parallelStep'' =
-  parallel >>? \(n, m) ->
+  parallelSimple >>? \(n, m) ->
     view (unwords <| replicate n m)
+
+parallelTest :: Task m (List Int)
+parallelTest = do
+  xs <- parallel [enterInt, enterInt, enterInt]
+  view xs
 
 -- Choices --
 

@@ -57,7 +57,7 @@ value = \case
   Editor (Named _) e -> value' e
   Trans f t -> pure (map f) -< value t
   Pair t1 t2 -> pure (><) -< value t1 -< value t2
-  Done b -> pure (Just b)
+  Done v -> pure (Just v)
   Choose t1 t2 -> pure (<|>) -< value t1 -< value t2
   Fail -> pure Nothing
   Step _ _ -> pure Nothing
@@ -80,12 +80,12 @@ failing ::
   Task m a -> Bool
 failing = \case
   Editor _ e -> failing' e
-  Trans _ t -> failing t
+  Trans _ t2 -> failing t2
   Pair t1 t2 -> failing t1 && failing t2
   Done _ -> False
   Choose t1 t2 -> failing t1 && failing t2
   Fail -> True
-  Step t _ -> failing t
+  Step t1 _ -> failing t1
   Share _ -> False
   Assign _ _ -> False
 
@@ -242,7 +242,7 @@ normalise t = case t of
           Nothing -> pure <| Choose t1' t2' -- N-ChooseNone
 
   -- Congruences --
-  Trans f t1 -> pure (Trans f) -< normalise t1
+  Trans f t2 -> pure (Trans f) -< normalise t2
   Pair t1 t2 -> pure Pair -< normalise t1 -< normalise t2
   -- Ready --
   Done _ -> pure t
@@ -328,9 +328,9 @@ handle t i = case t of
               else throw <| CouldNotGoTo l
         | otherwise -> throw <| CouldNotMatch n n'
       _ -> throw <| CouldNotHandle i
-    IEnter m b
+    IEnter m b'
       | n == Named m -> do
-        e' <- handle' b e
+        e' <- handle' b' e
         pure <| Editor n e'
       | otherwise -> throw <| CouldNotMatch n (Named m)
   -- Pass --
