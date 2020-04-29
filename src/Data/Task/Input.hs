@@ -66,6 +66,7 @@ data Input b
   deriving (Eq, Show, Functor, Foldable, Traversable)
 
 {-# COMPLETE IEnter, ISelect, IPreselect #-}
+
 pattern ISelect :: Nat -> Label -> Input b
 pattern ISelect n l = IOption (Named n) l
 

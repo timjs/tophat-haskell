@@ -71,6 +71,7 @@ temperature'' :: Collaborative r m => Double -> Task m Double
 temperature'' c = do
   r <- share c
   change r |< change (focus (iso c2f f2c) r)
+
 -- Flight booker ---------------------------------------------------------------
 {-
 -- We use type synonyms instead of new data types so we do not have to extend
