@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 6dbc22704b9f9c94d4f0936d6ab4cccf73b5a268ebce96eb33d55d88c1fd904d
+-- hash: b191509ef4df14f05397c1beaae0c03bf274722cd604c43097fa62050abbf38f
 
 name:           tophat
 version:        0.1.0.0
@@ -35,6 +35,7 @@ library
       Data.Store
       Data.Task
       Data.Task.Input
+      Data.Task.Observe
       Data.Task.Run
       Data.Task.Status
       Prelude
