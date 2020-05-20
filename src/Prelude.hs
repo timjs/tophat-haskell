@@ -169,6 +169,7 @@ import Relude hiding
     MonadFail (..),
     Nat,
     Option (..),
+    Read,
     String,
     Word,
     Word16,
@@ -278,7 +279,9 @@ infix 4 /<
 
 -- Reading & Tracing -----------------------------------------------------------
 
-scan :: Read a => Text -> Maybe a
+type Scan = Relude.Read
+
+scan :: Scan a => Text -> Maybe a
 scan = Relude.readMaybe << chars
 {-# INLINE scan #-}
 
