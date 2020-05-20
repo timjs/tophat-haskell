@@ -10,6 +10,9 @@ module Polysemy.Mutate
     read,
     write,
     alloc,
+    mutate,
+    (<<-),
+    (<<=),
 
     -- * Interpretations
     readToIO,
@@ -34,6 +37,23 @@ data Alloc l m a where
 makeSem ''Read
 makeSem ''Write
 makeSem ''Alloc
+
+-- Operators -------------------------------------------------------------------
+
+mutate :: Members '[Read l, Write l] r => (a -> a) -> l a -> Sem r ()
+mutate f r = do
+  x <- read r
+  write (f x) r
+
+infixl 1 <<-
+
+infixl 1 <<=
+
+(<<-) :: Members '[Read l, Write l] r => l a -> a -> Sem r ()
+(<<-) = flip write
+
+(<<=) :: Members '[Read l, Write l] r => l a -> (a -> a) -> Sem r ()
+(<<=) = flip mutate
 
 -- Interpretations -------------------------------------------------------------
 
