@@ -27,6 +27,7 @@ module Prelude
     -- * Aliases
     length,
     (~>),
+    getTextLine,
 
     -- ** Text
     chars,
@@ -176,6 +177,7 @@ import Relude hiding
     Word8,
     first,
     forever,
+    getLine,
     id,
     length,
     liftA2,
@@ -228,6 +230,9 @@ infix 0 ~>
 
 (~>) :: a -> b -> (a, b)
 (~>) = (,)
+
+getTextLine :: MonadIO m => m Text
+getTextLine = Relude.getLine
 
 -- Pretty printing --
 
