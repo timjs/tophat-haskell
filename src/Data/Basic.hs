@@ -3,6 +3,8 @@ module Data.Basic
   )
 where
 
+-- Basic types -----------------------------------------------------------------
+
 -- | Types `a` which can be edited by an end user.
 -- |
 -- | They should be:
