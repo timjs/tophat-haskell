@@ -1,6 +1,6 @@
 module Control.Interactive where
 
-import Data.Editable
+import Data.Basic
 import qualified Data.HashMap.Strict as HashMap
 
 -- | A monad `m` with interactive abilities.
@@ -12,9 +12,9 @@ import qualified Data.HashMap.Strict as HashMap
 -- |
 -- | FIXME: Simplify constraint?
 class (Monad m) => Interactive m where
-  enter :: Editable a => m a
-  update :: Editable a => a -> m a
-  view :: Editable a => a -> m a
+  enter :: Basic a => m a
+  update :: Basic a => a -> m a
+  view :: Basic a => a -> m a
 
   select :: HashMap Label (m a) -> m a
   select ms = do
@@ -45,22 +45,22 @@ instance (Interactive m) => Interactive (ExceptT e m) where
 -- Example instance for IO -----------------------------------------------------
 
 instance Interactive IO where
-  enter :: forall a. Editable a => IO a
+  enter :: forall a. Basic a => IO a
   enter = do
     putText <| show tau ++ "? "
-    t <- getLine
-    case scan t of
+    t <- getTextLn
+    case screen t of
       Just x -> pure x
       Nothing -> enter
     where
       tau = typeRep :: TypeRep a
 
-  update :: forall a. Editable a => a -> IO a
+  update :: forall a. Basic a => a -> IO a
   update x = do
     _ <- view x
     enter
 
-  view :: forall a. Editable a => a -> IO a
+  view :: forall a. Basic a => a -> IO a
   view x = do
     putTextLn <| show (pretty x)
     pure x

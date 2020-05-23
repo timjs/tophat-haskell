@@ -9,7 +9,8 @@ module Control.Collaborative
   )
 where
 
-import Data.Editable
+import Data.Basic
+import Data.Someref
 import Data.Store
 import qualified Lens.Simple as Lens
 
@@ -25,14 +26,14 @@ import qualified Lens.Simple as Lens
 -- | NOTE: GHC does not let us write this as a type synonym,
 -- | because of the impredicativity of `Eq (r a)`.
 class (Monad m, Typeable r, forall a. Eq (r a)) => Collaborative r m | m -> r where
-  share :: Editable a => a -> m (Store r a)
-  watch :: Editable a => Store r a -> m a
-  assign :: Editable a => a -> Store r a -> m ()
+  share :: Basic a => a -> m (Store r a)
+  watch :: Basic a => Store r a -> m a
+  assign :: Basic a => a -> Store r a -> m ()
 
-  change :: Editable a => Store r a -> m a
+  change :: Basic a => Store r a -> m a
   change = watch
 
-  mutate :: Editable a => (a -> a) -> Store r a -> m ()
+  mutate :: Basic a => (a -> a) -> Store r a -> m ()
   mutate f r = do
     x <- watch r
     assign (f x) r
@@ -43,10 +44,10 @@ infixl 1 <<-
 
 infixl 1 <<=
 
-(<<-) :: (Collaborative r m, Editable a) => Store r a -> a -> m ()
+(<<-) :: (Collaborative r m, Basic a) => Store r a -> a -> m ()
 (<<-) = flip assign
 
-(<<=) :: (Collaborative r m, Editable a) => Store r a -> (a -> a) -> m ()
+(<<=) :: (Collaborative r m, Basic a) => Store r a -> (a -> a) -> m ()
 (<<=) = flip mutate
 
 -- Instances -------------------------------------------------------------------
@@ -72,23 +73,3 @@ instance Collaborative IORef IO where
   watch (Store l r) = do
     s <- readIORef r
     pure <| Lens.view l s
-
--- Existential packing ---------------------------------------------------------
-
-data Someref (m :: Type -> Type) where
-  Someref :: (Collaborative r m, Typeable (r a), Eq (r a)) => r a -> Someref m
-
-pack :: forall m r a. (Collaborative r m, Typeable (r a), Eq (r a)) => r a -> Someref m
-pack = Someref
-
-unpack :: forall m r a. (Typeable (r a)) => Someref m -> Maybe (r a)
-unpack (Someref x)
-  | Just Refl <- x ~: r = Just x
-  | otherwise = Nothing
-  where
-    r = typeRep :: TypeRep (r a)
-
-instance Eq (Someref m) where
-  Someref x == Someref y
-    | Just Refl <- x ~= y = x == y
-    | otherwise = False
