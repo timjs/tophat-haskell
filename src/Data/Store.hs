@@ -1,11 +1,16 @@
 module Data.Store
   ( Store (..),
+    ref,
+    deref,
+    assign,
     focus,
     _identity,
   )
 where
 
-import Lens.Simple (Lens', iso)
+import Lens.Simple (Lens', iso, set, view)
+import Polysemy
+import Polysemy.Mutate
 
 -- Stores ----------------------------------------------------------------------
 
@@ -13,23 +18,21 @@ import Lens.Simple (Lens', iso)
 -- I think the source and target types always have to be the same,
 -- otherwise you would be able to change the type of the inner reference...
 -- Isn't it?
-data Store r a = forall s. Typeable s => Store (Lens' s a) (r s)
+data Store h a = forall s. Typeable s => Store (Lens' s a) (Ref h s)
 
-{-
-share :: ( MonadRef r m ) => a -> m (Share r a a)
-share x = do
-  r <- new x
-  pure <| Share _identity r
+ref :: (Member (Alloc h) r, Typeable a) => a -> Sem r (Store h a)
+ref x = do
+  r <- alloc x
+  pure <| Store _identity r
 
-watch :: ( MonadRef r m ) => Share r s a -> m a
-watch (Share l r) = do
+deref :: (Member (Read h) r) => Store h a -> Sem r a
+deref (Store l r) = do
   s <- read r
   pure <| view l s
 
-assign :: ( MonadRef r m ) => a -> Share r s a -> m ()
-assign x (Share l r) = do
-  r <<= set l x
--}
+assign :: (Members '[Read h, Write h] r) => a -> Store h a -> Sem r ()
+assign x (Store l r) = do
+  mutate (set l x) r
 
 -- Focussing -------------------------------------------------------------------
 

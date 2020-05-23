@@ -6,7 +6,10 @@ module Polysemy.Mutate
     Write (..),
     Alloc (..),
     Mutate,
+
+    -- ** Heaps
     Heap (..),
+    Ref,
 
     -- * Actions
     read,

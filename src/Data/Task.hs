@@ -2,6 +2,7 @@ module Data.Task
   ( Act (..),
     Edit (..),
     Name (..),
+    Label,
     parallel,
     choose,
     branch,
@@ -14,41 +15,45 @@ module Data.Task
     -- module Control.Interactive,
     -- module Control.Collaborative,
     module Data.Basic,
+    module Data.Someref,
     module Data.Store,
   )
 where
 
 -- import Control.Collaborative
+
 import Control.Interactive
-import Data.Basic (Basic)
-import Data.Store (Store)
+import Data.Basic
+import Data.Someref
+import Data.Store
 import qualified Data.Text.Prettyprint.Doc as Pretty
+import Polysemy.Mutate (Heap)
 
 -- Acts ------------------------------------------------------------------------
 
 -- | Act effect build on top of a monad `m`.
-data Act (m :: Type -> Type) (t :: Type) where
+data Act (h :: Heap h') (m :: Type -> Type) (t :: Type) where
   --
   -- Editors --
-  Edit :: Name -> Edit m t -> Act m t
+  Edit :: Name -> Edit h m t -> Act h m t
   --
   -- Parallels --
 
   -- | Composition of two tasks.
-  Pair :: Act m a -> Act m b -> Act m (a, b)
+  Pair :: Act h m a -> Act h m b -> Act h m (a, b)
   -- | Internal, unrestricted and hidden editor
-  Done :: t -> Act m t
+  Done :: t -> Act h m t
   -- | Internal choice between two tasks.
-  Choose :: Act m t -> Act m t -> Act m t
+  Choose :: Act h m t -> Act h m t -> Act h m t
   -- | The failing task
-  Fail :: Act m t
+  Fail :: Act h m t
   --
   -- Steps --
 
   -- | Internal value transformation
-  Trans :: (a -> t) -> Act m a -> Act m t
+  Trans :: (a -> t) -> Act h m a -> Act h m t
   -- | Internal, or system step.
-  Step :: Act m a -> (a -> Act m t) -> Act m t
+  Step :: Act h m a -> (a -> Act h m t) -> Act h m t
   --
   -- References --
   -- The inner monad `m` needs to have the notion of references.
@@ -56,9 +61,9 @@ data Act (m :: Type -> Type) (t :: Type) where
   -- because we need to mark them dirty and match those with watched references.
 
   -- | Create new reference of type `t`
-  Share :: (Basic t) => t -> Act m (Store r t)
+  Share :: (Basic t) => t -> Act h m (Store h t)
   -- | Assign to a reference of type `t` to a given value
-  Assign :: (Basic a) => a -> Store r a -> Act m ()
+  Assign :: (Basic a) => a -> Store h a -> Act h m ()
 
 -- NOTE:
 -- We could choose to replace `Share` and `Assign` and with a general `Lift` constructor,
@@ -68,70 +73,70 @@ data Act (m :: Type -> Type) (t :: Type) where
 -- This makes actions like logging to stdout, lounching missiles or other effects impossible.
 -- (Though this would need to be constrained with classes when specifying the task!)
 
-data Edit (m :: Type -> Type) (t :: Type) where
+data Edit (h :: Heap h') (m :: Type -> Type) (t :: Type) where
   -- | Unvalued editor
-  Enter :: (Basic t) => Edit m t
+  Enter :: (Basic t) => Edit h m t
   -- | Valued editor
-  Update :: (Basic t) => t -> Edit m t
+  Update :: (Basic t) => t -> Edit h m t
   -- | Valued, view only editor
-  View :: (Basic t) => t -> Edit m t
+  View :: (Basic t) => t -> Edit h m t
   -- | External choice between multple tasks.
-  Select :: HashMap Label (Act m t) -> Edit m t
+  Select :: HashMap Label (Act h m t) -> Edit h m t
   -- | Change to a reference of type `t` to a value
-  Change :: (Basic t) => Store r t -> Edit m t
+  Change :: (Typeable (Store h t), Eq (Store h t), Basic t) => Store h t -> Edit h m t
   -- | Watch a reference of type `t`
-  Watch :: (Basic t) => Store r t -> Edit m t
+  Watch :: (Typeable (Store h t), Eq (Store h t), Basic t) => Store h t -> Edit h m t
 
 data Name
   = Unnamed
   | Named Nat
   deriving (Eq, Ord, Show, Screen)
 
-new :: Edit m t -> Act m t
+new :: Edit h m t -> Act h m t
 new e = Edit Unnamed e
 
 -- Derived forms ---------------------------------------------------------------
 
-parallel :: List (Act m a) -> Act m (List a)
+parallel :: List (Act h m a) -> Act h m (List a)
 parallel [] = pure []
 parallel (t : ts) = t >< parallel ts >>= \(x, xs) -> pure (x : xs)
 
-choose :: List (Act m a) -> Act m a
+choose :: List (Act h m a) -> Act h m a
 choose = foldr (<|>) fail
 
-branch :: List (Bool, Act m a) -> Act m a
+branch :: List (Bool, Act h m a) -> Act h m a
 branch [] = fail
 branch ((b, t) : rs) = if b then t else branch rs
 
 infixl 3 <?>
 
-(<?>) :: Act m a -> Act m a -> Act m a
+(<?>) :: Act h m a -> Act h m a -> Act h m a
 (<?>) t1 t2 = select ["Left" ~> t1, "Right" ~> t2]
 
 infixl 1 >>?
 
-(>>?) :: Act m a -> (a -> Act m b) -> Act m b
+(>>?) :: Act h m a -> (a -> Act h m b) -> Act h m b
 (>>?) t1 e2 = t1 >>= \x -> select ["Continue" ~> e2 x]
 
 infixl 1 >>*
 
-(>>*) :: Act m a -> HashMap Label (a -> Act m b) -> Act m b
+(>>*) :: Act h m a -> HashMap Label (a -> Act h m b) -> Act h m b
 (>>*) t1 cs = t1 >>= \x -> select (cs ||> \c -> c x)
 
 infixl 1 >**
 
-(>**) :: Act m a -> HashMap Label (a -> Bool, a -> Act m b) -> Act m b
+(>**) :: Act h m a -> HashMap Label (a -> Bool, a -> Act h m b) -> Act h m b
 (>**) t1 cs = t1 >>= \x -> select (cs ||> \(b, c) -> if b x then c x else fail)
 
-forever :: Act m a -> Act m Void
+forever :: Act h m a -> Act h m Void
 forever t1 = t1 >>= \_ -> forever t1
 
-(>>@) :: Act m a -> (a -> Act m b) -> Act m b
+(>>@) :: Act h m a -> (a -> Act h m b) -> Act h m b
 (>>@) t1 e2 = t1 >>= \x -> select ["Repeat" ~> t1 >>@ e2, "Exit" ~> e2 x]
 
 -- Instances -------------------------------------------------------------------
 
-instance Pretty (Act m t) where
+instance Pretty (Act h m t) where
   pretty = \case
     Edit n e -> cat [pretty e |> Pretty.parens, "^", pretty n]
     Pair t1 t2 -> sep [pretty t1, "><", pretty t2] |> Pretty.parens
@@ -143,7 +148,7 @@ instance Pretty (Act m t) where
     Share v -> sep ["Share", pretty v]
     Assign v _ -> sep ["_", ":=", pretty v]
 
-instance Pretty (Edit m a) where
+instance Pretty (Edit h m a) where
   pretty = \case
     Enter -> "Enter"
     Update v -> sep ["Update", pretty v] |> Pretty.parens
@@ -157,37 +162,37 @@ instance Pretty Name where
     Unnamed -> "ε"
     Named n -> pretty n
 
-instance Functor (Act m) where
+instance Functor (Act h m) where
   fmap = Trans
 
-instance Interactive (Act m) where
+instance Interactive (Act h m) where
   enter = new Enter
   update v = new (Update v)
   view v = new (View v)
   select ts = new (Select ts)
 
-instance Monoidal (Act m) where
+instance Monoidal (Act h m) where
   (><) = Pair
   skip = Done ()
 
-instance Applicative (Act m) where
+instance Applicative (Act h m) where
   pure = Done
   (<*>) = applyDefault
 
--- instance Selective (Act m) where
+-- instance Selective (Act h m) where
 --   branch p t1 t2 = go =<< p
 --     where
 --       go (Left a) = map (<| a) t1
 --       go (Right b) = map (<| b) t2
 
-instance Alternative (Act m) where
+instance Alternative (Act h m) where
   (<|>) = Choose
   empty = Fail
 
-instance Monad (Act m) where
+instance Monad (Act h m) where
   (>>=) = Step
 
--- instance Collaborative r m => Collaborative r (Act m) where
+-- instance Collaborative r m => Collaborative r (Act h m) where
 --   share = Share
 --   assign = Assign
 --   watch l = new (Watch l)
