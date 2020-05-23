@@ -34,19 +34,12 @@ module Polysemy.Mutate
 where
 
 import Control.Monad.ST (ST)
-import Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
+import Data.Heap (Heap (..), Ref)
+import Data.STRef (newSTRef, readSTRef, writeSTRef)
 import Polysemy
 import Polysemy.Bundle
 
 -- Heap ------------------------------------------------------------------------
-
-data Heap h
-  = Global
-  | Local h
-
-type family Ref h where
-  Ref ('Global) = IORef
-  Ref ('Local h') = STRef h'
 
 -- Effects ---------------------------------------------------------------------
 
