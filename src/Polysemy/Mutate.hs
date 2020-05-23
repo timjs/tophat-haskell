@@ -5,12 +5,17 @@ module Polysemy.Mutate
     Read (..),
     Write (..),
     Alloc (..),
+    Mutate,
 
     -- * Actions
     read,
+    read',
     write,
+    write',
     alloc,
+    alloc',
     mutate,
+    -- mutate',
     (<<-),
     (<<=),
 
@@ -22,6 +27,7 @@ module Polysemy.Mutate
 where
 
 import Polysemy
+import Polysemy.Bundle
 
 -- Effects ---------------------------------------------------------------------
 
@@ -54,6 +60,22 @@ infixl 1 <<=
 
 (<<=) :: Members '[Read l, Write l] r => l a -> (a -> a) -> Sem r ()
 (<<=) = flip mutate
+
+-- Bundle ----------------------------------------------------------------------
+
+type Mutate l = Bundle '[Read l, Write l, Alloc l]
+
+read' :: (Member (Read l) r', Member (Bundle r') r) => l a -> Sem r a
+read' = sendBundle << read
+
+write' :: (Member (Write l) r', Member (Bundle r') r) => a -> l a -> Sem r ()
+write' val = sendBundle << write val
+
+alloc' :: (Member (Alloc l) r', Member (Bundle r') r) => a -> Sem r (l a)
+alloc' = sendBundle << alloc
+
+-- mutate' :: (Members '[Read l, Write l] r', Member (Bundle r') r) => (a -> a) -> l a -> Sem r ()
+-- mutate' f = sendBundle << mutate f
 
 -- Interpretations -------------------------------------------------------------
 
