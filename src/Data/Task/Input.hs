@@ -14,7 +14,7 @@ module Data.Task.Input
 where
 
 import qualified Data.Char as Char
-import Data.Task
+import Data.Task (Basic, Label, Name (..))
 import qualified Data.Text as Text
 import qualified Data.Text.Prettyprint.Doc as Pretty
 
@@ -23,7 +23,7 @@ import qualified Data.Text.Prettyprint.Doc as Pretty
 -- Concrete actions --
 
 data Concrete :: Type where
-  Concrete :: Editable b => b -> Concrete
+  Concrete :: Basic b => b -> Concrete
 
 instance Eq Concrete where
   Concrete x == Concrete y
@@ -37,7 +37,7 @@ instance Pretty Concrete where
 -- Symbolic actions --
 
 data Symbolic :: Type where
-  Symbolic :: Editable b => Proxy b -> Symbolic
+  Symbolic :: Basic b => Proxy b -> Symbolic
 
 instance Eq Symbolic where
   Symbolic x == Symbolic y
@@ -55,7 +55,7 @@ instance Pretty Symbolic where
 
 type Dummy = Symbolic
 
-dummy :: Editable b => Proxy b -> Dummy
+dummy :: Basic b => Proxy b -> Dummy
 dummy p = Symbolic p
 
 -- Inputs ----------------------------------------------------------------------
@@ -99,7 +99,7 @@ instance Pretty b => Pretty (Input b) where
 
 data Option
   = Option Name Label
-  deriving (Eq, Ord, Show, Read)
+  deriving (Eq, Ord, Show, Screen)
 
 instance Pretty Option where
   pretty (Option n l) = cat [pretty l, "^", pretty n]
@@ -153,7 +153,7 @@ usage =
 
 parseId :: Text -> Either (Doc n) Nat
 parseId t
-  | Just v <- scan t :: Maybe Nat = ok v
+  | Just v <- screen t :: Maybe Nat = ok v
   | otherwise = throw <| sep ["!!", Pretty.dquotes <| pretty t, "is not a proper id"]
 
 parseLabel :: Text -> Either (Doc n) Label
@@ -163,15 +163,15 @@ parseLabel t
 
 parseConcrete :: Text -> Either (Doc n) Concrete
 parseConcrete val
-  | Just v <- scan val :: Maybe Unit = ok <| Concrete v
-  | Just v <- scan val :: Maybe Bool = ok <| Concrete v
-  | Just v <- scan val :: Maybe Int = ok <| Concrete v
-  | Just v <- scan val :: Maybe Double = ok <| Concrete v
-  | Just v <- scan val :: Maybe Text = ok <| Concrete v
-  | Just v <- scan val :: Maybe [Bool] = ok <| Concrete v
-  | Just v <- scan val :: Maybe [Int] = ok <| Concrete v
-  | Just v <- scan val :: Maybe [Double] = ok <| Concrete v
-  | Just v <- scan val :: Maybe [Text] = ok <| Concrete v
+  | Just v <- screen val :: Maybe Unit = ok <| Concrete v
+  | Just v <- screen val :: Maybe Bool = ok <| Concrete v
+  | Just v <- screen val :: Maybe Int = ok <| Concrete v
+  | Just v <- screen val :: Maybe Double = ok <| Concrete v
+  | Just v <- screen val :: Maybe Text = ok <| Concrete v
+  | Just v <- screen val :: Maybe [Bool] = ok <| Concrete v
+  | Just v <- screen val :: Maybe [Int] = ok <| Concrete v
+  | Just v <- screen val :: Maybe [Double] = ok <| Concrete v
+  | Just v <- screen val :: Maybe [Text] = ok <| Concrete v
   | otherwise = throw <| sep ["!! Error parsing value", Pretty.dquotes (pretty val)]
 
 parse :: Text -> Either (Doc a) (Input Concrete)
