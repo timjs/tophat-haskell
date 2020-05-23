@@ -99,7 +99,7 @@ instance Pretty b => Pretty (Input b) where
 
 data Option
   = Option Name Label
-  deriving (Eq, Ord, Show, Screen)
+  deriving (Eq, Ord, Show, Scan)
 
 instance Pretty Option where
   pretty (Option n l) = cat [pretty l, "^", pretty n]
@@ -153,7 +153,7 @@ usage =
 
 parseId :: Text -> Either (Doc n) Nat
 parseId t
-  | Just v <- screen t :: Maybe Nat = ok v
+  | Just v <- scan t :: Maybe Nat = ok v
   | otherwise = throw <| sep ["!!", Pretty.dquotes <| pretty t, "is not a proper id"]
 
 parseLabel :: Text -> Either (Doc n) Label
@@ -163,15 +163,15 @@ parseLabel t
 
 parseConcrete :: Text -> Either (Doc n) Concrete
 parseConcrete val
-  | Just v <- screen val :: Maybe Unit = ok <| Concrete v
-  | Just v <- screen val :: Maybe Bool = ok <| Concrete v
-  | Just v <- screen val :: Maybe Int = ok <| Concrete v
-  | Just v <- screen val :: Maybe Double = ok <| Concrete v
-  | Just v <- screen val :: Maybe Text = ok <| Concrete v
-  | Just v <- screen val :: Maybe [Bool] = ok <| Concrete v
-  | Just v <- screen val :: Maybe [Int] = ok <| Concrete v
-  | Just v <- screen val :: Maybe [Double] = ok <| Concrete v
-  | Just v <- screen val :: Maybe [Text] = ok <| Concrete v
+  | Just v <- scan val :: Maybe Unit = ok <| Concrete v
+  | Just v <- scan val :: Maybe Bool = ok <| Concrete v
+  | Just v <- scan val :: Maybe Int = ok <| Concrete v
+  | Just v <- scan val :: Maybe Double = ok <| Concrete v
+  | Just v <- scan val :: Maybe Text = ok <| Concrete v
+  | Just v <- scan val :: Maybe [Bool] = ok <| Concrete v
+  | Just v <- scan val :: Maybe [Int] = ok <| Concrete v
+  | Just v <- scan val :: Maybe [Double] = ok <| Concrete v
+  | Just v <- scan val :: Maybe [Text] = ok <| Concrete v
   | otherwise = throw <| sep ["!! Error parsing value", Pretty.dquotes (pretty val)]
 
 parse :: Text -> Either (Doc a) (Input Concrete)

@@ -34,8 +34,8 @@ module Prelude
     unchars,
 
     -- ** Reading
-    Screen,
-    screen,
+    Scan,
+    scan,
 
     -- ** Tracing
     spy,
@@ -280,11 +280,11 @@ infix 4 /<
 
 -- Reading & Tracing -----------------------------------------------------------
 
-type Screen = Relude.Read
+type Scan = Relude.Read
 
-screen :: Screen a => Text -> Maybe a
-screen = Relude.readMaybe << chars
-{-# INLINE screen #-}
+scan :: Scan a => Text -> Maybe a
+scan = Relude.readMaybe << chars
+{-# INLINE scan #-}
 
 spy :: Pretty a => Text -> a -> a
 spy m x = Relude.traceShow (pretty m ++ ": " ++ pretty x) x

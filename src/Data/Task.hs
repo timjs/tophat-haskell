@@ -90,7 +90,7 @@ data Edit (h :: Heap h') (m :: Type -> Type) (t :: Type) where
 data Name
   = Unnamed
   | Named Nat
-  deriving (Eq, Ord, Show, Screen)
+  deriving (Eq, Ord, Show, Scan)
 
 new :: Edit h m t -> Act h m t
 new e = Edit Unnamed e

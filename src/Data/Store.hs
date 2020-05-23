@@ -1,8 +1,8 @@
 module Data.Store
   ( Store (..),
-    ref,
-    deref,
-    assign,
+    alloc,
+    read,
+    write,
     focus,
     _identity,
   )
@@ -10,7 +10,8 @@ where
 
 import Lens.Simple (Lens', iso, set, view)
 import Polysemy
-import Polysemy.Mutate
+import Polysemy.Mutate (Alloc, Read, Ref, Write)
+import qualified Polysemy.Mutate as Mutate
 
 -- Stores ----------------------------------------------------------------------
 
@@ -20,19 +21,19 @@ import Polysemy.Mutate
 -- Isn't it?
 data Store h a = forall s. Typeable s => Store (Lens' s a) (Ref h s)
 
-ref :: (Member (Alloc h) r, Typeable a) => a -> Sem r (Store h a)
-ref x = do
-  r <- alloc x
+alloc :: (Member (Alloc h) r, Typeable a) => a -> Sem r (Store h a)
+alloc x = do
+  r <- Mutate.alloc x
   pure <| Store _identity r
 
-deref :: (Member (Read h) r) => Store h a -> Sem r a
-deref (Store l r) = do
-  s <- read r
+read :: (Member (Read h) r) => Store h a -> Sem r a
+read (Store l r) = do
+  s <- Mutate.read r
   pure <| view l s
 
-assign :: (Members '[Read h, Write h] r) => a -> Store h a -> Sem r ()
-assign x (Store l r) = do
-  mutate (set l x) r
+write :: (Members '[Read h, Write h] r) => a -> Store h a -> Sem r ()
+write x (Store l r) = do
+  Mutate.mutate (set l x) r
 
 -- Focussing -------------------------------------------------------------------
 
