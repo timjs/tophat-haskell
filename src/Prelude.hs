@@ -27,7 +27,7 @@ module Prelude
     -- * Aliases
     length,
     (~>),
-    getTextLine,
+    getTextLn,
 
     -- ** Text
     chars,
@@ -233,8 +233,8 @@ infix 0 ~>
 (~>) :: a -> b -> (a, b)
 (~>) = (,)
 
-getTextLine :: MonadIO m => m Text
-getTextLine = Relude.getLine
+getTextLn :: MonadIO m => m Text
+getTextLn = Relude.getLine
 
 -- Pretty printing --
 

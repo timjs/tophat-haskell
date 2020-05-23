@@ -26,7 +26,7 @@ makeSem ''Interact
 
 interactToIO :: Member (Embed IO) r => Sem (Interact ': r) a -> Sem r a
 interactToIO = interpret \case
-  GetLine -> embed getTextLine
+  GetLine -> embed getTextLn
   PutLine msg -> embed <| putTextLn msg
 
 runInteractPure :: List Text -> Sem (Interact ': r) a -> Sem r (List Text, a)
