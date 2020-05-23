@@ -1,5 +1,5 @@
-module Data.Editable
-  ( Editable,
+module Data.Basic
+  ( Basic,
   )
 where
 
@@ -14,6 +14,6 @@ where
 -- | give better error messges.
 -- |
 -- | FIXME: Maybe also 'Arbitrary' and `Coarbitrary` ?
-class (Pretty a, Read a, Eq a, Typeable a) => Editable a
+class (Pretty a, Screen a, Eq a, Typeable a) => Basic a
 
-instance (Pretty a, Read a, Eq a, Typeable a) => Editable a
+instance (Pretty a, Screen a, Eq a, Typeable a) => Basic a
