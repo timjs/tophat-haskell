@@ -1,6 +1,6 @@
 module Data.Task
-  ( Task (..),
-    Editor (..),
+  ( Act (..),
+    Edit (..),
     Name (..),
     parallel,
     choose,
@@ -11,44 +11,44 @@ module Data.Task
     (>**),
     forever,
     (>>@),
-    module Control.Interactive,
-    module Control.Collaborative,
-    module Data.Editable,
+    -- module Control.Interactive,
+    -- module Control.Collaborative,
+    module Data.Basic,
+    module Data.Store,
   )
 where
 
-import Control.Collaborative
+-- import Control.Collaborative
 import Control.Interactive
-import Data.Editable (Editable)
+import Data.Basic (Basic)
+import Data.Store (Store)
 import qualified Data.Text.Prettyprint.Doc as Pretty
 
--- Tasks -----------------------------------------------------------------------
+-- Acts ------------------------------------------------------------------------
 
--- | Task monad transformer build on top of a monad `m`.
--- |
--- | To use references, `m` shoud be a `Collaborative` with locations `r`.
-data Task (m :: Type -> Type) (t :: Type) where
+-- | Act effect build on top of a monad `m`.
+data Act (m :: Type -> Type) (t :: Type) where
   --
   -- Editors --
-  Editor :: Name -> Editor m t -> Task m t
+  Edit :: Name -> Edit m t -> Act m t
   --
   -- Parallels --
 
   -- | Composition of two tasks.
-  Pair :: Task m a -> Task m b -> Task m (a, b)
+  Pair :: Act m a -> Act m b -> Act m (a, b)
   -- | Internal, unrestricted and hidden editor
-  Done :: t -> Task m t
+  Done :: t -> Act m t
   -- | Internal choice between two tasks.
-  Choose :: Task m t -> Task m t -> Task m t
+  Choose :: Act m t -> Act m t -> Act m t
   -- | The failing task
-  Fail :: Task m t
+  Fail :: Act m t
   --
   -- Steps --
 
   -- | Internal value transformation
-  Trans :: (a -> t) -> Task m a -> Task m t
+  Trans :: (a -> t) -> Act m a -> Act m t
   -- | Internal, or system step.
-  Step :: Task m a -> (a -> Task m t) -> Task m t
+  Step :: Act m a -> (a -> Act m t) -> Act m t
   --
   -- References --
   -- The inner monad `m` needs to have the notion of references.
@@ -56,84 +56,84 @@ data Task (m :: Type -> Type) (t :: Type) where
   -- because we need to mark them dirty and match those with watched references.
 
   -- | Create new reference of type `t`
-  Share :: (Collaborative r m, Editable t) => t -> Task m (Store r t)
+  Share :: (Basic t) => t -> Act m (Store r t)
   -- | Assign to a reference of type `t` to a given value
-  Assign :: (Collaborative r m, Editable a) => a -> Store r a -> Task m ()
+  Assign :: (Basic a) => a -> Store r a -> Act m ()
 
 -- NOTE:
 -- We could choose to replace `Share` and `Assign` and with a general `Lift` constructor,
 -- taking an arbitrary action in the underlying monad `m`.
 -- This action would then be performed during normalisation.
--- However, for now, we like to constrain the actions one can perform in the `Task` monad.
+-- However, for now, we like to constrain the actions one can perform in the `Act` monad.
 -- This makes actions like logging to stdout, lounching missiles or other effects impossible.
 -- (Though this would need to be constrained with classes when specifying the task!)
 
-data Editor (m :: Type -> Type) (t :: Type) where
+data Edit (m :: Type -> Type) (t :: Type) where
   -- | Unvalued editor
-  Enter :: (Editable t) => Editor m t
+  Enter :: (Basic t) => Edit m t
   -- | Valued editor
-  Update :: (Editable t) => t -> Editor m t
+  Update :: (Basic t) => t -> Edit m t
   -- | Valued, view only editor
-  View :: (Editable t) => t -> Editor m t
-  -- | External choice between two Editors.
-  Select :: HashMap Label (Task m t) -> Editor m t
+  View :: (Basic t) => t -> Edit m t
+  -- | External choice between multple tasks.
+  Select :: HashMap Label (Act m t) -> Edit m t
   -- | Change to a reference of type `t` to a value
-  Change :: (Collaborative r m, Editable t) => Store r t -> Editor m t
+  Change :: (Basic t) => Store r t -> Edit m t
   -- | Watch a reference of type `t`
-  Watch :: (Collaborative r m, Editable t) => Store r t -> Editor m t
+  Watch :: (Basic t) => Store r t -> Edit m t
 
 data Name
   = Unnamed
   | Named Nat
-  deriving (Eq, Ord, Show, Read)
+  deriving (Eq, Ord, Show, Screen)
 
-new :: Editor m t -> Task m t
-new e = Editor Unnamed e
+new :: Edit m t -> Act m t
+new e = Edit Unnamed e
 
 -- Derived forms ---------------------------------------------------------------
 
-parallel :: List (Task m a) -> Task m (List a)
+parallel :: List (Act m a) -> Act m (List a)
 parallel [] = pure []
 parallel (t : ts) = t >< parallel ts >>= \(x, xs) -> pure (x : xs)
 
-choose :: List (Task m a) -> Task m a
+choose :: List (Act m a) -> Act m a
 choose = foldr (<|>) fail
 
-branch :: List (Bool, Task m a) -> Task m a
+branch :: List (Bool, Act m a) -> Act m a
 branch [] = fail
 branch ((b, t) : rs) = if b then t else branch rs
 
 infixl 3 <?>
 
-(<?>) :: Task m a -> Task m a -> Task m a
+(<?>) :: Act m a -> Act m a -> Act m a
 (<?>) t1 t2 = select ["Left" ~> t1, "Right" ~> t2]
 
 infixl 1 >>?
 
-(>>?) :: Task m a -> (a -> Task m b) -> Task m b
+(>>?) :: Act m a -> (a -> Act m b) -> Act m b
 (>>?) t1 e2 = t1 >>= \x -> select ["Continue" ~> e2 x]
 
 infixl 1 >>*
 
-(>>*) :: Task m a -> HashMap Label (a -> Task m b) -> Task m b
+(>>*) :: Act m a -> HashMap Label (a -> Act m b) -> Act m b
 (>>*) t1 cs = t1 >>= \x -> select (cs ||> \c -> c x)
 
 infixl 1 >**
 
-(>**) :: Task m a -> HashMap Label (a -> Bool, a -> Task m b) -> Task m b
+(>**) :: Act m a -> HashMap Label (a -> Bool, a -> Act m b) -> Act m b
 (>**) t1 cs = t1 >>= \x -> select (cs ||> \(b, c) -> if b x then c x else fail)
 
-forever :: Task m a -> Task m Void
+forever :: Act m a -> Act m Void
 forever t1 = t1 >>= \_ -> forever t1
 
-(>>@) :: Task m a -> (a -> Task m b) -> Task m b
+(>>@) :: Act m a -> (a -> Act m b) -> Act m b
 (>>@) t1 e2 = t1 >>= \x -> select ["Repeat" ~> t1 >>@ e2, "Exit" ~> e2 x]
 
 -- Instances -------------------------------------------------------------------
 
-instance Pretty (Task m t) where
+instance Pretty (Act m t) where
   pretty = \case
-    Editor n e -> cat [pretty e |> Pretty.parens, "^", pretty n]
+    Edit n e -> cat [pretty e |> Pretty.parens, "^", pretty n]
     Pair t1 t2 -> sep [pretty t1, "><", pretty t2] |> Pretty.parens
     Done _ -> "Done _"
     Choose t1 t2 -> sep [pretty t1, "<|>", pretty t2] |> Pretty.parens
@@ -143,7 +143,7 @@ instance Pretty (Task m t) where
     Share v -> sep ["Share", pretty v]
     Assign v _ -> sep ["_", ":=", pretty v]
 
-instance Pretty (Editor m a) where
+instance Pretty (Edit m a) where
   pretty = \case
     Enter -> "Enter"
     Update v -> sep ["Update", pretty v] |> Pretty.parens
@@ -157,38 +157,38 @@ instance Pretty Name where
     Unnamed -> "ε"
     Named n -> pretty n
 
-instance Functor (Task m) where
+instance Functor (Act m) where
   fmap = Trans
 
-instance Interactive (Task m) where
+instance Interactive (Act m) where
   enter = new Enter
   update v = new (Update v)
   view v = new (View v)
   select ts = new (Select ts)
 
-instance Monoidal (Task m) where
+instance Monoidal (Act m) where
   (><) = Pair
   skip = Done ()
 
-instance Applicative (Task m) where
+instance Applicative (Act m) where
   pure = Done
   (<*>) = applyDefault
 
--- instance Selective (Task m) where
+-- instance Selective (Act m) where
 --   branch p t1 t2 = go =<< p
 --     where
 --       go (Left a) = map (<| a) t1
 --       go (Right b) = map (<| b) t2
 
-instance Alternative (Task m) where
+instance Alternative (Act m) where
   (<|>) = Choose
   empty = Fail
 
-instance Monad (Task m) where
+instance Monad (Act m) where
   (>>=) = Step
 
-instance Collaborative r m => Collaborative r (Task m) where
-  share = Share
-  assign = Assign
-  watch l = new (Watch l)
-  change l = new (Change l)
+-- instance Collaborative r m => Collaborative r (Act m) where
+--   share = Share
+--   assign = Assign
+--   watch l = new (Watch l)
+--   change l = new (Change l)
