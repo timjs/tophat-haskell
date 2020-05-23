@@ -23,9 +23,14 @@ module Polysemy.Mutate
     readToIO,
     writeToIO,
     allocToIO,
+    readToST,
+    writeToST,
+    allocToST,
   )
 where
 
+import Control.Monad.ST (ST)
+import Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 import Polysemy
 import Polysemy.Bundle
 
@@ -79,14 +84,30 @@ alloc' = sendBundle << alloc
 
 -- Interpretations -------------------------------------------------------------
 
+-- In IO --
+
 readToIO :: Member (Embed IO) r => Sem (Read IORef ': r) a -> Sem r a
 readToIO = interpret \case
-  Read loc -> readIORef loc
+  Read loc -> embed <| readIORef loc
 
 writeToIO :: Member (Embed IO) r => Sem (Write IORef ': r) a -> Sem r a
 writeToIO = interpret \case
-  Write val loc -> writeIORef loc val
+  Write val loc -> embed <| writeIORef loc val
 
 allocToIO :: Member (Embed IO) r => Sem (Alloc IORef ': r) a -> Sem r a
 allocToIO = interpret \case
-  Alloc val -> newIORef val
+  Alloc val -> embed <| newIORef val
+
+-- In ST --
+
+readToST :: Member (Embed (ST h)) r => Sem (Read (STRef h) ': r) a -> Sem r a
+readToST = interpret \case
+  Read loc -> embed <| readSTRef loc
+
+writeToST :: Member (Embed (ST h)) r => Sem (Write (STRef h) ': r) a -> Sem r a
+writeToST = interpret \case
+  Write val loc -> embed <| writeSTRef loc val
+
+allocToST :: Member (Embed (ST h)) r => Sem (Alloc (STRef h) ': r) a -> Sem r a
+allocToST = interpret \case
+  Alloc val -> embed <| newSTRef val
