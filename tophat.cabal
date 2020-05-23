@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ac4e5d0e66b3102486bb75021919cda6cfe32d36649084aeb681d2bfa1fb1c90
+-- hash: 89a72732d5e6a6e2528856f57ae53b5ddeae69ec2ad8a522616aa4640649a4fd
 
 name:           tophat
 version:        0.1.0.0
@@ -31,7 +31,8 @@ library
       Control.Monad.Log
       Control.Monad.Ref
       Control.Monad.Supply
-      Data.Editable
+      Data.Basic
+      Data.Someref
       Data.Store
       Data.Task
       Data.Task.Input
@@ -39,12 +40,14 @@ library
       Data.Task.Run
       Data.Task.Status
       Polysemy.Interact
+      Polysemy.Mutate
+      Polysemy.Supply
       Prelude
   other-modules:
       Paths_tophat
   hs-source-dirs:
       src
-  default-extensions: EmptyDataDecls EmptyCase FlexibleContexts FlexibleInstances InstanceSigs MultiParamTypeClasses LambdaCase MultiWayIf NamedFieldPuns TupleSections NumericUnderscores DeriveGeneric DeriveFunctor DeriveFoldable DeriveTraversable DerivingVia StandaloneDeriving BangPatterns KindSignatures TypeOperators MonadComprehensions BinaryLiterals NegativeLiterals NoStarIsType BlockArguments ScopedTypeVariables TypeApplications PartialTypeSignatures NamedWildCards OverloadedStrings OverloadedLists ConstraintKinds RankNTypes DefaultSignatures PatternSynonyms PatternGuards FunctionalDependencies UndecidableInstances GADTs ExistentialQuantification DataKinds PolyKinds TypeFamilies QuantifiedConstraints
+  default-extensions: EmptyDataDecls EmptyCase FlexibleContexts FlexibleInstances InstanceSigs MultiParamTypeClasses LambdaCase MultiWayIf NamedFieldPuns TupleSections NumericUnderscores DeriveGeneric DeriveFunctor DeriveFoldable DeriveTraversable DerivingVia StandaloneDeriving BangPatterns KindSignatures TypeOperators MonadComprehensions BinaryLiterals NegativeLiterals NoStarIsType BlockArguments ScopedTypeVariables TypeApplications PartialTypeSignatures NamedWildCards OverloadedStrings OverloadedLists ConstraintKinds RankNTypes DefaultSignatures PatternSynonyms PatternGuards FunctionalDependencies UndecidableInstances GADTs ExistentialQuantification DataKinds PolyKinds TypeFamilies TypeFamilyDependencies QuantifiedConstraints
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -O2 -flate-specialise -fspecialise-aggressively -fplugin=Polysemy.Plugin
   build-depends:
       base-noprelude >=4.12 && <5
@@ -66,7 +69,7 @@ executable tophat
       Paths_tophat
   hs-source-dirs:
       app
-  default-extensions: EmptyDataDecls EmptyCase FlexibleContexts FlexibleInstances InstanceSigs MultiParamTypeClasses LambdaCase MultiWayIf NamedFieldPuns TupleSections NumericUnderscores DeriveGeneric DeriveFunctor DeriveFoldable DeriveTraversable DerivingVia StandaloneDeriving BangPatterns KindSignatures TypeOperators MonadComprehensions BinaryLiterals NegativeLiterals NoStarIsType BlockArguments ScopedTypeVariables TypeApplications PartialTypeSignatures NamedWildCards OverloadedStrings OverloadedLists ConstraintKinds RankNTypes DefaultSignatures PatternSynonyms PatternGuards FunctionalDependencies UndecidableInstances GADTs ExistentialQuantification DataKinds PolyKinds TypeFamilies QuantifiedConstraints
+  default-extensions: EmptyDataDecls EmptyCase FlexibleContexts FlexibleInstances InstanceSigs MultiParamTypeClasses LambdaCase MultiWayIf NamedFieldPuns TupleSections NumericUnderscores DeriveGeneric DeriveFunctor DeriveFoldable DeriveTraversable DerivingVia StandaloneDeriving BangPatterns KindSignatures TypeOperators MonadComprehensions BinaryLiterals NegativeLiterals NoStarIsType BlockArguments ScopedTypeVariables TypeApplications PartialTypeSignatures NamedWildCards OverloadedStrings OverloadedLists ConstraintKinds RankNTypes DefaultSignatures PatternSynonyms PatternGuards FunctionalDependencies UndecidableInstances GADTs ExistentialQuantification DataKinds PolyKinds TypeFamilies TypeFamilyDependencies QuantifiedConstraints
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -O2 -flate-specialise -fspecialise-aggressively -fplugin=Polysemy.Plugin -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base-noprelude >=4.12 && <5
