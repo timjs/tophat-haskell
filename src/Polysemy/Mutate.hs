@@ -7,10 +7,6 @@ module Polysemy.Mutate
     Alloc (..),
     Mutate,
 
-    -- ** Heaps
-    Heap (..),
-    Ref,
-
     -- * Actions
     read,
     read',

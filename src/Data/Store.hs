@@ -8,9 +8,10 @@ module Data.Store
   )
 where
 
+import Data.Heap (Ref)
 import Lens.Simple (Lens', iso, set, view)
 import Polysemy
-import Polysemy.Mutate (Alloc, Read, Ref, Write)
+import Polysemy.Mutate (Alloc, Read, Write)
 import qualified Polysemy.Mutate as Mutate
 
 -- Stores ----------------------------------------------------------------------

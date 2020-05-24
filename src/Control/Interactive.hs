@@ -49,7 +49,7 @@ instance Interactive IO where
   enter = do
     putText <| show tau ++ "? "
     t <- getTextLn
-    case screen t of
+    case scan t of
       Just x -> pure x
       Nothing -> enter
     where

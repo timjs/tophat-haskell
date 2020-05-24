@@ -24,10 +24,10 @@ where
 
 import Control.Interactive
 import Data.Basic
+import Data.Heap (Heap)
 import Data.Someref
 import Data.Store
 import qualified Data.Text.Prettyprint.Doc as Pretty
-import Polysemy.Mutate (Heap)
 
 -- Acts ------------------------------------------------------------------------
 
@@ -134,7 +134,7 @@ forever t1 = t1 >>= \_ -> forever t1
 (>>@) :: Act h m a -> (a -> Act h m b) -> Act h m b
 (>>@) t1 e2 = t1 >>= \x -> select ["Repeat" ~> t1 >>@ e2, "Exit" ~> e2 x]
 
--- Instances -------------------------------------------------------------------
+-- Pretty ----------------------------------------------------------------------
 
 instance Pretty (Act h m t) where
   pretty = \case
@@ -161,6 +161,8 @@ instance Pretty Name where
   pretty = \case
     Unnamed -> "ε"
     Named n -> pretty n
+
+-- Instances -------------------------------------------------------------------
 
 instance Functor (Act h m) where
   fmap = Trans

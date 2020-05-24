@@ -2,10 +2,11 @@ module Data.Task.Observe where
 
 import qualified Data.HashMap.Strict as HashMap
 import Data.List (union)
+import qualified Data.Store as Store
 import Data.Task
 import Data.Task.Input
 import Polysemy
-import Polysemy.Mutate
+import Polysemy.Mutate (Alloc, Read)
 
 -- Observations ----------------------------------------------------------------
 -- NOTE: Normalisation should never happen in any observation, they are immediate.
@@ -43,8 +44,8 @@ ui' a = \case
   Update b -> pure <| cat ["□^", pretty a, " [ ", pretty b, " ]"]
   View b -> pure <| cat ["⧇^", pretty a, " [ ", pretty b, " ]"]
   Select ts -> pure <| cat ["◇^", pretty a, " ", pretty <| HashMap.keysSet ts]
-  Change l -> pure (\b -> cat ["⊟^", pretty a, " [ ", pretty b, " ]"]) -< deref l
-  Watch l -> pure (\b -> cat ["⧈^", pretty a, " [ ", pretty b, " ]"]) -< deref l
+  Change l -> pure (\b -> cat ["⊟^", pretty a, " [ ", pretty b, " ]"]) -< Store.read l
+  Watch l -> pure (\b -> cat ["⧈^", pretty a, " [ ", pretty b, " ]"]) -< Store.read l
 
 value ::
   Members '[Alloc h, Read h] r =>
@@ -59,11 +60,11 @@ value = \case
   Choose t1 t2 -> pure (<|>) -< value t1 -< value t2
   Fail -> pure Nothing
   Step _ _ -> pure Nothing
-  Share b -> pure Just -< ref b -- Nothing??
+  Share b -> pure Just -< Store.alloc b -- Nothing??
   Assign _ _ -> pure (Just ()) -- Nothing??
 
 value' ::
-  Member (Read h) r => -- We need to deref locations and be in monad `m`
+  Member (Read h) r => -- We need to Store.read locations and be in monad `m`
   Edit h (Sem r) a ->
   Sem r (Maybe a)
 value' = \case
@@ -71,8 +72,8 @@ value' = \case
   Update b -> pure (Just b)
   View b -> pure (Just b)
   Select _ -> pure Nothing
-  Change l -> pure Just -< deref l
-  Watch l -> pure Just -< deref l
+  Change l -> pure Just -< Store.read l
+  Watch l -> pure Just -< Store.read l
 
 failing ::
   Act h m a ->
