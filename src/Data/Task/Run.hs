@@ -14,6 +14,7 @@ import Polysemy.Log
 import Polysemy.Mutate
 import Polysemy.Output
 import Polysemy.Supply
+import Polysemy.Writer
 
 -- Logs and Errors -------------------------------------------------------------
 
@@ -60,7 +61,7 @@ instance Pretty NotApplicable where
 -- Normalising -----------------------------------------------------------------
 
 normalise ::
-  Members '[Log Steps, Supply Nat, Output (Someref h), Alloc h, Read h, Write h] r =>
+  Members '[Log Steps, Supply Nat, Writer (List (Someref h)), Alloc h, Read h, Write h] r =>
   Act h (Sem r) a ->
   Sem r (Act h (Sem r) a)
 normalise t = case t of
@@ -115,7 +116,7 @@ normalise t = case t of
     pure <| Done l
   Assign b s@(Store _ r) -> do
     Store.write b s
-    output <| pack r
+    tell [pack r]
     pure <| Done ()
 
 -- balance :: Act h m a -> Act h m a
@@ -139,7 +140,7 @@ normalise t = case t of
 
 handle ::
   forall h r a.
-  Members '[Error NotApplicable, Output (Someref h), Alloc h, Read h, Write h] r =>
+  Members '[Error NotApplicable, Writer (List (Someref h)), Alloc h, Read h, Write h] r =>
   Act h (Sem r) a ->
   Input Concrete ->
   Sem r (Act h (Sem r) a)
@@ -196,7 +197,7 @@ handle t i = case t of
 
 handle' ::
   forall h m r a.
-  Members '[Error NotApplicable, Output (Someref h), Read h, Write h] r =>
+  Members '[Error NotApplicable, Writer (List (Someref h)), Read h, Write h] r =>
   Concrete ->
   Edit h m a -> -- NOTE: `Select` does not return an `Editor`...
   Sem r (Edit h m a)
@@ -215,7 +216,7 @@ handle' c@(Concrete b') = \case
     -- NOTE: As in the `Update` case above, we check for type equality.
     | Just Refl <- b' ~: beta -> do
       Store.write b' s
-      output <| pack r
+      tell [pack r]
       pure <| Change s
     | otherwise -> throw <| CouldNotChangeRef (someTypeOf r) (someTypeOf b')
     where
@@ -223,56 +224,55 @@ handle' c@(Concrete b') = \case
   -- Rest --
   _ -> throw <| CouldNotHandleValue c
 
-{-
--- Interaction -----------------------------------------------------------------
-
+-- Fixation --------------------------------------------------------------------
 
 fixate ::
-  Members '[Log Steps, Supply Nat] r =>
-  Sem (Writer Someref ': r) a ->
-  Sem r a
-fixate tt = do
-  (t, d) <- runWriterT tt
-  (t', d') <- runWriterT <| normalise t
-  log Info <| DidNormalise (show <| pretty t')
-  let ws = watching t'
+  Members '[Log Steps, Supply Nat, Writer (List (Someref h)), Alloc h, Read h, Write h] r =>
+  Sem r (Act h (Sem r) a) ->
+  Sem r (Act h (Sem r) a)
+fixate t = do
+  (d, t') <- listen t --FIXME: Is this correct??
+  (d', t'') <- listen <| normalise t' --FIXME: Is this correct??
+  log Info <| DidNormalise (show <| pretty t'')
+  let ws = watching t''
   let ds = d `union` d'
   let os = ds `intersect` ws
   case os of
     [] -> do
       log Info <| DidStabilise (length ds) (length ws)
-      -- let t'' = balance t'
-      -- log Info <| DidBalance (show <| pretty t'')
-      pure t' -- F-Done --
+      -- let t''' = balance t''
+      -- log Info <| DidBalance (show <| pretty t''')
+      pure t'' -- F-Done --
     _ -> do
       log Info <| DidNotStabilise (length ds) (length ws) (length os)
-      fixate <| pure t' -- F-Loop --
+      fixate <| pure t'' -- F-Loop --
+
+-- Initialisation --------------------------------------------------------------
 
 initialise ::
-  Collaborative r m =>
-  MonadSupply Nat m =>
-  MonadLog Steps m =>
-  Act h m a ->
-  m (Act h m a)
+  Members '[Log Steps, Supply Nat, Writer (List (Someref h)), Alloc h, Read h, Write h] r =>
+  Act h (Sem r) a ->
+  Sem r (Act h (Sem r) a)
 initialise t = do
   log Info <| DidStart (show <| pretty t)
   fixate (pure t)
 
+-- Interaction -----------------------------------------------------------------
+
+{-
 interact ::
-  Collaborative r m =>
-  MonadSupply Nat m =>
-  MonadLog NotApplicable m =>
-  MonadLog Steps m =>
-  Act h m a ->
+  Members '[Log Steps, Writer (List (Someref h)), Error NotApplicable, Alloc h, Read h, Write h] r =>
   Input Concrete ->
-  m (Act h m a)
-interact t i = do
-  xt <- runExceptT <| runWriterT <| handle t i
-  case xt of
+  Act h (Sem r) a ->
+  Sem r (Act h (Sem r) a)
+interact i t = do
+  -- (_, t') <- listen <| handle t i
+  x <- _ t
+  case x of
     Left e -> do
       log Warning e
       pure t
-    Right tt -> fixate <| WriterT <| pure tt
+    Right t'' -> fixate <| pure t''
 
 execute ::
   Editable a =>
