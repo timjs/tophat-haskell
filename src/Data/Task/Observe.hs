@@ -102,7 +102,7 @@ failing' = \case
 
 watching ::
   Act h m a ->
-  List (Someref m) -- There is no need to be in monad `m`
+  List (Someref h) -- There is no need to be in monad `m`
 watching = \case
   Edit Unnamed _ -> []
   Edit (Named _) e -> watching' e
@@ -117,14 +117,14 @@ watching = \case
 
 watching' ::
   Edit h m a ->
-  List (Someref m) -- There is no need to be in monad `m`
+  List (Someref h) -- There is no need to be in monad `m`
 watching' = \case
   Enter -> []
   Update _ -> []
   View _ -> []
   Select _ -> []
-  Change r -> [pack r]
-  Watch r -> [pack r]
+  Change (Store _ r) -> [pack r]
+  Watch (Store _ r) -> [pack r]
 
 -- | Calculate all possible options that can be send to this task,
 -- | i.e. all possible label-activity pairs which select a task.

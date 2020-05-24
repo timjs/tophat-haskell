@@ -61,7 +61,7 @@ data Act (h :: Heap h') (m :: Type -> Type) (t :: Type) where
   -- because we need to mark them dirty and match those with watched references.
 
   -- | Create new reference of type `t`
-  Share :: (Basic t) => t -> Act h m (Store h t)
+  Share :: (Inspectable h t, Basic t) => t -> Act h m (Store h t)
   -- | Assign to a reference of type `t` to a given value
   Assign :: (Basic a) => a -> Store h a -> Act h m ()
 
@@ -83,9 +83,9 @@ data Edit (h :: Heap h') (m :: Type -> Type) (t :: Type) where
   -- | External choice between multple tasks.
   Select :: HashMap Label (Act h m t) -> Edit h m t
   -- | Change to a reference of type `t` to a value
-  Change :: (Typeable (Store h t), Eq (Store h t), Basic t) => Store h t -> Edit h m t
+  Change :: (Inspectable h t, Basic t) => Store h t -> Edit h m t
   -- | Watch a reference of type `t`
-  Watch :: (Typeable (Store h t), Eq (Store h t), Basic t) => Store h t -> Edit h m t
+  Watch :: (Inspectable h t, Basic t) => Store h t -> Edit h m t
 
 data Name
   = Unnamed
