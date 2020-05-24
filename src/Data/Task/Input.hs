@@ -154,12 +154,12 @@ usage =
 parseId :: Text -> Either (Doc n) Nat
 parseId t
   | Just v <- scan t :: Maybe Nat = ok v
-  | otherwise = throw <| sep ["!!", Pretty.dquotes <| pretty t, "is not a proper id"]
+  | otherwise = error <| sep ["!!", Pretty.dquotes <| pretty t, "is not a proper id"]
 
 parseLabel :: Text -> Either (Doc n) Label
 parseLabel t
   | Just (c, _) <- Text.uncons t, Char.isUpper c = ok <| t
-  | otherwise = throw <| sep ["!!", Pretty.dquotes <| pretty t, "is not a proper label"]
+  | otherwise = error <| sep ["!!", Pretty.dquotes <| pretty t, "is not a proper label"]
 
 parseConcrete :: Text -> Either (Doc n) Concrete
 parseConcrete val
@@ -172,16 +172,16 @@ parseConcrete val
   | Just v <- scan val :: Maybe [Int] = ok <| Concrete v
   | Just v <- scan val :: Maybe [Double] = ok <| Concrete v
   | Just v <- scan val :: Maybe [Text] = ok <| Concrete v
-  | otherwise = throw <| sep ["!! Error parsing value", Pretty.dquotes (pretty val)]
+  | otherwise = error <| sep ["!! Error parsing value", Pretty.dquotes (pretty val)]
 
 parse :: Text -> Either (Doc a) (Input Concrete)
 parse t = case Text.words t of
-  ["help"] -> throw usage
-  ["h"] -> throw usage
+  ["help"] -> error usage
+  ["h"] -> error usage
   [i, x] -> do
     n <- parseId i
     map (ISelect n) (parseLabel x) ++ map (IEnter n) (parseConcrete x) --NOTE: should be `<|>`, but we've got some strange import of `Error` getting in the way
   [x] -> do
     l <- parseLabel x
     ok <| IPreselect l
-  _ -> throw <| sep ["!!", Pretty.dquotes (pretty t), "is not a valid command, type `help` for more info"]
+  _ -> error <| sep ["!!", Pretty.dquotes (pretty t), "is not a valid command, type `help` for more info"]

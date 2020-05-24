@@ -4,7 +4,6 @@ module Prelude
   ( module Relude,
     -- module Control.Newtype,
     module Data.Type.Equality,
-    module Control.Monad.Writer.Strict,
 
     -- * Types
     Unit,
@@ -28,6 +27,10 @@ module Prelude
     length,
     (~>),
     getTextLn,
+
+    -- ** Errors
+    ok,
+    error,
 
     -- ** Text
     chars,
@@ -112,18 +115,6 @@ module Prelude
     MonadZero,
     fail,
 
-    -- ** MonadError
-    MonadError,
-    ok,
-    throw,
-    catch,
-    try,
-
-    -- ** MonadWriter
-    WriterT (..),
-    evalWriterT,
-    clear,
-
     -- * Type level
     (~=),
     (~:),
@@ -139,9 +130,6 @@ module Prelude
 where
 
 -- import Control.Newtype hiding (pack, unpack)
-import Control.Monad.Except (MonadError (..))
-import Control.Monad.Writer.Strict (MonadWriter (..), WriterT (..), runWriterT)
--- import Control.Monad.List (ListT)
 
 import Data.Foldable (foldr1)
 import qualified Data.HashMap.Strict as HashMap
@@ -177,6 +165,7 @@ import Relude hiding
     Word32,
     Word64,
     Word8,
+    error,
     first,
     forever,
     getLine,
@@ -544,34 +533,19 @@ instance (Relude.MonadFail m, MonadPlus m) => MonadZero (StateT s m)
 -- pattern Err :: e -> Result e a
 -- pattern Err e = Left e
 
-ok :: MonadError e m => a -> m a
-ok = pure
+ok :: a -> Either e a
+ok = Right
 {-# INLINE ok #-}
 
-throw :: MonadError e m => e -> m a
-throw = throwError
-{-# INLINE throw #-}
-
-catch :: MonadError e m => m a -> (e -> m a) -> m a
-catch = catchError
-{-# INLINE catch #-}
-
-try :: MonadError e m => m a -> m (Either e a)
-try a = catch (Right <|| a) (return << Left)
+error :: e -> Either e a
+error = Left
+{-# INLINE error #-}
 
 -- instance Alternative (Either e) where
 --   Left e <|> y = Left e
 --   x <|> _ = x
 
 --   empty = Left neutral
-
--- Writer --
-
-clear :: MonadWriter w m => m ()
-clear = pass <| lift0 ((), const neutral)
-
-evalWriterT :: Monad m => WriterT w m a -> m a
-evalWriterT m = lift1 fst (runWriterT m)
 
 -- Type equality ---------------------------------------------------------------
 
