@@ -26,22 +26,6 @@ class (Monad m) => Interactive m where
 
 type Label = Text
 
--- Transformer instances -------------------------------------------------------
-
-instance (Interactive m, Monoid w) => Interactive (WriterT w m) where
-  enter = lift enter
-  update = lift << update
-  view = lift << view
-
--- select = lift << select
-
-instance (Interactive m) => Interactive (ExceptT e m) where
-  enter = lift enter
-  update = lift << update
-  view = lift << view
-
--- select = lift << select
-
 -- Example instance for IO -----------------------------------------------------
 
 instance Interactive IO where
