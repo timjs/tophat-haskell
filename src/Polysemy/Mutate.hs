@@ -1,5 +1,15 @@
 {-# LANGUAGE TemplateHaskell #-}
 
+-- | Module providing reading, writing and allocating references on a heap `h`.
+-- |
+-- | **Important**!
+-- | Because the `m` parameter will be instantiated with `Sem r`,
+-- | we won't have access to the concrete monad in which we will interpret these effects.
+-- | We need to know this, because we need to link the type of references used, to the monad we will interpret the references in.
+-- | However, we'd like to abstract away from the concrete interpretation monad, which is the whole point of using these tricks!
+-- |
+-- | To solve this, we parametrise all effects over a fictional heap `h`.
+-- | This way, we can link all pieces together.
 module Polysemy.Mutate
   ( -- * Effects
     Read (..),

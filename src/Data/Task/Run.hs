@@ -63,7 +63,7 @@ instance Pretty NotApplicable where
 normalise ::
   Members '[Log Steps, Supply Nat, Writer (List (Someref h)), Alloc h, Read h, Write h] r =>
   Task h (Sem r) a ->
-  Sem r (Task h (Sem r) a)
+  Sem r (Task h (Sem r) a) --NOTE: Here we're constructing a concrete stack. I don't know if that's the best way to go...
 normalise t = case t of
   -- Step --
   Step t1 e2 -> do

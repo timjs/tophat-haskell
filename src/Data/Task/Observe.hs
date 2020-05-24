@@ -35,7 +35,7 @@ ui = \case
   Assign b _ -> pure <| sep ["…", ":=", pretty b]
 
 ui' ::
-  Member (Read h) r =>
+  Members '[Read h] r =>
   Name ->
   Editor h (Sem r) b ->
   Sem r (Doc n)
@@ -64,7 +64,7 @@ value = \case
   Assign _ _ -> pure (Just ()) -- Nothing??
 
 value' ::
-  Member (Read h) r => -- We need to Store.read locations and be in monad `m`
+  Members '[Read h] r => -- We need to Store.read locations and be in monad `m`
   Editor h (Sem r) a ->
   Sem r (Maybe a)
 value' = \case

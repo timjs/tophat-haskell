@@ -22,12 +22,28 @@ import qualified Polysemy.Mutate as Mutate
 
 -- Stores ----------------------------------------------------------------------
 
--- NOTE:
--- I think the source and target types always have to be the same,
--- otherwise you would be able to change the type of the inner reference...
--- Isn't it?
--- NOTE: `s` should be `Typeable` to store it as `Someref`.
-data Store h a = forall s. (Inspectable h s) => Store (Lens' s a) (Ref h s)
+-- | **Note**
+-- | I think the source and target types always have to be the same,
+-- | otherwise you would be able to change the type of the inner reference...
+-- | Isn't it?
+-- |
+-- | **Note**
+-- | `s` should be `Typeable` to store it as `Someref`.
+-- |
+-- | **Important!**
+-- | When using Polysemy, the `Read`, `Write`, and `Alloc` effects range over a heap `h`.
+-- | So we have only access to this `h` parameter.
+-- | We need to have a way to link the heap which the effects operate on,
+-- | to the type of references we save in a `Store`.
+-- | This is why stores are parametrised over a heap `h`,
+-- | and not over a monad `m`.
+-- |
+-- | See for example `alloc`, which needs `Alloc h` as a member, and returns a `Sem r (Store h a)`.
+-- | The `h` parameter links the reference type of the effect (`Alloc`), to the reference type of the `Store`.
+-- | In past days, we used a type class with fundep, which deduced the reference type from the monad `m`.
+-- | But now we don't know in which (final) `m` we're going to interpret `Sem r`!
+data Store h a where
+  Store {- exists s -} :: (Inspectable h s) => Lens' s a -> Ref h s -> Store h a
 
 alloc :: (Member (Alloc h) r, Inspectable h a) => a -> Sem r (Store h a)
 alloc x = do
