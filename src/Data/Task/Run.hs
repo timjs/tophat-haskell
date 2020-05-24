@@ -1,99 +1,38 @@
-module Data.Task.Run where
+module Data.Task.Interact where
 
-import Control.Monad.Log
-import Control.Monad.Supply
 import qualified Data.HashMap.Strict as HashMap
+import Data.Heap (Ref)
 import Data.List (intersect, union)
+import qualified Data.Store as Store
 import Data.Task
 import Data.Task.Input
 import Data.Task.Observe
 import qualified Data.Text.Prettyprint.Doc as Pretty
+import Polysemy
+import Polysemy.Error
+import Polysemy.Log
+import Polysemy.Mutate
+import Polysemy.Output
+import Polysemy.Supply
 
--- Normalising -----------------------------------------------------------------
+-- Logs and Errors -------------------------------------------------------------
 
-type Tracking f m a = WriterT (List (Someref m)) m (f m a)
+data Steps
+  = DidStabilise Nat Nat
+  | DidNotStabilise Nat Nat Nat
+  | DidNormalise Text
+  | DidBalance Text
+  | DidStart Text
+  | DidCalculateOptions (List Option) Text
 
-normalise ::
-  Collaborative r m =>
-  MonadSupply Nat m =>
-  MonadLog Steps m =>
-  Task m a ->
-  Tracking Task m a
-normalise t = case t of
-  -- Step --
-  Step t1 e2 -> do
-    t1' <- normalise t1
-    let stay = Step t1' e2
-    mv1 <- lift <| value t1'
-    case mv1 of
-      Nothing -> pure stay -- N-StepNone
-      Just v1 -> do
-        let t2 = e2 v1
-        if failing t2
-          then pure stay -- N-StepFail
-          else do
-            let os = options t2
-            log Info <| DidCalculateOptions os (pretty t2 |> show)
-            if not <| null <| os
-              then pure stay -- N-StepWait
-              else normalise t2 -- N-StepCont
-
-  -- Choose --
-  Choose t1 t2 -> do
-    t1' <- normalise t1
-    mv1 <- lift <| value t1'
-    case mv1 of
-      Just _ -> pure t1' -- N-ChooseLeft
-      Nothing -> do
-        t2' <- normalise t2
-        mv2 <- lift <| value t2'
-        case mv2 of
-          Just _ -> pure t2' -- N-ChooseRight
-          Nothing -> pure <| Choose t1' t2' -- N-ChooseNone
-
-  -- Congruences --
-  Trans f t2 -> pure (Trans f) -< normalise t2
-  Pair t1 t2 -> pure Pair -< normalise t1 -< normalise t2
-  -- Ready --
-  Done _ -> pure t
-  Fail -> pure t
-  -- Editors --
-  Editor Unnamed e -> do
-    n <- supply
-    pure <| Editor (Named n) e
-  Editor (Named _) _ -> pure t
-  -- Assert --
-  -- Assert p -> do
-  --   pure <| Done p
-  -- References --
-  Share b -> do
-    l <- lift <| share b
-    pure <| Done l
-  Assign b s@(Store _ r) -> do
-    lift <| s <<- b
-    tell [pack r]
-    pure <| Done ()
-
--- balance :: Task m a -> Task m a
--- balance t = case t of
---   Pair t1 t2 -> Pair (balance t1) (balance t2)
---   Choose t1 t2 -> Choose (balance t1) (balance t2)
---   Trans f t1 -> Trans f (balance t1)
---   Forever t1 -> Forever (balance t1)
---   -- Monad associativity
---   Step (Step t1 e2) e3 -> Step t1 (\x -> Step (e2 x) e3)
---   _ -> t
-
--- balance' :: Editor m a -> Editor m a
--- balance' = \case
---   Select ts -> Select <| map balance ts
---   e -> e
-
--- Handling --------------------------------------------------------------------
-
-type PartialTracking f m a = WriterT (List (Someref m)) (ExceptT NotApplicable m) (f m a)
-
--- type PartialTrackingTask m a = ExceptT NotApplicable (WriterT (List (Someref m)) m) (Task m a)
+instance Pretty Steps where
+  pretty = \case
+    DidNotStabilise d w o -> sep ["Found", pretty o, "overlap(s) amongst", pretty d, "dirty and", pretty w, "watched reference(s)"]
+    DidStabilise d w -> sep ["Found no overlaps amongst", pretty d, "dirty and", pretty w, "watched reference(s)"]
+    DidNormalise t -> sep ["Normalised to:", pretty t]
+    DidBalance t -> sep ["Rebalanced to:", pretty t]
+    DidStart t -> sep ["Started with:", pretty t]
+    DidCalculateOptions os t -> sep ["Future options before normalising", pretty os, "for task", pretty t]
 
 data NotApplicable
   = CouldNotMatch Name Name
@@ -118,15 +57,95 @@ instance Pretty NotApplicable where
     CouldNotHandle i -> sep ["Could not handle input", Pretty.dquotes <| pretty i]
     CouldNotHandleValue b -> sep ["Could not handle new editor value", Pretty.dquotes <| pretty b, "for readonly editor"]
 
+-- Normalising -----------------------------------------------------------------
+
+normalise ::
+  Members '[Log Steps, Supply Nat, Output (Someref h), Alloc h, Read h, Write h] r =>
+  Act h (Sem r) a ->
+  Sem r (Act h (Sem r) a)
+normalise t = case t of
+  -- Step --
+  Step t1 e2 -> do
+    t1' <- normalise t1
+    let stay = Step t1' e2
+    mv1 <- value t1'
+    case mv1 of
+      Nothing -> pure stay -- N-StepNone
+      Just v1 -> do
+        let t2 = e2 v1
+        if failing t2
+          then pure stay -- N-StepFail
+          else do
+            let os = options t2
+            log Info <| DidCalculateOptions os (pretty t2 |> show)
+            if not <| null <| os
+              then pure stay -- N-StepWait
+              else normalise t2 -- N-StepCont
+
+  -- Choose --
+  Choose t1 t2 -> do
+    t1' <- normalise t1
+    mv1 <- value t1'
+    case mv1 of
+      Just _ -> pure t1' -- N-ChooseLeft
+      Nothing -> do
+        t2' <- normalise t2
+        mv2 <- value t2'
+        case mv2 of
+          Just _ -> pure t2' -- N-ChooseRight
+          Nothing -> pure <| Choose t1' t2' -- N-ChooseNone
+
+  -- Congruences --
+  Trans f t2 -> pure (Trans f) -< normalise t2
+  Pair t1 t2 -> pure Pair -< normalise t1 -< normalise t2
+  -- Ready --
+  Done _ -> pure t
+  Fail -> pure t
+  -- Editors --
+  Edit Unnamed e -> do
+    n <- supply
+    pure <| Edit (Named n) e
+  Edit (Named _) _ -> pure t
+  -- Assert --
+  -- Assert p -> do
+  --   pure <| Done p
+  -- References --
+  Share b -> do
+    l <- Store.alloc b
+    pure <| Done l
+  Assign b s@(Store _ r) -> do
+    Store.write b s
+    output <| pack r
+    pure <| Done ()
+
+-- balance :: Act h m a -> Act h m a
+-- balance t = case t of
+--   Pair t1 t2 -> Pair (balance t1) (balance t2)
+--   Choose t1 t2 -> Choose (balance t1) (balance t2)
+--   Trans f t1 -> Trans f (balance t1)
+--   Forever t1 -> Forever (balance t1)
+--   -- Monad associativity
+--   Step (Step t1 e2) e3 -> Step t1 (\x -> Step (e2 x) e3)
+--   _ -> t
+
+-- balance' :: Edit m a -> Edit m a
+-- balance' = \case
+--   Select ts -> Select <| map balance ts
+--   e -> e
+
+-- Handling --------------------------------------------------------------------
+
+-- type PartialTracking f m a = WriterT (List (Someref m)) (ExceptT NotApplicable m) (f m a)
+
 handle ::
-  forall m r a.
-  Collaborative r m =>
-  Task m a ->
+  forall h r a.
+  Members '[Error NotApplicable, Output (Someref h), Alloc h, Read h, Write h] r =>
+  Act h (Sem r) a ->
   Input Concrete ->
-  PartialTracking Task m a
+  Sem r (Act h (Sem r) a)
 handle t i = case t of
   -- Editors --
-  Editor n e -> case i of
+  Edit n e -> case i of
     IOption n' l -> case e of
       Select ts
         | n == n' -> case HashMap.lookup l ts of
@@ -141,7 +160,7 @@ handle t i = case t of
     IEnter m b'
       | n == Named m -> do
         e' <- handle' b' e
-        pure <| Editor n e'
+        pure <| Edit n e'
       | otherwise -> throw <| CouldNotMatch n (Named m)
   -- Pass --
   Trans e1 t2 -> do
@@ -152,7 +171,7 @@ handle t i = case t of
     case et1' of
       Right t1' -> pure <| Step t1' e2 -- H-Step
       Left _ -> do
-        mv1 <- lift <| lift <| value t1
+        mv1 <- value t1
         case mv1 of
           Nothing -> throw CouldNotContinue
           Just v1 -> do
@@ -176,11 +195,11 @@ handle t i = case t of
   _ -> throw <| CouldNotHandle i
 
 handle' ::
-  forall m r a.
-  Collaborative r m =>
+  forall h m r a.
+  Members '[Error NotApplicable, Output (Someref h), Read h, Write h] r =>
   Concrete ->
-  Editor m a -> -- `Select` does not return an `Editor`...
-  PartialTracking Editor m a
+  Edit h m a -> -- NOTE: `Select` does not return an `Editor`...
+  Sem r (Edit h m a)
 handle' c@(Concrete b') = \case
   Enter
     | Just Refl <- b' ~: beta -> pure <| Update b'
@@ -195,40 +214,23 @@ handle' c@(Concrete b') = \case
   Change s@(Store _ r)
     -- NOTE: As in the `Update` case above, we check for type equality.
     | Just Refl <- b' ~: beta -> do
-      s <<- b'
-      tell [pack r]
+      Store.write b' s
+      output <| pack r
       pure <| Change s
-    | otherwise -> throw <| CouldNotChangeRef (someTypeOf s) (someTypeOf b')
+    | otherwise -> throw <| CouldNotChangeRef (someTypeOf r) (someTypeOf b')
     where
       beta = typeRep :: TypeRep a
   -- Rest --
   _ -> throw <| CouldNotHandleValue c
 
+{-
 -- Interaction -----------------------------------------------------------------
 
-data Steps
-  = DidStabilise Nat Nat
-  | DidNotStabilise Nat Nat Nat
-  | DidNormalise Text
-  | DidBalance Text
-  | DidStart Text
-  | DidCalculateOptions (List Option) Text
-
-instance Pretty Steps where
-  pretty = \case
-    DidNotStabilise d w o -> sep ["Found", pretty o, "overlap(s) amongst", pretty d, "dirty and", pretty w, "watched reference(s)"]
-    DidStabilise d w -> sep ["Found no overlaps amongst", pretty d, "dirty and", pretty w, "watched reference(s)"]
-    DidNormalise t -> sep ["Normalised to:", pretty t]
-    DidBalance t -> sep ["Rebalanced to:", pretty t]
-    DidStart t -> sep ["Started with:", pretty t]
-    DidCalculateOptions os t -> sep ["Future options before normalising", pretty os, "for task", pretty t]
 
 fixate ::
-  Collaborative r m =>
-  MonadSupply Nat m =>
-  MonadLog Steps m =>
-  Tracking Task m a ->
-  m (Task m a)
+  Members '[Log Steps, Supply Nat] r =>
+  Sem (Writer Someref ': r) a ->
+  Sem r a
 fixate tt = do
   (t, d) <- runWriterT tt
   (t', d') <- runWriterT <| normalise t
@@ -250,8 +252,8 @@ initialise ::
   Collaborative r m =>
   MonadSupply Nat m =>
   MonadLog Steps m =>
-  Task m a ->
-  m (Task m a)
+  Act h m a ->
+  m (Act h m a)
 initialise t = do
   log Info <| DidStart (show <| pretty t)
   fixate (pure t)
@@ -261,9 +263,9 @@ interact ::
   MonadSupply Nat m =>
   MonadLog NotApplicable m =>
   MonadLog Steps m =>
-  Task m a ->
+  Act h m a ->
   Input Concrete ->
-  m (Task m a)
+  m (Act h m a)
 interact t i = do
   xt <- runExceptT <| runWriterT <| handle t i
   case xt of
@@ -317,3 +319,5 @@ run task = do
       input <- getUserInput
       task'' <- interact task' input
       loop task''
+
+-}
