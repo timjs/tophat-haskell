@@ -13,10 +13,10 @@ import Polysemy.Mutate (Alloc, Read)
 
 ui ::
   Members '[Alloc h, Read h] r =>
-  Act h (Sem r) a ->
+  Task h (Sem r) a ->
   Sem r (Doc n)
 ui = \case
-  Edit a e -> ui' a e
+  Editor a e -> ui' a e
   Done _ -> pure "■ …"
   Pair t1 t2 -> pure (\l r -> sep [l, " ⧓ ", r]) -< ui t1 -< ui t2
   Choose t1 t2 -> pure (\l r -> sep [l, " ◆ ", r]) -< ui t1 -< ui t2
@@ -37,7 +37,7 @@ ui = \case
 ui' ::
   Member (Read h) r =>
   Name ->
-  Edit h (Sem r) b ->
+  Editor h (Sem r) b ->
   Sem r (Doc n)
 ui' a = \case
   Enter -> pure <| cat ["⊠^", pretty a, " [ ] "]
@@ -49,11 +49,11 @@ ui' a = \case
 
 value ::
   Members '[Alloc h, Read h] r =>
-  Act h (Sem r) a ->
+  Task h (Sem r) a ->
   Sem r (Maybe a) -- We need to watch locations and be in monad `m`
 value = \case
-  Edit Unnamed _ -> pure Nothing
-  Edit (Named _) e -> value' e
+  Editor Unnamed _ -> pure Nothing
+  Editor (Named _) e -> value' e
   Trans f t -> pure (map f) -< value t
   Pair t1 t2 -> pure (><) -< value t1 -< value t2
   Done v -> pure (Just v)
@@ -65,7 +65,7 @@ value = \case
 
 value' ::
   Member (Read h) r => -- We need to Store.read locations and be in monad `m`
-  Edit h (Sem r) a ->
+  Editor h (Sem r) a ->
   Sem r (Maybe a)
 value' = \case
   Enter -> pure Nothing
@@ -76,10 +76,10 @@ value' = \case
   Watch l -> pure Just -< Store.read l
 
 failing ::
-  Act h m a ->
+  Task h m a ->
   Bool
 failing = \case
-  Edit _ e -> failing' e
+  Editor _ e -> failing' e
   Trans _ t2 -> failing t2
   Pair t1 t2 -> failing t1 && failing t2
   Done _ -> False
@@ -90,7 +90,7 @@ failing = \case
   Assign _ _ -> False
 
 failing' ::
-  Edit h m a ->
+  Editor h m a ->
   Bool
 failing' = \case
   Enter -> False
@@ -101,11 +101,11 @@ failing' = \case
   Watch _ -> False
 
 watching ::
-  Act h m a ->
+  Task h m a ->
   List (Someref h) -- There is no need to be in monad `m`
 watching = \case
-  Edit Unnamed _ -> []
-  Edit (Named _) e -> watching' e
+  Editor Unnamed _ -> []
+  Editor (Named _) e -> watching' e
   Trans _ t2 -> watching t2
   Pair t1 t2 -> watching t1 `union` watching t2
   Done _ -> []
@@ -116,7 +116,7 @@ watching = \case
   Assign _ _ -> []
 
 watching' ::
-  Edit h m a ->
+  Editor h m a ->
   List (Someref h) -- There is no need to be in monad `m`
 watching' = \case
   Enter -> []
@@ -131,12 +131,12 @@ watching' = \case
 -- |
 -- | Notes:
 -- | * We need this to pair `Label`s with `Name`s, because we need to tag all deeper lables with the appropriate editor name.
--- | * We can't return a `HashMap _ (Act h m a)` because deeper tasks can be of different types!
+-- | * We can't return a `HashMap _ (Task h m a)` because deeper tasks can be of different types!
 options ::
-  Act h m a ->
+  Task h m a ->
   List Option
 options = \case
-  Edit n (Select ts) -> options' ts |> map (Option n)
+  Editor n (Select ts) -> options' ts |> map (Option n)
   Trans _ t2 -> options t2
   Step t1 _ -> options t1
   -- Step t1 e2 -> pure (++) -< options t1 -< do
@@ -155,18 +155,18 @@ options = \case
 -- | Notes:
 -- | * Goes one level deep!
 options' ::
-  HashMap Label (Act h m a) ->
+  HashMap Label (Task h m a) ->
   List Label
 options' = HashMap.keys << HashMap.filter (not << failing)
 
 inputs ::
   Members '[Alloc h, Read h] r =>
-  Act h (Sem r) a ->
+  Task h (Sem r) a ->
   Sem r (List (Input Dummy)) -- We need to call `value`, therefore we are in `m`
 inputs t = case t of
-  Edit Unnamed _ -> pure []
-  Edit (Named n) (Select ts) -> options' ts |> map (ISelect n) |> pure
-  Edit (Named n) e -> inputs' e |> map (IEnter n) |> pure
+  Editor Unnamed _ -> pure []
+  Editor (Named n) (Select ts) -> options' ts |> map (ISelect n) |> pure
+  Editor (Named n) e -> inputs' e |> map (IEnter n) |> pure
   Trans _ t2 -> inputs t2
   Pair t1 t2 -> pure (++) -< inputs t1 -< inputs t2
   Done _ -> pure []
@@ -184,7 +184,7 @@ inputs t = case t of
 
 inputs' ::
   forall h m a.
-  Edit h m a ->
+  Editor h m a ->
   List Dummy
 inputs' t = case t of
   Enter -> [dummy beta]

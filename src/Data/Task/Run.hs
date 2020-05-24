@@ -62,8 +62,8 @@ instance Pretty NotApplicable where
 
 normalise ::
   Members '[Log Steps, Supply Nat, Writer (List (Someref h)), Alloc h, Read h, Write h] r =>
-  Act h (Sem r) a ->
-  Sem r (Act h (Sem r) a)
+  Task h (Sem r) a ->
+  Sem r (Task h (Sem r) a)
 normalise t = case t of
   -- Step --
   Step t1 e2 -> do
@@ -103,10 +103,10 @@ normalise t = case t of
   Done _ -> pure t
   Fail -> pure t
   -- Editors --
-  Edit Unnamed e -> do
+  Editor Unnamed e -> do
     n <- supply
-    pure <| Edit (Named n) e
-  Edit (Named _) _ -> pure t
+    pure <| Editor (Named n) e
+  Editor (Named _) _ -> pure t
   -- Assert --
   -- Assert p -> do
   --   pure <| Done p
@@ -119,7 +119,7 @@ normalise t = case t of
     tell [pack r]
     pure <| Done ()
 
--- balance :: Act h m a -> Act h m a
+-- balance :: Task h m a -> Task h m a
 -- balance t = case t of
 --   Pair t1 t2 -> Pair (balance t1) (balance t2)
 --   Choose t1 t2 -> Choose (balance t1) (balance t2)
@@ -129,7 +129,7 @@ normalise t = case t of
 --   Step (Step t1 e2) e3 -> Step t1 (\x -> Step (e2 x) e3)
 --   _ -> t
 
--- balance' :: Edit m a -> Edit m a
+-- balance' :: Editor m a -> Editor m a
 -- balance' = \case
 --   Select ts -> Select <| map balance ts
 --   e -> e
@@ -141,12 +141,12 @@ normalise t = case t of
 handle ::
   forall h r a.
   Members '[Error NotApplicable, Writer (List (Someref h)), Alloc h, Read h, Write h] r =>
-  Act h (Sem r) a ->
+  Task h (Sem r) a ->
   Input Concrete ->
-  Sem r (Act h (Sem r) a)
+  Sem r (Task h (Sem r) a)
 handle t i = case t of
   -- Editors --
-  Edit n e -> case i of
+  Editor n e -> case i of
     IOption n' l -> case e of
       Select ts
         | n == n' -> case HashMap.lookup l ts of
@@ -161,7 +161,7 @@ handle t i = case t of
     IEnter m b'
       | n == Named m -> do
         e' <- handle' b' e
-        pure <| Edit n e'
+        pure <| Editor n e'
       | otherwise -> throw <| CouldNotMatch n (Named m)
   -- Pass --
   Trans e1 t2 -> do
@@ -199,8 +199,8 @@ handle' ::
   forall h m r a.
   Members '[Error NotApplicable, Writer (List (Someref h)), Read h, Write h] r =>
   Concrete ->
-  Edit h m a -> -- NOTE: `Select` does not return an `Editor`...
-  Sem r (Edit h m a)
+  Editor h m a -> -- NOTE: `Select` does not return an `Editor`...
+  Sem r (Editor h m a)
 handle' c@(Concrete b') = \case
   Enter
     | Just Refl <- b' ~: beta -> pure <| Update b'
@@ -228,8 +228,8 @@ handle' c@(Concrete b') = \case
 
 fixate ::
   Members '[Log Steps, Supply Nat, Writer (List (Someref h)), Alloc h, Read h, Write h] r =>
-  Sem r (Act h (Sem r) a) ->
-  Sem r (Act h (Sem r) a)
+  Sem r (Task h (Sem r) a) ->
+  Sem r (Task h (Sem r) a)
 fixate t = do
   (d, t') <- listen t --FIXME: Is this correct??
   (d', t'') <- listen <| normalise t' --FIXME: Is this correct??
@@ -251,8 +251,8 @@ fixate t = do
 
 initialise ::
   Members '[Log Steps, Supply Nat, Writer (List (Someref h)), Alloc h, Read h, Write h] r =>
-  Act h (Sem r) a ->
-  Sem r (Act h (Sem r) a)
+  Task h (Sem r) a ->
+  Sem r (Task h (Sem r) a)
 initialise t = do
   log Info <| DidStart (show <| pretty t)
   fixate (pure t)
@@ -263,8 +263,8 @@ initialise t = do
 interact ::
   Members '[Log Steps, Writer (List (Someref h)), Error NotApplicable, Alloc h, Read h, Write h] r =>
   Input Concrete ->
-  Act h (Sem r) a ->
-  Sem r (Act h (Sem r) a)
+  Task h (Sem r) a ->
+  Sem r (Task h (Sem r) a)
 interact i t = do
   -- (_, t') <- listen <| handle t i
   x <- _ t
