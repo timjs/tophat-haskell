@@ -135,7 +135,6 @@ import qualified Data.HashMap.Strict as HashMap
 import qualified Data.HashSet as HashSet
 import qualified Data.Text as Text
 import Data.Type.Equality
-import Data.Unique (Unique, hashUnique)
 import Relude hiding
   ( ($),
     ($>),
@@ -191,6 +190,8 @@ import Type.Reflection (SomeTypeRep (..), TypeRep, someTypeRep, typeOf, typeRep)
 
 -- Synonyms --------------------------------------------------------------------
 
+-- Types --
+
 type Unit = ()
 
 type Nat = Relude.Word
@@ -209,6 +210,8 @@ type Cons = NonEmpty
 
 type Hash a = (Eq a, Hashable a)
 
+-- Text --
+
 chars :: Text -> List Char
 chars = Text.unpack
 
@@ -224,10 +227,14 @@ quote = between '"' '"'
 length :: Foldable f => f a -> Nat
 length = Relude.length >> fromIntegral
 
+-- Tuples --
+
 infix 0 ~>
 
 (~>) :: a -> b -> (a, b)
 (~>) = (,)
+
+-- IO --
 
 getTextLn :: MonadIO m => m Text
 getTextLn = Relude.getLine
@@ -289,11 +296,14 @@ class Display a where
 instance {-# OVERLAPPABLE #-} Debug a => Display a where
   display = debug
 
-instance Display a => Display (List a) where
+instance (Display a) => Display (List a) where
   display = map display >> concat >> between '[' ']'
 
 instance (Display k, Display v) => Display (HashMap k v) where
   display = HashMap.toList >> map (\(k, v) -> display k ++ ":" ++ display v) >> intercalate "," >> between '{' '}'
+
+instance (Display v) => Display (HashSet v) where
+  display = HashSet.toList >> map display >> intercalate "," >> between '{' '}'
 
 -- Monoids ---------------------------------------------------------------------
 
@@ -309,12 +319,14 @@ neutral = Relude.mempty
 
 concat :: Monoid m => List m -> m
 concat = Relude.mconcat
+{-# INLINE concat #-}
 
 intercalate :: Foldable f => Monoid m => m -> f m -> m
 intercalate sep = foldl' go (True, neutral) >> snd
   where
     go (True, _) x = (False, x)
     go (st, acc) x = (st, acc ++ sep ++ x)
+{-# INLINE intercalate #-}
 
 -- Groups and more -------------------------------------------------------------
 
@@ -584,9 +596,3 @@ typeOfProxy _ = typeRep
 someTypeOf :: Typeable a => a -> SomeTypeRep
 someTypeOf = someTypeRep << proxyOf
 {-# INLINE someTypeOf #-}
-
--- instance Pretty (TypeRep a) where
---   pretty = Pretty.viaShow
-
--- instance Pretty SomeTypeRep where
---   pretty = Pretty.viaShow
