@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 0e64a48fac481c5ca3180d3069b059ca57256db227f5e156a84747aa169ce950
+-- hash: 63bd3791674c2784649dd8358a71e9c36dc3e42b09d55b156b2e1627c30a0e9c
 
 name:           tophat
 version:        0.1.0.0
@@ -28,7 +28,7 @@ library
   exposed-modules:
       Control.Collaborative
       Control.Interactive
-      Data.Editable
+      Data.Basic
       Data.Heap
       Data.Someref
       Data.Store
