@@ -62,8 +62,8 @@ instance Pretty NotApplicable where
 
 normalise ::
   Members '[Log Steps, Supply Nat, Writer (List (Someref h)), Alloc h, Read h, Write h] r =>
-  Task h (Sem r) a ->
-  Sem r (Task h (Sem r) a) --NOTE: Here we're constructing a concrete stack. I don't know if that's the best way to go...
+  Task h r a ->
+  Sem r (Task h r a) --NOTE: Here we're constructing a concrete stack. I don't know if that's the best way to go...
 normalise t = case t of
   -- Step --
   Step t1 e2 -> do
@@ -141,9 +141,9 @@ normalise t = case t of
 handle ::
   forall h r a.
   Members '[Error NotApplicable, Writer (List (Someref h)), Alloc h, Read h, Write h] r =>
-  Task h (Sem r) a ->
+  Task h r a ->
   Input Concrete ->
-  Sem r (Task h (Sem r) a)
+  Sem r (Task h r a)
 handle t i = case t of
   -- Editors --
   Editor n e -> case i of
@@ -228,8 +228,8 @@ handle' c@(Concrete b') = \case
 
 fixate ::
   Members '[Log Steps, Supply Nat, Writer (List (Someref h)), Alloc h, Read h, Write h] r =>
-  Sem r (Task h (Sem r) a) ->
-  Sem r (Task h (Sem r) a)
+  Sem r (Task h r a) ->
+  Sem r (Task h r a)
 fixate t = do
   (d, t') <- listen t --FIXME: Is this correct??
   (d', t'') <- listen <| normalise t' --FIXME: Is this correct??
@@ -251,8 +251,8 @@ fixate t = do
 
 initialise ::
   Members '[Log Steps, Supply Nat, Writer (List (Someref h)), Alloc h, Read h, Write h] r =>
-  Task h (Sem r) a ->
-  Sem r (Task h (Sem r) a)
+  Task h r a ->
+  Sem r (Task h r a)
 initialise t = do
   log Info <| DidStart (show <| pretty t)
   fixate (pure t)
@@ -263,8 +263,8 @@ initialise t = do
 interact ::
   Members '[Log Steps, Writer (List (Someref h)), Error NotApplicable, Alloc h, Read h, Write h] r =>
   Input Concrete ->
-  Task h (Sem r) a ->
-  Sem r (Task h (Sem r) a)
+  Task h r a ->
+  Sem r (Task h r a)
 interact i t = do
   -- (_, t') <- listen <| handle t i
   x <- _ t

@@ -13,7 +13,7 @@ import Polysemy.Mutate (Alloc, Read)
 
 ui ::
   Members '[Alloc h, Read h] r =>
-  Task h (Sem r) a ->
+  Task h r a ->
   Sem r (Doc n)
 ui = \case
   Editor a e -> ui' a e
@@ -37,7 +37,7 @@ ui = \case
 ui' ::
   Members '[Read h] r =>
   Name ->
-  Editor h (Sem r) b ->
+  Editor h r b ->
   Sem r (Doc n)
 ui' a = \case
   Enter -> pure <| cat ["⊠^", pretty a, " [ ] "]
@@ -49,7 +49,7 @@ ui' a = \case
 
 value ::
   Members '[Alloc h, Read h] r =>
-  Task h (Sem r) a ->
+  Task h r a ->
   Sem r (Maybe a) -- We need to watch locations and be in monad `m`
 value = \case
   Editor Unnamed _ -> pure Nothing
@@ -65,7 +65,7 @@ value = \case
 
 value' ::
   Members '[Read h] r => -- We need to Store.read locations and be in monad `m`
-  Editor h (Sem r) a ->
+  Editor h r a ->
   Sem r (Maybe a)
 value' = \case
   Enter -> pure Nothing
@@ -161,7 +161,7 @@ options' = HashMap.keys << HashMap.filter (not << failing)
 
 inputs ::
   Members '[Alloc h, Read h] r =>
-  Task h (Sem r) a ->
+  Task h r a ->
   Sem r (List (Input Dummy)) -- We need to call `value`, therefore we are in `m`
 inputs t = case t of
   Editor Unnamed _ -> pure []
