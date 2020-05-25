@@ -19,6 +19,7 @@ module Data.Task
   )
 where
 
+import Control.Collaborative
 import Control.Interactive
 import Data.Editable
 import Data.Heap (Heap)
@@ -95,9 +96,9 @@ data Editor (h :: Heap h') (r :: EffectRow) (t :: Type) where
   -- | External choice between multple tasks.
   Select :: HashMap Label (Task h r t) -> Editor h r t
   -- | Change to a reference of type `t` to a value
-  Change :: (Inspectable h t, Editable t) => Store h t -> Editor h r t
+  Change :: (Editable t) => Store h t -> Editor h r t
   -- | Watch a reference of type `t`
-  Watch :: (Inspectable h t, Editable t) => Store h t -> Editor h r t
+  Watch :: (Editable t) => Store h t -> Editor h r t
 
 data Name
   = Unnamed
@@ -206,8 +207,8 @@ instance Alternative (Task h r) where
 instance Monad (Task h r) where
   (>>=) = Step
 
--- instance Collaborative r m => Collaborative r (Task h r) where
---   share = Share
---   assign = Assign
---   watch l = new (Watch l)
---   change l = new (Change l)
+instance Collaborative h (Task h r) where
+  share = Share
+  assign = Assign
+  watch l = new (Watch l)
+  change l = new (Change l)

@@ -1,6 +1,7 @@
 module Data.Store
   ( -- * Data
     Store (..),
+    Heap (..),
 
     -- * Operations
     alloc,
@@ -14,7 +15,7 @@ module Data.Store
   )
 where
 
-import Data.Heap (Ref)
+import Data.Heap (Heap (..), Ref)
 import Lens.Simple (Lens', iso, set, view)
 import Polysemy
 import Polysemy.Mutate (Alloc, Read, Write)
