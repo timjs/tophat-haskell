@@ -1,7 +1,6 @@
 module Data.Task.Run where
 
 import qualified Data.HashMap.Strict as HashMap
-import Data.Heap (Ref)
 import Data.List (intersect, union)
 import qualified Data.Store as Store
 import Data.Task
@@ -11,7 +10,6 @@ import Polysemy
 import Polysemy.Error
 import Polysemy.Log
 import Polysemy.Mutate
-import Polysemy.Output
 import Polysemy.Supply
 import Polysemy.Writer
 
@@ -60,15 +58,15 @@ instance Display NotApplicable where
 -- Normalising -----------------------------------------------------------------
 
 normalise ::
-  Members '[Log Steps, Supply Nat, Writer (List (Someref h)), Alloc h, Read h, Write h] r =>
+  Members '[Log Steps, Supply Nat, Alloc h, Read h, Write h] r =>
   Task h r a ->
-  Sem r (Task h r a) --NOTE: Here we're constructing a concrete stack. I don't know if that's the best way to go...
+  Sem (Writer (List (Someref h)) ': r) (Task h r a) --NOTE: Here we're constructing a concrete stack. I don't know if that's the best way to go...
 normalise t = case t of
   -- Step --
   Step t1 e2 -> do
     t1' <- normalise t1
     let stay = Step t1' e2
-    mv1 <- value t1'
+    mv1 <- raise <| value t1'
     case mv1 of
       Nothing -> pure stay -- N-StepNone
       Just v1 -> do
@@ -85,12 +83,12 @@ normalise t = case t of
   -- Choose --
   Choose t1 t2 -> do
     t1' <- normalise t1
-    mv1 <- value t1'
+    mv1 <- raise <| value t1'
     case mv1 of
       Just _ -> pure t1' -- N-ChooseLeft
       Nothing -> do
         t2' <- normalise t2
-        mv2 <- value t2'
+        mv2 <- raise <| value t2'
         case mv2 of
           Just _ -> pure t2' -- N-ChooseRight
           Nothing -> pure <| Choose t1' t2' -- N-ChooseNone
@@ -111,14 +109,14 @@ normalise t = case t of
   --   pure <| Done p
   -- References --
   Share b -> do
-    l <- Store.alloc b
+    l <- Store.alloc b --XXX: raise?
     pure <| Done l
   Assign b s@(Store _ r) -> do
     Store.write b s
     tell [pack r]
     pure <| Done ()
 
--- balance :: Task h m a -> Task h m a
+-- balance :: Task h r a -> Task h r a
 -- balance t = case t of
 --   Pair t1 t2 -> Pair (balance t1) (balance t2)
 --   Choose t1 t2 -> Choose (balance t1) (balance t2)
@@ -135,14 +133,12 @@ normalise t = case t of
 
 -- Handling --------------------------------------------------------------------
 
--- type PartialTracking f m a = WriterT (List (Someref m)) (ExceptT NotApplicable m) (f m a)
-
 handle ::
   forall h r a.
-  Members '[Error NotApplicable, Writer (List (Someref h)), Alloc h, Read h, Write h] r =>
+  Members '[Alloc h, Read h, Write h] r =>
   Task h r a ->
   Input Concrete ->
-  Sem r (Task h r a)
+  Sem (Writer (List (Someref h)) ': Error NotApplicable ': r) (Task h r a)
 handle t i = case t of
   -- Editors --
   Editor n e -> case i of
@@ -171,7 +167,7 @@ handle t i = case t of
     case et1' of
       Right t1' -> pure <| Step t1' e2 -- H-Step
       Left _ -> do
-        mv1 <- value t1
+        mv1 <- raise <| raise <| value t1
         case mv1 of
           Nothing -> throw CouldNotContinue
           Just v1 -> do
@@ -195,11 +191,11 @@ handle t i = case t of
   _ -> throw <| CouldNotHandle i
 
 handle' ::
-  forall h m r a.
-  Members '[Error NotApplicable, Writer (List (Someref h)), Read h, Write h] r =>
+  forall h r a.
+  Members '[Read h, Write h] r =>
   Concrete ->
-  Editor h m a -> -- NOTE: `Select` does not return an `Editor`...
-  Sem r (Editor h m a)
+  Editor h r a -> -- NOTE: `Select` does not return an `Editor`...
+  Sem (Writer (List (Someref h)) ': Error NotApplicable ': r) (Editor h r a)
 handle' c@(Concrete b') = \case
   Enter
     | Just Refl <- b' ~: beta -> pure <| Update b'
@@ -226,12 +222,12 @@ handle' c@(Concrete b') = \case
 -- Fixation --------------------------------------------------------------------
 
 fixate ::
-  Members '[Log Steps, Supply Nat, Writer (List (Someref h)), Alloc h, Read h, Write h] r =>
-  Sem r (Task h r a) ->
+  Members '[Log Steps, Supply Nat, Alloc h, Read h, Write h] r =>
+  Sem (Writer (List (Someref h)) ': r) (Task h r a) ->
   Sem r (Task h r a)
 fixate t = do
-  (d, t') <- listen t --FIXME: Is this correct??
-  (d', t'') <- listen <| normalise t' --FIXME: Is this correct??
+  (d, t') <- runWriter t
+  (d', t'') <- normalise t' |> runWriter
   log Info <| DidNormalise (display t'')
   let ws = watching t''
   let ds = d `union` d'
@@ -249,7 +245,7 @@ fixate t = do
 -- Initialisation --------------------------------------------------------------
 
 initialise ::
-  Members '[Log Steps, Supply Nat, Writer (List (Someref h)), Alloc h, Read h, Write h] r =>
+  Members '[Log Steps, Supply Nat, Alloc h, Read h, Write h] r =>
   Task h r a ->
   Sem r (Task h r a)
 initialise t = do
@@ -258,25 +254,24 @@ initialise t = do
 
 -- Interaction -----------------------------------------------------------------
 
-{-
 interact ::
-  Members '[Log Steps, Writer (List (Someref h)), Error NotApplicable, Alloc h, Read h, Write h] r =>
+  Members '[Log Steps, Log NotApplicable, Supply Nat, Alloc h, Read h, Write h] r =>
   Input Concrete ->
   Task h r a ->
   Sem r (Task h r a)
 interact i t = do
-  -- (_, t') <- listen <| handle t i
-  x <- _ t
-  case x of
+  xt <- handle t i |> runWriter |> runError
+  case xt of
     Left e -> do
       log Warning e
       pure t
-    Right t'' -> fixate <| pure t''
+    Right (_, t') -> fixate <| pure t'
 
+{-
 execute ::
-  Editable a =>
+  Basic a =>
   List (Input Concrete) ->
-  Task IO a ->
+  Task h r a ->
   IO ()
 execute events task = initialise task >>= go events
   where
@@ -287,13 +282,14 @@ execute events task = initialise task >>= go events
       [] -> do
         result <- value task'
         putTextLn <| display result
+-}
 
 -- Running ---------------------------------------------------------------------
 
 getUserInput :: IO (Input Concrete)
 getUserInput = do
   putText ">> "
-  line <- getLine
+  line <- getTextLn
   case line of
     "quit" -> exitSuccess
     "q" -> exitSuccess
@@ -303,6 +299,7 @@ getUserInput = do
         print message
         getUserInput
 
+{-
 run :: Task IO a -> IO ()
 run task = do
   task' <- initialise task
