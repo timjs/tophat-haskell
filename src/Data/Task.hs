@@ -25,7 +25,6 @@ import Data.Editable
 import Data.Heap (Heap)
 import Data.Someref
 import Data.Store
-import qualified Data.Text.Prettyprint.Doc as Pretty
 import Polysemy
 
 -- Tasks -----------------------------------------------------------------------
@@ -103,7 +102,7 @@ data Editor (h :: Heap h') (r :: EffectRow) (t :: Type) where
 data Name
   = Unnamed
   | Named Nat
-  deriving (Eq, Ord, Show, Scan)
+  deriving (Eq, Ord, Debug, Scan)
 
 new :: Editor h r t -> Task h r t
 new e = Editor Unnamed e
@@ -147,33 +146,33 @@ forever t1 = t1 >>= \_ -> forever t1
 (>>@) :: Task h r a -> (a -> Task h r b) -> Task h r b
 (>>@) t1 e2 = t1 >>= \x -> select ["Repeat" ~> t1 >>@ e2, "Exit" ~> e2 x]
 
--- Pretty ----------------------------------------------------------------------
+-- Display ---------------------------------------------------------------------
 
-instance Pretty (Task h r t) where
-  pretty = \case
-    Editor n e -> cat [pretty e |> Pretty.parens, "^", pretty n]
-    Pair t1 t2 -> sep [pretty t1, "><", pretty t2] |> Pretty.parens
+instance Display (Task h r t) where
+  display = \case
+    Editor n e -> concat [display e |> between '(' ')', "^", display n]
+    Pair t1 t2 -> unwords [display t1, "><", display t2] |> between '(' ')'
     Done _ -> "Done _"
-    Choose t1 t2 -> sep [pretty t1, "<|>", pretty t2] |> Pretty.parens
+    Choose t1 t2 -> unwords [display t1, "<|>", display t2] |> between '(' ')'
     Fail -> "Fail"
-    Trans _ t -> sep ["Trans _", pretty t]
-    Step t _ -> sep [pretty t, ">>=", "_"] |> Pretty.parens
-    Share v -> sep ["Share", pretty v]
-    Assign v _ -> sep ["_", ":=", pretty v]
+    Trans _ t -> unwords ["Trans _", display t]
+    Step t _ -> unwords [display t, ">>=", "_"] |> between '(' ')'
+    Share v -> unwords ["Share", display v]
+    Assign v _ -> unwords ["_", ":=", display v]
 
-instance Pretty (Editor h r a) where
-  pretty = \case
+instance Display (Editor h r a) where
+  display = \case
     Enter -> "Enter"
-    Update v -> sep ["Update", pretty v] |> Pretty.parens
-    View v -> sep ["View", pretty v] |> Pretty.parens
-    Select ts -> sep ["Select", pretty ts] |> Pretty.parens
-    Watch _ -> sep ["Watch", "_"]
-    Change _ -> sep ["Change", "_"]
+    Update v -> unwords ["Update", display v] |> between '(' ')'
+    View v -> unwords ["View", display v] |> between '(' ')'
+    Select ts -> unwords ["Select", display ts] |> between '(' ')'
+    Watch _ -> unwords ["Watch", "_"]
+    Change _ -> unwords ["Change", "_"]
 
-instance Pretty Name where
-  pretty = \case
+instance Display Name where
+  display = \case
     Unnamed -> "ε"
-    Named n -> pretty n
+    Named n -> display n
 
 -- Instances -------------------------------------------------------------------
 

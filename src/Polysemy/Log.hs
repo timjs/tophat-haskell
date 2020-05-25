@@ -22,8 +22,8 @@ data Severity
   | Warning
   | Info
 
-instance Pretty Severity where
-  pretty = \case
+instance Display Severity where
+  display = \case
     Error -> "!!"
     Warning -> "**"
     Info -> "=="
@@ -35,6 +35,6 @@ makeSem ''Log
 
 -- Interpretations -------------------------------------------------------------
 
-logToIO :: (Member (Embed IO) r, Pretty i) => Sem (Log i ': r) a -> Sem r a
+logToIO :: (Member (Embed IO) r, Debug i) => Sem (Log i ': r) a -> Sem r a
 logToIO = interpret \case
-  Log s i -> embed <| print <| sep [pretty s, pretty i]
+  Log s i -> embed <| print <| unwords [display s, debug i]

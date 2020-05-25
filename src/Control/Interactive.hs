@@ -31,7 +31,7 @@ type Label = Text
 instance Interactive IO where
   enter :: forall a. Editable a => IO a
   enter = do
-    putText <| show tau ++ "? "
+    putText <| display tau ++ "? "
     t <- getTextLn
     case scan t of
       Just x -> pure x
@@ -46,5 +46,5 @@ instance Interactive IO where
 
   view :: forall a. Editable a => a -> IO a
   view x = do
-    putTextLn <| show (pretty x)
+    putTextLn <| display x
     pure x

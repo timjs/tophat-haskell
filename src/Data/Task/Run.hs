@@ -1,4 +1,4 @@
-module Data.Task.Interact where
+module Data.Task.Run where
 
 import qualified Data.HashMap.Strict as HashMap
 import Data.Heap (Ref)
@@ -7,7 +7,6 @@ import qualified Data.Store as Store
 import Data.Task
 import Data.Task.Input
 import Data.Task.Observe
-import qualified Data.Text.Prettyprint.Doc as Pretty
 import Polysemy
 import Polysemy.Error
 import Polysemy.Log
@@ -26,14 +25,14 @@ data Steps
   | DidStart Text
   | DidCalculateOptions (List Option) Text
 
-instance Pretty Steps where
-  pretty = \case
-    DidNotStabilise d w o -> sep ["Found", pretty o, "overlap(s) amongst", pretty d, "dirty and", pretty w, "watched reference(s)"]
-    DidStabilise d w -> sep ["Found no overlaps amongst", pretty d, "dirty and", pretty w, "watched reference(s)"]
-    DidNormalise t -> sep ["Normalised to:", pretty t]
-    DidBalance t -> sep ["Rebalanced to:", pretty t]
-    DidStart t -> sep ["Started with:", pretty t]
-    DidCalculateOptions os t -> sep ["Future options before normalising", pretty os, "for task", pretty t]
+instance Display Steps where
+  display = \case
+    DidNotStabilise d w o -> unwords ["Found", display o, "overlap(s) amongst", display d, "dirty and", display w, "watched reference(s)"]
+    DidStabilise d w -> unwords ["Found no overlaps amongst", display d, "dirty and", display w, "watched reference(s)"]
+    DidNormalise t -> unwords ["Normalised to:", display t]
+    DidBalance t -> unwords ["Rebalanced to:", display t]
+    DidStart t -> unwords ["Started with:", display t]
+    DidCalculateOptions os t -> unwords ["Future options before normalising", display os, "for task", display t]
 
 data NotApplicable
   = CouldNotMatch Name Name
@@ -46,17 +45,17 @@ data NotApplicable
   | CouldNotHandle (Input Concrete)
   | CouldNotHandleValue Concrete
 
-instance Pretty NotApplicable where
-  pretty = \case
-    CouldNotMatch n m -> sep ["Could not match editor id", Pretty.dquotes <| pretty n, "with id", Pretty.dquotes <| pretty m]
-    CouldNotChangeVal b c -> sep ["Could not change value because types", Pretty.dquotes <| pretty b, "and", Pretty.dquotes <| pretty c, "do not match"]
-    CouldNotChangeRef r c -> sep ["Could not change value because cell", Pretty.dquotes <| pretty r, "does not contain", Pretty.dquotes <| pretty c]
-    CouldNotGoTo l -> sep ["Could not pick label", Pretty.dquotes <| pretty l, "because it leads to an empty task"]
-    CouldNotFind l -> sep ["Could not find label", Pretty.dquotes <| pretty l, "in the possible options"]
-    CouldNotSelect -> sep ["Could not pick because there is nothing to pick from in this task"]
-    CouldNotContinue -> sep ["Could not continue because there is no value to continue with"]
-    CouldNotHandle i -> sep ["Could not handle input", Pretty.dquotes <| pretty i]
-    CouldNotHandleValue b -> sep ["Could not handle new editor value", Pretty.dquotes <| pretty b, "for readonly editor"]
+instance Display NotApplicable where
+  display = \case
+    CouldNotMatch n m -> unwords ["Could not match editor id", display n |> quote, "with id", display m |> quote]
+    CouldNotChangeVal b c -> unwords ["Could not change value because types", display b |> quote, "and", display c |> quote, "do not match"]
+    CouldNotChangeRef r c -> unwords ["Could not change value because cell", display r |> quote, "does not contain", display c |> quote]
+    CouldNotGoTo l -> unwords ["Could not pick label", display l |> quote, "because it leads to an empty task"]
+    CouldNotFind l -> unwords ["Could not find label", display l |> quote, "in the possible options"]
+    CouldNotSelect -> unwords ["Could not pick because there is nothing to pick from in this task"]
+    CouldNotContinue -> unwords ["Could not continue because there is no value to continue with"]
+    CouldNotHandle i -> unwords ["Could not handle input", display i |> quote]
+    CouldNotHandleValue b -> unwords ["Could not handle new editor value", display b |> quote, "for readonly editor"]
 
 -- Normalising -----------------------------------------------------------------
 
@@ -78,7 +77,7 @@ normalise t = case t of
           then pure stay -- N-StepFail
           else do
             let os = options t2
-            log Info <| DidCalculateOptions os (pretty t2 |> show)
+            log Info <| DidCalculateOptions os (display t2)
             if not <| null <| os
               then pure stay -- N-StepWait
               else normalise t2 -- N-StepCont
@@ -233,7 +232,7 @@ fixate ::
 fixate t = do
   (d, t') <- listen t --FIXME: Is this correct??
   (d', t'') <- listen <| normalise t' --FIXME: Is this correct??
-  log Info <| DidNormalise (show <| pretty t'')
+  log Info <| DidNormalise (display t'')
   let ws = watching t''
   let ds = d `union` d'
   let os = ds `intersect` ws
@@ -241,7 +240,7 @@ fixate t = do
     [] -> do
       log Info <| DidStabilise (length ds) (length ws)
       -- let t''' = balance t''
-      -- log Info <| DidBalance (show <| pretty t''')
+      -- log Info <| DidBalance (display t''')
       pure t'' -- F-Done --
     _ -> do
       log Info <| DidNotStabilise (length ds) (length ws) (length os)
@@ -254,7 +253,7 @@ initialise ::
   Task h r a ->
   Sem r (Task h r a)
 initialise t = do
-  log Info <| DidStart (show <| pretty t)
+  log Info <| DidStart (display t)
   fixate (pure t)
 
 -- Interaction -----------------------------------------------------------------
@@ -287,7 +286,7 @@ execute events task = initialise task >>= go events
         go rest task''
       [] -> do
         result <- value task'
-        putTextLn <| show <| pretty result
+        putTextLn <| display result
 
 -- Running ---------------------------------------------------------------------
 
@@ -315,7 +314,7 @@ run task = do
       interface <- ui task'
       print interface
       events <- inputs task'
-      print <| "Possibilities: " ++ pretty events
+      print <| "Possibilities: " ++ display events
       input <- getUserInput
       task'' <- interact task' input
       loop task''

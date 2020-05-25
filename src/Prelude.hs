@@ -35,13 +35,18 @@ module Prelude
     -- ** Text
     chars,
     unchars,
+    between,
+    quote,
 
-    -- ** Reading
+    -- ** Scanning
     Scan,
     scan,
 
-    -- ** Tracing
+    -- ** Printing
+    Debug,
+    debug,
     spy,
+    Display (..),
 
     -- ** HashMaps
     forWithKey,
@@ -53,14 +58,6 @@ module Prelude
     -- ** Vectors
     -- Vector, only, index, update
 
-    -- * Pretty printing
-    Pretty (..),
-    Doc,
-    viaShow,
-    sep,
-    cat,
-    split,
-
     -- * Operators
 
     -- ** Pairs
@@ -70,8 +67,10 @@ module Prelude
     foldr1,
 
     -- ** Monoids
-    neutral,
     (++),
+    neutral,
+    concat,
+    intercalate,
 
     -- ** Functions
     (|>),
@@ -135,8 +134,6 @@ import Data.Foldable (foldr1)
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.HashSet as HashSet
 import qualified Data.Text as Text
-import Data.Text.Prettyprint.Doc (Doc, Pretty (..), viaShow)
-import qualified Data.Text.Prettyprint.Doc as Pretty
 import Data.Type.Equality
 import Data.Unique (Unique, hashUnique)
 import Relude hiding
@@ -159,17 +156,20 @@ import Relude hiding
     Nat,
     Option (..),
     Read,
+    Show,
     String,
     Word,
     Word16,
     Word32,
     Word64,
     Word8,
+    concat,
     error,
     first,
     forever,
     getLine,
     id,
+    intercalate,
     length,
     liftA2,
     liftA3,
@@ -178,6 +178,7 @@ import Relude hiding
     pass,
     readMaybe,
     second,
+    show,
     trace,
     traceShow,
     traceShowId,
@@ -214,6 +215,12 @@ chars = Text.unpack
 unchars :: List Char -> Text
 unchars = Text.pack
 
+between :: Char -> Char -> Text -> Text
+between a b t = a `Text.cons` t `Text.snoc` b
+
+quote :: Text -> Text
+quote = between '"' '"'
+
 length :: Foldable f => f a -> Nat
 length = Relude.length >> fromIntegral
 
@@ -224,17 +231,6 @@ infix 0 ~>
 
 getTextLn :: MonadIO m => m Text
 getTextLn = Relude.getLine
-
--- Pretty printing --
-
-instance (Pretty v) => Pretty (HashSet v) where
-  pretty = Pretty.braces << Pretty.cat << Pretty.punctuate ", " << map pretty << HashSet.toList
-
-instance (Pretty k, Pretty v) => Pretty (HashMap k v) where
-  pretty = Pretty.braces << Pretty.cat << Pretty.punctuate ", " << map (\(k, v) -> cat [pretty k, ": ", pretty v]) << HashMap.toList
-
-instance Pretty Unique where
-  pretty = pretty << hashUnique
 
 -- HashMaps --
 
@@ -264,10 +260,7 @@ infix 4 /<
 -- update :: Nat -> a -> Vector a -> Vector a
 -- update (Nat i) x xs = (Vector.//) xs [ ( i, x ) ]
 
--- instance ( Pretty a ) => Pretty (Vector a) where
---   pretty = Pretty.angles << fold << intersperse ", " << map pretty << Vector.toList
-
--- Reading & Tracing -----------------------------------------------------------
+-- Scanning & Debugging --------------------------------------------------------
 
 type Scan = Relude.Read
 
@@ -275,27 +268,32 @@ scan :: Scan a => Text -> Maybe a
 scan = Relude.readMaybe << chars
 {-# INLINE scan #-}
 
-spy :: Pretty a => Text -> a -> a
-spy m x = Relude.traceShow (pretty m ++ ": " ++ pretty x) x
+type Debug = Relude.Show
+
+debug :: Debug a => a -> Text
+debug = Relude.show
+{-# INLINE debug #-}
+
+spy :: Debug a => Text -> a -> a
+spy m x = Relude.traceShow (debug m ++ ": " ++ debug x) x
 {-# INLINE spy #-}
 
-sep :: List (Doc n) -> Doc n
-sep = Pretty.hsep
+-- Displaying ------------------------------------------------------------------
 
-cat :: List (Doc n) -> Doc n
-cat = Pretty.hcat
+-- | `Display` is like `Debug` but for user facing output.
+class Display a where
+  display :: a -> Text
 
-split :: List (Doc n) -> Doc n
-split = Pretty.vsep
+-- | If a type already has a `Debug` instance, we crate a `Display` instance.
+-- | However, by specialisation it is overlappable!
+instance {-# OVERLAPPABLE #-} Debug a => Display a where
+  display = debug
 
--- pretty' :: Pretty a => a -> Pretty.SimpleDocStream n
--- pretty' = Pretty.layoutPretty (Pretty.LayoutOptions Pretty.Unbounded) << pretty
+instance Display a => Display (List a) where
+  display = map display >> concat >> between '[' ']'
 
-instance (Pretty a, Pretty b, Pretty c, Pretty d) => Pretty (a, b, c, d) where
-  pretty (x1, x2, x3, x4) = Pretty.tupled [pretty x1, pretty x2, pretty x3, pretty x4]
-
-instance (Pretty a, Pretty b, Pretty c, Pretty d, Pretty e) => Pretty (a, b, c, d, e) where
-  pretty (x1, x2, x3, x4, x5) = Pretty.tupled [pretty x1, pretty x2, pretty x3, pretty x4, pretty x5]
+instance (Display k, Display v) => Display (HashMap k v) where
+  display = HashMap.toList >> map (\(k, v) -> display k ++ ":" ++ display v) >> intercalate "," >> between '{' '}'
 
 -- Monoids ---------------------------------------------------------------------
 
@@ -308,6 +306,15 @@ infixr 5 ++
 neutral :: Monoid m => m
 neutral = Relude.mempty
 {-# INLINE neutral #-}
+
+concat :: Monoid m => List m -> m
+concat = Relude.mconcat
+
+intercalate :: Foldable f => Monoid m => m -> f m -> m
+intercalate sep = foldl' go (True, neutral) >> snd
+  where
+    go (True, _) x = (False, x)
+    go (st, acc) x = (st, acc ++ sep ++ x)
 
 -- Groups and more -------------------------------------------------------------
 
@@ -578,8 +585,8 @@ someTypeOf :: Typeable a => a -> SomeTypeRep
 someTypeOf = someTypeRep << proxyOf
 {-# INLINE someTypeOf #-}
 
-instance Pretty (TypeRep a) where
-  pretty = Pretty.viaShow
+-- instance Pretty (TypeRep a) where
+--   pretty = Pretty.viaShow
 
-instance Pretty SomeTypeRep where
-  pretty = Pretty.viaShow
+-- instance Pretty SomeTypeRep where
+--   pretty = Pretty.viaShow

@@ -16,6 +16,6 @@ where
 -- | give better error messges.
 -- |
 -- | FIXME: Maybe also 'Arbitrary' and `Coarbitrary` ?
-class (Pretty a, Scan a, Eq a, Typeable a) => Editable a
+class (Display a, Scan a, Eq a, Typeable a) => Editable a
 
-instance (Pretty a, Scan a, Eq a, Typeable a) => Editable a
+instance (Display a, Scan a, Eq a, Typeable a) => Editable a

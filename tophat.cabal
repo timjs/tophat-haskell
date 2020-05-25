@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f2b732d5b074308e39805a1f3a14bb3e37a25b70161fb29055d9163315bdfcb3
+-- hash: d96c0a0b593a3bd3a1b3ee9ba3d2f2901896ef50b5176fd755ba2367448b40b5
 
 name:           tophat
 version:        0.1.0.0
@@ -28,9 +28,6 @@ library
   exposed-modules:
       Control.Collaborative
       Control.Interactive
-      Control.Monad.Log
-      Control.Monad.Ref
-      Control.Monad.Supply
       Data.Editable
       Data.Heap
       Data.Someref
@@ -57,7 +54,6 @@ library
     , mtl
     , polysemy >=1.3.0 && <1.4.0
     , polysemy-plugin
-    , prettyprinter
     , relude >=0.5 && <1
     , text
     , transformers
@@ -79,7 +75,6 @@ executable tophat
     , mtl
     , polysemy >=1.3.0 && <1.4.0
     , polysemy-plugin
-    , prettyprinter
     , relude >=0.5 && <1
     , text
     , tophat

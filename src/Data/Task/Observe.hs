@@ -14,12 +14,12 @@ import Polysemy.Mutate (Alloc, Read)
 ui ::
   Members '[Alloc h, Read h] r =>
   Task h r a ->
-  Sem r (Doc n)
+  Sem r Text
 ui = \case
   Editor a e -> ui' a e
   Done _ -> pure "■ …"
-  Pair t1 t2 -> pure (\l r -> sep [l, " ⧓ ", r]) -< ui t1 -< ui t2
-  Choose t1 t2 -> pure (\l r -> sep [l, " ◆ ", r]) -< ui t1 -< ui t2
+  Pair t1 t2 -> pure (\l r -> unwords [l, " ⧓ ", r]) -< ui t1 -< ui t2
+  Choose t1 t2 -> pure (\l r -> unwords [l, " ◆ ", r]) -< ui t1 -< ui t2
   Fail -> pure "↯"
   Trans _ t -> ui t
   Step t1 e2 -> pure go -< ui t1 -< do
@@ -29,23 +29,23 @@ ui = \case
       Just v1 -> pure <| options (e2 v1)
     where
       go s ls
-        | null ls = cat [s, " ▶…"]
-        | otherwise = cat [s, " ▷", pretty ls]
-  Share b -> pure <| sep ["share", pretty b]
-  Assign b _ -> pure <| sep ["…", ":=", pretty b]
+        | null ls = concat [s, " ▶…"]
+        | otherwise = concat [s, " ▷", display ls]
+  Share b -> pure <| unwords ["share", display b]
+  Assign b _ -> pure <| unwords ["…", ":=", display b]
 
 ui' ::
   Members '[Read h] r =>
   Name ->
   Editor h r b ->
-  Sem r (Doc n)
+  Sem r Text
 ui' a = \case
-  Enter -> pure <| cat ["⊠^", pretty a, " [ ] "]
-  Update b -> pure <| cat ["□^", pretty a, " [ ", pretty b, " ]"]
-  View b -> pure <| cat ["⧇^", pretty a, " [ ", pretty b, " ]"]
-  Select ts -> pure <| cat ["◇^", pretty a, " ", pretty <| HashMap.keysSet ts]
-  Change l -> pure (\b -> cat ["⊟^", pretty a, " [ ", pretty b, " ]"]) -< Store.read l
-  Watch l -> pure (\b -> cat ["⧈^", pretty a, " [ ", pretty b, " ]"]) -< Store.read l
+  Enter -> pure <| concat ["⊠^", display a, " [ ] "]
+  Update b -> pure <| concat ["□^", display a, " [ ", display b, " ]"]
+  View b -> pure <| concat ["⧇^", display a, " [ ", display b, " ]"]
+  Select ts -> pure <| concat ["◇^", display a, " ", display <| HashMap.keysSet ts]
+  Change l -> pure (\b -> concat ["⊟^", display a, " [ ", display b, " ]"]) -< Store.read l
+  Watch l -> pure (\b -> concat ["⧈^", display a, " [ ", display b, " ]"]) -< Store.read l
 
 value ::
   Members '[Alloc h, Read h] r =>
