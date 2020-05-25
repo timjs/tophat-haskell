@@ -11,7 +11,7 @@ module Data.Store
     _identity,
 
     -- * Inspecting
-    Inspectable,
+    Inspect,
   )
 where
 
@@ -29,7 +29,7 @@ import qualified Polysemy.Mutate as Mutate
 -- | Isn't it?
 -- |
 -- | **Note**
--- | `s` should be `Typeable` to store it as `Someref`.
+-- | `s` should be `Reflect` to store it as `Someref`.
 -- |
 -- | **Important!**
 -- | When using Polysemy, the `Read`, `Write`, and `Alloc` effects range over a heap `h`.
@@ -44,9 +44,9 @@ import qualified Polysemy.Mutate as Mutate
 -- | In past days, we used a type class with fundep, which deduced the reference type from the monad `m`.
 -- | But now we don't know in which (final) `m` we're going to interpret `Sem r`!
 data Store h a where
-  Store {- exists s -} :: (Inspectable h s) => Lens' s a -> Ref h s -> Store h a
+  Store {- exists s -} :: (Inspect h s) => Lens' s a -> Ref h s -> Store h a
 
-alloc :: (Member (Alloc h) r, Inspectable h a) => a -> Sem r (Store h a)
+alloc :: (Member (Alloc h) r, Inspect h a) => a -> Sem r (Store h a)
 alloc x = do
   r <- Mutate.alloc x
   pure <| Store _identity r
@@ -70,4 +70,4 @@ focus l' (Store l r) = Store (l << l') r
 
 -- Inspecting ------------------------------------------------------------------
 
-class (Typeable (Ref h a), Eq (Ref h a)) => Inspectable h a
+class (Reflect (Ref h a), Eq (Ref h a)) => Inspect h a

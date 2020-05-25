@@ -12,7 +12,7 @@ module Control.Collaborative
   )
 where
 
-import Data.Editable
+import Data.Edit
 import Data.Someref
 import Data.Store
 import qualified Lens.Simple as Lens
@@ -29,14 +29,14 @@ import qualified Lens.Simple as Lens
 -- | NOTE: GHC does not let us write this as a type synonym,
 -- | because of the impredicativity of `Eq (r a)`.
 class (Monad m) => Collaborative h m | m -> h where
-  share :: (Editable a, Inspectable h a) => a -> m (Store h a)
-  watch :: (Editable a) => Store h a -> m a
-  assign :: (Editable a) => a -> Store h a -> m ()
+  share :: (Edit a, Inspect h a) => a -> m (Store h a)
+  watch :: (Edit a) => Store h a -> m a
+  assign :: (Edit a) => a -> Store h a -> m ()
 
-  change :: (Editable a) => Store h a -> m a
+  change :: (Edit a) => Store h a -> m a
   change = watch
 
-  mutate :: (Editable a) => (a -> a) -> Store h a -> m ()
+  mutate :: (Edit a) => (a -> a) -> Store h a -> m ()
   mutate f r = do
     x <- watch r
     assign (f x) r
@@ -47,10 +47,10 @@ infixl 1 <<-
 
 infixl 1 <<=
 
-(<<-) :: (Collaborative h m, Editable a) => Store h a -> a -> m ()
+(<<-) :: (Collaborative h m, Edit a) => Store h a -> a -> m ()
 (<<-) = flip assign
 
-(<<=) :: (Collaborative h m, Editable a) => Store h a -> (a -> a) -> m ()
+(<<=) :: (Collaborative h m, Edit a) => Store h a -> (a -> a) -> m ()
 (<<=) = flip mutate
 
 -- Instances -------------------------------------------------------------------

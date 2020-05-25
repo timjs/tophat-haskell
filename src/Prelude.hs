@@ -20,6 +20,10 @@ module Prelude
 
     -- * Classes
     Hash,
+    Reflect,
+    Fold,
+    Traverse,
+    Coerce,
 
     -- ** Groups, Modules, Torsors
     Group (..),
@@ -212,7 +216,15 @@ type Cons = NonEmpty
 
 -- Classes -------------------------------------------------------------
 
-type Hash a = (Eq a, Hashable a)
+type Hash a = (Eq a, Relude.Hashable a)
+
+type Reflect = Relude.Typeable
+
+type Coerce = Relude.Coercible
+
+type Fold = Relude.Foldable
+
+type Traverse = Relude.Traversable
 
 ---- Groups, Modules, Torsors -----
 

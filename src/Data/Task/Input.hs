@@ -14,7 +14,7 @@ module Data.Task.Input
 where
 
 import qualified Data.Char as Char
-import Data.Task (Editable, Label, Name (..))
+import Data.Task (Edit, Label, Name (..))
 import qualified Data.Text as Text
 
 -- Actions ---------------------------------------------------------------------
@@ -22,7 +22,7 @@ import qualified Data.Text as Text
 -- Concrete actions --
 
 data Concrete :: Type where
-  Concrete :: Editable b => b -> Concrete
+  Concrete :: Edit b => b -> Concrete
 
 instance Eq Concrete where
   Concrete x == Concrete y
@@ -36,7 +36,7 @@ instance Display Concrete where
 -- Symbolic actions --
 
 data Symbolic :: Type where
-  Symbolic :: Editable b => Proxy b -> Symbolic
+  Symbolic :: Edit b => Proxy b -> Symbolic
 
 instance Eq Symbolic where
   Symbolic x == Symbolic y
@@ -54,7 +54,7 @@ instance Display Symbolic where
 
 type Dummy = Symbolic
 
-dummy :: Editable b => Proxy b -> Dummy
+dummy :: Edit b => Proxy b -> Dummy
 dummy p = Symbolic p
 
 -- Inputs ----------------------------------------------------------------------
