@@ -1,9 +1,9 @@
-module Data.Basic
-  ( Basic,
+module Data.Editable
+  ( Editable,
   )
 where
 
--- Basic types -----------------------------------------------------------------
+-- Editable types --------------------------------------------------------------
 
 -- | Types `a` which can be edited by an end user.
 -- |
@@ -16,6 +16,6 @@ where
 -- | give better error messges.
 -- |
 -- | FIXME: Maybe also 'Arbitrary' and `Coarbitrary` ?
-class (Pretty a, Scan a, Eq a, Typeable a) => Basic a
+class (Pretty a, Scan a, Eq a, Typeable a) => Editable a
 
-instance (Pretty a, Scan a, Eq a, Typeable a) => Basic a
+instance (Pretty a, Scan a, Eq a, Typeable a) => Editable a

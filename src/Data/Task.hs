@@ -13,14 +13,14 @@ module Data.Task
     forever,
     (>>@),
     -- module Control.Interactive,
-    module Data.Basic,
+    module Data.Editable,
     module Data.Someref,
     module Data.Store,
   )
 where
 
 import Control.Interactive
-import Data.Basic
+import Data.Editable
 import Data.Heap (Heap)
 import Data.Someref
 import Data.Store
@@ -73,9 +73,9 @@ data Task (h :: Heap h') (r :: EffectRow) (t :: Type) where
   -- because we need to mark them dirty and match those with watched references.
 
   -- | Create new reference of type `t`
-  Share :: (Inspectable h t, Basic t) => t -> Task h r (Store h t)
+  Share :: (Inspectable h t, Editable t) => t -> Task h r (Store h t)
   -- | Assign to a reference of type `t` to a given value
-  Assign :: (Basic a) => a -> Store h a -> Task h r ()
+  Assign :: (Editable a) => a -> Store h a -> Task h r ()
 
 -- NOTE:
 -- We could choose to replace `Share` and `Assign` and with a general `Lift` constructor,
@@ -87,17 +87,17 @@ data Task (h :: Heap h') (r :: EffectRow) (t :: Type) where
 
 data Editor (h :: Heap h') (r :: EffectRow) (t :: Type) where
   -- | Unvalued editor
-  Enter :: (Basic t) => Editor h r t
+  Enter :: (Editable t) => Editor h r t
   -- | Valued editor
-  Update :: (Basic t) => t -> Editor h r t
+  Update :: (Editable t) => t -> Editor h r t
   -- | Valued, view only editor
-  View :: (Basic t) => t -> Editor h r t
+  View :: (Editable t) => t -> Editor h r t
   -- | External choice between multple tasks.
   Select :: HashMap Label (Task h r t) -> Editor h r t
   -- | Change to a reference of type `t` to a value
-  Change :: (Inspectable h t, Basic t) => Store h t -> Editor h r t
+  Change :: (Inspectable h t, Editable t) => Store h t -> Editor h r t
   -- | Watch a reference of type `t`
-  Watch :: (Inspectable h t, Basic t) => Store h t -> Editor h r t
+  Watch :: (Inspectable h t, Editable t) => Store h t -> Editor h r t
 
 data Name
   = Unnamed
