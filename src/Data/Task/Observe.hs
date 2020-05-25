@@ -12,7 +12,7 @@ import Polysemy.Mutate (Alloc, Read)
 -- NOTE: Normalisation should never happen in any observation, they are immediate.
 
 ui ::
-  Members '[Alloc h, Read h] r =>
+  Members '[Alloc h, Read h] r => -- We need `Alloc` because `Value` needs it.
   Task h r a ->
   Sem r Text
 ui = \case
@@ -35,7 +35,7 @@ ui = \case
   Assign b _ -> pure <| unwords ["…", ":=", display b]
 
 ui' ::
-  Members '[Read h] r =>
+  Members '[Read h] r => -- We need `Read` to read from references.
   Name ->
   Editor h r b ->
   Sem r Text
@@ -48,9 +48,9 @@ ui' a = \case
   Watch l -> pure (\b -> concat ["⧈^", display a, " [ ", display b, " ]"]) -< Store.read l
 
 value ::
-  Members '[Alloc h, Read h] r =>
+  Members '[Alloc h, Read h] r => -- We need `Alloc` to allocate a fresh store to continue with.
   Task h r a ->
-  Sem r (Maybe a) -- We need to watch locations and be in monad `m`
+  Sem r (Maybe a)
 value = \case
   Editor Unnamed _ -> pure Nothing
   Editor (Named _) e -> value' e
@@ -60,11 +60,11 @@ value = \case
   Choose t1 t2 -> pure (<|>) -< value t1 -< value t2
   Fail -> pure Nothing
   Step _ _ -> pure Nothing
-  Share b -> pure Just -< Store.alloc b -- Nothing??
-  Assign _ _ -> pure (Just ()) -- Nothing??
+  Share b -> pure Just -< Store.alloc b
+  Assign _ _ -> pure (Just ())
 
 value' ::
-  Members '[Read h] r => -- We need to Store.read locations and be in monad `m`
+  Members '[Read h] r => -- We need `Read` to read from references.
   Editor h r a ->
   Sem r (Maybe a)
 value' = \case
@@ -76,7 +76,7 @@ value' = \case
   Watch l -> pure Just -< Store.read l
 
 failing ::
-  Task h m a ->
+  Task h r a ->
   Bool
 failing = \case
   Editor _ e -> failing' e
@@ -90,7 +90,7 @@ failing = \case
   Assign _ _ -> False
 
 failing' ::
-  Editor h m a ->
+  Editor h r a ->
   Bool
 failing' = \case
   Enter -> False
@@ -101,8 +101,8 @@ failing' = \case
   Watch _ -> False
 
 watching ::
-  Task h m a ->
-  List (Someref h) -- There is no need to be in monad `m`
+  Task h r a ->
+  List (Someref h) -- There is no need for any effects.
 watching = \case
   Editor Unnamed _ -> []
   Editor (Named _) e -> watching' e
@@ -116,8 +116,8 @@ watching = \case
   Assign _ _ -> []
 
 watching' ::
-  Editor h m a ->
-  List (Someref h) -- There is no need to be in monad `m`
+  Editor h r a ->
+  List (Someref h) -- There is no need for any effects.
 watching' = \case
   Enter -> []
   Update _ -> []
@@ -131,9 +131,9 @@ watching' = \case
 -- |
 -- | Notes:
 -- | * We need this to pair `Label`s with `Name`s, because we need to tag all deeper lables with the appropriate editor name.
--- | * We can't return a `HashMap _ (Task h m a)` because deeper tasks can be of different types!
+-- | * We can't return a `HashMap _ (Task h r a)` because deeper tasks can be of different types!
 options ::
-  Task h m a ->
+  Task h r a -> -- There is no need for any effects.
   List Option
 options = \case
   Editor n (Select ts) -> options' ts |> map (Option n)
@@ -155,14 +155,14 @@ options = \case
 -- | Notes:
 -- | * Goes one level deep!
 options' ::
-  HashMap Label (Task h m a) ->
+  HashMap Label (Task h r a) -> -- There is no need for any effects.
   List Label
 options' = HashMap.keys << HashMap.filter (not << failing)
 
 inputs ::
-  Members '[Alloc h, Read h] r =>
+  Members '[Alloc h, Read h] r => -- We need `Alloc` and `Read` because we call `value`.
   Task h r a ->
-  Sem r (List (Input Dummy)) -- We need to call `value`, therefore we are in `m`
+  Sem r (List (Input Dummy))
 inputs t = case t of
   Editor Unnamed _ -> pure []
   Editor (Named n) (Select ts) -> options' ts |> map (ISelect n) |> pure
@@ -183,8 +183,8 @@ inputs t = case t of
   Assign _ _ -> pure []
 
 inputs' ::
-  forall h m a.
-  Editor h m a ->
+  forall h r a.
+  Editor h r a ->
   List Dummy
 inputs' t = case t of
   Enter -> [dummy beta]
