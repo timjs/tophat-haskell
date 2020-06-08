@@ -284,7 +284,26 @@ execute events task = initialise task >>= go events
         putTextLn <| display result
 -}
 
--- Running ---------------------------------------------------------------------
+-- Looping ---------------------------------------------------------------------
+
+loop ::
+  Members '[Log Steps, Supply Nat, Alloc h, Read h, Write h] r =>
+  Task h r a ->
+  Sem r b
+loop task = do
+  task' <- initialise task
+  go task'
+  where
+    -- go :: Task IO a -> IO ()
+    go task' = do
+      putTextLn ""
+      interface <- ui task'
+      print interface
+      events <- inputs task'
+      print <| "Possibilities: " ++ display events
+      input <- getUserInput
+      task'' <- interact task' input
+      go task''
 
 getUserInput :: IO (Input Concrete)
 getUserInput = do
@@ -298,22 +317,3 @@ getUserInput = do
       Left message -> do
         print message
         getUserInput
-
-{-
-run :: Task IO a -> IO ()
-run task = do
-  task' <- initialise task
-  loop task'
-  where
-    loop :: Task IO a -> IO ()
-    loop task' = do
-      putTextLn ""
-      interface <- ui task'
-      print interface
-      events <- inputs task'
-      print <| "Possibilities: " ++ display events
-      input <- getUserInput
-      task'' <- interact task' input
-      loop task''
-
--}
