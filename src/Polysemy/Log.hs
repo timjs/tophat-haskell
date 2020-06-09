@@ -37,4 +37,4 @@ makeSem ''Log
 
 logToIO :: (Member (Embed IO) r, Debug i) => Sem (Log i ': r) a -> Sem r a
 logToIO = interpret \case
-  Log s i -> embed <| print <| unwords [display s, debug i]
+  Log s i -> embed <| putTextLn <| unwords [display s, debug i]
