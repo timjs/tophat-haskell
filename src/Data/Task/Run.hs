@@ -265,7 +265,7 @@ interact i t = do
     Left e -> do
       log Warning e
       pure t
-    Right (_, t') -> fixate <| pure t'
+    Right (_, t') -> fixate <| pure t' --XXX: forget delta?!
 
 {-
 execute ::
