@@ -17,7 +17,7 @@ import Data.Someref
 import Data.Store
 import qualified Lens.Simple as Lens
 
--- Class -----------------------------------------------------------------------
+---- Class ---------------------------------------------------------------------
 
 -- | A variation on a monad `m` with references `r`.
 -- |
@@ -41,7 +41,7 @@ class (Monad m) => Collaborative h m | m -> h where
     x <- watch r
     assign (f x) r
 
--- Operators -------------------------------------------------------------------
+---- Operators -----------------------------------------------------------------
 
 infixl 1 <<-
 
@@ -53,7 +53,7 @@ infixl 1 <<=
 (<<=) :: (Collaborative h m, Basic a) => Store h a -> (a -> a) -> m ()
 (<<=) = flip mutate
 
--- Instances -------------------------------------------------------------------
+---- Instances -----------------------------------------------------------------
 
 instance Collaborative 'Global IO where
   share x = do

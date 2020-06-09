@@ -21,7 +21,7 @@ import Polysemy
 import Polysemy.Mutate (Alloc, Read, Write)
 import qualified Polysemy.Mutate as Mutate
 
--- Stores ----------------------------------------------------------------------
+---- Stores --------------------------------------------------------------------
 
 -- | **Note**
 -- | I think the source and target types always have to be the same,
@@ -60,7 +60,7 @@ write :: (Members '[Read h, Write h] r) => a -> Store h a -> Sem r ()
 write x (Store l r) = do
   Mutate.mutate (set l x) r
 
--- Focussing -------------------------------------------------------------------
+---- Focussing -----------------------------------------------------------------
 
 _identity :: Lens' a a
 _identity = iso identity identity
@@ -68,6 +68,6 @@ _identity = iso identity identity
 focus :: Lens' a b -> Store r a -> Store r b
 focus l' (Store l r) = Store (l << l') r
 
--- Inspecting ------------------------------------------------------------------
+---- Inspecting ----------------------------------------------------------------
 
 class (Reflect (Ref h a), Eq (Ref h a)) => Inspect h a

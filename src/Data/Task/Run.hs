@@ -13,7 +13,7 @@ import Polysemy.Mutate
 import Polysemy.Supply
 import Polysemy.Writer
 
--- Logs and Errors -------------------------------------------------------------
+---- Logs and Errors -----------------------------------------------------------
 
 data Steps
   = DidStabilise Nat Nat
@@ -55,14 +55,14 @@ instance Display NotApplicable where
     CouldNotHandle i -> unwords ["Could not handle input", display i |> quote]
     CouldNotHandleValue b -> unwords ["Could not handle new editor value", display b |> quote, "for readonly editor"]
 
--- Normalising -----------------------------------------------------------------
+---- Normalising ---------------------------------------------------------------
 
 normalise ::
   Members '[Log Steps, Supply Nat, Alloc h, Read h, Write h] r =>
   Task h r a ->
   Sem (Writer (List (Someref h)) ': r) (Task h r a) --NOTE: Here we're constructing a concrete stack. I don't know if that's the best way to go...
 normalise t = case t of
-  -- Step --
+  ---- Step
   Step t1 e2 -> do
     t1' <- normalise t1
     let stay = Step t1' e2
@@ -80,7 +80,7 @@ normalise t = case t of
               then pure stay -- N-StepWait
               else normalise t2 -- N-StepCont
 
-  -- Choose --
+  ---- Choose
   Choose t1 t2 -> do
     t1' <- normalise t1
     mv1 <- raise <| value t1'
@@ -93,21 +93,21 @@ normalise t = case t of
           Just _ -> pure t2' -- N-ChooseRight
           Nothing -> pure <| Choose t1' t2' -- N-ChooseNone
 
-  -- Congruences --
+  ---- Congruences
   Trans f t2 -> pure (Trans f) -< normalise t2
   Pair t1 t2 -> pure Pair -< normalise t1 -< normalise t2
-  -- Ready --
+  ---- Ready
   Done _ -> pure t
   Fail -> pure t
-  -- Editors --
+  ---- Editors
   Editor Unnamed e -> do
     n <- supply
     pure <| Editor (Named n) e
   Editor (Named _) _ -> pure t
-  -- Assert --
+  ---- Assert
   -- Assert p -> do
   --   pure <| Done p
-  -- References --
+  ---- References
   Share b -> do
     l <- Store.alloc b --XXX: raise?
     pure <| Done l
@@ -131,7 +131,7 @@ normalise t = case t of
 --   Select ts -> Select <| map balance ts
 --   e -> e
 
--- Handling --------------------------------------------------------------------
+---- Handling ------------------------------------------------------------------
 
 handle ::
   forall h r a.
@@ -140,7 +140,7 @@ handle ::
   Input Concrete ->
   Sem (Writer (List (Someref h)) ': Error NotApplicable ': r) (Task h r a)
 handle t i = case t of
-  -- Editors --
+  ---- Editors
   Editor n e -> case i of
     IOption n' l -> case e of
       Select ts
@@ -158,7 +158,7 @@ handle t i = case t of
         e' <- handle' b' e
         pure <| Editor n e'
       | otherwise -> throw <| CouldNotMatch n (Named m)
-  -- Pass --
+  ---- Pass
   Trans e1 t2 -> do
     t2' <- handle t2 i
     pure <| Trans e1 t2'
@@ -187,7 +187,7 @@ handle t i = case t of
       Left _ -> do
         t2' <- handle t2 i
         pure <| Choose t1 t2' -- H-ChoosSecond
-            -- Rest --
+        ---- Rest
   _ -> throw <| CouldNotHandle i
 
 handle' ::
@@ -216,10 +216,10 @@ handle' c@(Concrete b') = \case
     | otherwise -> throw <| CouldNotChangeRef (someTypeOf r) (someTypeOf b')
     where
       beta = typeRep :: TypeRep a
-  -- Rest --
+  ---- Rest
   _ -> throw <| CouldNotHandleValue c
 
--- Fixation --------------------------------------------------------------------
+---- Fixation ------------------------------------------------------------------
 
 fixate ::
   Members '[Log Steps, Supply Nat, Alloc h, Read h, Write h] r =>
@@ -237,12 +237,12 @@ fixate t = do
       log Info <| DidStabilise (length ds) (length ws)
       -- let t''' = balance t''
       -- log Info <| DidBalance (display t''')
-      pure t'' -- F-Done --
+      pure t'' -- F-Done
     _ -> do
       log Info <| DidNotStabilise (length ds) (length ws) (length os)
-      fixate <| pure t'' -- F-Loop --
+      fixate <| pure t'' -- F-Loop
 
--- Initialisation --------------------------------------------------------------
+---- Initialisation ------------------------------------------------------------
 
 initialise ::
   Members '[Log Steps, Supply Nat, Alloc h, Read h, Write h] r =>
@@ -252,7 +252,7 @@ initialise t = do
   log Info <| DidStart (display t)
   fixate (pure t)
 
--- Interaction -----------------------------------------------------------------
+---- Interaction ---------------------------------------------------------------
 
 interact ::
   Members '[Log Steps, Log NotApplicable, Supply Nat, Alloc h, Read h, Write h] r =>
@@ -284,7 +284,7 @@ execute events task = initialise task >>= go events
         putTextLn <| display result
 -}
 
--- Looping ---------------------------------------------------------------------
+---- Looping -------------------------------------------------------------------
 
 loop ::
   Members '[Log Steps, Supply Nat, Alloc h, Read h, Write h] r =>

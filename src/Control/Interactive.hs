@@ -26,7 +26,7 @@ class (Monad m) => Interactive m where
 
 type Label = Text
 
--- Example instance for IO -----------------------------------------------------
+---- Example instance for IO ---------------------------------------------------
 
 instance Interactive IO where
   enter :: forall a. Basic a => IO a

@@ -17,9 +17,9 @@ import qualified Data.Char as Char
 import Data.Task (Basic, Label, Name (..))
 import qualified Data.Text as Text
 
--- Actions ---------------------------------------------------------------------
+---- Actions -------------------------------------------------------------------
 
--- Concrete actions --
+---- Concrete actions
 
 data Concrete :: Type where
   Concrete :: Basic b => b -> Concrete
@@ -33,7 +33,7 @@ instance Display Concrete where
   display = \case
     Concrete x -> display x
 
--- Symbolic actions --
+---- Symbolic actions
 
 data Symbolic :: Type where
   Symbolic :: Basic b => Proxy b -> Symbolic
@@ -50,14 +50,14 @@ instance Display Symbolic where
       where
         beta = typeOfProxy p
 
--- Dummy actions --
+---- Dummy actions
 
 type Dummy = Symbolic
 
 dummy :: Basic b => Proxy b -> Dummy
 dummy p = Symbolic p
 
--- Inputs ----------------------------------------------------------------------
+---- Inputs --------------------------------------------------------------------
 
 data Input b
   = IEnter Nat b
@@ -78,7 +78,7 @@ instance Display b => Display (Input b) where
     ISelect n l -> unwords [display n, display l]
     IPreselect l -> display l
 
--- -- Action view --
+---- -- Action view
 
 -- data Action b
 --   = AValue b
@@ -94,7 +94,7 @@ instance Display b => Display (Input b) where
 --   ISelect n l -> Just (n, ALabel l)
 --   IPreselect _ -> Nothing
 
--- Options ---------------------------------------------------------------------
+---- Options -------------------------------------------------------------------
 
 data Option
   = Option Name Label
@@ -106,7 +106,7 @@ instance Display Option where
 fromOption :: Option -> Input b
 fromOption (Option n l) = IOption n l
 
--- Conformance -----------------------------------------------------------------
+---- Conformance ---------------------------------------------------------------
 
 -- dummyfy :: Action -> Dummy
 -- dummyfy = \case
@@ -123,7 +123,7 @@ fromOption (Option n l) = IOption n l
 -- fill :: Input Dummy -> Gen (List (Input Action))
 -- fill = map sequence << sequence << map reify
 
--- Parsing ---------------------------------------------------------------------
+---- Parsing -------------------------------------------------------------------
 
 usage :: Text
 usage =

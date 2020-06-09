@@ -3,7 +3,7 @@ module Data.Task.Status where
 {-
 import Data.Task (Collaborative (..), Task (..))
 
--- Definition ------------------------------------------------------------------
+---- Definition ----------------------------------------------------------------
 
 -- | The status of a `Task a` is defined to be one of four options:
 data Status a
@@ -13,7 +13,7 @@ data Status a
   | Stepping -- it is still stepping, and we do not know how it will end
   deriving (Show, Functor)
 
--- Equality --------------------------------------------------------------------
+---- Equality ------------------------------------------------------------------
 
 -- | Status observations _of the same type_ are equal in only three cases:
 instance Eq a => Eq (Status a) where
@@ -22,7 +22,7 @@ instance Eq a => Eq (Status a) where
   Failing == Failing = True -- when both are `Failing`
   _ == _ = False -- in any other case, tasks are looping or stepping and we do not know how things will end.
 
--- Combinations ----------------------------------------------------------------
+---- Combinations --------------------------------------------------------------
 
 instance Monoidal Status where
   skip = Producing ()
@@ -43,7 +43,7 @@ instance Alternative Status where
   _ <|> Producing y = Producing y
   _ <|> _ = Stepping
 
--- Observation -----------------------------------------------------------------
+---- Observation ---------------------------------------------------------------
 
 status :: Collaborative r m => Task m a -> m (Status a)
 status = \case

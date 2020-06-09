@@ -45,9 +45,9 @@ import Data.STRef (newSTRef, readSTRef, writeSTRef)
 import Polysemy
 import Polysemy.Bundle
 
--- Heap ------------------------------------------------------------------------
+---- Heap ----------------------------------------------------------------------
 
--- Effects ---------------------------------------------------------------------
+---- Effects -------------------------------------------------------------------
 
 data Read h m a where
   Read :: Ref h a -> Read h m a
@@ -62,7 +62,7 @@ makeSem ''Read
 makeSem ''Write
 makeSem ''Alloc
 
--- Operators -------------------------------------------------------------------
+---- Operators -----------------------------------------------------------------
 
 mutate :: Members '[Read h, Write h] r => (a -> a) -> Ref h a -> Sem r ()
 mutate f r = do
@@ -79,7 +79,7 @@ infixl 1 <<=
 (<<=) :: Members '[Read h, Write h] r => Ref h a -> (a -> a) -> Sem r ()
 (<<=) = flip mutate
 
--- Bundle ----------------------------------------------------------------------
+---- Bundle --------------------------------------------------------------------
 
 type Mutate h = Bundle '[Read h, Write h, Alloc h]
 
@@ -95,9 +95,9 @@ alloc' = sendBundle << alloc
 -- mutate' :: (Members '[Read h, Write h] r', Member (Bundle r') r) => (a -> a) -> Ref h a -> Sem r ()
 -- mutate' f = sendBundle << mutate f
 
--- Interpretations -------------------------------------------------------------
+---- Interpretations -----------------------------------------------------------
 
--- In IO --
+---- In IO
 
 readToIO :: Member (Embed IO) r => Sem (Read 'Global ': r) a -> Sem r a
 readToIO = interpret \case
@@ -111,7 +111,7 @@ allocToIO :: Member (Embed IO) r => Sem (Alloc 'Global ': r) a -> Sem r a
 allocToIO = interpret \case
   Alloc val -> embed <| newIORef val
 
--- In ST --
+---- In ST
 
 readToST :: Member (Embed (ST h)) r => Sem (Read ('Local h) ': r) a -> Sem r a
 readToST = interpret \case

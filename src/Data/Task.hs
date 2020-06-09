@@ -27,7 +27,7 @@ import Data.Someref
 import Data.Store
 import Polysemy
 
--- Tasks -----------------------------------------------------------------------
+---- Tasks ---------------------------------------------------------------------
 
 -- | Tasks parametrised over a heap `h`, making use of effects `r`.
 -- |
@@ -45,11 +45,11 @@ import Polysemy
 -- | I.e. `Task` is a monad on it's own right.
 -- | (Although it actually isn't a monad... but that's another story.)
 data Task (h :: Heap h') (r :: EffectRow) (t :: Type) where
-  --
-  -- Editors --
+  ---- Editors
+
+  -- | Editors, named and unnamed
   Editor :: Name -> Editor h r t -> Task h r t
-  --
-  -- Parallels --
+  ---- Parallels
 
   -- | Composition of two tasks.
   Pair :: Task h r a -> Task h r b -> Task h r (a, b)
@@ -59,15 +59,13 @@ data Task (h :: Heap h') (r :: EffectRow) (t :: Type) where
   Choose :: Task h r t -> Task h r t -> Task h r t
   -- | The failing task
   Fail :: Task h r t
-  --
-  -- Steps --
+  ---- Steps
 
   -- | Internal value transformation
   Trans :: (a -> t) -> Task h r a -> Task h r t
   -- | Internal, or system step.
   Step :: Task h r a -> (a -> Task h r t) -> Task h r t
-  --
-  -- References --
+  ---- References
   -- The inner monad `m` needs to have the notion of references.
   -- These references should be `Eq` and `Typeable`,
   -- because we need to mark them dirty and match those with watched references.
@@ -107,7 +105,7 @@ data Name
 new :: Editor h r t -> Task h r t
 new e = Editor Unnamed e
 
--- Derived forms ---------------------------------------------------------------
+---- Derived forms -------------------------------------------------------------
 
 parallel :: List (Task h r a) -> Task h r (List a)
 parallel [] = pure []
@@ -146,7 +144,7 @@ forever t1 = t1 >>= \_ -> forever t1
 (>>@) :: Task h r a -> (a -> Task h r b) -> Task h r b
 (>>@) t1 e2 = t1 >>= \x -> select ["Repeat" ~> t1 >>@ e2, "Exit" ~> e2 x]
 
--- Display ---------------------------------------------------------------------
+---- Display -------------------------------------------------------------------
 
 instance Display (Task h r t) where
   display = \case
@@ -174,7 +172,7 @@ instance Display Name where
     Unnamed -> "ε"
     Named n -> display n
 
--- Instances -------------------------------------------------------------------
+---- Instances -----------------------------------------------------------------
 
 instance Functor (Task h r) where
   fmap = Trans

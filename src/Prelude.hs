@@ -196,7 +196,7 @@ import Type.Reflection (SomeTypeRep (..), TypeRep, someTypeRep, typeOf, typeRep)
 -- import qualified Data.Vector as Vector
 -- import Control.Newtype hiding (pack, unpack)
 
--- Types -----------------------------------------------------------------------
+---- Types ---------------------------------------------------------------------
 
 type Unit = ()
 
@@ -214,7 +214,7 @@ type List = []
 
 type Cons = NonEmpty
 
--- Classes -------------------------------------------------------------
+---- Classes -----------------------------------------------------------
 
 type Hash a = (Eq a, Relude.Hashable a)
 
@@ -226,7 +226,7 @@ type Fold = Relude.Foldable
 
 type Traverse = Relude.Traversable
 
----- Groups, Modules, Torsors -----
+---- Groups, Modules, Torsors -
 
 infixr 5 ~~
 
@@ -244,7 +244,7 @@ class Group d => Torsor a d | a -> d where
   diff :: a -> a -> d
   adjust :: d -> a -> a
 
----- Scanning ----
+---- Scanning
 
 type Scan = Relude.Read
 
@@ -252,7 +252,7 @@ scan :: Scan a => Text -> Maybe a
 scan = Relude.readMaybe << chars
 {-# INLINE scan #-}
 
----- Debugging ----
+---- Debugging
 
 type Debug = Relude.Show
 
@@ -264,7 +264,7 @@ spy :: Debug a => Text -> a -> a
 spy m x = Relude.traceShow (debug m ++ ": " ++ debug x) x
 {-# INLINE spy #-}
 
----- Displaying ----
+---- Displaying
 
 -- | `Display` is like `Debug` but for user facing output.
 class Display a where
@@ -284,7 +284,7 @@ instance (Display k, Display v) => Display (HashMap k v) where
 instance (Display v) => Display (HashSet v) where
   display = HashSet.toList >> map display >> intercalate "," >> between '{' '}'
 
--- Functions -------------------------------------------------------------------
+---- Functions -----------------------------------------------------------------
 
 length :: Foldable f => f a -> Nat
 length = Relude.length >> fromIntegral
@@ -300,7 +300,7 @@ getTextLn :: MonadIO m => m Text
 getTextLn = Relude.getLine
 {-# INLINE getTextLn #-}
 
----- Text ----
+---- Text
 
 chars :: Text -> List Char
 chars = Text.unpack
@@ -318,13 +318,13 @@ quote :: Text -> Text
 quote = between '"' '"'
 {-# INLINE quote #-}
 
----- HashMaps ----
+---- HashMaps
 
 forWithKey :: Applicative f => HashMap k v -> (k -> v -> f w) -> f (HashMap k w)
 forWithKey = flip HashMap.traverseWithKey
 {-# INLINE forWithKey #-}
 
----- HashSets ----
+---- HashSets
 
 infix 4 =<
 
@@ -338,7 +338,7 @@ infix 4 /<
 (/<) x = not << HashSet.member x
 {-# INLINE (/<) #-}
 
----- Vectors ----
+---- Vectors
 
 -- only :: a -> Vector a
 -- only = Vector.singleton
@@ -349,7 +349,7 @@ infix 4 /<
 -- update :: Nat -> a -> Vector a -> Vector a
 -- update (Nat i) x xs = (Vector.//) xs [ ( i, x ) ]
 
----- Errors ----
+---- Errors
 
 ok :: a -> Either e a
 ok = Right
@@ -372,7 +372,7 @@ error = Left
 
 --   empty = Left neutral
 
----- Foldables ----
+---- Foldables
 
 -- | Fold a data structure, accumulating values in some `Monoid`,
 -- | combining adjacent elements using the specified separator.
@@ -440,7 +440,7 @@ surround :: forall f m. Foldable f => Semigroup m => m -> f m -> m
 surround d = surroundMap d identity
 {-# INLINE surround #-}
 
----- Monoids ----
+---- Monoids
 
 infixr 5 ++
 
@@ -456,9 +456,9 @@ concat :: Monoid m => List m -> m
 concat = Relude.mconcat
 {-# INLINE concat #-}
 
--- Operators -------------------------------------------------------------------
+---- Operators -----------------------------------------------------------------
 
----- Functions ----
+---- Functions
 
 infixr 0 <|
 
@@ -490,7 +490,7 @@ f << g = \x -> f (g x)
 (>>) = flip (<<)
 {-# INLINE (>>) #-}
 
----- Functors ----
+---- Functors
 
 infixl 4 <||
 
@@ -520,7 +520,7 @@ map = Relude.fmap
 -- (.|>) = (Relude.$>)
 -- {-# INLINE (.|>) #-}
 
----- Applicatives ----
+---- Applicatives
 
 infixr 1 <-<
 
@@ -574,7 +574,7 @@ f <-< g = pure (<<) -< f -< g
 (>->) = flip (<-<)
 {-# INLINE (>->) #-}
 
----- Monoidals ----
+---- Monoidals
 
 infixl 6 ><
 
@@ -607,8 +607,8 @@ instance Monoidal (Either e)
 
 instance Monoidal IO
 
-{--- Selectives ----
-
+----- Selectives
+{-
 class Applicative f => Selective f where
   branch :: f (Either a b) -> f (a -> c) -> f (b -> c) -> f c
   branch p x y = map (map Left) p `select` map (map Right) x `select` y
@@ -630,7 +630,7 @@ when :: Selective f => f Bool -> f Unit -> f Unit
 when p t = check p t (pure ())
 -}
 
----- Monads ----
+---- Monads
 
 -- | A safe alternative for MonadFail.
 -- |
@@ -650,7 +650,7 @@ fail = empty
 
 instance (Relude.MonadFail m, MonadPlus m) => MonadZero (StateT s m)
 
--- Type equality ---------------------------------------------------------------
+---- Type equality -------------------------------------------------------------
 
 infix 4 ~=
 

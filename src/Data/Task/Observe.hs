@@ -8,7 +8,7 @@ import Data.Task.Input
 import Polysemy
 import Polysemy.Mutate (Alloc, Read)
 
--- Observations ----------------------------------------------------------------
+---- Observations --------------------------------------------------------------
 -- NOTE: Normalisation should never happen in any observation, they are immediate.
 
 ui ::

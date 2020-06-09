@@ -15,7 +15,7 @@ where
 
 import Polysemy
 
--- Effect ----------------------------------------------------------------------
+---- Effect --------------------------------------------------------------------
 
 data Severity
   = Error
@@ -33,7 +33,7 @@ data Log i m a where
 
 makeSem ''Log
 
--- Interpretations -------------------------------------------------------------
+---- Interpretations -----------------------------------------------------------
 
 logToIO :: (Member (Embed IO) r, Debug i) => Sem (Log i ': r) a -> Sem r a
 logToIO = interpret \case
