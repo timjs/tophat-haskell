@@ -104,9 +104,11 @@ normalise t = case t of
     n <- supply
     pure <| Editor (Named n) e
   Editor (Named _) _ -> pure t
-  ---- Assert
-  -- Assert p -> do
-  --   pure <| Done p
+  ---- Checks
+  Branch ts ->
+    pure <| eval ts
+  Assert p -> do
+    pure <| Done p
   ---- References
   Share b -> do
     l <- Store.alloc b --XXX: raise?
@@ -286,6 +288,7 @@ execute events task = initialise task >>= go events
 
 ---- Looping -------------------------------------------------------------------
 
+{-
 loop ::
   Members '[Log Steps, Supply Nat, Alloc h, Read h, Write h] r =>
   Task h r a ->
@@ -304,6 +307,7 @@ loop task = do
       input <- getUserInput
       task'' <- interact task' input
       go task''
+-}
 
 getUserInput :: IO (Input Concrete)
 getUserInput = do
