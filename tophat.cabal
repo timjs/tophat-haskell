@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.34.2.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 63bd3791674c2784649dd8358a71e9c36dc3e42b09d55b156b2e1627c30a0e9c
+-- hash: ecda58208314558ac35ce06a0cd1848f3e22214e1a703133b66a08a1f7fbc823
 
 name:           tophat
 version:        0.1.0.0
@@ -36,6 +36,7 @@ library
       Data.Task.Input
       Data.Task.Observe
       Data.Task.Run
+      Data.Task.Simulate
       Data.Task.Status
       Polysemy.Interact
       Polysemy.Log

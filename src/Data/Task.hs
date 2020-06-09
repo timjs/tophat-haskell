@@ -6,6 +6,8 @@ module Data.Task
     parallel,
     choose,
     branch,
+    eval,
+    assert,
     (<?>),
     (>>?),
     (>>*),
@@ -65,6 +67,12 @@ data Task (h :: Heap h') (r :: EffectRow) (t :: Type) where
   Trans :: (a -> t) -> Task h r a -> Task h r t
   -- | Internal, or system step.
   Step :: Task h r a -> (a -> Task h r t) -> Task h r t
+  ---- Checks
+
+  -- | Branching
+  Branch :: List (Bool, Task h r t) -> Task h r t
+  -- | Assertions
+  Assert :: Bool -> Task h r Bool
   ---- References
   -- The inner monad `m` needs to have the notion of references.
   -- These references should be `Eq` and `Typeable`,
@@ -115,8 +123,10 @@ choose :: List (Task h r a) -> Task h r a
 choose = foldr (<|>) fail
 
 branch :: List (Bool, Task h r a) -> Task h r a
-branch [] = fail
-branch ((b, t) : rs) = if b then t else branch rs
+branch = Branch
+
+assert :: Bool -> Task h r Bool
+assert = Assert
 
 infixl 3 <?>
 
@@ -144,6 +154,12 @@ forever t1 = t1 >>= \_ -> forever t1
 (>>@) :: Task h r a -> (a -> Task h r b) -> Task h r b
 (>>@) t1 e2 = t1 >>= \x -> select ["Repeat" ~> t1 >>@ e2, "Exit" ~> e2 x]
 
+---- Helpers -------------------------------------------------------------------
+
+eval :: List (Bool, Task h r a) -> Task h r a
+eval [] = fail
+eval ((b, t) : rs) = if b then t else eval rs
+
 ---- Display -------------------------------------------------------------------
 
 instance Display (Task h r t) where
@@ -155,6 +171,8 @@ instance Display (Task h r t) where
     Fail -> "Fail"
     Trans _ t -> unwords ["Trans _", display t]
     Step t _ -> unwords [display t, ">>=", "_"] |> between '(' ')'
+    Branch ts -> unwords ["Branch", display ts]
+    Assert b -> unwords ["Assert", display b]
     Share v -> unwords ["Share", display v]
     Assign v _ -> unwords ["_", ":=", display v]
 

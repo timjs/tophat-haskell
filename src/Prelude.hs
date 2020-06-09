@@ -275,6 +275,9 @@ class Display a where
 instance {-# OVERLAPPABLE #-} Debug a => Display a where
   display = debug
 
+instance (Display a, Display b) => Display (a, b) where
+  display (a, b) = display a ++ "," ++ display b |> between '(' ')'
+
 instance (Display a) => Display (List a) where
   display = map display >> concat >> between '[' ']'
 
