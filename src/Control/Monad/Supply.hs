@@ -16,7 +16,7 @@ class Monad m => MonadSupply s m | m -> s where
 instance MonadSupply Nat IO where
   supply = newUnique ||> hashUnique ||> fromIntegral
 
--- Monad transformer instances --
+---- Monad transformer instances
 
 instance MonadSupply s m => MonadSupply s (ExceptT e m) where
   supply = lift supply

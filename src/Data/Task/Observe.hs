@@ -5,7 +5,7 @@ import Data.List (union)
 import Data.Task
 import Data.Task.Input
 
--- Observations ----------------------------------------------------------------
+---- Observations --------------------------------------------------------------
 -- NOTE: Normalisation should never happen in any observation, they are immediate.
 
 ui ::

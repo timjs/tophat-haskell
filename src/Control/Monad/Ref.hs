@@ -5,7 +5,7 @@ module Control.Monad.Ref
   )
 where
 
--- Class -----------------------------------------------------------------------
+---- Class ---------------------------------------------------------------------
 
 class (Monad m) => MonadRef r m | m -> r where
   new :: a -> m (r a)
@@ -17,7 +17,7 @@ class (Monad m) => MonadRef r m | m -> r where
     x <- read r
     write (f x) r
 
--- Operators -------------------------------------------------------------------
+---- Operators -----------------------------------------------------------------
 
 infixl 1 <<-
 
@@ -29,7 +29,7 @@ infixl 1 <<=
 (<<=) :: MonadRef r m => r a -> (a -> a) -> m ()
 (<<=) = flip mutate
 
--- Instances -------------------------------------------------------------------
+---- Instances -----------------------------------------------------------------
 
 -- instance ( MonadRef r m, Monoid w ) => MonadRef r (WriterT w m) where
 --   new    = lift << new

@@ -26,7 +26,7 @@ class (Monad m) => Interactive m where
 
 type Label = Text
 
--- Transformer instances -------------------------------------------------------
+---- Transformer instances -----------------------------------------------------
 
 instance (Interactive m, Monoid w) => Interactive (WriterT w m) where
   enter = lift enter
@@ -42,7 +42,7 @@ instance (Interactive m) => Interactive (ExceptT e m) where
 
 -- select = lift << select
 
--- Example instance for IO -----------------------------------------------------
+---- Example instance for IO ---------------------------------------------------
 
 instance Interactive IO where
   enter :: forall a. Editable a => IO a

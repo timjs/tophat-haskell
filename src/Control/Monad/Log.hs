@@ -1,6 +1,6 @@
 module Control.Monad.Log where
 
--- Class -----------------------------------------------------------------------
+---- Class ---------------------------------------------------------------------
 
 class (Pretty a, Monad m) => MonadLog a m where
   log :: Severity -> a -> m ()
@@ -14,7 +14,7 @@ instance (Pretty a) => MonadLog a IO where
 instance (Monoid w, Pretty s, MonadLog s m) => MonadLog s (WriterT w m) where
   log s = lift << log s
 
--- Severity --------------------------------------------------------------------
+---- Severity ------------------------------------------------------------------
 
 data Severity
   = Error

@@ -22,17 +22,17 @@ import Control.Interactive
 import Data.Editable (Editable)
 import qualified Data.Text.Prettyprint.Doc as Pretty
 
--- Tasks -----------------------------------------------------------------------
+---- Tasks ---------------------------------------------------------------------
 
 -- | Task monad transformer build on top of a monad `m`.
 -- |
 -- | To use references, `m` shoud be a `Collaborative` with locations `r`.
 data Task (m :: Type -> Type) (t :: Type) where
-  --
-  -- Editors --
+  ---- Editors ----
+
+  -- | Editors, named or unnamed
   Editor :: Name -> Editor m t -> Task m t
-  --
-  -- Parallels --
+  ---- Parallels ----
 
   -- | Composition of two tasks.
   Pair :: Task m a -> Task m b -> Task m (a, b)
@@ -42,15 +42,13 @@ data Task (m :: Type -> Type) (t :: Type) where
   Choose :: Task m t -> Task m t -> Task m t
   -- | The failing task
   Fail :: Task m t
-  --
-  -- Steps --
+  ---- Steps ----
 
   -- | Internal value transformation
   Trans :: (a -> t) -> Task m a -> Task m t
   -- | Internal, or system step.
   Step :: Task m a -> (a -> Task m t) -> Task m t
-  --
-  -- References --
+  ---- References ----
   -- The inner monad `m` needs to have the notion of references.
   -- These references should be `Eq` and `Typeable`,
   -- because we need to mark them dirty and match those with watched references.
@@ -90,7 +88,7 @@ data Name
 new :: Editor m t -> Task m t
 new e = Editor Unnamed e
 
--- Derived forms ---------------------------------------------------------------
+---- Derived forms -------------------------------------------------------------
 
 parallel :: List (Task m a) -> Task m (List a)
 parallel [] = pure []
@@ -129,7 +127,7 @@ forever t1 = t1 >>= \_ -> forever t1
 (>>@) :: Task m a -> (a -> Task m b) -> Task m b
 (>>@) t1 e2 = t1 >>= \x -> select ["Repeat" ~> t1 >>@ e2, "Exit" ~> e2 x]
 
--- Instances -------------------------------------------------------------------
+---- Instances -----------------------------------------------------------------
 
 instance Pretty (Task m t) where
   pretty = \case

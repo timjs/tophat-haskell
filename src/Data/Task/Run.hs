@@ -9,7 +9,7 @@ import Data.Task.Input
 import Data.Task.Observe
 import qualified Data.Text.Prettyprint.Doc as Pretty
 
--- Normalising -----------------------------------------------------------------
+---- Normalising ---------------------------------------------------------------
 
 type Tracking f m a = WriterT (List (Someref m)) m (f m a)
 
@@ -20,7 +20,7 @@ normalise ::
   Task m a ->
   Tracking Task m a
 normalise t = case t of
-  -- Step --
+  ---- Step
   Step t1 e2 -> do
     t1' <- normalise t1
     let stay = Step t1' e2
@@ -38,7 +38,7 @@ normalise t = case t of
               then pure stay -- N-StepWait
               else normalise t2 -- N-StepCont
 
-  -- Choose --
+  ---- Choose
   Choose t1 t2 -> do
     t1' <- normalise t1
     mv1 <- lift <| value t1'
@@ -51,21 +51,21 @@ normalise t = case t of
           Just _ -> pure t2' -- N-ChooseRight
           Nothing -> pure <| Choose t1' t2' -- N-ChooseNone
 
-  -- Congruences --
+  ---- Congruences
   Trans f t2 -> pure (Trans f) -< normalise t2
   Pair t1 t2 -> pure Pair -< normalise t1 -< normalise t2
-  -- Ready --
+  ---- Ready
   Done _ -> pure t
   Fail -> pure t
-  -- Editors --
+  ---- Editors
   Editor Unnamed e -> do
     n <- supply
     pure <| Editor (Named n) e
   Editor (Named _) _ -> pure t
-  -- Assert --
+  ---- Assert
   -- Assert p -> do
   --   pure <| Done p
-  -- References --
+  ---- References
   Share b -> do
     l <- lift <| share b
     pure <| Done l
@@ -89,7 +89,7 @@ normalise t = case t of
 --   Select ts -> Select <| map balance ts
 --   e -> e
 
--- Handling --------------------------------------------------------------------
+---- Handling ------------------------------------------------------------------
 
 type PartialTracking f m a = WriterT (List (Someref m)) (ExceptT NotApplicable m) (f m a)
 
@@ -125,7 +125,7 @@ handle ::
   Input Concrete ->
   PartialTracking Task m a
 handle t i = case t of
-  -- Editors --
+  ---- Editors
   Editor n e -> case i of
     IOption n' l -> case e of
       Select ts
@@ -143,7 +143,7 @@ handle t i = case t of
         e' <- handle' b' e
         pure <| Editor n e'
       | otherwise -> throw <| CouldNotMatch n (Named m)
-  -- Pass --
+  ---- Pass
   Trans e1 t2 -> do
     t2' <- handle t2 i
     pure <| Trans e1 t2'
@@ -172,7 +172,7 @@ handle t i = case t of
       Left _ -> do
         t2' <- handle t2 i
         pure <| Choose t1 t2' -- H-ChoosSecond
-            -- Rest --
+        ---- Rest
   _ -> throw <| CouldNotHandle i
 
 handle' ::
@@ -201,10 +201,10 @@ handle' c@(Concrete b') = \case
     | otherwise -> throw <| CouldNotChangeRef (someTypeOf s) (someTypeOf b')
     where
       beta = typeRep :: TypeRep a
-  -- Rest --
+  ---- Rest
   _ -> throw <| CouldNotHandleValue c
 
--- Interaction -----------------------------------------------------------------
+---- Interaction ---------------------------------------------------------------
 
 data Steps
   = DidStabilise Nat Nat
@@ -241,10 +241,10 @@ fixate tt = do
       log Info <| DidStabilise (length ds) (length ws)
       -- let t'' = balance t'
       -- log Info <| DidBalance (show <| pretty t'')
-      pure t' -- F-Done --
+      pure t' -- F-Done
     _ -> do
       log Info <| DidNotStabilise (length ds) (length ws) (length os)
-      fixate <| pure t' -- F-Loop --
+      fixate <| pure t' -- F-Loop
 
 initialise ::
   Collaborative r m =>
@@ -287,7 +287,7 @@ execute events task = initialise task >>= go events
         result <- value task'
         putTextLn <| show <| pretty result
 
--- Running ---------------------------------------------------------------------
+---- Running -------------------------------------------------------------------
 
 getUserInput :: IO (Input Concrete)
 getUserInput = do

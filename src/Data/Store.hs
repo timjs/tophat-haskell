@@ -7,7 +7,7 @@ where
 
 import Lens.Simple (Lens', iso)
 
--- Stores ----------------------------------------------------------------------
+---- Stores --------------------------------------------------------------------
 
 -- NOTE:
 -- I think the source and target types always have to be the same,
@@ -31,7 +31,7 @@ assign x (Share l r) = do
   r <<= set l x
 -}
 
--- Focussing -------------------------------------------------------------------
+---- Focussing -----------------------------------------------------------------
 
 _identity :: Lens' a a
 _identity = iso identity identity

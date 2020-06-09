@@ -13,7 +13,7 @@ import Data.Editable
 import Data.Store
 import qualified Lens.Simple as Lens
 
--- Class -----------------------------------------------------------------------
+---- Class ---------------------------------------------------------------------
 
 -- | A variation on a monad `m` with references `r`.
 -- |
@@ -37,7 +37,7 @@ class (Monad m, Typeable r, forall a. Eq (r a)) => Collaborative r m | m -> r wh
     x <- watch r
     assign (f x) r
 
--- Operators -------------------------------------------------------------------
+---- Operators -----------------------------------------------------------------
 
 infixl 1 <<-
 
@@ -49,7 +49,7 @@ infixl 1 <<=
 (<<=) :: (Collaborative r m, Editable a) => Store r a -> (a -> a) -> m ()
 (<<=) = flip mutate
 
--- Instances -------------------------------------------------------------------
+---- Instances -----------------------------------------------------------------
 
 instance (Collaborative r m, Monoid w) => Collaborative r (WriterT w m) where
   share = lift << share
@@ -73,7 +73,7 @@ instance Collaborative IORef IO where
     s <- readIORef r
     pure <| Lens.view l s
 
--- Existential packing ---------------------------------------------------------
+---- Existential packing -------------------------------------------------------
 
 data Someref (m :: Type -> Type) where
   Someref :: (Collaborative r m, Typeable (r a), Eq (r a)) => r a -> Someref m

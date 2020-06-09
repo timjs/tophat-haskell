@@ -18,9 +18,9 @@ import Data.Task
 import qualified Data.Text as Text
 import qualified Data.Text.Prettyprint.Doc as Pretty
 
--- Actions ---------------------------------------------------------------------
+---- Actions -------------------------------------------------------------------
 
--- Concrete actions --
+---- Concrete actions
 
 data Concrete :: Type where
   Concrete :: Editable b => b -> Concrete
@@ -34,7 +34,7 @@ instance Pretty Concrete where
   pretty = \case
     Concrete x -> pretty x
 
--- Symbolic actions --
+---- Symbolic actions
 
 data Symbolic :: Type where
   Symbolic :: Editable b => Proxy b -> Symbolic
@@ -51,14 +51,14 @@ instance Pretty Symbolic where
       where
         beta = typeOfProxy p
 
--- Dummy actions --
+---- Dummy actions
 
 type Dummy = Symbolic
 
 dummy :: Editable b => Proxy b -> Dummy
 dummy p = Symbolic p
 
--- Inputs ----------------------------------------------------------------------
+---- Inputs --------------------------------------------------------------------
 
 data Input b
   = IEnter Nat b
@@ -79,7 +79,7 @@ instance Pretty b => Pretty (Input b) where
     ISelect n l -> sep [pretty n, pretty l]
     IPreselect l -> pretty l
 
--- -- Action view --
+---- -- Action view
 
 -- data Action b
 --   = AValue b
@@ -95,7 +95,7 @@ instance Pretty b => Pretty (Input b) where
 --   ISelect n l -> Just (n, ALabel l)
 --   IPreselect _ -> Nothing
 
--- Options ---------------------------------------------------------------------
+---- Options -------------------------------------------------------------------
 
 data Option
   = Option Name Label
@@ -107,7 +107,7 @@ instance Pretty Option where
 fromOption :: Option -> Input b
 fromOption (Option n l) = IOption n l
 
--- Conformance -----------------------------------------------------------------
+---- Conformance ---------------------------------------------------------------
 
 -- dummyfy :: Action -> Dummy
 -- dummyfy = \case
@@ -124,7 +124,7 @@ fromOption (Option n l) = IOption n l
 -- fill :: Input Dummy -> Gen (List (Input Action))
 -- fill = map sequence << sequence << map reify
 
--- Parsing ---------------------------------------------------------------------
+---- Parsing -------------------------------------------------------------------
 
 usage :: Doc n
 usage =

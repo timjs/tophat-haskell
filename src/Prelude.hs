@@ -195,7 +195,7 @@ import Type.Reflection (SomeTypeRep (..), TypeRep, someTypeRep, typeOf, typeRep)
 
 -- import qualified Data.Vector as Vector
 
--- Synonyms --------------------------------------------------------------------
+---- Synonyms ------------------------------------------------------------------
 
 type Unit = ()
 
@@ -229,7 +229,7 @@ infix 0 ~>
 (~>) :: a -> b -> (a, b)
 (~>) = (,)
 
--- Pretty printing --
+---- Pretty printing
 
 instance (Pretty v) => Pretty (HashSet v) where
   pretty = Pretty.braces << Pretty.cat << Pretty.punctuate ", " << map pretty << HashSet.toList
@@ -240,12 +240,12 @@ instance (Pretty k, Pretty v) => Pretty (HashMap k v) where
 instance Pretty Unique where
   pretty = pretty << hashUnique
 
--- HashMaps --
+---- HashMaps
 
 forWithKey :: Applicative f => HashMap k v -> (k -> v -> f w) -> f (HashMap k w)
 forWithKey = flip HashMap.traverseWithKey
 
--- HashSets --
+---- HashSets
 
 infix 4 =<
 
@@ -257,7 +257,7 @@ infix 4 /<
 (/<) :: Hash a => a -> HashSet a -> Bool
 (/<) x = not << HashSet.member x
 
--- Vectors ---------------------------------------------------------------------
+---- Vectors -------------------------------------------------------------------
 
 -- only :: a -> Vector a
 -- only = Vector.singleton
@@ -271,7 +271,7 @@ infix 4 /<
 -- instance ( Pretty a ) => Pretty (Vector a) where
 --   pretty = Pretty.angles << fold << intersperse ", " << map pretty << Vector.toList
 
--- Reading & Tracing -----------------------------------------------------------
+---- Reading & Tracing ---------------------------------------------------------
 
 scan :: Read a => Text -> Maybe a
 scan = Relude.readMaybe << chars
@@ -299,7 +299,7 @@ instance (Pretty a, Pretty b, Pretty c, Pretty d) => Pretty (a, b, c, d) where
 instance (Pretty a, Pretty b, Pretty c, Pretty d, Pretty e) => Pretty (a, b, c, d, e) where
   pretty (x1, x2, x3, x4, x5) = Pretty.tupled [pretty x1, pretty x2, pretty x3, pretty x4, pretty x5]
 
--- Monoids ---------------------------------------------------------------------
+---- Monoids -------------------------------------------------------------------
 
 infixr 5 ++
 
@@ -311,7 +311,7 @@ neutral :: Monoid m => m
 neutral = Relude.mempty
 {-# INLINE neutral #-}
 
--- Groups and more -------------------------------------------------------------
+---- Groups and more -----------------------------------------------------------
 
 infixr 5 ~~
 
@@ -329,7 +329,7 @@ class Group d => Torsor a d | a -> d where
   diff :: a -> a -> d
   adjust :: d -> a -> a
 
--- Functions -------------------------------------------------------------------
+---- Functions -----------------------------------------------------------------
 
 infixr 0 <|
 
@@ -361,7 +361,7 @@ f << g = \x -> f (g x)
 (>>) = flip (<<)
 {-# INLINE (>>) #-}
 
--- Functors --------------------------------------------------------------------
+---- Functors ------------------------------------------------------------------
 
 infixl 4 <||
 
@@ -391,7 +391,7 @@ map = Relude.fmap
 -- (.|>) = (Relude.$>)
 -- {-# INLINE (.|>) #-}
 
--- Applicative functors --------------------------------------------------------
+---- Applicative functors ------------------------------------------------------
 
 infixr 1 <-<
 
@@ -445,7 +445,7 @@ f <-< g = pure (<<) -< f -< g
 (>->) = flip (<-<)
 {-# INLINE (>->) #-}
 
--- Monoidal functors -----------------------------------------------------------
+---- Monoidal functors ---------------------------------------------------------
 
 infixl 6 ><
 
@@ -478,8 +478,8 @@ instance Monoidal (Either e)
 
 instance Monoidal IO
 
-{- Selective functors ----------------------------------------------------------
-
+---- Selective functors --------------------------------------------------------
+{-
 class Applicative f => Selective f where
   branch :: f (Either a b) -> f (a -> c) -> f (b -> c) -> f c
   branch p x y = map (map Left) p `select` map (map Right) x `select` y
@@ -501,9 +501,9 @@ when :: Selective f => f Bool -> f Unit -> f Unit
 when p t = check p t (pure ())
 -}
 
--- Monads ----------------------------------------------------------------------
+---- Monads --------------------------------------------------------------------
 
--- Zero --
+---- Zero
 
 -- | A safe alternative for MonadFail.
 -- |
@@ -525,7 +525,7 @@ fail = empty
 
 instance (Relude.MonadFail m, MonadPlus m) => MonadZero (StateT s m)
 
--- Error --
+---- Error
 
 -- type Result = Either
 
@@ -556,7 +556,7 @@ try a = catch (Right <|| a) (return << Left)
 
 --   empty = Left neutral
 
--- Writer --
+---- Writer
 
 clear :: MonadWriter w m => m ()
 clear = pass <| lift0 ((), const neutral)
@@ -564,7 +564,7 @@ clear = pass <| lift0 ((), const neutral)
 evalWriterT :: Monad m => WriterT w m a -> m a
 evalWriterT m = lift1 fst (runWriterT m)
 
--- Type equality ---------------------------------------------------------------
+---- Type equality -------------------------------------------------------------
 
 infix 4 ~=
 
