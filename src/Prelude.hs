@@ -182,6 +182,7 @@ import Relude hiding
     map,
     mempty,
     pass,
+    print,
     readMaybe,
     second,
     show,
