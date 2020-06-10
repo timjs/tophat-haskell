@@ -1,4 +1,8 @@
-module Control.Interactive where
+module Control.Interactive
+  ( Interactive (..),
+    Label,
+  )
+where
 
 import Data.Basic
 import qualified Data.HashMap.Strict as HashMap

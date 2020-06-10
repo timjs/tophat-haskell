@@ -2,7 +2,6 @@ module Data.Task
   ( Task (..),
     Editor (..),
     Name (..),
-    Label,
     parallel,
     choose,
     branch,
@@ -18,6 +17,8 @@ module Data.Task
     module Data.Basic,
     module Data.Someref,
     module Data.Store,
+    module Control.Interactive,
+    module Control.Collaborative,
   )
 where
 
