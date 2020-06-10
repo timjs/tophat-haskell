@@ -36,18 +36,32 @@ loop t = do
       input <- getUserInput
       t'' <- Task.interact input t'
       go t''
+    getUserInput ::
+      Members '[Interact, Abort] r =>
+      Sem r (Input Concrete)
+    getUserInput = do
+      print ">> "
+      line <- scanLn
+      case line of
+        "quit" -> abort
+        "q" -> abort
+        _ -> case Input.parse line of
+          Right input -> pure input
+          Left message -> do
+            printLn message
+            getUserInput
 
-getUserInput ::
-  Members '[Interact, Abort] r =>
-  Sem r (Input Concrete)
-getUserInput = do
-  print ">> "
-  line <- scanLn
-  case line of
-    "quit" -> abort
-    "q" -> abort
-    _ -> case Input.parse line of
-      Right input -> pure input
-      Left message -> do
-        printLn message
-        getUserInput
+-- taskToIO ::
+--   Task 'Global '[Interact, Abort, Log Steps, Log NotApplicable, Supply Nat, Alloc 'Global, Read 'Global, Write 'Global, Embed IO] a ->
+--   IO b
+taskToIO =
+  loop
+    >> interactToIO
+    >> abortToIO
+    >> logToIO @Steps
+    >> logToIO @NotApplicable
+    >> supplyToIO
+    >> allocToIO
+    >> readToIO
+    >> writeToIO
+    >> runM
