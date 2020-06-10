@@ -13,7 +13,7 @@ import Polysemy.Mutate (Alloc, Read)
 
 ui ::
   Members '[Alloc h, Read h] r => -- We need `Alloc` because `Value` needs it.
-  Task h r a ->
+  Task h a ->
   Sem r Text
 ui = \case
   Editor a e -> ui' a e
@@ -39,7 +39,7 @@ ui = \case
 ui' ::
   Members '[Read h] r => -- We need `Read` to read from references.
   Name ->
-  Editor h r b ->
+  Editor h b ->
   Sem r Text
 ui' n = \case
   Enter -> pure <| concat ["⊠^", display n, " [ ] "]
@@ -51,7 +51,7 @@ ui' n = \case
 
 value ::
   Members '[Alloc h, Read h] r => -- We need `Alloc` to allocate a fresh store to continue with.
-  Task h r a ->
+  Task h a ->
   Sem r (Maybe a)
 value = \case
   Editor Unnamed _ -> pure Nothing
@@ -69,7 +69,7 @@ value = \case
 
 value' ::
   Members '[Read h] r => -- We need `Read` to read from references.
-  Editor h r a ->
+  Editor h a ->
   Sem r (Maybe a)
 value' = \case
   Enter -> pure Nothing
@@ -80,7 +80,7 @@ value' = \case
   Watch l -> pure Just -< Store.read l
 
 failing ::
-  Task h r a ->
+  Task h a ->
   Bool
 failing = \case
   Editor _ e -> failing' e
@@ -96,7 +96,7 @@ failing = \case
   Assign _ _ -> False
 
 failing' ::
-  Editor h r a ->
+  Editor h a ->
   Bool
 failing' = \case
   Enter -> False
@@ -107,7 +107,7 @@ failing' = \case
   Watch _ -> False
 
 watching ::
-  Task h r a ->
+  Task h a ->
   List (Someref h) -- There is no need for any effects.
 watching = \case
   Editor Unnamed _ -> []
@@ -124,7 +124,7 @@ watching = \case
   Assign _ _ -> []
 
 watching' ::
-  Editor h r a ->
+  Editor h a ->
   List (Someref h) -- There is no need for any effects.
 watching' = \case
   Enter -> []
@@ -139,9 +139,9 @@ watching' = \case
 -- |
 -- | Notes:
 -- | * We need this to pair `Label`s with `Name`s, because we need to tag all deeper lables with the appropriate editor name.
--- | * We can't return a `HashMap _ (Task h r a)` because deeper tasks can be of different types!
+-- | * We can't return a `HashMap _ (Task  a)` because deeper tasks can be of different types!
 options ::
-  Task h r a -> -- There is no need for any effects.
+  Task h a -> -- There is no need for any effects.
   List Option
 options = \case
   Editor n (Select ts) -> options' ts |> map (Option n)
@@ -164,13 +164,13 @@ options = \case
 -- | Notes:
 -- | * Goes one level deep!
 options' ::
-  HashMap Label (Task h r a) -> -- There is no need for any effects.
+  HashMap Label (Task h a) -> -- There is no need for any effects.
   List Label
 options' = HashMap.keys << HashMap.filter (not << failing)
 
 inputs ::
   Members '[Alloc h, Read h] r => -- We need `Alloc` and `Read` because we call `value`.
-  Task h r a ->
+  Task h a ->
   Sem r (List (Input Dummy))
 inputs t = case t of
   Editor Unnamed _ -> pure []
@@ -194,8 +194,8 @@ inputs t = case t of
   Assign _ _ -> pure []
 
 inputs' ::
-  forall h r a.
-  Editor h r a ->
+  forall h a.
+  Editor h a ->
   List Dummy
 inputs' t = case t of
   Enter -> [dummy beta]

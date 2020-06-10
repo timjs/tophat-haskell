@@ -14,56 +14,56 @@ main =
 
 -- Basics --
 
-enterInt :: Task h r Int
+enterInt :: Task h Int
 enterInt = enter
 
-fourtytwo :: Task h r Int
+fourtytwo :: Task h Int
 fourtytwo =
   update 42
 
-hello :: Task h r Text
+hello :: Task h Text
 hello =
   update "Hello"
 
-inc :: Int -> Task h r Int
+inc :: Int -> Task h Int
 inc x =
   view (x + 1)
 
-dec :: Int -> Task h r Int
+dec :: Int -> Task h Int
 dec x =
   view (x - 1)
 
-add :: Int -> Int -> Task h r Int
+add :: Int -> Int -> Task h Int
 add x y =
   view (x + y)
 
-append :: Text -> Text -> Task h r Text
+append :: Text -> Text -> Task h Text
 append x y =
   view (x ++ y)
 
 -- Steps --
 
-pureStep :: Task h r Int
+pureStep :: Task h Int
 pureStep = do
   x <- fourtytwo
   inc x
 
-pureStep' :: Task h r Int
+pureStep' :: Task h Int
 pureStep' = do
   x <- fourtytwo
   inc x <?> fail
 
-oneStep :: Task h r Int
+oneStep :: Task h Int
 oneStep = do
   x <- update 0
   inc x
 
-oneStep' :: Task h r Int
+oneStep' :: Task h Int
 oneStep' =
   update 0 >>? \x ->
     inc x
 
-oneStep'' :: Task h r Int
+oneStep'' :: Task h Int
 oneStep'' = do
   x <- update 0
   select
@@ -71,32 +71,32 @@ oneStep'' = do
       "Decrease" ~> dec x
     ]
 
-oneStep''' :: Task h r Int
+oneStep''' :: Task h Int
 oneStep''' =
   update 0
     >>* [ "Increase" ~> inc,
           "Decrease" ~> dec
         ]
 
-twoSteps :: Task h r Int
+twoSteps :: Task h Int
 twoSteps = do
   x <- update 1
   y <- update 2
   add x y
 
-twoSteps' :: Task h r Int
+twoSteps' :: Task h Int
 twoSteps' =
   update 1 >>? \x ->
     update 2 >>? \y ->
       add x y
 
-twoSteps'' :: Task h r Int
+twoSteps'' :: Task h Int
 twoSteps'' = do
   x <- enter
   y <- enter
   add x y
 
-twoSteps''' :: Task h r Int
+twoSteps''' :: Task h Int
 twoSteps''' =
   enter >>? \x ->
     enter >>? \y ->
@@ -104,50 +104,50 @@ twoSteps''' =
 
 -- Parallel --
 
-parallelSimple :: Task h r (Int, Text)
+parallelSimple :: Task h (Int, Text)
 parallelSimple = enter >< hello
 
-parallelStep :: Task h r Text
+parallelStep :: Task h Text
 parallelStep = do
   (n, m) <- parallelSimple
   view (unwords <| replicate n m)
 
-parallelStep' :: Task h r Text
+parallelStep' :: Task h Text
 parallelStep' = do
   (n, m) <- parallelSimple
   view (unwords <| replicate n m) <?> fail
 
-parallelStep'' :: Task h r Text
+parallelStep'' :: Task h Text
 parallelStep'' =
   parallelSimple >>? \(n, m) ->
     view (unwords <| replicate n m)
 
-parallelTest :: Task h r (List Int)
+parallelTest :: Task h (List Int)
 parallelTest = do
   xs <- parallel [enterInt, enterInt, enterInt]
   view xs
 
 -- Choices --
 
-choose1 :: Task h r Int
+choose1 :: Task h Int
 choose1 = fail <|> view 1
 
-choose2 :: Task h r Int
+choose2 :: Task h Int
 choose2 = view 1 <|> view 2
 
-choose3 :: Task h r Int
+choose3 :: Task h Int
 choose3 = choose2 <|> view 3
 
-pick1 :: Task h r Int
+pick1 :: Task h Int
 pick1 = fail <?> view 1
 
-pick2 :: Task h r Int
+pick2 :: Task h Int
 pick2 = view 1 <?> view 2
 
-pick3 :: Task h r Int
+pick3 :: Task h Int
 pick3 = pick2 <?> view 3
 
-pick3' :: Task h r Int
+pick3' :: Task h Int
 pick3' =
   select
     [ "A" ~> view 1,
@@ -155,29 +155,29 @@ pick3' =
       "C" ~> view 3
     ]
 
-parpick :: Task h r (Int, Int)
+parpick :: Task h (Int, Int)
 parpick = pick3' >< pick3'
 
 -- Guards --
 
-auto :: Task h r Text
+auto :: Task h Text
 auto = do
   x <- enter
   if x >= (10 :: Int)
     then view "large"
     else fail
 
-actions :: Task h r Int
+actions :: Task h Int
 actions = do
-  _ <- enter :: Task h r Int
+  _ <- enter :: Task h Int
   pick3
 
-actions' :: Task h r Int
+actions' :: Task h Int
 actions' = do
-  _ <- enter :: Task h r Int
+  _ <- enter :: Task h Int
   pick3'
 
-actions'' :: Task h r Int
+actions'' :: Task h Int
 actions'' = do
   enter
     >>* [ "A" ~> (\x -> view (x * 1 :: Int)),
@@ -185,7 +185,7 @@ actions'' = do
           "C" ~> (\x -> view (x * 3 :: Int))
         ]
 
-guards :: Task h r Text
+guards :: Task h Text
 guards = do
   x <- enter
   select
@@ -193,14 +193,14 @@ guards = do
       "B" ~> if x >= (100 :: Int) then view "very large" else fail
     ]
 
-guards' :: Task h r Text
+guards' :: Task h Text
 guards' = do
   enter
     >>* [ "A" ~> \x -> if x >= (10 :: Int) then view "large" else fail,
           "B" ~> \x -> if x >= (100 :: Int) then view "very large" else fail
         ]
 
-branch :: Task h r Text
+branch :: Task h Text
 branch = do
   x <- update (1 :: Int)
   if x `mod` 3 == 0
@@ -210,19 +210,19 @@ branch = do
         then view "multiple of 5"
         else fail
 
-branch' :: Task h r Text
+branch' :: Task h Text
 branch' = do
   x <- update (1 :: Int)
   (if x `mod` 3 == 0 then view "multiple of 3" else fail)
     <|> (if x `mod` 5 == 0 then view "multiple of 5" else fail)
 
-branch'' :: Task h r Text
+branch'' :: Task h Text
 branch'' = do
   x <- update (1 :: Int)
   (if x `mod` 3 == 0 then view "multiple of 3" else fail)
     <?> (if x `mod` 5 == 0 then view "multiple of 5" else fail)
 
-branch''' :: Task h r Text
+branch''' :: Task h Text
 branch''' = do
   x <- update (1 :: Int)
   select
@@ -232,30 +232,30 @@ branch''' = do
 
 -- Future --
 
-enterFutureR :: Task h r Int
+enterFutureR :: Task h Int
 enterFutureR = enterInt >>= \_ -> (select ["A" ~> view (1 :: Int)] >>= \_ -> select ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)])
 
-enterFutureL :: Task h r Int
+enterFutureL :: Task h Int
 enterFutureL = (enterInt >>= \_ -> select ["A" ~> view (1 :: Int)]) >>= \_ -> select ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)]
 
-updateFutureR :: Task h r Int
+updateFutureR :: Task h Int
 updateFutureR = fourtytwo >>= \_ -> (select ["A" ~> view (1 :: Int)] >>= \_ -> select ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)])
 
-updateFutureL :: Task h r Int
+updateFutureL :: Task h Int
 updateFutureL = (fourtytwo >>= \_ -> select ["A" ~> view (1 :: Int)]) >>= \_ -> select ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)]
 
-mixedFutureR :: Task h r Int
+mixedFutureR :: Task h Int
 mixedFutureR = (enterInt >>= \_ -> fourtytwo) >>= \_ -> select ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)]
 
-mixedFutureL :: Task h r Int
+mixedFutureL :: Task h Int
 mixedFutureL = (enterInt >>= \_ -> fourtytwo) >>= \_ -> select ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)]
 
-parallelFuture :: Task h r (Int, Int)
+parallelFuture :: Task h (Int, Int)
 parallelFuture = do
   _ <- enterInt
   select ["A" ~> view (1 :: Int)] >< select ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)]
 
-nestedFuture :: Task h r Int
+nestedFuture :: Task h Int
 nestedFuture = do
   _ <- enterInt
   select
@@ -265,12 +265,12 @@ nestedFuture = do
 
 -- Shared Data --
 
-update1 :: Store h Int -> Task h r ()
+update1 :: Store h Int -> Task h ()
 update1 r = do
   x <- enter
   r <<- x
 
-update2 :: Store h Int -> Task h r Int
+update2 :: Store h Int -> Task h Int
 update2 r = do
   x <- enter
   r <<- x
@@ -278,7 +278,7 @@ update2 r = do
   r <<- y
   watch r
 
-update3 :: Store h Int -> Task h r Int
+update3 :: Store h Int -> Task h Int
 update3 r = do
   x <- enter
   r <<- x
@@ -287,12 +287,12 @@ update3 r = do
   r <<- y + z
   watch r
 
-inspect :: (Inspect h Int) => (Store h Int -> Task h r a) -> Task h r (a, Int)
+inspect :: (Inspect h Int) => (Store h Int -> Task h a) -> Task h (a, Int)
 inspect f = do
   r <- share 0
   f r >< watch r
 
-doubleShared :: (Inspect h Int) => Task h r ((), Int)
+doubleShared :: (Inspect h Int) => Task h ((), Int)
 doubleShared = do
   r <- share (0 :: Int)
   m <- share (0 :: Int)
@@ -305,7 +305,7 @@ doubleShared = do
       y <- change r
       if y >= 5 then m <<- 12 else fail
 
-atomic :: (Inspect h Int) => Task h r ((), ())
+atomic :: (Inspect h Int) => Task h ((), ())
 atomic = do
   r <- share (0 :: Int)
   let t1 = do
@@ -319,7 +319,7 @@ atomic = do
   -- t1 >< t2
   t2 >< t1
 
-unfixated :: (Inspect h Bool) => Task h r ((), ())
+unfixated :: (Inspect h Bool) => Task h ((), ())
 unfixated = do
   r <- share False
   let t1 = do
@@ -332,7 +332,7 @@ unfixated = do
 
 -- Forever --
 
-numbers :: (Inspect h (List Int)) => Task h r (Void, List Int)
+numbers :: (Inspect h (List Int)) => Task h (Void, List Int)
 numbers = do
   r <- share ([] :: List Int)
   forever (prepend r) >< watch r
@@ -341,7 +341,7 @@ numbers = do
       x <- enter
       r <<= (:) x
 
-numbers' :: (Inspect h (List Int)) => Task h r (List Int)
+numbers' :: (Inspect h (List Int)) => Task h (List Int)
 numbers' = do
   r <- share ([] :: List Int)
   (edit_ r >< watch r) >>@ exit_

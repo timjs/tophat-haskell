@@ -17,7 +17,7 @@ import Polysemy.Supply
 
 loop ::
   Members '[Interact, Abort, Log Steps, Log NotApplicable, Supply Nat, Alloc h, Read h, Write h] r =>
-  Task h r a ->
+  Task h a ->
   Sem r b
 loop t = do
   t' <- Task.initialise t
@@ -25,7 +25,7 @@ loop t = do
   where
     go ::
       Members '[Interact, Abort, Log Steps, Log NotApplicable, Supply Nat, Alloc h, Read h, Write h] r =>
-      Task h r a ->
+      Task h a ->
       Sem r b
     go t' = do
       printLn neutral

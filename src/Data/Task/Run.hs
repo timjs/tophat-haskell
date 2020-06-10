@@ -59,8 +59,8 @@ instance Display NotApplicable where
 
 normalise ::
   Members '[Log Steps, Supply Nat, Alloc h, Read h, Write h] r =>
-  Task h r a ->
-  Sem (Writer (List (Someref h)) ': r) (Task h r a) --NOTE: Here we're constructing a concrete stack. I don't know if that's the best way to go...
+  Task h a ->
+  Sem (Writer (List (Someref h)) ': r) (Task h a) --NOTE: Here we're constructing a concrete stack. I don't know if that's the best way to go...
 normalise t = case t of
   ---- Step
   Step t1 e2 -> do
@@ -118,7 +118,7 @@ normalise t = case t of
     tell [pack r]
     pure <| Done ()
 
--- balance :: Task h r a -> Task h r a
+-- balance :: Task h a -> Task h a
 -- balance t = case t of
 --   Pair t1 t2 -> Pair (balance t1) (balance t2)
 --   Choose t1 t2 -> Choose (balance t1) (balance t2)
@@ -138,9 +138,9 @@ normalise t = case t of
 handle ::
   forall h r a.
   Members '[Alloc h, Read h, Write h] r =>
-  Task h r a ->
+  Task h a ->
   Input Concrete ->
-  Sem (Writer (List (Someref h)) ': Error NotApplicable ': r) (Task h r a)
+  Sem (Writer (List (Someref h)) ': Error NotApplicable ': r) (Task h a)
 handle t i = case t of
   ---- Editors
   Editor n e -> case i of
@@ -196,8 +196,8 @@ handle' ::
   forall h r a.
   Members '[Read h, Write h] r =>
   Concrete ->
-  Editor h r a -> -- NOTE: `Select` does not return an `Editor`...
-  Sem (Writer (List (Someref h)) ': Error NotApplicable ': r) (Editor h r a)
+  Editor h a -> -- NOTE: `Select` does not return an `Editor`...
+  Sem (Writer (List (Someref h)) ': Error NotApplicable ': r) (Editor h a)
 handle' c@(Concrete b') = \case
   Enter
     | Just Refl <- b' ~: beta -> pure <| Update b'
@@ -225,8 +225,8 @@ handle' c@(Concrete b') = \case
 
 fixate ::
   Members '[Log Steps, Supply Nat, Alloc h, Read h, Write h] r =>
-  Sem (Writer (List (Someref h)) ': r) (Task h r a) ->
-  Sem r (Task h r a)
+  Sem (Writer (List (Someref h)) ': r) (Task h a) ->
+  Sem r (Task h a)
 fixate t = do
   (d, t') <- runWriter t
   (d', t'') <- normalise t' |> runWriter
@@ -248,8 +248,8 @@ fixate t = do
 
 initialise ::
   Members '[Log Steps, Supply Nat, Alloc h, Read h, Write h] r =>
-  Task h r a ->
-  Sem r (Task h r a)
+  Task h a ->
+  Sem r (Task h a)
 initialise t = do
   log Info <| DidStart (display t)
   fixate (pure t)
@@ -259,8 +259,8 @@ initialise t = do
 interact ::
   Members '[Log Steps, Log NotApplicable, Supply Nat, Alloc h, Read h, Write h] r =>
   Input Concrete ->
-  Task h r a ->
-  Sem r (Task h r a)
+  Task h a ->
+  Sem r (Task h a)
 interact i t = do
   xt <- handle t i |> runWriter |> runError
   case xt of
@@ -273,7 +273,7 @@ interact i t = do
 execute ::
   Basic a =>
   List (Input Concrete) ->
-  Task h r a ->
+  Task h a ->
   IO ()
 execute events task = initialise task >>= go events
   where
