@@ -1,5 +1,6 @@
 module Data.Task.Interact where
 
+-- import Data.Heap (Heap (..))
 import Data.Task (Task)
 import Data.Task.Input (Concrete, Input)
 import qualified Data.Task.Input as Input
@@ -52,8 +53,7 @@ loop t = do
             getUserInput
 
 -- taskToIO ::
---   Task 'Global '[Interact, Abort, Log Steps, Log NotApplicable, Supply Nat, Alloc 'Global, Read 'Global, Write 'Global, Embed IO] a ->
---   IO b
+-- taskToIO :: Task 'Global a1 -> IO a2
 taskToIO =
   loop
     >> interactToIO
