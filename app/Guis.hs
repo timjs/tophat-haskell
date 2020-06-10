@@ -6,7 +6,7 @@ import Lens.Simple (iso)
 -- Counter ---------------------------------------------------------------------
 
 -- This is not part of the TopHat language (recursion!)
-counter :: Int -> Task m Void
+counter :: Int -> Task h r Void
 counter start = do
   count <- view start
   select
@@ -17,7 +17,7 @@ counter start = do
 -- `forever` is not a proper (monadic) fixpoint combinator,
 -- so we cannot feed new pure values into our task.
 -- Otherwise we could do:
---   counter' :: Int -> Task m Int
+--   counter' :: Int -> Task h r Int
 --   counter' start = loop start \count -> do
 --     _ <- view count
 --     pick
@@ -26,7 +26,7 @@ counter start = do
 --       ]
 
 -- Therefore we need a share!
-counter'' :: forall r m. Collaborative r m => Int -> Task m Void
+counter'' :: (Inspect h Int) => Int -> Task h r Void
 counter'' start = do
   c <- share start
   forever do
@@ -48,7 +48,7 @@ f2c f' = ((f' - 32.0) * 5.0) / 9.0
 -- and will loop indefinitely...
 -- Also, both `c` and `f` have a value, so when updating `f`,
 -- we would always recieve the old `c` value tagged with `Left`...
-temperature :: (Double, Double) -> Task m a
+temperature :: (Double, Double) -> Task h r a
 temperature (c, f) = do
   n <- map Left (update c) <|> map Right (update f)
   case n of
@@ -57,7 +57,7 @@ temperature (c, f) = do
 
 -- Because steps do not wait for an event (they fire automatically if there is a value),
 -- this will also loop indefinitely...
-temperature' :: (Double, Double) -> Task m Void
+temperature' :: (Double, Double) -> Task h r Void
 temperature' (c, f) = forever do
   n <- map Left (update c) <|> map Right (update f)
   case n of
@@ -67,7 +67,7 @@ temperature' (c, f) = forever do
 -- with shares, we do not need any recursion.
 -- Recursion on editing is built in.
 -- However, we need a way to transform our view on shares: lenses!
-temperature'' :: Collaborative r m => Double -> Task m Double
+temperature'' :: (Inspect h Double) => Double -> Task h r Double
 temperature'' c = do
   r <- share c
   change r |< change (focus (iso c2f f2c) r)
@@ -79,7 +79,7 @@ temperature'' c = do
 type Date = Int
 type Flight = Either Date ( Date, Date )
 
-book :: Task m Flight
+book :: Task h r Flight
 book = do
   flight <- enter
   pick
