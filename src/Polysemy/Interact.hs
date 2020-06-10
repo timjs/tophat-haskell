@@ -11,14 +11,14 @@ module Polysemy.Interact
 
     -- * Interpretations
     interactToIO,
-    -- runInteractPure,
+    interactToInputOutput,
+    -- runInteract,
   )
 where
 
 import Polysemy
-
--- import Polysemy.Input
--- import Polysemy.Output
+import Polysemy.Input
+import Polysemy.Output
 
 data Interact m a where
   ScanLn :: (Scan a, Reflect a) => Interact m a
@@ -44,22 +44,41 @@ interactToIO = interpret \case
       where
         tau = typeRep :: TypeRep a
 
---FIXME: infinte!
--- runInteractPure :: List Text -> Sem (Interact ': r) a -> Sem r (List Text, a)
--- runInteractPure is =
---   runOutputMonoid pure -- For each PrintLn in our program, consume an output by appending it to the list in a ([Text], a)
---     << runInputList is -- Treat each element of our list of Texts as a line of input
---     << reinterpret2 \case
---       -- Reinterpret our effect in terms of Input and Output
---       ScanLn -> getInput
---       PrintLn msg -> output msg
---       Print msg -> output msg
---   where
---     getInput :: (Scan a) => Sem (Input (Maybe Text) ': r) a
---     getInput = do
---       next <- input
---       case next of
---         Just text -> case scan text of
---           Just x -> pure x
---           Nothing -> getInput
---         Nothing -> getInput
+interactToInputOutput :: Sem (Interact ': r) a -> Sem ((Input Text) ': (Output Text) ': r) a
+interactToInputOutput = reinterpret2 \case
+  ScanLn -> scanInput
+  PrintLn msg -> output msg
+  Print msg -> output msg
+  where
+    scanInput :: (Scan a) => Sem (Input Text ': r) a
+    scanInput = do
+      i <- input
+      case scan i of
+        Just x -> pure x
+        Nothing -> scanInput
+
+-- runInteract :: List Text -> Sem (Interact ': r) a -> Sem r (List Text, a)
+-- runInteract is =
+--   interactToInputOutput >> runInputStream is >> runOutputMonoid pure
+
+-- runInputStream ::
+--   Stream i ->
+--   Sem (Input i ': r) a ->
+--   Sem r (Maybe a)
+-- runInputStream is = _ << runState is << reinterpret \case
+--   Input -> do
+--     s <- gets uncons
+--     case s of
+--       Just (x, xs) -> do
+--         put xs
+--         pure (Just x)
+--       Nothing -> pure Nothing
+-- {-# INLINE runInputStream #-}
+
+-- runOutputMonoid pure -- For each PrintLn in our program, consume an output by appending it to the list in a ([Text], a)
+--   << runInputList is -- Treat each element of our list of Texts as a line of input
+--   << reinterpret2 \case
+--     -- Reinterpret our effect in terms of Input and Output
+--     ScanLn -> getInput
+--     PrintLn msg -> output msg
+--     Print msg -> output msg

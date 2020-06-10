@@ -9,11 +9,13 @@ module Polysemy.Log
     log,
 
     -- * Interpretations
+    logToOutput,
     logToIO,
   )
 where
 
 import Polysemy
+import Polysemy.Output
 
 ---- Effect --------------------------------------------------------------------
 
@@ -35,6 +37,9 @@ makeSem ''Log
 
 ---- Interpretations -----------------------------------------------------------
 
-logToIO :: (Member (Embed IO) r, Debug i) => Sem (Log i ': r) a -> Sem r a
-logToIO = interpret \case
-  Log s i -> embed <| putTextLn <| unwords [display s, debug i]
+logToOutput :: (Display i) => Sem (Log i ': r) a -> Sem (Output Text ': r) a
+logToOutput = reinterpret \case
+  Log s i -> output <| unwords [display s, display i]
+
+logToIO :: forall i a r. (Member (Embed IO) r, Display i) => Sem (Log i ': r) a -> Sem r a
+logToIO = logToOutput >> runOutputSem putTextLn
