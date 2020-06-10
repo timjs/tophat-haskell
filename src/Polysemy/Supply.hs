@@ -29,6 +29,6 @@ data Supply s m a where
 makeSem ''Supply
 
 -- | Runs a 'Supply' effect through generating 'Unique's using 'IO'.
-supplyToIO :: Member (Embed IO) r => Sem (Supply Int ': r) a -> Sem r a
-supplyToIO = interpret \Supply -> embed (newUnique ||> hashUnique)
+supplyToIO :: Member (Embed IO) r => Sem (Supply Nat ': r) a -> Sem r a
+supplyToIO = interpret \Supply -> embed (newUnique ||> hashUnique ||> fromIntegral)
 {-# INLINE supplyToIO #-}
