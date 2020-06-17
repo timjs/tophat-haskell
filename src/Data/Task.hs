@@ -1,7 +1,10 @@
 module Data.Task
-  ( Task (..),
+  ( -- * Types
+    Task (..),
     Editor (..),
     Name (..),
+
+    -- * Combinators
     parallel,
     choose,
     branch,
@@ -13,25 +16,26 @@ module Data.Task
     (>**),
     forever,
     (>>@),
-    -- module Control.Interactive,
+
+    -- * Constructors
     share,
     watch,
     change,
     (<<-),
     (<<=),
+
+    -- * Reexports
     module Data.Basic,
     module Data.Store,
-    module Data.Someref,
+    module Data.Some,
     module Control.Interactive,
-    -- module Control.Collaborative,
   )
 where
 
 -- import Control.Collaborative
 import Control.Interactive
 import Data.Basic
-import Data.Heap (Heap)
-import Data.Someref
+import Data.Some
 import Data.Store
 
 ---- Tasks ---------------------------------------------------------------------
@@ -51,7 +55,7 @@ import Data.Store
 -- | it only *needs* effects to be interpreted (denoted by `r`).
 -- | I.e. `Task` is a monad on it's own right.
 -- | (Although it actually isn't a monad... but that's another story.)
-data Task (h :: Heap h') (t :: Type) where
+data Task h t where
   ---- Editors
 
   -- | Editors, named and unnamed
@@ -84,7 +88,7 @@ data Task (h :: Heap h') (t :: Type) where
   -- because we need to mark them dirty and match those with watched references.
 
   -- | Create new reference of type `t`
-  Share :: (Inspect h t, Basic t) => t -> Task h (Store h t)
+  Share :: (Basic t, Reflect h) => t -> Task h (Store h t)
   -- | Assign to a reference of type `t` to a given value
   Assign :: (Basic a) => a -> Store h a -> Task h ()
 
@@ -96,7 +100,7 @@ data Task (h :: Heap h') (t :: Type) where
 -- This makes actions like logging to stdout, lounching missiles or other effects impossible.
 -- (Though this would need to be constrained with classes when specifying the task!)
 
-data Editor (h :: Heap h') (t :: Type) where
+data Editor h t where
   -- | Unvalued editor
   Enter :: (Basic t) => Editor h t
   -- | Valued editor
@@ -231,7 +235,7 @@ instance Monad (Task h) where
 
 -- instance Collaborative h (Task h) where
 
-share :: (Inspect h a, Basic a) => a -> Task h (Store h a)
+share :: (Basic a, Reflect h) => a -> Task h (Store h a)
 share = Share
 
 watch :: (Basic a) => Store h a -> Task h a

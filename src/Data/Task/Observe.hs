@@ -108,7 +108,7 @@ failing' = \case
 
 watching ::
   Task h a ->
-  List (Someref h) -- There is no need for any effects.
+  List (Some (Ref h)) -- There is no need for any effects.
 watching = \case
   Editor Unnamed _ -> []
   Editor (Named _) e -> watching' e
@@ -125,7 +125,7 @@ watching = \case
 
 watching' ::
   Editor h a ->
-  List (Someref h) -- There is no need for any effects.
+  List (Some (Ref h)) -- There is no need for any effects.
 watching' = \case
   Enter -> []
   Update _ -> []

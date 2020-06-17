@@ -60,7 +60,7 @@ instance Display NotApplicable where
 normalise ::
   Members '[Log Steps, Supply Nat, Alloc h, Read h, Write h] r =>
   Task h a ->
-  Sem (Writer (List (Someref h)) ': r) (Task h a) --NOTE: Here we're constructing a concrete stack. I don't know if that's the best way to go...
+  Sem (Writer (List (Some (Ref h))) ': r) (Task h a) --NOTE: Here we're constructing a concrete stack. I don't know if that's the best way to go...
 normalise t = case t of
   ---- Step
   Step t1 e2 -> do
@@ -140,7 +140,7 @@ handle ::
   Members '[Alloc h, Read h, Write h] r =>
   Task h a ->
   Input Concrete ->
-  Sem (Writer (List (Someref h)) ': Error NotApplicable ': r) (Task h a)
+  Sem (Writer (List (Some (Ref h))) ': Error NotApplicable ': r) (Task h a)
 handle t i = case t of
   ---- Editors
   Editor n e -> case i of
@@ -197,7 +197,7 @@ handle' ::
   Members '[Read h, Write h] r =>
   Concrete ->
   Editor h a -> -- NOTE: `Select` does not return an `Editor`...
-  Sem (Writer (List (Someref h)) ': Error NotApplicable ': r) (Editor h a)
+  Sem (Writer (List (Some (Ref h))) ': Error NotApplicable ': r) (Editor h a)
 handle' c@(Concrete b') = \case
   Enter
     | Just Refl <- b' ~: beta -> pure <| Update b'
@@ -225,7 +225,7 @@ handle' c@(Concrete b') = \case
 
 fixate ::
   Members '[Log Steps, Supply Nat, Alloc h, Read h, Write h] r =>
-  Sem (Writer (List (Someref h)) ': r) (Task h a) ->
+  Sem (Writer (List (Some (Ref h))) ': r) (Task h a) ->
   Sem r (Task h a)
 fixate t = do
   (d, t') <- runWriter t

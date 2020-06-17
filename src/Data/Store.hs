@@ -1,7 +1,8 @@
 module Data.Store
   ( -- * Data
     Store (..),
-    Heap (..),
+    Ref,
+    RealWorld,
 
     -- * Operations
     alloc,
@@ -9,19 +10,19 @@ module Data.Store
     write,
     focus,
     _identity,
-
-    -- * Inspecting
-    Inspect,
   )
 where
 
-import Data.Heap (Heap (..), Ref)
+import Control.Monad.ST (RealWorld)
+import Data.STRef (STRef)
 import Lens.Simple (Lens', iso, set, view)
 import Polysemy
 import Polysemy.Mutate (Alloc, Read, Write)
 import qualified Polysemy.Mutate as Mutate
 
 ---- Stores --------------------------------------------------------------------
+
+type Ref = STRef
 
 -- | **Note**
 -- | I think the source and target types always have to be the same,
@@ -44,9 +45,9 @@ import qualified Polysemy.Mutate as Mutate
 -- | In past days, we used a type class with fundep, which deduced the reference type from the monad `m`.
 -- | But now we don't know in which (final) `m` we're going to interpret `Sem r`!
 data Store h a where
-  Store {- exists s -} :: (Inspect h s) => Lens' s a -> Ref h s -> Store h a
+  Store {- exists s -} :: (Reflect h, Reflect s) => Lens' s a -> Ref h s -> Store h a
 
-alloc :: (Member (Alloc h) r, Inspect h a) => a -> Sem r (Store h a)
+alloc :: (Member (Alloc h) r, Reflect h, Reflect a) => a -> Sem r (Store h a)
 alloc x = do
   r <- Mutate.alloc x
   pure <| Store _identity r
@@ -67,7 +68,3 @@ _identity = iso identity identity
 
 focus :: Lens' a b -> Store r a -> Store r b
 focus l' (Store l r) = Store (l << l') r
-
----- Inspecting ----------------------------------------------------------------
-
-class (Reflect (Ref h a), Eq (Ref h a)) => Inspect h a

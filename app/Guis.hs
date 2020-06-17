@@ -26,7 +26,7 @@ counter start = do
 --       ]
 
 -- Therefore we need a share!
-counter'' :: (Inspect h Int) => Int -> Task h Void
+counter'' :: (Reflect h) => Int -> Task h Void
 counter'' start = do
   c <- share start
   forever do
@@ -67,7 +67,7 @@ temperature' (c, f) = forever do
 -- with shares, we do not need any recursion.
 -- Recursion on editing is built in.
 -- However, we need a way to transform our view on shares: lenses!
-temperature'' :: (Inspect h Double) => Double -> Task h Double
+temperature'' :: (Reflect h) => Double -> Task h Double
 temperature'' c = do
   r <- share c
   change r |< change (focus (iso c2f f2c) r)

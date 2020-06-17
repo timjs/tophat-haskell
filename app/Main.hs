@@ -287,12 +287,12 @@ update3 r = do
   r <<- y + z
   watch r
 
-inspect :: (Inspect h Int) => (Store h Int -> Task h a) -> Task h (a, Int)
+inspect :: (Reflect h) => (Store h Int -> Task h a) -> Task h (a, Int)
 inspect f = do
   r <- share 0
   f r >< watch r
 
-doubleShared :: (Inspect h Int) => Task h ((), Int)
+doubleShared :: (Reflect h) => Task h ((), Int)
 doubleShared = do
   r <- share (0 :: Int)
   m <- share (0 :: Int)
@@ -305,7 +305,7 @@ doubleShared = do
       y <- change r
       if y >= 5 then m <<- 12 else fail
 
-atomic :: (Inspect h Int) => Task h ((), ())
+atomic :: (Reflect h) => Task h ((), ())
 atomic = do
   r <- share (0 :: Int)
   let t1 = do
@@ -319,7 +319,7 @@ atomic = do
   -- t1 >< t2
   t2 >< t1
 
-unfixated :: (Inspect h Bool) => Task h ((), ())
+unfixated :: (Reflect h) => Task h ((), ())
 unfixated = do
   r <- share False
   let t1 = do
@@ -332,7 +332,7 @@ unfixated = do
 
 -- Forever --
 
-numbers :: (Inspect h (List Int)) => Task h (Void, List Int)
+numbers :: (Reflect h) => Task h (Void, List Int)
 numbers = do
   r <- share ([] :: List Int)
   forever (prepend r) >< watch r
@@ -341,7 +341,7 @@ numbers = do
       x <- enter
       r <<= (:) x
 
-numbers' :: (Inspect h (List Int)) => Task h (List Int)
+numbers' :: (Reflect h) => Task h (List Int)
 numbers' = do
   r <- share ([] :: List Int)
   (edit_ r >< watch r) >>@ exit_
