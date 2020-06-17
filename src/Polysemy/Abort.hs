@@ -71,5 +71,5 @@ abortToIO ::
   Sem (Abort ': r) a ->
   Sem r a
 abortToIO = interpret \case
-  Abort -> embed exitFailure
+  Abort -> embed exitSuccess
 {-# INLINE abortToIO #-}

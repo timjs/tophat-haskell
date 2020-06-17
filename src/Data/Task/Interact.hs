@@ -33,10 +33,15 @@ loop t = do
       ui <- Task.ui t'
       printLn ui
       inputs <- Task.inputs t'
-      printLn <| "Possibilities: " ++ display inputs
-      input <- getUserInput
-      t'' <- Task.interact input t'
-      go t''
+      if null inputs
+        then do
+          log Info Task.DidFinish
+          abort
+        else do
+          printLn <| "Possibilities: " ++ display inputs
+          input <- getUserInput
+          t'' <- Task.interact input t'
+          go t''
     getUserInput ::
       Members '[Interact, Abort] r =>
       Sem r (Input Concrete)
