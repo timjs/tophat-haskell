@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.34.2.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b191509ef4df14f05397c1beaae0c03bf274722cd604c43097fa62050abbf38f
+-- hash: fd75fdfccf4fb607e98b73827f2fe90bf5a773dbba93c81edc2be4b605a8e932
 
 name:           tophat
 version:        0.1.0.0
@@ -26,33 +26,35 @@ source-repository head
 
 library
   exposed-modules:
-      Control.Collaborative
-      Control.Interactive
-      Control.Monad.Log
-      Control.Monad.Ref
-      Control.Monad.Supply
-      Data.Editable
+      Data.Basic
+      Data.Some
       Data.Store
       Data.Task
       Data.Task.Input
+      Data.Task.Interact
       Data.Task.Observe
       Data.Task.Run
+      Data.Task.Simulate
       Data.Task.Status
+      Polysemy.Abort
+      Polysemy.Interact
+      Polysemy.Log
+      Polysemy.Mutate
+      Polysemy.Supply
       Prelude
   other-modules:
       Paths_tophat
   hs-source-dirs:
       src
-  default-extensions: EmptyDataDecls EmptyCase FlexibleContexts FlexibleInstances InstanceSigs MultiParamTypeClasses LambdaCase MultiWayIf NamedFieldPuns TupleSections NumericUnderscores DeriveGeneric DeriveFunctor DeriveFoldable DeriveTraversable DerivingVia StandaloneDeriving BangPatterns KindSignatures TypeOperators MonadComprehensions BinaryLiterals NegativeLiterals NoStarIsType BlockArguments ScopedTypeVariables TypeApplications PartialTypeSignatures NamedWildCards OverloadedStrings OverloadedLists ConstraintKinds RankNTypes DefaultSignatures PatternSynonyms PatternGuards FunctionalDependencies UndecidableInstances GADTs ExistentialQuantification DataKinds PolyKinds QuantifiedConstraints
-  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints
+  default-extensions: EmptyDataDecls EmptyCase FlexibleContexts FlexibleInstances InstanceSigs MultiParamTypeClasses LambdaCase MultiWayIf NamedFieldPuns TupleSections NumericUnderscores DeriveGeneric DeriveFunctor DeriveFoldable DeriveTraversable DerivingVia StandaloneDeriving BangPatterns KindSignatures TypeOperators MonadComprehensions BinaryLiterals NegativeLiterals NoStarIsType BlockArguments ScopedTypeVariables TypeApplications PartialTypeSignatures NamedWildCards OverloadedStrings OverloadedLists ConstraintKinds RankNTypes DefaultSignatures PatternSynonyms PatternGuards FunctionalDependencies UndecidableInstances GADTs ExistentialQuantification DataKinds PolyKinds TypeFamilies TypeFamilyDependencies QuantifiedConstraints StrictData
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -O2 -flate-specialise -fspecialise-aggressively -fplugin=Polysemy.Plugin
   build-depends:
       base-noprelude >=4.12 && <5
     , lens-simple
-    , mtl
-    , prettyprinter
+    , polysemy >=1.3.0 && <1.4.0
+    , polysemy-plugin
     , relude >=0.5 && <1
     , text
-    , transformers
     , unordered-containers
   default-language: Haskell2010
 
@@ -63,16 +65,15 @@ executable tophat
       Paths_tophat
   hs-source-dirs:
       app
-  default-extensions: EmptyDataDecls EmptyCase FlexibleContexts FlexibleInstances InstanceSigs MultiParamTypeClasses LambdaCase MultiWayIf NamedFieldPuns TupleSections NumericUnderscores DeriveGeneric DeriveFunctor DeriveFoldable DeriveTraversable DerivingVia StandaloneDeriving BangPatterns KindSignatures TypeOperators MonadComprehensions BinaryLiterals NegativeLiterals NoStarIsType BlockArguments ScopedTypeVariables TypeApplications PartialTypeSignatures NamedWildCards OverloadedStrings OverloadedLists ConstraintKinds RankNTypes DefaultSignatures PatternSynonyms PatternGuards FunctionalDependencies UndecidableInstances GADTs ExistentialQuantification DataKinds PolyKinds QuantifiedConstraints
-  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  default-extensions: EmptyDataDecls EmptyCase FlexibleContexts FlexibleInstances InstanceSigs MultiParamTypeClasses LambdaCase MultiWayIf NamedFieldPuns TupleSections NumericUnderscores DeriveGeneric DeriveFunctor DeriveFoldable DeriveTraversable DerivingVia StandaloneDeriving BangPatterns KindSignatures TypeOperators MonadComprehensions BinaryLiterals NegativeLiterals NoStarIsType BlockArguments ScopedTypeVariables TypeApplications PartialTypeSignatures NamedWildCards OverloadedStrings OverloadedLists ConstraintKinds RankNTypes DefaultSignatures PatternSynonyms PatternGuards FunctionalDependencies UndecidableInstances GADTs ExistentialQuantification DataKinds PolyKinds TypeFamilies TypeFamilyDependencies QuantifiedConstraints StrictData
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -O2 -flate-specialise -fspecialise-aggressively -fplugin=Polysemy.Plugin -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base-noprelude >=4.12 && <5
     , lens-simple
-    , mtl
-    , prettyprinter
+    , polysemy >=1.3.0 && <1.4.0
+    , polysemy-plugin
     , relude >=0.5 && <1
     , text
     , tophat
-    , transformers
     , unordered-containers
   default-language: Haskell2010

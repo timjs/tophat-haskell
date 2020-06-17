@@ -2,21 +2,24 @@ module Data.Task.Observe where
 
 import qualified Data.HashMap.Strict as HashMap
 import Data.List (union)
+import qualified Data.Store as Store
 import Data.Task
 import Data.Task.Input
+import Polysemy
+import Polysemy.Mutate (Alloc, Read)
 
 ---- Observations --------------------------------------------------------------
 -- NOTE: Normalisation should never happen in any observation, they are immediate.
 
 ui ::
-  Collaborative r m =>
-  Task m a ->
-  m (Doc n) -- We need to watch locations and be in monad `m`
+  Members '[Alloc h, Read h] r => -- We need `Alloc` because `Value` needs it.
+  Task h a ->
+  Sem r Text
 ui = \case
   Editor a e -> ui' a e
   Done _ -> pure "■ …"
-  Pair t1 t2 -> pure (\l r -> sep [l, " ⧓ ", r]) -< ui t1 -< ui t2
-  Choose t1 t2 -> pure (\l r -> sep [l, " ◆ ", r]) -< ui t1 -< ui t2
+  Pair t1 t2 -> pure (\l r -> unwords [l, " ⧓ ", r]) -< ui t1 -< ui t2
+  Choose t1 t2 -> pure (\l r -> unwords [l, " ◆ ", r]) -< ui t1 -< ui t2
   Fail -> pure "↯"
   Trans _ t -> ui t
   Step t1 e2 -> pure go -< ui t1 -< do
@@ -26,29 +29,29 @@ ui = \case
       Just v1 -> pure <| options (e2 v1)
     where
       go s ls
-        | null ls = cat [s, " ▶…"]
-        | otherwise = cat [s, " ▷", pretty ls]
-  Share b -> pure <| sep ["share", pretty b]
-  Assign b _ -> pure <| sep ["…", ":=", pretty b]
+        | null ls = concat [s, " ▶…"]
+        | otherwise = concat [s, " ▷", display ls]
+  Assert _ -> pure <| unwords ["assert", "…"]
+  Share b -> pure <| unwords ["share", display b]
+  Assign b _ -> pure <| unwords ["…", ":=", display b]
 
 ui' ::
-  forall r m n b.
-  Collaborative r m =>
+  Members '[Read h] r => -- We need `Read` to read from references.
   Name ->
-  Editor m b ->
-  m (Doc n) -- We need to watch locations and be in monad `m`
-ui' a = \case
-  Enter -> pure <| cat ["⊠^", pretty a, " [ ] "]
-  Update b -> pure <| cat ["□^", pretty a, " [ ", pretty b, " ]"]
-  View b -> pure <| cat ["⧇^", pretty a, " [ ", pretty b, " ]"]
-  Select ts -> pure <| cat ["◇^", pretty a, " ", pretty <| HashMap.keysSet ts]
-  Change l -> pure (\b -> cat ["⊟^", pretty a, " [ ", pretty b, " ]"]) -< watch l
-  Watch l -> pure (\b -> cat ["⧈^", pretty a, " [ ", pretty b, " ]"]) -< watch l
+  Editor h b ->
+  Sem r Text
+ui' n = \case
+  Enter -> pure <| concat ["⊠^", display n, " [ ] "]
+  Update b -> pure <| concat ["□^", display n, " [ ", display b, " ]"]
+  View b -> pure <| concat ["⧇^", display n, " [ ", display b, " ]"]
+  Select ts -> pure <| concat ["◇^", display n, " ", display <| HashMap.keysSet ts]
+  Change l -> pure (\b -> concat ["⊟^", display n, " [ ", display b, " ]"]) -< Store.read l
+  Watch l -> pure (\b -> concat ["⧈^", display n, " [ ", display b, " ]"]) -< Store.read l
 
 value ::
-  Collaborative r m =>
-  Task m a ->
-  m (Maybe a) -- We need to watch locations and be in monad `m`
+  Members '[Alloc h, Read h] r => -- We need `Alloc` to allocate a fresh store to continue with.
+  Task h a ->
+  Sem r (Maybe a)
 value = \case
   Editor Unnamed _ -> pure Nothing
   Editor (Named _) e -> value' e
@@ -58,23 +61,25 @@ value = \case
   Choose t1 t2 -> pure (<|>) -< value t1 -< value t2
   Fail -> pure Nothing
   Step _ _ -> pure Nothing
-  Share b -> pure Just -< share b -- Nothing??
-  Assign _ _ -> pure (Just ()) -- Nothing??
+  Assert b -> pure (Just b)
+  Share b -> pure Just -< Store.alloc b
+  Assign _ _ -> pure (Just ())
 
 value' ::
-  Collaborative r m =>
-  Editor m a ->
-  m (Maybe a) -- We need to watch locations and be in monad `m`
+  Members '[Read h] r => -- We need `Read` to read from references.
+  Editor h a ->
+  Sem r (Maybe a)
 value' = \case
   Enter -> pure Nothing
   Update b -> pure (Just b)
   View b -> pure (Just b)
   Select _ -> pure Nothing
-  Change l -> pure Just -< watch l
-  Watch l -> pure Just -< watch l
+  Change l -> pure Just -< Store.read l
+  Watch l -> pure Just -< Store.read l
 
 failing ::
-  Task m a -> Bool
+  Task h a ->
+  Bool
 failing = \case
   Editor _ e -> failing' e
   Trans _ t2 -> failing t2
@@ -83,11 +88,13 @@ failing = \case
   Choose t1 t2 -> failing t1 && failing t2
   Fail -> True
   Step t1 _ -> failing t1
+  Assert _ -> False
   Share _ -> False
   Assign _ _ -> False
 
 failing' ::
-  Editor m a -> Bool
+  Editor h a ->
+  Bool
 failing' = \case
   Enter -> False
   Update _ -> False
@@ -97,9 +104,8 @@ failing' = \case
   Watch _ -> False
 
 watching ::
-  -- Collaborative r m => -- We need Collaborative here to pack references `r`
-  Task m a ->
-  List (Someref m) -- But there is no need to be in monad `m`
+  Task h a ->
+  List (Some (Ref h)) -- There is no need for any effects.
 watching = \case
   Editor Unnamed _ -> []
   Editor (Named _) e -> watching' e
@@ -109,13 +115,13 @@ watching = \case
   Choose t1 t2 -> watching t1 `union` watching t2
   Fail -> []
   Step t1 _ -> watching t1
+  Assert _ -> []
   Share _ -> []
   Assign _ _ -> []
 
 watching' ::
-  -- Collaborative r m => -- We need Collaborative here to pack references `r`
-  Editor m a ->
-  List (Someref m) -- But there is no need to be in monad `m`
+  Editor h a ->
+  List (Some (Ref h)) -- There is no need for any effects.
 watching' = \case
   Enter -> []
   Update _ -> []
@@ -129,10 +135,9 @@ watching' = \case
 -- |
 -- | Notes:
 -- | * We need this to pair `Label`s with `Name`s, because we need to tag all deeper lables with the appropriate editor name.
--- | * We can't return a `HashMap _ (Task m a)` because deeper tasks can be of different types!
+-- | * We can't return a `HashMap _ (Task  a)` because deeper tasks can be of different types!
 options ::
-  Collaborative r m =>
-  Task m a ->
+  Task h a -> -- There is no need for any effects.
   List Option
 options = \case
   Editor n (Select ts) -> options' ts |> map (Option n)
@@ -154,14 +159,14 @@ options = \case
 -- | Notes:
 -- | * Goes one level deep!
 options' ::
-  HashMap Label (Task m a) ->
+  HashMap Label (Task h a) -> -- There is no need for any effects.
   List Label
 options' = HashMap.keys << HashMap.filter (not << failing)
 
 inputs ::
-  Collaborative r m =>
-  Task m a ->
-  m (List (Input Dummy)) -- We need to call `value`, therefore we are in `m`
+  Members '[Alloc h, Read h] r => -- We need `Alloc` and `Read` because we call `value`.
+  Task h a ->
+  Sem r (List (Input Dummy))
 inputs t = case t of
   Editor Unnamed _ -> pure []
   Editor (Named n) (Select ts) -> options' ts |> map (ISelect n) |> pure
@@ -178,13 +183,13 @@ inputs t = case t of
       Just v1 -> do
         let t2 = e2 v1
         options t2 |> map fromOption |> pure
+  Assert _ -> pure []
   Share _ -> pure []
   Assign _ _ -> pure []
 
 inputs' ::
-  forall m a.
-  -- Collaborative r m =>
-  Editor m a ->
+  forall h a.
+  Editor h a ->
   List Dummy
 inputs' t = case t of
   Enter -> [dummy beta]

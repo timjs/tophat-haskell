@@ -1,62 +1,99 @@
 module Data.Task
-  ( Task (..),
+  ( -- * Types
+    Task (..),
     Editor (..),
     Name (..),
+    Label,
+
+    -- * Constructors
+
+    -- ** Editors
+    enter,
+    update,
+    view,
+    select,
+
+    -- ** Shares
+    share,
+    watch,
+    change,
+    (<<-),
+    (<<=),
+
+    -- ** Derived
     parallel,
     choose,
     branch,
+    assert,
     (<?>),
     (>>?),
     (>>*),
     (>**),
     forever,
     (>>@),
-    module Control.Interactive,
-    module Control.Collaborative,
-    module Data.Editable,
+
+    -- * Reexports
+    module Data.Basic,
+    module Data.Store,
+    module Data.Some,
   )
 where
 
-import Control.Collaborative
-import Control.Interactive
-import Data.Editable (Editable)
-import qualified Data.Text.Prettyprint.Doc as Pretty
+import Data.Basic
+import Data.Some
+import Data.Store
 
 ---- Tasks ---------------------------------------------------------------------
 
--- | Task monad transformer build on top of a monad `m`.
+-- | Tasks parametrised over a heap `h`, making use of effects `r`.
 -- |
--- | To use references, `m` shoud be a `Collaborative` with locations `r`.
-data Task (m :: Type -> Type) (t :: Type) where
-  ---- Editors ----
+-- | **Important!**
+-- | We do *not* encode this as a free monad.
+-- | It is not free, because we'd like to have full control over the semantics for bind, i.e. `Step` below.
+-- | This saves us from higher order interpretation,
+-- | and gives us the freedom to completely control our own semantics.
+-- |
+-- | It can be seen best like this:
+-- | We use `Sem` and its effects to *implement* its semantics,
+-- | but `Task` is not an effect itself.
+-- | In particular, it can't be combined with other effects,
+-- | it only *needs* effects to be interpreted (denoted by `r`).
+-- | I.e. `Task` is a monad on it's own right.
+-- | (Although it actually isn't a monad... but that's another story.)
+data Task h t where
+  ---- Editors
 
-  -- | Editors, named or unnamed
-  Editor :: Name -> Editor m t -> Task m t
-  ---- Parallels ----
+  -- | Editors, named and unnamed
+  Editor :: Name -> Editor h t -> Task h t
+  ---- Parallels
 
   -- | Composition of two tasks.
-  Pair :: Task m a -> Task m b -> Task m (a, b)
+  Pair :: Task h a -> Task h b -> Task h (a, b)
   -- | Internal, unrestricted and hidden editor
-  Done :: t -> Task m t
+  Done :: t -> Task h t
   -- | Internal choice between two tasks.
-  Choose :: Task m t -> Task m t -> Task m t
+  Choose :: Task h t -> Task h t -> Task h t
   -- | The failing task
-  Fail :: Task m t
-  ---- Steps ----
+  Fail :: Task h t
+  ---- Steps
 
   -- | Internal value transformation
-  Trans :: (a -> t) -> Task m a -> Task m t
+  Trans :: (a -> t) -> Task h a -> Task h t
   -- | Internal, or system step.
-  Step :: Task m a -> (a -> Task m t) -> Task m t
-  ---- References ----
+  Step :: Task h a -> (a -> Task h t) -> Task h t
+  ---- Checks
+
+  -- | Assertions
+  Assert :: Bool -> Task h Bool
+  ---- References
   -- The inner monad `m` needs to have the notion of references.
   -- These references should be `Eq` and `Typeable`,
   -- because we need to mark them dirty and match those with watched references.
 
   -- | Create new reference of type `t`
-  Share :: (Collaborative r m, Editable t) => t -> Task m (Store r t)
+  Share :: (Basic t, Reflect h) => t -> Task h (Store h t)
   -- | Assign to a reference of type `t` to a given value
-  Assign :: (Collaborative r m, Editable a) => a -> Store r a -> Task m ()
+  Assign :: (Basic a) => a -> Store h a -> Task h ()
 
 -- NOTE:
 -- We could choose to replace `Share` and `Assign` and with a general `Lift` constructor,
@@ -66,127 +103,164 @@ data Task (m :: Type -> Type) (t :: Type) where
 -- This makes actions like logging to stdout, lounching missiles or other effects impossible.
 -- (Though this would need to be constrained with classes when specifying the task!)
 
-data Editor (m :: Type -> Type) (t :: Type) where
+data Editor h t where
   -- | Unvalued editor
-  Enter :: (Editable t) => Editor m t
+  Enter :: (Basic t) => Editor h t
   -- | Valued editor
-  Update :: (Editable t) => t -> Editor m t
+  Update :: (Basic t) => t -> Editor h t
   -- | Valued, view only editor
-  View :: (Editable t) => t -> Editor m t
-  -- | External choice between two Editors.
-  Select :: HashMap Label (Task m t) -> Editor m t
+  View :: (Basic t) => t -> Editor h t
+  -- | External choice between multple tasks.
+  Select :: HashMap Label (Task h t) -> Editor h t
   -- | Change to a reference of type `t` to a value
-  Change :: (Collaborative r m, Editable t) => Store r t -> Editor m t
+  Change :: (Basic t) => Store h t -> Editor h t
   -- | Watch a reference of type `t`
-  Watch :: (Collaborative r m, Editable t) => Store r t -> Editor m t
+  Watch :: (Basic t) => Store h t -> Editor h t
 
 data Name
   = Unnamed
   | Named Nat
-  deriving (Eq, Ord, Show, Read)
+  deriving (Eq, Ord, Debug, Scan)
 
-new :: Editor m t -> Task m t
+type Label =
+  Text
+
+new :: Editor h t -> Task h t
 new e = Editor Unnamed e
 
----- Derived forms -------------------------------------------------------------
+---- Builtins ------------------------------------------------------------------
 
-parallel :: List (Task m a) -> Task m (List a)
+assert :: Bool -> Task h Bool
+assert = Assert
+
+---- Editors
+
+enter :: (Basic t) => Task h t
+enter = new Enter
+
+update :: (Basic t) => t -> Task h t
+update v = new (Update v)
+
+view :: (Basic t) => t -> Task h t
+view v = new (View v)
+
+select :: HashMap Label (Task h t) -> Task h t
+select ts = new (Select ts)
+
+---- Shares
+
+share :: (Basic a, Reflect h) => a -> Task h (Store h a)
+share = Share
+
+watch :: (Basic a) => Store h a -> Task h a
+watch l = new (Watch l)
+
+change :: (Basic a) => Store h a -> Task h a
+change l = new (Change l)
+
+infixl 1 <<-
+
+infixl 1 <<=
+
+(<<-) :: (Basic a) => Store h a -> a -> Task h ()
+(<<-) = flip Assign
+
+-- (<<=) :: (Members '[Read h, Write h] r) => Store h a -> (a -> a) -> Sem r ()
+(<<=) :: (Basic a) => Store h a -> (a -> a) -> Task h ()
+(<<=) r f = do
+  x <- watch r
+  r <<- f x
+
+---- Derived -------------------------------------------------------------------
+
+parallel :: List (Task h a) -> Task h (List a)
 parallel [] = pure []
-parallel (t : ts) = t >< parallel ts >>= \(x, xs) -> pure (x : xs)
+parallel (t : ts) = t >< parallel ts >>= \(x, xs) -> pure (x : xs) --XXX order of parens?
 
-choose :: List (Task m a) -> Task m a
+choose :: List (Task h a) -> Task h a
 choose = foldr (<|>) fail
 
-branch :: List (Bool, Task m a) -> Task m a
+branch :: List (Bool, Task h a) -> Task h a
 branch [] = fail
 branch ((b, t) : rs) = if b then t else branch rs
 
 infixl 3 <?>
 
-(<?>) :: Task m a -> Task m a -> Task m a
+(<?>) :: Task h a -> Task h a -> Task h a
 (<?>) t1 t2 = select ["Left" ~> t1, "Right" ~> t2]
 
 infixl 1 >>?
 
-(>>?) :: Task m a -> (a -> Task m b) -> Task m b
+(>>?) :: Task h a -> (a -> Task h b) -> Task h b
 (>>?) t1 e2 = t1 >>= \x -> select ["Continue" ~> e2 x]
 
 infixl 1 >>*
 
-(>>*) :: Task m a -> HashMap Label (a -> Task m b) -> Task m b
+(>>*) :: Task h a -> HashMap Label (a -> Task h b) -> Task h b
 (>>*) t1 cs = t1 >>= \x -> select (cs ||> \c -> c x)
 
 infixl 1 >**
 
-(>**) :: Task m a -> HashMap Label (a -> Bool, a -> Task m b) -> Task m b
+(>**) :: Task h a -> HashMap Label (a -> Bool, a -> Task h b) -> Task h b
 (>**) t1 cs = t1 >>= \x -> select (cs ||> \(b, c) -> if b x then c x else fail)
 
-forever :: Task m a -> Task m Void
+forever :: Task h a -> Task h Void
 forever t1 = t1 >>= \_ -> forever t1
 
-(>>@) :: Task m a -> (a -> Task m b) -> Task m b
+(>>@) :: Task h a -> (a -> Task h b) -> Task h b
 (>>@) t1 e2 = t1 >>= \x -> select ["Repeat" ~> t1 >>@ e2, "Exit" ~> e2 x]
+
+---- Display -------------------------------------------------------------------
+
+instance Display (Task h t) where
+  display = \case
+    Editor n e -> concat [display e |> between '(' ')', "^", display n]
+    Pair t1 t2 -> unwords [display t1, "><", display t2] |> between '(' ')'
+    Done _ -> "Done _"
+    Choose t1 t2 -> unwords [display t1, "<|>", display t2] |> between '(' ')'
+    Fail -> "Fail"
+    Trans _ t -> unwords ["Trans _", display t]
+    Step t _ -> unwords [display t, ">>=", "_"] |> between '(' ')'
+    Assert b -> unwords ["Assert", display b]
+    Share v -> unwords ["Share", display v]
+    Assign v _ -> unwords ["_", ":=", display v]
+
+instance Display (Editor h a) where
+  display = \case
+    Enter -> "Enter"
+    Update v -> unwords ["Update", display v] |> between '(' ')'
+    View v -> unwords ["View", display v] |> between '(' ')'
+    Select ts -> unwords ["Select", display ts] |> between '(' ')'
+    Watch _ -> unwords ["Watch", "_"]
+    Change _ -> unwords ["Change", "_"]
+
+instance Display Name where
+  display = \case
+    Unnamed -> "ε"
+    Named n -> display n
 
 ---- Instances -----------------------------------------------------------------
 
-instance Pretty (Task m t) where
-  pretty = \case
-    Editor n e -> cat [pretty e |> Pretty.parens, "^", pretty n]
-    Pair t1 t2 -> sep [pretty t1, "><", pretty t2] |> Pretty.parens
-    Done _ -> "Done _"
-    Choose t1 t2 -> sep [pretty t1, "<|>", pretty t2] |> Pretty.parens
-    Fail -> "Fail"
-    Trans _ t -> sep ["Trans _", pretty t]
-    Step t _ -> sep [pretty t, ">>=", "_"] |> Pretty.parens
-    Share v -> sep ["Share", pretty v]
-    Assign v _ -> sep ["_", ":=", pretty v]
-
-instance Pretty (Editor m a) where
-  pretty = \case
-    Enter -> "Enter"
-    Update v -> sep ["Update", pretty v] |> Pretty.parens
-    View v -> sep ["View", pretty v] |> Pretty.parens
-    Select ts -> sep ["Select", pretty ts] |> Pretty.parens
-    Watch _ -> sep ["Watch", "_"]
-    Change _ -> sep ["Change", "_"]
-
-instance Pretty Name where
-  pretty = \case
-    Unnamed -> "ε"
-    Named n -> pretty n
-
-instance Functor (Task m) where
+instance Functor (Task h) where
   fmap = Trans
 
-instance Interactive (Task m) where
-  enter = new Enter
-  update v = new (Update v)
-  view v = new (View v)
-  select ts = new (Select ts)
-
-instance Monoidal (Task m) where
+instance Monoidal (Task h) where
   (><) = Pair
   skip = Done ()
 
-instance Applicative (Task m) where
+instance Applicative (Task h) where
   pure = Done
   (<*>) = applyDefault
 
--- instance Selective (Task m) where
+-- instance Selective (Task h) where
 --   branch p t1 t2 = go =<< p
 --     where
 --       go (Left a) = map (<| a) t1
 --       go (Right b) = map (<| b) t2
 
-instance Alternative (Task m) where
+instance Alternative (Task h) where
   (<|>) = Choose
   empty = Fail
 
-instance Monad (Task m) where
+instance Monad (Task h) where
   (>>=) = Step
-
-instance Collaborative r m => Collaborative r (Task m) where
-  share = Share
-  assign = Assign
-  watch l = new (Watch l)
-  change l = new (Change l)

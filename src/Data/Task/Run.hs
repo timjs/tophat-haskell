@@ -1,30 +1,74 @@
 module Data.Task.Run where
 
-import Control.Monad.Log
-import Control.Monad.Supply
 import qualified Data.HashMap.Strict as HashMap
 import Data.List (intersect, union)
+import qualified Data.Store as Store
 import Data.Task
 import Data.Task.Input
 import Data.Task.Observe
-import qualified Data.Text.Prettyprint.Doc as Pretty
+import Polysemy
+import Polysemy.Error
+import Polysemy.Log
+import Polysemy.Mutate
+import Polysemy.Supply
+import Polysemy.Writer
+
+---- Logs and Errors -----------------------------------------------------------
+
+data Steps
+  = DidStabilise Nat Nat
+  | DidNotStabilise Nat Nat Nat
+  | DidNormalise Text
+  | DidBalance Text
+  | DidStart Text
+  | DidCalculateOptions (List Option) Text
+  | DidFinish
+
+instance Display Steps where
+  display = \case
+    DidNotStabilise d w o -> unwords ["Found", display o, "overlap(s) amongst", display d, "dirty and", display w, "watched reference(s)"]
+    DidStabilise d w -> unwords ["Found no overlaps amongst", display d, "dirty and", display w, "watched reference(s)"]
+    DidNormalise t -> unwords ["Normalised to:", display t]
+    DidBalance t -> unwords ["Rebalanced to:", display t]
+    DidStart t -> unwords ["Started with:", display t]
+    DidCalculateOptions os t -> unwords ["Future options before normalising", display os, "for task", display t]
+    DidFinish -> "Done!"
+
+data NotApplicable
+  = CouldNotMatch Name Name
+  | CouldNotChangeVal SomeTypeRep SomeTypeRep
+  | CouldNotChangeRef SomeTypeRep SomeTypeRep
+  | CouldNotGoTo Label
+  | CouldNotFind Label
+  | CouldNotSelect
+  | CouldNotContinue
+  | CouldNotHandle (Input Concrete)
+  | CouldNotHandleValue Concrete
+
+instance Display NotApplicable where
+  display = \case
+    CouldNotMatch n m -> unwords ["Could not match editor id", display n |> quote, "with id", display m |> quote]
+    CouldNotChangeVal b c -> unwords ["Could not change value because types", display b |> quote, "and", display c |> quote, "do not match"]
+    CouldNotChangeRef r c -> unwords ["Could not change value because cell", display r |> quote, "does not contain", display c |> quote]
+    CouldNotGoTo l -> unwords ["Could not pick label", display l |> quote, "because it leads to an empty task"]
+    CouldNotFind l -> unwords ["Could not find label", display l |> quote, "in the possible options"]
+    CouldNotSelect -> unwords ["Could not pick because there is nothing to pick from in this task"]
+    CouldNotContinue -> unwords ["Could not continue because there is no value to continue with"]
+    CouldNotHandle i -> unwords ["Could not handle input", display i |> quote]
+    CouldNotHandleValue b -> unwords ["Could not handle new editor value", display b |> quote, "for readonly editor"]
 
 ---- Normalising ---------------------------------------------------------------
 
-type Tracking f m a = WriterT (List (Someref m)) m (f m a)
-
 normalise ::
-  Collaborative r m =>
-  MonadSupply Nat m =>
-  MonadLog Steps m =>
-  Task m a ->
-  Tracking Task m a
+  Members '[Log Steps, Supply Nat, Alloc h, Read h, Write h] r =>
+  Task h a ->
+  Sem (Writer (List (Some (Ref h))) ': r) (Task h a) --NOTE: Here we're constructing a concrete stack. I don't know if that's the best way to go...
 normalise t = case t of
   ---- Step
   Step t1 e2 -> do
     t1' <- normalise t1
     let stay = Step t1' e2
-    mv1 <- lift <| value t1'
+    mv1 <- raise <| value t1'
     case mv1 of
       Nothing -> pure stay -- N-StepNone
       Just v1 -> do
@@ -33,7 +77,7 @@ normalise t = case t of
           then pure stay -- N-StepFail
           else do
             let os = options t2
-            log Info <| DidCalculateOptions os (pretty t2 |> show)
+            log Info <| DidCalculateOptions os (display t2)
             if not <| null <| os
               then pure stay -- N-StepWait
               else normalise t2 -- N-StepCont
@@ -41,12 +85,12 @@ normalise t = case t of
   ---- Choose
   Choose t1 t2 -> do
     t1' <- normalise t1
-    mv1 <- lift <| value t1'
+    mv1 <- raise <| value t1'
     case mv1 of
       Just _ -> pure t1' -- N-ChooseLeft
       Nothing -> do
         t2' <- normalise t2
-        mv2 <- lift <| value t2'
+        mv2 <- raise <| value t2'
         case mv2 of
           Just _ -> pure t2' -- N-ChooseRight
           Nothing -> pure <| Choose t1' t2' -- N-ChooseNone
@@ -62,19 +106,19 @@ normalise t = case t of
     n <- supply
     pure <| Editor (Named n) e
   Editor (Named _) _ -> pure t
-  ---- Assert
-  -- Assert p -> do
-  --   pure <| Done p
+  ---- Checks
+  Assert p -> do
+    pure <| Done p
   ---- References
   Share b -> do
-    l <- lift <| share b
+    l <- Store.alloc b --XXX: raise?
     pure <| Done l
   Assign b s@(Store _ r) -> do
-    lift <| s <<- b
+    Store.write b s
     tell [pack r]
     pure <| Done ()
 
--- balance :: Task m a -> Task m a
+-- balance :: Task h a -> Task h a
 -- balance t = case t of
 --   Pair t1 t2 -> Pair (balance t1) (balance t2)
 --   Choose t1 t2 -> Choose (balance t1) (balance t2)
@@ -91,39 +135,12 @@ normalise t = case t of
 
 ---- Handling ------------------------------------------------------------------
 
-type PartialTracking f m a = WriterT (List (Someref m)) (ExceptT NotApplicable m) (f m a)
-
--- type PartialTrackingTask m a = ExceptT NotApplicable (WriterT (List (Someref m)) m) (Task m a)
-
-data NotApplicable
-  = CouldNotMatch Name Name
-  | CouldNotChangeVal SomeTypeRep SomeTypeRep
-  | CouldNotChangeRef SomeTypeRep SomeTypeRep
-  | CouldNotGoTo Label
-  | CouldNotFind Label
-  | CouldNotSelect
-  | CouldNotContinue
-  | CouldNotHandle (Input Concrete)
-  | CouldNotHandleValue Concrete
-
-instance Pretty NotApplicable where
-  pretty = \case
-    CouldNotMatch n m -> sep ["Could not match editor id", Pretty.dquotes <| pretty n, "with id", Pretty.dquotes <| pretty m]
-    CouldNotChangeVal b c -> sep ["Could not change value because types", Pretty.dquotes <| pretty b, "and", Pretty.dquotes <| pretty c, "do not match"]
-    CouldNotChangeRef r c -> sep ["Could not change value because cell", Pretty.dquotes <| pretty r, "does not contain", Pretty.dquotes <| pretty c]
-    CouldNotGoTo l -> sep ["Could not pick label", Pretty.dquotes <| pretty l, "because it leads to an empty task"]
-    CouldNotFind l -> sep ["Could not find label", Pretty.dquotes <| pretty l, "in the possible options"]
-    CouldNotSelect -> sep ["Could not pick because there is nothing to pick from in this task"]
-    CouldNotContinue -> sep ["Could not continue because there is no value to continue with"]
-    CouldNotHandle i -> sep ["Could not handle input", Pretty.dquotes <| pretty i]
-    CouldNotHandleValue b -> sep ["Could not handle new editor value", Pretty.dquotes <| pretty b, "for readonly editor"]
-
 handle ::
-  forall m r a.
-  Collaborative r m =>
-  Task m a ->
+  forall h r a.
+  Members '[Alloc h, Read h, Write h] r =>
+  Task h a ->
   Input Concrete ->
-  PartialTracking Task m a
+  Sem (Writer (List (Some (Ref h))) ': Error NotApplicable ': r) (Task h a)
 handle t i = case t of
   ---- Editors
   Editor n e -> case i of
@@ -152,7 +169,7 @@ handle t i = case t of
     case et1' of
       Right t1' -> pure <| Step t1' e2 -- H-Step
       Left _ -> do
-        mv1 <- lift <| lift <| value t1
+        mv1 <- raise <| raise <| value t1
         case mv1 of
           Nothing -> throw CouldNotContinue
           Just v1 -> do
@@ -176,11 +193,11 @@ handle t i = case t of
   _ -> throw <| CouldNotHandle i
 
 handle' ::
-  forall m r a.
-  Collaborative r m =>
+  forall h r a.
+  Members '[Read h, Write h] r =>
   Concrete ->
-  Editor m a -> -- `Select` does not return an `Editor`...
-  PartialTracking Editor m a
+  Editor h a -> -- NOTE: `Select` does not return an `Editor`...
+  Sem (Writer (List (Some (Ref h))) ': Error NotApplicable ': r) (Editor h a)
 handle' c@(Concrete b') = \case
   Enter
     | Just Refl <- b' ~: beta -> pure <| Update b'
@@ -195,87 +212,68 @@ handle' c@(Concrete b') = \case
   Change s@(Store _ r)
     -- NOTE: As in the `Update` case above, we check for type equality.
     | Just Refl <- b' ~: beta -> do
-      s <<- b'
+      Store.write b' s
       tell [pack r]
       pure <| Change s
-    | otherwise -> throw <| CouldNotChangeRef (someTypeOf s) (someTypeOf b')
+    | otherwise -> throw <| CouldNotChangeRef (someTypeOf r) (someTypeOf b')
     where
       beta = typeRep :: TypeRep a
   ---- Rest
   _ -> throw <| CouldNotHandleValue c
 
----- Interaction ---------------------------------------------------------------
-
-data Steps
-  = DidStabilise Nat Nat
-  | DidNotStabilise Nat Nat Nat
-  | DidNormalise Text
-  | DidBalance Text
-  | DidStart Text
-  | DidCalculateOptions (List Option) Text
-
-instance Pretty Steps where
-  pretty = \case
-    DidNotStabilise d w o -> sep ["Found", pretty o, "overlap(s) amongst", pretty d, "dirty and", pretty w, "watched reference(s)"]
-    DidStabilise d w -> sep ["Found no overlaps amongst", pretty d, "dirty and", pretty w, "watched reference(s)"]
-    DidNormalise t -> sep ["Normalised to:", pretty t]
-    DidBalance t -> sep ["Rebalanced to:", pretty t]
-    DidStart t -> sep ["Started with:", pretty t]
-    DidCalculateOptions os t -> sep ["Future options before normalising", pretty os, "for task", pretty t]
+---- Fixation ------------------------------------------------------------------
 
 fixate ::
-  Collaborative r m =>
-  MonadSupply Nat m =>
-  MonadLog Steps m =>
-  Tracking Task m a ->
-  m (Task m a)
-fixate tt = do
-  (t, d) <- runWriterT tt
-  (t', d') <- runWriterT <| normalise t
-  log Info <| DidNormalise (show <| pretty t')
-  let ws = watching t'
+  Members '[Log Steps, Supply Nat, Alloc h, Read h, Write h] r =>
+  Sem (Writer (List (Some (Ref h))) ': r) (Task h a) ->
+  Sem r (Task h a)
+fixate t = do
+  (d, t') <- runWriter t
+  (d', t'') <- normalise t' |> runWriter
+  log Info <| DidNormalise (display t'')
+  let ws = watching t''
   let ds = d `union` d'
   let os = ds `intersect` ws
   case os of
     [] -> do
       log Info <| DidStabilise (length ds) (length ws)
-      -- let t'' = balance t'
-      -- log Info <| DidBalance (show <| pretty t'')
-      pure t' -- F-Done
+      -- let t''' = balance t''
+      -- log Info <| DidBalance (display t''')
+      pure t'' -- F-Done
     _ -> do
       log Info <| DidNotStabilise (length ds) (length ws) (length os)
-      fixate <| pure t' -- F-Loop
+      fixate <| pure t'' -- F-Loop
+
+---- Initialisation ------------------------------------------------------------
 
 initialise ::
-  Collaborative r m =>
-  MonadSupply Nat m =>
-  MonadLog Steps m =>
-  Task m a ->
-  m (Task m a)
+  Members '[Log Steps, Supply Nat, Alloc h, Read h, Write h] r =>
+  Task h a ->
+  Sem r (Task h a)
 initialise t = do
-  log Info <| DidStart (show <| pretty t)
+  log Info <| DidStart (display t)
   fixate (pure t)
 
+---- Interaction ---------------------------------------------------------------
+
 interact ::
-  Collaborative r m =>
-  MonadSupply Nat m =>
-  MonadLog NotApplicable m =>
-  MonadLog Steps m =>
-  Task m a ->
+  Members '[Log Steps, Log NotApplicable, Supply Nat, Alloc h, Read h, Write h] r =>
   Input Concrete ->
-  m (Task m a)
-interact t i = do
-  xt <- runExceptT <| runWriterT <| handle t i
+  Task h a ->
+  Sem r (Task h a)
+interact i t = do
+  xt <- handle t i |> runWriter |> runError
   case xt of
     Left e -> do
       log Warning e
       pure t
-    Right tt -> fixate <| WriterT <| pure tt
+    Right (_, t') -> fixate <| pure t' --XXX: forget delta?!
 
+{-
 execute ::
-  Editable a =>
+  Basic a =>
   List (Input Concrete) ->
-  Task IO a ->
+  Task h a ->
   IO ()
 execute events task = initialise task >>= go events
   where
@@ -285,35 +283,5 @@ execute events task = initialise task >>= go events
         go rest task''
       [] -> do
         result <- value task'
-        putTextLn <| show <| pretty result
-
----- Running -------------------------------------------------------------------
-
-getUserInput :: IO (Input Concrete)
-getUserInput = do
-  putText ">> "
-  line <- getLine
-  case line of
-    "quit" -> exitSuccess
-    "q" -> exitSuccess
-    _ -> case parse line of
-      Right input -> pure input
-      Left message -> do
-        print message
-        getUserInput
-
-run :: Task IO a -> IO ()
-run task = do
-  task' <- initialise task
-  loop task'
-  where
-    loop :: Task IO a -> IO ()
-    loop task' = do
-      putTextLn ""
-      interface <- ui task'
-      print interface
-      events <- inputs task'
-      print <| "Possibilities: " ++ pretty events
-      input <- getUserInput
-      task'' <- interact task' input
-      loop task''
+        putTextLn <| display result
+-}

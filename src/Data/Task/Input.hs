@@ -14,30 +14,29 @@ module Data.Task.Input
 where
 
 import qualified Data.Char as Char
-import Data.Task
+import Data.Task (Basic, Label, Name (..))
 import qualified Data.Text as Text
-import qualified Data.Text.Prettyprint.Doc as Pretty
 
 ---- Actions -------------------------------------------------------------------
 
 ---- Concrete actions
 
 data Concrete :: Type where
-  Concrete :: Editable b => b -> Concrete
+  Concrete :: Basic b => b -> Concrete
 
 instance Eq Concrete where
   Concrete x == Concrete y
     | Just Refl <- x ~= y = x == y
     | otherwise = False
 
-instance Pretty Concrete where
-  pretty = \case
-    Concrete x -> pretty x
+instance Display Concrete where
+  display = \case
+    Concrete x -> display x
 
 ---- Symbolic actions
 
 data Symbolic :: Type where
-  Symbolic :: Editable b => Proxy b -> Symbolic
+  Symbolic :: Basic b => Proxy b -> Symbolic
 
 instance Eq Symbolic where
   Symbolic x == Symbolic y
@@ -45,9 +44,9 @@ instance Eq Symbolic where
     | Just Refl <- x ~= y = True
     | otherwise = False
 
-instance Pretty Symbolic where
-  pretty = \case
-    Symbolic p -> cat ["<", pretty beta, ">"]
+instance Display Symbolic where
+  display = \case
+    Symbolic p -> concat ["<", display beta, ">"]
       where
         beta = typeOfProxy p
 
@@ -55,7 +54,7 @@ instance Pretty Symbolic where
 
 type Dummy = Symbolic
 
-dummy :: Editable b => Proxy b -> Dummy
+dummy :: Basic b => Proxy b -> Dummy
 dummy p = Symbolic p
 
 ---- Inputs --------------------------------------------------------------------
@@ -63,7 +62,7 @@ dummy p = Symbolic p
 data Input b
   = IEnter Nat b
   | IOption Name Label
-  deriving (Eq, Show, Functor, Foldable, Traversable)
+  deriving (Eq, Debug, Functor, Foldable, Traversable)
 
 {-# COMPLETE IEnter, ISelect, IPreselect #-}
 
@@ -73,13 +72,13 @@ pattern ISelect n l = IOption (Named n) l
 pattern IPreselect :: Label -> Input b
 pattern IPreselect l = IOption Unnamed l
 
-instance Pretty b => Pretty (Input b) where
-  pretty = \case
-    IEnter n b -> sep [pretty n, pretty b]
-    ISelect n l -> sep [pretty n, pretty l]
-    IPreselect l -> pretty l
+instance Display b => Display (Input b) where
+  display = \case
+    IEnter n b -> unwords [display n, display b]
+    ISelect n l -> unwords [display n, display l]
+    IPreselect l -> display l
 
----- -- Action view
+---- Action view
 
 -- data Action b
 --   = AValue b
@@ -99,10 +98,10 @@ instance Pretty b => Pretty (Input b) where
 
 data Option
   = Option Name Label
-  deriving (Eq, Ord, Show, Read)
+  deriving (Eq, Ord, Debug, Scan)
 
-instance Pretty Option where
-  pretty (Option n l) = cat [pretty l, "^", pretty n]
+instance Display Option where
+  display (Option n l) = concat [display l, "^", display n]
 
 fromOption :: Option -> Input b
 fromOption (Option n l) = IOption n l
@@ -126,9 +125,9 @@ fromOption (Option n l) = IOption n l
 
 ---- Parsing -------------------------------------------------------------------
 
-usage :: Doc n
+usage :: Text
 usage =
-  split
+  unlines
     [ ":: Possible inputs are:",
       "    <id> <value> : enter <value> into editor <id>",
       "    <id> <label> : select one of the possible options from editor <id>",
@@ -151,17 +150,17 @@ usage =
       "    Start With A Capital Letter"
     ]
 
-parseId :: Text -> Either (Doc n) Nat
+parseId :: Text -> Either Text Nat
 parseId t
   | Just v <- scan t :: Maybe Nat = ok v
-  | otherwise = throw <| sep ["!!", Pretty.dquotes <| pretty t, "is not a proper id"]
+  | otherwise = error <| unwords ["!!", display t |> quote, "is not a proper id"]
 
-parseLabel :: Text -> Either (Doc n) Label
+parseLabel :: Text -> Either Text Label
 parseLabel t
   | Just (c, _) <- Text.uncons t, Char.isUpper c = ok <| t
-  | otherwise = throw <| sep ["!!", Pretty.dquotes <| pretty t, "is not a proper label"]
+  | otherwise = error <| unwords ["!!", display t |> quote, "is not a proper label"]
 
-parseConcrete :: Text -> Either (Doc n) Concrete
+parseConcrete :: Text -> Either Text Concrete
 parseConcrete val
   | Just v <- scan val :: Maybe Unit = ok <| Concrete v
   | Just v <- scan val :: Maybe Bool = ok <| Concrete v
@@ -172,16 +171,16 @@ parseConcrete val
   | Just v <- scan val :: Maybe [Int] = ok <| Concrete v
   | Just v <- scan val :: Maybe [Double] = ok <| Concrete v
   | Just v <- scan val :: Maybe [Text] = ok <| Concrete v
-  | otherwise = throw <| sep ["!! Error parsing value", Pretty.dquotes (pretty val)]
+  | otherwise = error <| unwords ["!! Error parsing value", display val |> quote]
 
-parse :: Text -> Either (Doc a) (Input Concrete)
+parse :: Text -> Either Text (Input Concrete)
 parse t = case Text.words t of
-  ["help"] -> throw usage
-  ["h"] -> throw usage
+  ["help"] -> error usage
+  ["h"] -> error usage
   [i, x] -> do
     n <- parseId i
     map (ISelect n) (parseLabel x) ++ map (IEnter n) (parseConcrete x) --NOTE: should be `<|>`, but we've got some strange import of `Error` getting in the way
   [x] -> do
     l <- parseLabel x
     ok <| IPreselect l
-  _ -> throw <| sep ["!!", Pretty.dquotes (pretty t), "is not a valid command, type `help` for more info"]
+  _ -> error <| unwords ["!!", display t |> quote, "is not a valid command, type `help` for more info"]

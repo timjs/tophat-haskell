@@ -1,10 +1,10 @@
 {-# OPTIONS_GHC -Wno-orphans -Wno-deprecations #-}
 
 module Prelude
-  ( module Relude,
+  ( -- * Reexports
+    module Relude,
     -- module Control.Newtype,
     module Data.Type.Equality,
-    module Control.Monad.Writer.Strict,
 
     -- * Types
     Unit,
@@ -20,23 +20,38 @@ module Prelude
 
     -- * Classes
     Hash,
+    Reflect,
+    Fold,
+    Traverse,
+    Coerce,
+
+    -- ** Groups, Modules, Torsors
     Group (..),
     Module (..),
     Torsor (..),
 
-    -- * Aliases
+    -- ** Scanning
+    Scan,
+    scan,
+
+    -- ** Debugging
+    Debug,
+    debug,
+    spy,
+
+    -- ** Displaying
+    Display (..),
+
+    -- * Functions
     length,
     (~>),
+    getTextLn,
 
     -- ** Text
     chars,
     unchars,
-
-    -- ** Reading
-    scan,
-
-    -- ** Tracing
-    spy,
+    between,
+    quote,
 
     -- ** HashMaps
     forWithKey,
@@ -46,27 +61,27 @@ module Prelude
     (/<),
 
     -- ** Vectors
-    -- Vector, only, index, update
+    -- Vector,
+    -- only,
+    -- index,
+    -- update,
 
-    -- * Pretty printing
-    Pretty (..),
-    Doc,
-    viaShow,
-    sep,
-    cat,
-    split,
-
-    -- * Operators
-
-    -- ** Pairs
-    -- pattern (:=),
+    -- ** Errors
+    ok,
+    error,
 
     -- ** Foldables
     foldr1,
+    intercalate,
+    surroundMap,
+    surround,
 
     -- ** Monoids
-    neutral,
     (++),
+    neutral,
+    concat,
+
+    -- * Operators
 
     -- ** Functions
     (|>),
@@ -104,25 +119,11 @@ module Prelude
     -- check,
     -- when,
 
-    -- * Fixes
-
-    -- ** MonadZero
+    -- ** Monads
     MonadZero,
     fail,
 
-    -- ** MonadError
-    MonadError,
-    ok,
-    throw,
-    catch,
-    try,
-
-    -- ** MonadWriter
-    WriterT (..),
-    evalWriterT,
-    clear,
-
-    -- * Type level
+    -- * Types and Proxys
     (~=),
     (~:),
     proxyOf,
@@ -136,19 +137,11 @@ module Prelude
   )
 where
 
--- import Control.Newtype hiding (pack, unpack)
-import Control.Monad.Except (MonadError (..))
-import Control.Monad.Writer.Strict (MonadWriter (..), WriterT (..), runWriterT)
--- import Control.Monad.List (ListT)
-
 import Data.Foldable (foldr1)
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.HashSet as HashSet
 import qualified Data.Text as Text
-import Data.Text.Prettyprint.Doc (Doc, Pretty (..), viaShow)
-import qualified Data.Text.Prettyprint.Doc as Pretty
 import Data.Type.Equality
-import Data.Unique (Unique, hashUnique)
 import Relude hiding
   ( ($),
     ($>),
@@ -168,23 +161,31 @@ import Relude hiding
     MonadFail (..),
     Nat,
     Option (..),
+    Read,
+    Show,
     String,
     Word,
     Word16,
     Word32,
     Word64,
     Word8,
+    concat,
+    error,
     first,
     forever,
+    getLine,
     id,
+    intercalate,
     length,
     liftA2,
     liftA3,
     map,
     mempty,
     pass,
+    print,
     readMaybe,
     second,
+    show,
     trace,
     traceShow,
     traceShowId,
@@ -194,8 +195,9 @@ import qualified Relude
 import Type.Reflection (SomeTypeRep (..), TypeRep, someTypeRep, typeOf, typeRep)
 
 -- import qualified Data.Vector as Vector
+-- import Control.Newtype hiding (pack, unpack)
 
----- Synonyms ------------------------------------------------------------------
+---- Types ---------------------------------------------------------------------
 
 type Unit = ()
 
@@ -213,105 +215,19 @@ type List = []
 
 type Cons = NonEmpty
 
-type Hash a = (Eq a, Hashable a)
+---- Classes -------------------------------------------------------------------
 
-chars :: Text -> List Char
-chars = Text.unpack
+type Hash a = (Eq a, Relude.Hashable a)
 
-unchars :: List Char -> Text
-unchars = Text.pack
+type Reflect = Relude.Typeable
 
-length :: Foldable f => f a -> Nat
-length = Relude.length >> fromIntegral
+type Coerce = Relude.Coercible
 
-infix 0 ~>
+type Fold = Relude.Foldable
 
-(~>) :: a -> b -> (a, b)
-(~>) = (,)
+type Traverse = Relude.Traversable
 
----- Pretty printing
-
-instance (Pretty v) => Pretty (HashSet v) where
-  pretty = Pretty.braces << Pretty.cat << Pretty.punctuate ", " << map pretty << HashSet.toList
-
-instance (Pretty k, Pretty v) => Pretty (HashMap k v) where
-  pretty = Pretty.braces << Pretty.cat << Pretty.punctuate ", " << map (\(k, v) -> cat [pretty k, ": ", pretty v]) << HashMap.toList
-
-instance Pretty Unique where
-  pretty = pretty << hashUnique
-
----- HashMaps
-
-forWithKey :: Applicative f => HashMap k v -> (k -> v -> f w) -> f (HashMap k w)
-forWithKey = flip HashMap.traverseWithKey
-
----- HashSets
-
-infix 4 =<
-
-infix 4 /<
-
-(=<) :: Hash a => a -> HashSet a -> Bool
-(=<) = HashSet.member
-
-(/<) :: Hash a => a -> HashSet a -> Bool
-(/<) x = not << HashSet.member x
-
----- Vectors -------------------------------------------------------------------
-
--- only :: a -> Vector a
--- only = Vector.singleton
-
--- index :: Nat -> Vector a -> Maybe a
--- index (Nat i) xs = (Vector.!?) xs i
-
--- update :: Nat -> a -> Vector a -> Vector a
--- update (Nat i) x xs = (Vector.//) xs [ ( i, x ) ]
-
--- instance ( Pretty a ) => Pretty (Vector a) where
---   pretty = Pretty.angles << fold << intersperse ", " << map pretty << Vector.toList
-
----- Reading & Tracing ---------------------------------------------------------
-
-scan :: Read a => Text -> Maybe a
-scan = Relude.readMaybe << chars
-{-# INLINE scan #-}
-
-spy :: Pretty a => Text -> a -> a
-spy m x = Relude.traceShow (pretty m ++ ": " ++ pretty x) x
-{-# INLINE spy #-}
-
-sep :: List (Doc n) -> Doc n
-sep = Pretty.hsep
-
-cat :: List (Doc n) -> Doc n
-cat = Pretty.hcat
-
-split :: List (Doc n) -> Doc n
-split = Pretty.vsep
-
--- pretty' :: Pretty a => a -> Pretty.SimpleDocStream n
--- pretty' = Pretty.layoutPretty (Pretty.LayoutOptions Pretty.Unbounded) << pretty
-
-instance (Pretty a, Pretty b, Pretty c, Pretty d) => Pretty (a, b, c, d) where
-  pretty (x1, x2, x3, x4) = Pretty.tupled [pretty x1, pretty x2, pretty x3, pretty x4]
-
-instance (Pretty a, Pretty b, Pretty c, Pretty d, Pretty e) => Pretty (a, b, c, d, e) where
-  pretty (x1, x2, x3, x4, x5) = Pretty.tupled [pretty x1, pretty x2, pretty x3, pretty x4, pretty x5]
-
----- Monoids -------------------------------------------------------------------
-
-infixr 5 ++
-
-(++) :: Relude.Semigroup s => s -> s -> s
-(++) = (Relude.<>)
-{-# INLINE (++) #-}
-
-neutral :: Monoid m => m
-neutral = Relude.mempty
-{-# INLINE neutral #-}
-
----- Groups and more -----------------------------------------------------------
+---- Groups, Modules, Torsors -
 
 infixr 5 ~~
 
@@ -329,7 +245,243 @@ class Group d => Torsor a d | a -> d where
   diff :: a -> a -> d
   adjust :: d -> a -> a
 
+---- Scanning
+
+type Scan = Relude.Read
+
+scan :: Scan a => Text -> Maybe a
+scan = Relude.readMaybe << chars
+{-# INLINE scan #-}
+
+---- Debugging
+
+type Debug = Relude.Show
+
+debug :: Debug a => a -> Text
+debug = Relude.show
+{-# INLINE debug #-}
+
+spy :: Debug a => Text -> a -> a
+spy m x = Relude.traceShow (debug m ++ ": " ++ debug x) x
+{-# INLINE spy #-}
+
+---- Displaying
+
+-- | `Display` is like `Debug` but for user facing output.
+class Display a where
+  display :: a -> Text
+
+instance Display () where
+  display () = "()"
+
+instance Display Bool where
+  display = debug
+
+instance Display Nat where
+  display = debug
+
+instance Display Int where
+  display = debug
+
+instance Display Double where
+  display = debug
+
+instance Display Text where
+  display = identity
+
+instance (Display a, Display b) => Display (a, b) where
+  display (a, b) = display a ++ "," ++ display b |> between '(' ')'
+
+instance (Display a) => Display (List a) where
+  display = map display >> intercalate "," >> between '[' ']'
+
+instance (Display k, Display v) => Display (HashMap k v) where
+  display = HashMap.toList >> map (\(k, v) -> display k ++ ":" ++ display v) >> intercalate "," >> between '{' '}'
+
+instance (Display v) => Display (HashSet v) where
+  display = HashSet.toList >> map display >> intercalate "," >> between '{' '}'
+
+instance Display (TypeRep a) where
+  display = debug
+
+instance Display SomeTypeRep where
+  display = debug
+
 ---- Functions -----------------------------------------------------------------
+
+length :: Foldable f => f a -> Nat
+length = Relude.length >> fromIntegral
+{-# INLINE length #-}
+
+infix 0 ~>
+
+(~>) :: a -> b -> (a, b)
+(~>) = (,)
+{-# INLINE (~>) #-}
+
+getTextLn :: MonadIO m => m Text
+getTextLn = Relude.getLine
+{-# INLINE getTextLn #-}
+
+---- Text
+
+chars :: Text -> List Char
+chars = Text.unpack
+{-# INLINE chars #-}
+
+unchars :: List Char -> Text
+unchars = Text.pack
+{-# INLINE unchars #-}
+
+between :: Char -> Char -> Text -> Text
+between a b t = a `Text.cons` t `Text.snoc` b
+{-# INLINE between #-}
+
+quote :: Text -> Text
+quote = between '"' '"'
+{-# INLINE quote #-}
+
+---- HashMaps
+
+forWithKey :: Applicative f => HashMap k v -> (k -> v -> f w) -> f (HashMap k w)
+forWithKey = flip HashMap.traverseWithKey
+{-# INLINE forWithKey #-}
+
+---- HashSets
+
+infix 4 =<
+
+infix 4 /<
+
+(=<) :: Hash a => a -> HashSet a -> Bool
+(=<) = HashSet.member
+{-# INLINE (=<) #-}
+
+(/<) :: Hash a => a -> HashSet a -> Bool
+(/<) x = not << HashSet.member x
+{-# INLINE (/<) #-}
+
+---- Vectors
+
+-- only :: a -> Vector a
+-- only = Vector.singleton
+
+-- index :: Nat -> Vector a -> Maybe a
+-- index (Nat i) xs = (Vector.!?) xs i
+
+-- update :: Nat -> a -> Vector a -> Vector a
+-- update (Nat i) x xs = (Vector.//) xs [ ( i, x ) ]
+
+---- Errors
+
+ok :: a -> Either e a
+ok = Right
+{-# INLINE ok #-}
+
+error :: e -> Either e a
+error = Left
+{-# INLINE error #-}
+
+-- type Result = Either
+
+-- pattern Ok :: a -> Result e a
+-- pattern Ok x = Right x
+
+-- pattern Err :: e -> Result e a
+-- pattern Err e = Left e
+-- instance Alternative (Either e) where
+--   Left e <|> y = Left e
+--   x <|> _ = x
+
+--   empty = Left neutral
+
+---- Foldables
+
+-- | Fold a data structure, accumulating values in some `Monoid`,
+-- | combining adjacent elements using the specified separator.
+-- |
+-- | For example:
+-- |
+-- | ```purescript
+-- | > intercalate ", " ["Lorem", "ipsum", "dolor"]
+-- | = "Lorem, ipsum, dolor"
+-- |
+-- | > intercalate "*" ["a", "b", "c"]
+-- | = "a*b*c"
+-- |
+-- | > intercalate [1] [[2, 3], [4, 5], [6, 7]]
+-- | = [2, 3, 1, 4, 5, 1, 6, 7]
+-- | ```
+intercalate :: Foldable f => Monoid m => m -> f m -> m
+intercalate sep = foldl' go (True, neutral) >> snd
+  where
+    go (True, _) x = (False, x)
+    go (st, acc) x = (st, acc ++ sep ++ x)
+{-# INLINE intercalate #-}
+
+-- | `foldMap` but with each element surrounded by some fixed value.
+-- |
+-- | For example:
+-- |
+-- | ```purescript
+-- | > surroundMap "*" show []
+-- | = "*"
+-- |
+-- | > surroundMap "*" show [1]
+-- | = "*1*"
+-- |
+-- | > surroundMap "*" show [1, 2]
+-- | = "*1*2*"
+-- |
+-- | > surroundMap "*" show [1, 2, 3]
+-- | = "*1*2*3*"
+-- | ```
+surroundMap :: Foldable f => Semigroup m => m -> (a -> m) -> f a -> m
+surroundMap d t f = appEndo (foldMap joined f) d
+  where
+    joined a = Endo \m -> d <> t a <> m
+{-# INLINE surroundMap #-}
+
+-- | `fold` but with each element surrounded by some fixed value.
+-- |
+-- | For example:
+-- |
+-- | ```purescript
+-- | > surround "*" []
+-- | = "*"
+-- |
+-- | > surround "*" ["1"]
+-- | = "*1*"
+-- |
+-- | > surround "*" ["1", "2"]
+-- | = "*1*2*"
+-- |
+-- | > surround "*" ["1", "2", "3"]
+-- | = "*1*2*3*"
+-- | ```
+surround :: forall f m. Foldable f => Semigroup m => m -> f m -> m
+surround d = surroundMap d identity
+{-# INLINE surround #-}
+
+---- Monoids
+
+infixr 5 ++
+
+(++) :: Relude.Semigroup s => s -> s -> s
+(++) = (Relude.<>)
+{-# INLINE (++) #-}
+
+neutral :: Monoid m => m
+neutral = Relude.mempty
+{-# INLINE neutral #-}
+
+concat :: Monoid m => List m -> m
+concat = Relude.mconcat
+{-# INLINE concat #-}
+
+---- Operators -----------------------------------------------------------------
+
+---- Functions
 
 infixr 0 <|
 
@@ -361,7 +513,7 @@ f << g = \x -> f (g x)
 (>>) = flip (<<)
 {-# INLINE (>>) #-}
 
----- Functors ------------------------------------------------------------------
+---- Functors
 
 infixl 4 <||
 
@@ -391,7 +543,7 @@ map = Relude.fmap
 -- (.|>) = (Relude.$>)
 -- {-# INLINE (.|>) #-}
 
----- Applicative functors ------------------------------------------------------
+---- Applicatives
 
 infixr 1 <-<
 
@@ -445,7 +597,7 @@ f <-< g = pure (<<) -< f -< g
 (>->) = flip (<-<)
 {-# INLINE (>->) #-}
 
----- Monoidal functors ---------------------------------------------------------
+---- Monoidals
 
 infixl 6 ><
 
@@ -478,7 +630,7 @@ instance Monoidal (Either e)
 
 instance Monoidal IO
 
----- Selective functors --------------------------------------------------------
+----- Selectives
 {-
 class Applicative f => Selective f where
   branch :: f (Either a b) -> f (a -> c) -> f (b -> c) -> f c
@@ -501,9 +653,7 @@ when :: Selective f => f Bool -> f Unit -> f Unit
 when p t = check p t (pure ())
 -}
 
----- Monads --------------------------------------------------------------------
-
----- Zero
+---- Monads
 
 -- | A safe alternative for MonadFail.
 -- |
@@ -521,48 +671,7 @@ instance MonadZero List
 fail :: Alternative m => m a
 fail = empty
 
--- instance Monad m => MonadZero (ListT m)
-
 instance (Relude.MonadFail m, MonadPlus m) => MonadZero (StateT s m)
-
----- Error
-
--- type Result = Either
-
--- pattern Ok :: a -> Result e a
--- pattern Ok x = Right x
-
--- pattern Err :: e -> Result e a
--- pattern Err e = Left e
-
-ok :: MonadError e m => a -> m a
-ok = pure
-{-# INLINE ok #-}
-
-throw :: MonadError e m => e -> m a
-throw = throwError
-{-# INLINE throw #-}
-
-catch :: MonadError e m => m a -> (e -> m a) -> m a
-catch = catchError
-{-# INLINE catch #-}
-
-try :: MonadError e m => m a -> m (Either e a)
-try a = catch (Right <|| a) (return << Left)
-
--- instance Alternative (Either e) where
---   Left e <|> y = Left e
---   x <|> _ = x
-
---   empty = Left neutral
-
----- Writer
-
-clear :: MonadWriter w m => m ()
-clear = pass <| lift0 ((), const neutral)
-
-evalWriterT :: Monad m => WriterT w m a -> m a
-evalWriterT m = lift1 fst (runWriterT m)
 
 ---- Type equality -------------------------------------------------------------
 
@@ -594,9 +703,3 @@ typeOfProxy _ = typeRep
 someTypeOf :: Typeable a => a -> SomeTypeRep
 someTypeOf = someTypeRep << proxyOf
 {-# INLINE someTypeOf #-}
-
-instance Pretty (TypeRep a) where
-  pretty = Pretty.viaShow
-
-instance Pretty SomeTypeRep where
-  pretty = Pretty.viaShow
