@@ -24,7 +24,6 @@ module Data.Task
     parallel,
     choose,
     branch,
-    eval,
     assert,
     (<?>),
     (>>?),
@@ -84,8 +83,6 @@ data Task h t where
   Step :: Task h a -> (a -> Task h t) -> Task h t
   ---- Checks
 
-  -- | Branching
-  Branch :: List (Bool, Task h t) -> Task h t
   -- | Assertions
   Assert :: Bool -> Task h Bool
   ---- References
@@ -131,7 +128,12 @@ type Label =
 new :: Editor h t -> Task h t
 new e = Editor Unnamed e
 
----- Editors -------------------------------------------------------------------
+---- Builtins ------------------------------------------------------------------
+
+assert :: Bool -> Task h Bool
+assert = Assert
+
+---- Editors
 
 enter :: (Basic t) => Task h t
 enter = new Enter
@@ -145,7 +147,7 @@ view v = new (View v)
 select :: HashMap Label (Task h t) -> Task h t
 select ts = new (Select ts)
 
----- Shares --------------------------------------------------------------------
+---- Shares
 
 share :: (Basic a, Reflect h) => a -> Task h (Store h a)
 share = Share
@@ -169,20 +171,18 @@ infixl 1 <<=
   x <- watch r
   r <<- f x
 
----- Derived forms -------------------------------------------------------------
+---- Derived -------------------------------------------------------------------
 
 parallel :: List (Task h a) -> Task h (List a)
 parallel [] = pure []
-parallel (t : ts) = t >< parallel ts >>= \(x, xs) -> pure (x : xs)
+parallel (t : ts) = t >< parallel ts >>= \(x, xs) -> pure (x : xs) --XXX order of parens?
 
 choose :: List (Task h a) -> Task h a
 choose = foldr (<|>) fail
 
 branch :: List (Bool, Task h a) -> Task h a
-branch = Branch
-
-assert :: Bool -> Task h Bool
-assert = Assert
+branch [] = fail
+branch ((b, t) : rs) = if b then t else branch rs
 
 infixl 3 <?>
 
@@ -210,12 +210,6 @@ forever t1 = t1 >>= \_ -> forever t1
 (>>@) :: Task h a -> (a -> Task h b) -> Task h b
 (>>@) t1 e2 = t1 >>= \x -> select ["Repeat" ~> t1 >>@ e2, "Exit" ~> e2 x]
 
----- Helpers -------------------------------------------------------------------
-
-eval :: List (Bool, Task h a) -> Task h a
-eval [] = fail
-eval ((b, t) : rs) = if b then t else eval rs
-
 ---- Display -------------------------------------------------------------------
 
 instance Display (Task h t) where
@@ -227,7 +221,6 @@ instance Display (Task h t) where
     Fail -> "Fail"
     Trans _ t -> unwords ["Trans _", display t]
     Step t _ -> unwords [display t, ">>=", "_"] |> between '(' ')'
-    Branch ts -> unwords ["Branch", display ts]
     Assert b -> unwords ["Assert", display b]
     Share v -> unwords ["Share", display v]
     Assign v _ -> unwords ["_", ":=", display v]

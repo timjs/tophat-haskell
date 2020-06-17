@@ -31,7 +31,6 @@ ui = \case
       go s ls
         | null ls = concat [s, " ▶…"]
         | otherwise = concat [s, " ▷", display ls]
-  Branch ts -> ui (eval ts) --pure (\bs -> concat ["◆", " { ", intercalate ", " bs, " } "]) -< traverse (snd >> ui) ts
   Assert _ -> pure <| unwords ["assert", "…"]
   Share b -> pure <| unwords ["share", display b]
   Assign b _ -> pure <| unwords ["…", ":=", display b]
@@ -62,7 +61,6 @@ value = \case
   Choose t1 t2 -> pure (<|>) -< value t1 -< value t2
   Fail -> pure Nothing
   Step _ _ -> pure Nothing
-  Branch ts -> value (eval ts)
   Assert b -> pure (Just b)
   Share b -> pure Just -< Store.alloc b
   Assign _ _ -> pure (Just ())
@@ -90,7 +88,6 @@ failing = \case
   Choose t1 t2 -> failing t1 && failing t2
   Fail -> True
   Step t1 _ -> failing t1
-  Branch ts -> failing (eval ts)
   Assert _ -> False
   Share _ -> False
   Assign _ _ -> False
@@ -118,7 +115,6 @@ watching = \case
   Choose t1 t2 -> watching t1 `union` watching t2
   Fail -> []
   Step t1 _ -> watching t1
-  Branch ts -> watching (eval ts)
   Assert _ -> []
   Share _ -> []
   Assign _ _ -> []
@@ -147,7 +143,6 @@ options = \case
   Editor n (Select ts) -> options' ts |> map (Option n)
   Trans _ t2 -> options t2
   Step t1 _ -> options t1
-  Branch ts -> options (eval ts)
   -- Step t1 e2 -> pure (++) -< options t1 -< do
   --   mv1 <- value t1
   --   case mv1 of
@@ -188,7 +183,6 @@ inputs t = case t of
       Just v1 -> do
         let t2 = e2 v1
         options t2 |> map fromOption |> pure
-  Branch ts -> inputs (eval ts)
   Assert _ -> pure []
   Share _ -> pure []
   Assign _ _ -> pure []

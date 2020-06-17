@@ -22,6 +22,7 @@ data Steps
   | DidBalance Text
   | DidStart Text
   | DidCalculateOptions (List Option) Text
+  | DidFinish
 
 instance Display Steps where
   display = \case
@@ -31,6 +32,7 @@ instance Display Steps where
     DidBalance t -> unwords ["Rebalanced to:", display t]
     DidStart t -> unwords ["Started with:", display t]
     DidCalculateOptions os t -> unwords ["Future options before normalising", display os, "for task", display t]
+    DidFinish -> "Done!"
 
 data NotApplicable
   = CouldNotMatch Name Name
@@ -105,8 +107,6 @@ normalise t = case t of
     pure <| Editor (Named n) e
   Editor (Named _) _ -> pure t
   ---- Checks
-  Branch ts ->
-    pure <| eval ts
   Assert p -> do
     pure <| Done p
   ---- References
