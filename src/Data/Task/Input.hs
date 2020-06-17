@@ -78,7 +78,7 @@ instance Display b => Display (Input b) where
     ISelect n l -> unwords [display n, display l]
     IPreselect l -> display l
 
----- -- Action view
+---- Action view
 
 -- data Action b
 --   = AValue b

@@ -21,7 +21,7 @@ import Polysemy.Input
 import Polysemy.Output
 
 data Interact m a where
-  ScanLn :: (Scan a, Reflect a) => Interact m a
+  ScanLn :: Interact m Text
   PrintLn :: Text -> Interact m ()
   Print :: Text -> Interact m ()
 
@@ -29,33 +29,15 @@ makeSem ''Interact
 
 interactToIO :: (Member (Embed IO) r) => Sem (Interact ': r) a -> Sem r a
 interactToIO = interpret \case
-  ScanLn -> embed scanTextLn
+  ScanLn -> embed getTextLn
   PrintLn msg -> embed <| putTextLn msg
   Print msg -> embed <| putText msg
-  where
-    scanTextLn :: forall a. (Scan a, Reflect a) => IO a
-    scanTextLn = do
-      text <- getTextLn
-      case scan text of
-        Just x -> pure x
-        Nothing -> do
-          putTextLn <| "*** Scan error, please enter a(n) " ++ debug tau
-          scanTextLn
-      where
-        tau = typeRep :: TypeRep a
 
 interactToInputOutput :: Sem (Interact ': r) a -> Sem ((Input Text) ': (Output Text) ': r) a
 interactToInputOutput = reinterpret2 \case
-  ScanLn -> scanInput
+  ScanLn -> input
   PrintLn msg -> output msg
   Print msg -> output msg
-  where
-    scanInput :: (Scan a) => Sem (Input Text ': r) a
-    scanInput = do
-      i <- input
-      case scan i of
-        Just x -> pure x
-        Nothing -> scanInput
 
 -- runInteract :: List Text -> Sem (Interact ': r) a -> Sem r (List Text, a)
 -- runInteract is =
