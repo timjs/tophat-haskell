@@ -3,8 +3,24 @@ module Data.Task
     Task (..),
     Editor (..),
     Name (..),
+    Label,
 
-    -- * Combinators
+    -- * Constructors
+
+    -- ** Editors
+    enter,
+    update,
+    view,
+    select,
+
+    -- ** Shares
+    share,
+    watch,
+    change,
+    (<<-),
+    (<<=),
+
+    -- ** Derived
     parallel,
     choose,
     branch,
@@ -17,23 +33,13 @@ module Data.Task
     forever,
     (>>@),
 
-    -- * Constructors
-    share,
-    watch,
-    change,
-    (<<-),
-    (<<=),
-
     -- * Reexports
     module Data.Basic,
     module Data.Store,
     module Data.Some,
-    module Control.Interactive,
   )
 where
 
--- import Control.Collaborative
-import Control.Interactive
 import Data.Basic
 import Data.Some
 import Data.Store
@@ -119,8 +125,49 @@ data Name
   | Named Nat
   deriving (Eq, Ord, Debug, Scan)
 
+type Label =
+  Text
+
 new :: Editor h t -> Task h t
 new e = Editor Unnamed e
+
+---- Editors -------------------------------------------------------------------
+
+enter :: (Basic t) => Task h t
+enter = new Enter
+
+update :: (Basic t) => t -> Task h t
+update v = new (Update v)
+
+view :: (Basic t) => t -> Task h t
+view v = new (View v)
+
+select :: HashMap Label (Task h t) -> Task h t
+select ts = new (Select ts)
+
+---- Shares --------------------------------------------------------------------
+
+share :: (Basic a, Reflect h) => a -> Task h (Store h a)
+share = Share
+
+watch :: (Basic a) => Store h a -> Task h a
+watch l = new (Watch l)
+
+change :: (Basic a) => Store h a -> Task h a
+change l = new (Change l)
+
+infixl 1 <<-
+
+infixl 1 <<=
+
+(<<-) :: (Basic a) => Store h a -> a -> Task h ()
+(<<-) = flip Assign
+
+-- (<<=) :: (Members '[Read h, Write h] r) => Store h a -> (a -> a) -> Sem r ()
+(<<=) :: (Basic a) => Store h a -> (a -> a) -> Task h ()
+(<<=) r f = do
+  x <- watch r
+  r <<- f x
 
 ---- Derived forms -------------------------------------------------------------
 
@@ -204,12 +251,6 @@ instance Display Name where
 instance Functor (Task h) where
   fmap = Trans
 
-instance Interactive (Task h) where
-  enter = new Enter
-  update v = new (Update v)
-  view v = new (View v)
-  select ts = new (Select ts)
-
 instance Monoidal (Task h) where
   (><) = Pair
   skip = Done ()
@@ -230,29 +271,3 @@ instance Alternative (Task h) where
 
 instance Monad (Task h) where
   (>>=) = Step
-
----- Shares --------------------------------------------------------------------
-
--- instance Collaborative h (Task h) where
-
-share :: (Basic a, Reflect h) => a -> Task h (Store h a)
-share = Share
-
-watch :: (Basic a) => Store h a -> Task h a
-watch l = new (Watch l)
-
-change :: (Basic a) => Store h a -> Task h a
-change l = new (Change l)
-
-infixl 1 <<-
-
-infixl 1 <<=
-
-(<<-) :: (Basic a) => Store h a -> a -> Task h ()
-(<<-) = flip Assign
-
--- (<<=) :: (Members '[Read h, Write h] r) => Store h a -> (a -> a) -> Sem r ()
-(<<=) :: (Basic a) => Store h a -> (a -> a) -> Task h ()
-(<<=) r f = do
-  x <- watch r
-  r <<- f x
