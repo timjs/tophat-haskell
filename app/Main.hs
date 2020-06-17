@@ -7,12 +7,10 @@ main :: IO ()
 main =
   taskToIO (add 3 4)
 
--- Examples --------------------------------------------------------------------
---
--- NOTE: Tasks ending with a quote need user input
---
+---- Examples ------------------------------------------------------------------
+---- NOTE: Tasks ending with a quote need user input
 
--- Basics --
+---- Basics
 
 enterInt :: Task h Int
 enterInt = enter
@@ -41,7 +39,7 @@ append :: Text -> Text -> Task h Text
 append x y =
   view (x ++ y)
 
--- Steps --
+---- Steps
 
 pureStep :: Task h Int
 pureStep = do
@@ -102,7 +100,7 @@ twoSteps''' =
     enter >>? \y ->
       add x y
 
--- Parallel --
+---- Parallel
 
 parallelSimple :: Task h (Int, Text)
 parallelSimple = enter >< hello
@@ -127,7 +125,7 @@ parallelTest = do
   xs <- parallel [enterInt, enterInt, enterInt]
   view xs
 
--- Choices --
+---- Choices
 
 choose1 :: Task h Int
 choose1 = fail <|> view 1
@@ -158,7 +156,7 @@ pick3' =
 parpick :: Task h (Int, Int)
 parpick = pick3' >< pick3'
 
--- Guards --
+---- Guards
 
 auto :: Task h Text
 auto = do
@@ -230,7 +228,7 @@ branch''' = do
       "Div5" ~> if x `mod` 5 == 0 then view "multiple of 5" else fail
     ]
 
--- Future --
+---- Future
 
 enterFutureR :: Task h Int
 enterFutureR = enterInt >>= \_ -> (select ["A" ~> view (1 :: Int)] >>= \_ -> select ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)])
@@ -263,7 +261,7 @@ nestedFuture = do
       "B" ~> select ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)]
     ]
 
--- Shared Data --
+---- Shared Data
 
 update1 :: Store h Int -> Task h ()
 update1 r = do
@@ -330,7 +328,7 @@ unfixated = do
         view ()
   t1 >< t2
 
--- Forever --
+---- Forever
 
 numbers :: (Reflect h) => Task h (Void, List Int)
 numbers = do
@@ -374,7 +372,7 @@ numbers' = do
       x <- enter
       r <<= rep i x
 
--- Helpers ---------------------------------------------------------------------
+---- Helpers -------------------------------------------------------------------
 
 del :: Int -> List a -> List a
 del _ [] = []
