@@ -1,6 +1,6 @@
 module Data.Task.Interact where
 
--- import Data.Heap (Heap (..))
+import Data.Store (RealWorld)
 import Data.Task (Task)
 import Data.Task.Input (Concrete, Input)
 import qualified Data.Task.Input as Input
@@ -54,6 +54,7 @@ loop t = do
 
 -- taskToIO ::
 -- taskToIO :: Task 'Global a1 -> IO a2
+taskToIO :: Task RealWorld a1 -> IO a2
 taskToIO =
   loop
     >> interactToIO
