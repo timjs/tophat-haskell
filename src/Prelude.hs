@@ -271,22 +271,41 @@ spy m x = Relude.traceShow (debug m ++ ": " ++ debug x) x
 class Display a where
   display :: a -> Text
 
--- | If a type already has a `Debug` instance, we crate a `Display` instance.
--- | However, by specialisation it is overlappable!
-instance {-# OVERLAPPABLE #-} Debug a => Display a where
+instance Display () where
+  display () = "()"
+
+instance Display Bool where
   display = debug
+
+instance Display Nat where
+  display = debug
+
+instance Display Int where
+  display = debug
+
+instance Display Double where
+  display = debug
+
+instance Display Text where
+  display = identity
 
 instance (Display a, Display b) => Display (a, b) where
   display (a, b) = display a ++ "," ++ display b |> between '(' ')'
 
 instance (Display a) => Display (List a) where
-  display = map display >> concat >> between '[' ']'
+  display = map display >> intercalate "," >> between '[' ']'
 
 instance (Display k, Display v) => Display (HashMap k v) where
   display = HashMap.toList >> map (\(k, v) -> display k ++ ":" ++ display v) >> intercalate "," >> between '{' '}'
 
 instance (Display v) => Display (HashSet v) where
   display = HashSet.toList >> map display >> intercalate "," >> between '{' '}'
+
+instance Display (TypeRep a) where
+  display = debug
+
+instance Display SomeTypeRep where
+  display = debug
 
 ---- Functions -----------------------------------------------------------------
 
