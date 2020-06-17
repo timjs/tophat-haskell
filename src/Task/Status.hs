@@ -1,7 +1,7 @@
-module Data.Task.Status where
+module Task.Status where
 
 {-
-import Data.Task (Collaborative (..), Task (..))
+import Task (Collaborative (..), Task (..))
 
 ---- Definition ----------------------------------------------------------------
 

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: fd75fdfccf4fb607e98b73827f2fe90bf5a773dbba93c81edc2be4b605a8e932
+-- hash: df13fc4dca5cd67a4c857ba097907d25b8358c97a6b1458fbaaf1a04a8b89cef
 
 name:           tophat
 version:        0.1.0.0
@@ -29,19 +29,19 @@ library
       Data.Basic
       Data.Some
       Data.Store
-      Data.Task
-      Data.Task.Input
-      Data.Task.Interact
-      Data.Task.Observe
-      Data.Task.Run
-      Data.Task.Simulate
-      Data.Task.Status
       Polysemy.Abort
       Polysemy.Interact
       Polysemy.Log
       Polysemy.Mutate
       Polysemy.Supply
       Prelude
+      Task
+      Task.Input
+      Task.Interact
+      Task.Observe
+      Task.Run
+      Task.Simulate
+      Task.Status
   other-modules:
       Paths_tophat
   hs-source-dirs:

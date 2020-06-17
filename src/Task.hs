@@ -1,4 +1,4 @@
-module Data.Task
+module Task
   ( -- * Types
     Task (..),
     Editor (..),

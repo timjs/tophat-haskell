@@ -1,18 +1,18 @@
-module Data.Task.Interact where
+module Task.Interact where
 
 import Data.Store (RealWorld)
-import Data.Task (Task)
-import Data.Task.Input (Concrete, Input)
-import qualified Data.Task.Input as Input
-import qualified Data.Task.Observe as Task
-import qualified Data.Task.Run as Task
-import Data.Task.Run (NotApplicable, Steps)
 import Polysemy
 import Polysemy.Abort
 import Polysemy.Interact
 import Polysemy.Log
 import Polysemy.Mutate
 import Polysemy.Supply
+import Task (Task)
+import Task.Input (Concrete, Input)
+import qualified Task.Input as Input
+import qualified Task.Observe as Task
+import qualified Task.Run as Task
+import Task.Run (NotApplicable, Steps)
 
 ---- Looping -------------------------------------------------------------------
 

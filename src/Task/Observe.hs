@@ -1,12 +1,12 @@
-module Data.Task.Observe where
+module Task.Observe where
 
 import qualified Data.HashMap.Strict as HashMap
 import Data.List (union)
 import qualified Data.Store as Store
-import Data.Task
-import Data.Task.Input
 import Polysemy
 import Polysemy.Mutate (Alloc, Read)
+import Task
+import Task.Input
 
 ---- Observations --------------------------------------------------------------
 -- NOTE: Normalisation should never happen in any observation, they are immediate.

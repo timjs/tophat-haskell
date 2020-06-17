@@ -1,7 +1,7 @@
 module Main where
 
-import Data.Task
-import Data.Task.Interact
+import Task
+import Task.Interact
 
 main :: IO ()
 main =

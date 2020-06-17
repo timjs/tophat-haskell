@@ -1,17 +1,17 @@
-module Data.Task.Run where
+module Task.Run where
 
 import qualified Data.HashMap.Strict as HashMap
 import Data.List (intersect, union)
 import qualified Data.Store as Store
-import Data.Task
-import Data.Task.Input
-import Data.Task.Observe
 import Polysemy
 import Polysemy.Error
 import Polysemy.Log
 import Polysemy.Mutate
 import Polysemy.Supply
 import Polysemy.Writer
+import Task
+import Task.Input
+import Task.Observe
 
 ---- Logs and Errors -----------------------------------------------------------
 

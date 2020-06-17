@@ -1,4 +1,4 @@
-module Data.Task.Input
+module Task.Input
   ( Concrete (..),
     Symbolic (..),
     Dummy,
@@ -14,8 +14,8 @@ module Data.Task.Input
 where
 
 import qualified Data.Char as Char
-import Data.Task (Basic, Label, Name (..))
 import qualified Data.Text as Text
+import Task (Basic, Label, Name (..))
 
 ---- Actions -------------------------------------------------------------------
 
