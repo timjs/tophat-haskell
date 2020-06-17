@@ -1,4 +1,4 @@
-module Data.Task.Restricted where
+module Task.Script.Syntax where
 
 ---- Synonyms ------------------------------------------------------------------
 
