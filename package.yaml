@@ -93,6 +93,9 @@ default-extensions:
   - TypeFamilyDependencies
   - QuantifiedConstraints
 
+  # Semantic extensions
+  - StrictData
+
 
 ghc-options:
   - -Wall
