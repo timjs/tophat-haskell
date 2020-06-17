@@ -14,15 +14,20 @@ module Data.Task
     forever,
     (>>@),
     -- module Control.Interactive,
+    share,
+    watch,
+    change,
+    (<<-),
+    (<<=),
     module Data.Basic,
-    module Data.Someref,
     module Data.Store,
+    module Data.Someref,
     module Control.Interactive,
-    module Control.Collaborative,
+    -- module Control.Collaborative,
   )
 where
 
-import Control.Collaborative
+-- import Control.Collaborative
 import Control.Interactive
 import Data.Basic
 import Data.Heap (Heap)
@@ -222,8 +227,28 @@ instance Alternative (Task h) where
 instance Monad (Task h) where
   (>>=) = Step
 
-instance Collaborative h (Task h) where
-  share = Share
-  assign = Assign
-  watch l = new (Watch l)
-  change l = new (Change l)
+---- Shares --------------------------------------------------------------------
+
+-- instance Collaborative h (Task h) where
+
+share :: (Inspect h a, Basic a) => a -> Task h (Store h a)
+share = Share
+
+watch :: (Basic a) => Store h a -> Task h a
+watch l = new (Watch l)
+
+change :: (Basic a) => Store h a -> Task h a
+change l = new (Change l)
+
+infixl 1 <<-
+
+infixl 1 <<=
+
+(<<-) :: (Basic a) => Store h a -> a -> Task h ()
+(<<-) = flip Assign
+
+-- (<<=) :: (Members '[Read h, Write h] r) => Store h a -> (a -> a) -> Sem r ()
+(<<=) :: (Basic a) => Store h a -> (a -> a) -> Task h ()
+(<<=) r f = do
+  x <- watch r
+  r <<- f x
