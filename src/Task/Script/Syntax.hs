@@ -6,8 +6,8 @@ module Task.Script.Syntax
     Message,
 
     -- * Types
-    Tipe (..),
-    PrimTipe (..),
+    Ty (..),
+    PrimTy (..),
     isBasic,
 
     -- * Expressions
@@ -35,19 +35,35 @@ type Message = Text
 
 ---- Types ---------------------------------------------------------------------
 
-data Tipe
-  = TFunction Tipe Tipe
-  | TRecord (Row Tipe)
-  | TReference Tipe
-  | TTask Tipe
-  | TPrimitive PrimTipe
+data Ty
+  = TFunction Ty Ty
+  | TRecord (Row Ty)
+  | TReference Ty
+  | TTask Ty
+  | TPrimitive PrimTy
+  deriving (Eq, Ord, Debug)
 
-data PrimTipe
+instance Display Ty where
+  display = \case
+    TFunction t1 t2 -> unwords [display t1, "->", display t2] |> between '(' ')'
+    TRecord r -> display r
+    TReference t -> unwords ["Ref", display t]
+    TTask t -> unwords ["Task", display t]
+    TPrimitive p -> display p
+
+data PrimTy
   = TBool
   | TInt
   | TString
+  deriving (Eq, Ord, Debug)
 
-isBasic :: Tipe -> Bool
+instance Display PrimTy where
+  display = \case
+    TBool -> "Bool"
+    TInt -> "Int"
+    TString -> "String"
+
+isBasic :: Ty -> Bool
 isBasic = \case
   TPrimitive _ -> True
   TRecord r -> all isBasic r
@@ -58,19 +74,25 @@ isBasic = \case
 ---- Expressions ---------------------------------------------------------------
 
 data Expression
-  = Lambda Match Tipe Expression
+  = Lambda Match Ty Expression
   | Apply Expression Expression
   | Variable Name
-  | Location Nat
   | IfThenElse Expression Expression Expression
-  | Case Expression (List (Label, Match, Tipe, Expression))
   | Record (Row Expression)
   | Constant Constant
+  deriving (Eq, Ord, Debug)
 
 data Constant
   = B Bool
   | I Int
   | S Text
+  deriving (Eq, Ord, Debug)
+
+instance Display Constant where
+  display = \case
+    B b -> display b
+    I i -> display i
+    S s -> display s
 
 ---- Matches -------------------------------------------------------------------
 
@@ -79,12 +101,21 @@ data Match
   | MBind Name
   | MRecord (Row Match)
   | MUnpack
+  deriving (Eq, Ord, Debug)
+
+instance Display Match where
+  display = \case
+    MIgnore -> "_"
+    MBind x -> x
+    MRecord ms -> display ms
+    MUnpack -> "{..}"
 
 ---- Statements ----------------------------------------------------------------
 
 data Statement
   = SBind Match Task Statement
   | STask
+  deriving (Eq, Ord, Debug)
 
 data Task
   = -- Editors
@@ -105,3 +136,4 @@ data Task
   | -- Shares
     Share Expression
   | Assign Expression Expression
+  deriving (Eq, Ord, Debug)
