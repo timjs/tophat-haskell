@@ -152,25 +152,25 @@ usage =
 
 parseId :: Text -> Either Text Nat
 parseId t
-  | Just v <- scan t :: Maybe Nat = ok v
+  | Just v <- scan t :: Maybe Nat = okay v
   | otherwise = error <| unwords ["!!", display t |> quote, "is not a proper id"]
 
 parseLabel :: Text -> Either Text Label
 parseLabel t
-  | Just (c, _) <- Text.uncons t, Char.isUpper c = ok <| t
+  | Just (c, _) <- Text.uncons t, Char.isUpper c = okay <| t
   | otherwise = error <| unwords ["!!", display t |> quote, "is not a proper label"]
 
 parseConcrete :: Text -> Either Text Concrete
 parseConcrete val
-  | Just v <- scan val :: Maybe Unit = ok <| Concrete v
-  | Just v <- scan val :: Maybe Bool = ok <| Concrete v
-  | Just v <- scan val :: Maybe Int = ok <| Concrete v
-  | Just v <- scan val :: Maybe Double = ok <| Concrete v
-  | Just v <- scan val :: Maybe Text = ok <| Concrete v
-  | Just v <- scan val :: Maybe [Bool] = ok <| Concrete v
-  | Just v <- scan val :: Maybe [Int] = ok <| Concrete v
-  | Just v <- scan val :: Maybe [Double] = ok <| Concrete v
-  | Just v <- scan val :: Maybe [Text] = ok <| Concrete v
+  | Just v <- scan val :: Maybe Unit = okay <| Concrete v
+  | Just v <- scan val :: Maybe Bool = okay <| Concrete v
+  | Just v <- scan val :: Maybe Int = okay <| Concrete v
+  | Just v <- scan val :: Maybe Double = okay <| Concrete v
+  | Just v <- scan val :: Maybe Text = okay <| Concrete v
+  | Just v <- scan val :: Maybe [Bool] = okay <| Concrete v
+  | Just v <- scan val :: Maybe [Int] = okay <| Concrete v
+  | Just v <- scan val :: Maybe [Double] = okay <| Concrete v
+  | Just v <- scan val :: Maybe [Text] = okay <| Concrete v
   | otherwise = error <| unwords ["!! Error parsing value", display val |> quote]
 
 parse :: Text -> Either Text (Input Concrete)
@@ -182,5 +182,5 @@ parse t = case Text.words t of
     map (ISelect n) (parseLabel x) ++ map (IEnter n) (parseConcrete x) --NOTE: should be `<|>`, but we've got some strange import of `Error` getting in the way
   [x] -> do
     l <- parseLabel x
-    ok <| IPreselect l
+    okay <| IPreselect l
   _ -> error <| unwords ["!!", display t |> quote, "is not a valid command, type `help` for more info"]

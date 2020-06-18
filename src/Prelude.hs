@@ -67,8 +67,10 @@ module Prelude
     -- update,
 
     -- ** Errors
-    ok,
+    okay,
     error,
+    -- note,
+    -- hush,
 
     -- ** Foldables
     foldr1,
@@ -163,6 +165,7 @@ import Relude hiding
     Option (..),
     Read,
     Show,
+    State,
     String,
     Word,
     Word16,
@@ -174,6 +177,7 @@ import Relude hiding
     first,
     forever,
     getLine,
+    gets,
     id,
     intercalate,
     length,
@@ -374,13 +378,21 @@ infix 4 /<
 
 ---- Errors
 
-ok :: a -> Either e a
-ok = Right
-{-# INLINE ok #-}
+okay :: a -> Either e a
+okay = Right
+{-# INLINE okay #-}
 
 error :: e -> Either e a
 error = Left
 {-# INLINE error #-}
+
+-- note :: a -> Maybe b -> Either a b
+-- note = maybeToRight
+-- {-# INLINE note #-}
+
+-- hush :: Either l r -> Maybe r
+-- hush = rightToMaybe
+-- {-# INLINE hush #-}
 
 -- type Result = Either
 
