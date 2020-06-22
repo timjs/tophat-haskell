@@ -7,11 +7,17 @@ module Task.Script.Syntax
 
     -- * Types
     Ty (..),
+    ofReference,
+    ofTask,
     PrimTy (..),
+    BasicTy (..),
+    ofType,
+    ofBasic,
     isBasic,
 
     -- * Expressions
     Expression (..),
+    Argument (..),
     Constant (..),
 
     -- * Matches
@@ -38,8 +44,8 @@ type Message = Text
 data Ty
   = TFunction Ty Ty
   | TRecord (Row Ty)
-  | TReference Ty
-  | TTask Ty
+  | TReference BasicTy
+  | TTask (Row Ty)
   | TPrimitive PrimTy
   deriving (Eq, Ord, Debug)
 
@@ -50,6 +56,16 @@ instance Display Ty where
     TReference t -> unwords ["Ref", display t]
     TTask t -> unwords ["Task", display t]
     TPrimitive p -> display p
+
+ofReference :: Ty -> Maybe BasicTy
+ofReference = \case
+  TReference b -> Just b
+  _ -> Nothing
+
+ofTask :: Ty -> Maybe (Row Ty)
+ofTask = \case
+  TTask t -> Just t
+  _ -> Nothing
 
 data PrimTy
   = TBool
@@ -63,13 +79,35 @@ instance Display PrimTy where
     TInt -> "Int"
     TString -> "String"
 
+data BasicTy
+  = BRecord (Row BasicTy)
+  | BPrimitive PrimTy
+  deriving (Eq, Ord, Debug)
+
+instance Display BasicTy where
+  display = \case
+    BRecord r -> display r
+    BPrimitive p -> display p
+
+ofType :: Ty -> Maybe BasicTy
+ofType = \case
+  TPrimitive p -> Just <| BPrimitive p
+  TRecord r
+    | Just ts <- traverse ofType r -> Just <| BRecord ts
+    | otherwise -> Nothing
+  TFunction _ _ -> Nothing
+  TReference _ -> Nothing
+  TTask _ -> Nothing
+
+ofBasic :: BasicTy -> Ty
+ofBasic = \case
+  BRecord r -> TRecord <| map ofBasic r
+  BPrimitive p -> TPrimitive p
+
 isBasic :: Ty -> Bool
-isBasic = \case
-  TPrimitive _ -> True
-  TRecord r -> all isBasic r
-  TFunction _ _ -> False
-  TReference _ -> False
-  TTask _ -> False
+isBasic t
+  | Just _ <- ofType t = True
+  | otherwise = False
 
 ---- Expressions ---------------------------------------------------------------
 
@@ -80,6 +118,10 @@ data Expression
   | IfThenElse Expression Expression Expression
   | Record (Row Expression)
   | Constant Constant
+  deriving (Eq, Ord, Debug)
+
+data Argument
+  = ARecord (Row Expression)
   deriving (Eq, Ord, Debug)
 
 data Constant
@@ -113,13 +155,13 @@ instance Display Match where
 ---- Statements ----------------------------------------------------------------
 
 data Statement
-  = SBind Match Task Statement
-  | STask
+  = Step Match Task Statement
+  | Task Task
   deriving (Eq, Ord, Debug)
 
 data Task
   = -- Editors
-    Edit Message
+    Edit BasicTy Message
   | Update Message Expression
   | Change Message Expression
   | View Message Expression
@@ -131,8 +173,8 @@ data Task
   | Branch (List (Expression, Statement))
   | Select (List (Label, Expression, Statement))
   | -- Extras
-    Execute Name (Row Expression)
-  | Hole (Row Expression)
+    Execute Name Argument
+  | Hole Argument
   | -- Shares
     Share Expression
   | Assign Expression Expression
