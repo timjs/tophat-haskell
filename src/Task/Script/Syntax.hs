@@ -8,6 +8,7 @@ module Task.Script.Syntax
     -- * Types
     Ty (..),
     ofRecord,
+    ofVariant,
     ofReference,
     ofTask,
     PrimTy (..),
@@ -30,6 +31,8 @@ module Task.Script.Syntax
   )
 where
 
+import qualified Data.HashMap.Strict as HashMap
+
 ---- Synonyms ------------------------------------------------------------------
 
 type Row a = HashMap Label a
@@ -45,6 +48,7 @@ type Message = Text
 data Ty
   = TFunction Ty Ty
   | TRecord (Row Ty)
+  | TVariant (Row Ty)
   | TReference BasicTy
   | TTask (Row Ty)
   | TPrimitive PrimTy
@@ -54,6 +58,7 @@ instance Display Ty where
   display = \case
     TFunction t1 t2 -> unwords [display t1, "->", display t2] |> between '(' ')'
     TRecord r -> display r
+    TVariant r -> display r
     TReference t -> unwords ["Ref", display t]
     TTask t -> unwords ["Task", display t]
     TPrimitive p -> display p
@@ -61,6 +66,11 @@ instance Display Ty where
 ofRecord :: Ty -> Maybe (Row Ty)
 ofRecord = \case
   TRecord r -> Just r
+  _ -> Nothing
+
+ofVariant :: Ty -> Maybe (Row Ty)
+ofVariant = \case
+  TVariant r -> Just r
   _ -> Nothing
 
 ofReference :: Ty -> Maybe BasicTy
@@ -87,12 +97,14 @@ instance Display PrimTy where
 
 data BasicTy
   = BRecord (Row BasicTy)
+  | BVariant (Row BasicTy)
   | BPrimitive PrimTy
   deriving (Eq, Ord, Debug)
 
 instance Display BasicTy where
   display = \case
     BRecord r -> display r
+    BVariant r -> HashMap.toList r |> map (\(k, v) -> display k ++ ":" ++ display v) |> intercalate "," |> between '<' '>'
     BPrimitive p -> display p
 
 ofType :: Ty -> Maybe BasicTy
@@ -101,6 +113,9 @@ ofType = \case
   TRecord r
     | Just ts <- traverse ofType r -> Just <| BRecord ts
     | otherwise -> Nothing
+  TVariant r
+    | Just ts <- traverse ofType r -> Just <| BVariant ts
+    | otherwise -> Nothing
   TFunction _ _ -> Nothing
   TReference _ -> Nothing
   TTask _ -> Nothing
@@ -108,6 +123,7 @@ ofType = \case
 ofBasic :: BasicTy -> Ty
 ofBasic = \case
   BRecord r -> TRecord <| map ofBasic r
+  BVariant r -> TVariant <| map ofBasic r
   BPrimitive p -> TPrimitive p
 
 isBasic :: Ty -> Bool
@@ -122,7 +138,9 @@ data Expression
   | Apply Expression Expression
   | Variable Name
   | IfThenElse Expression Expression Expression
+  | Case Expression (List (Label, Match, Expression))
   | Record (Row Expression)
+  | Variant Label Expression Ty
   | Constant Constant
   deriving (Eq, Ord, Debug)
 
