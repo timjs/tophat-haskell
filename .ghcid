@@ -1,1 +1,1 @@
---command=cabal repl exe:tophat --restart=tophat.cabal --output=errors.txt
+--command=cabal repl tophat --restart=tophat.cabal --output=errors.txt
