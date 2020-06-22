@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 29d42da2f90d491ced1ffd46290631dafd79cf1483c309f19d146c793715dc39
+-- hash: caee25fb10f6d2eb82782ae9d5794656d2de9f19e096815bb1e8a3e26f146842
 
 name:           tophat
 version:        0.1.0.0
@@ -41,6 +41,7 @@ library
       Task.Observe
       Task.Run
       Task.Script.Checker
+      Task.Script.Example
       Task.Script.Parser
       Task.Script.Syntax
       Task.Simulate
