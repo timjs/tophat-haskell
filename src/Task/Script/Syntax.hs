@@ -7,6 +7,7 @@ module Task.Script.Syntax
 
     -- * Types
     Ty (..),
+    ofRecord,
     ofReference,
     ofTask,
     PrimTy (..),
@@ -57,6 +58,11 @@ instance Display Ty where
     TTask t -> unwords ["Task", display t]
     TPrimitive p -> display p
 
+ofRecord :: Ty -> Maybe (Row Ty)
+ofRecord = \case
+  TRecord r -> Just r
+  _ -> Nothing
+
 ofReference :: Ty -> Maybe BasicTy
 ofReference = \case
   TReference b -> Just b
@@ -64,7 +70,7 @@ ofReference = \case
 
 ofTask :: Ty -> Maybe (Row Ty)
 ofTask = \case
-  TTask t -> Just t
+  TTask r -> Just r
   _ -> Nothing
 
 data PrimTy
@@ -161,7 +167,7 @@ data Statement
 
 data Task
   = -- Editors
-    Edit BasicTy Message
+    Enter BasicTy Message
   | Update Message Expression
   | Change Message Expression
   | View Message Expression
