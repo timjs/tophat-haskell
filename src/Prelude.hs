@@ -23,6 +23,7 @@ module Prelude
     Reflect,
     Fold,
     Traverse,
+    Bind,
     Coerce,
 
     -- ** Groups, Modules, Torsors
@@ -74,11 +75,12 @@ module Prelude
     -- hush,
 
     -- ** Folds
-    foldr1,
     intercalate,
     surroundMap,
     surround,
+    foldr1,
     gather,
+    -- gather1,
 
     -- ** Monoids
     (++),
@@ -143,7 +145,6 @@ module Prelude
   )
 where
 
-import Data.Foldable (foldr1)
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.HashSet as HashSet
 import qualified Data.Text as Text
@@ -298,6 +299,11 @@ instance Display Double where
 
 instance Display Text where
   display = identity
+
+instance (Display e, Display a) => Display (Either e a) where
+  display = \case
+    Left e -> "Error: " ++ display e
+    Right a -> display a
 
 instance (Display a, Display b) => Display (a, b) where
   display (a, b) = display a ++ "," ++ display b |> between '(' ')'
@@ -484,8 +490,26 @@ surround :: forall f m. Fold f => Semigroup m => m -> f m -> m
 surround d = surroundMap d identity
 {-# INLINE surround #-}
 
-gather :: (Bind m, Fold f) => (b -> a -> m b) -> b -> f a -> m b
+gather :: (Fold t, Bind m) => (b -> a -> m b) -> b -> t a -> m b
 gather = Relude.foldlM
+
+-- gather f b0 = foldr go (pure b0)
+-- where
+--   go a mb = mb >>= flip f a
+
+-- gather1 :: (Bind m, Fold t) => (a -> a -> m a) -> t a -> Maybe (m a)
+-- gather1 :: (Monad m, Foldable t1) => (b -> t2 -> m b) -> b -> t1 t2 -> m b
+-- gather1 :: (Fold t, Bind m) => (a -> m a -> m a) -> t (m a) -> m (Maybe a)
+-- gather1 :: (Fold t, Bind m) => (a -> a -> m a) -> t a -> m (Maybe a)
+-- gather1 f = foldr1 (\a ma -> _) >> sequence
+-- gahter1 f = foldr go
+
+foldr1 :: (Fold t) => (a -> a -> a) -> t a -> Maybe a
+foldr1 f xs = foldr mf Nothing xs
+  where
+    mf x m = Just <| case m of
+      Nothing -> x
+      Just y -> f x y
 
 ---- Monoids
 
