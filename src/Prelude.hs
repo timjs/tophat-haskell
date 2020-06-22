@@ -52,6 +52,7 @@ module Prelude
     unchars,
     between,
     quote,
+    indent,
 
     -- ** HashMaps
     forWithKey,
@@ -72,11 +73,12 @@ module Prelude
     -- note,
     -- hush,
 
-    -- ** Foldables
+    -- ** Folds
     foldr1,
     intercalate,
     surroundMap,
     surround,
+    gather,
 
     -- ** Monoids
     (++),
@@ -122,6 +124,8 @@ module Prelude
     -- when,
 
     -- ** Monads
+    (||=),
+    (=||),
     MonadZero,
     fail,
 
@@ -158,6 +162,7 @@ import Relude hiding
     (<*),
     -- (<>),
     -- (<*>),
+    (=<<),
     (>>),
     Any,
     MonadFail (..),
@@ -175,6 +180,7 @@ import Relude hiding
     concat,
     error,
     first,
+    foldlM,
     forever,
     getLine,
     gets,
@@ -313,7 +319,7 @@ instance Display SomeTypeRep where
 
 ---- Functions -----------------------------------------------------------------
 
-length :: Foldable f => f a -> Nat
+length :: Fold f => f a -> Nat
 length = Relude.length >> fromIntegral
 {-# INLINE length #-}
 
@@ -344,6 +350,9 @@ between a b t = a `Text.cons` t `Text.snoc` b
 quote :: Text -> Text
 quote = between '"' '"'
 {-# INLINE quote #-}
+
+indent :: Int -> Text -> Text
+indent n t = Text.replicate n " " ++ t
 
 ---- HashMaps
 
@@ -424,7 +433,7 @@ error = Left
 -- | > intercalate [1] [[2, 3], [4, 5], [6, 7]]
 -- | = [2, 3, 1, 4, 5, 1, 6, 7]
 -- | ```
-intercalate :: Foldable f => Monoid m => m -> f m -> m
+intercalate :: Fold f => Monoid m => m -> f m -> m
 intercalate sep = foldl' go (True, neutral) >> snd
   where
     go (True, _) x = (False, x)
@@ -448,7 +457,7 @@ intercalate sep = foldl' go (True, neutral) >> snd
 -- | > surroundMap "*" show [1, 2, 3]
 -- | = "*1*2*3*"
 -- | ```
-surroundMap :: Foldable f => Semigroup m => m -> (a -> m) -> f a -> m
+surroundMap :: Fold f => Semigroup m => m -> (a -> m) -> f a -> m
 surroundMap d t f = appEndo (foldMap joined f) d
   where
     joined a = Endo \m -> d <> t a <> m
@@ -471,9 +480,12 @@ surroundMap d t f = appEndo (foldMap joined f) d
 -- | > surround "*" ["1", "2", "3"]
 -- | = "*1*2*3*"
 -- | ```
-surround :: forall f m. Foldable f => Semigroup m => m -> f m -> m
+surround :: forall f m. Fold f => Semigroup m => m -> f m -> m
 surround d = surroundMap d identity
 {-# INLINE surround #-}
+
+gather :: (Bind m, Fold f) => (b -> a -> m b) -> b -> f a -> m b
+gather = Relude.foldlM
 
 ---- Monoids
 
@@ -667,6 +679,20 @@ when p t = check p t (pure ())
 
 ---- Monads
 
+type Bind = Monad
+
+infixl 1 ||=
+
+infixr 1 =||
+
+(||=) :: (Monad m) => m a -> (a -> m b) -> m b
+(||=) = (Relude.>>=)
+{-# INLINE (||=) #-}
+
+(=||) :: (Monad m) => (a -> m b) -> m a -> m b
+(=||) = (Relude.=<<)
+{-# INLINE (=||) #-}
+
 -- | A safe alternative for MonadFail.
 -- |
 -- | Be sure only types that have a sensible, non-throwing,
@@ -683,7 +709,7 @@ instance MonadZero List
 fail :: Alternative m => m a
 fail = empty
 
-instance (Relude.MonadFail m, MonadPlus m) => MonadZero (StateT s m)
+-- instance (Relude.MonadFail m, MonadPlus m) => MonadZero (StateT s m)
 
 ---- Type equality -------------------------------------------------------------
 
