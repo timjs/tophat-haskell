@@ -17,19 +17,20 @@ import Task.Script.Syntax
 
 data TypeError
   = UnknownVariable Name
-  | ArgumentMismatch Ty Ty
-  | BranchMismatch Ty Ty
-  | AssignMismatch Ty Ty
+  | ArgumentError Ty Ty
+  | BranchError Ty Ty
+  | AssignError Ty Ty
   | FunctionNeeded Ty
   | BoolNeeded Ty
   | RecordNeeded Ty
   | ReferenceNeeded Ty
   | TaskNeeded Ty
   | BasicNeeded Ty
-  | DoubleField (HashSet Label) (Row Ty)
+  | DoubleFields (HashSet Label) (Row Ty)
   | EmptyChoice
   | HoleFound Context
-  | MatchError MatchError
+  | RecordMismatch (Row Match) Ty
+  | UnpackMismatch Ty
   deriving (Debug)
 
 instance Display TypeError where
@@ -37,9 +38,9 @@ instance Display TypeError where
     UnknownVariable x -> unwords ["Unknown variable", x |> quote]
     -- VariableMismatch x t_exp t_act -> unwords ["Variable", quote x, "has type", display t_act, ", but it is expected to be a(n)", display t_exp]
     -- ConstantMismatch c t_exp t_act -> unwords ["Constant", quote (display c), "has type", display t_act, "but it is expected to be a(n)", display t_exp]
-    ArgumentMismatch t_exp t_act -> unlines ["This function needs it argument to be of type", display t_exp |> quote |> indent 2, ", but it is of type", display t_act |> quote |> indent 2]
-    BranchMismatch t_then t_else -> unlines ["This conditional's then-branch has type", display t_then |> quote |> indent 2, ", while the else-branch has type", display t_else |> quote |> indent 2]
-    AssignMismatch t_ref t_val -> unlines ["This assignment tries to store something of type", display t_val |> quote |> indent 2, "into a reference of type", display t_ref |> quote |> indent 2]
+    ArgumentError t_exp t_act -> unlines ["This function needs it argument to be of type", display t_exp |> quote |> indent 2, ", but it is of type", display t_act |> quote |> indent 2]
+    BranchError t_then t_else -> unlines ["This conditional's then-branch has type", display t_then |> quote |> indent 2, ", while the else-branch has type", display t_else |> quote |> indent 2]
+    AssignError t_ref t_val -> unlines ["This assignment tries to store something of type", display t_val |> quote |> indent 2, "into a reference of type", display t_ref |> quote |> indent 2]
     FunctionNeeded t_bad -> unwords ["Cannot use", display t_bad |> quote, "as a function"]
     -- BindNeeded t_bad -> unwords ["Cannot use", display t_bad |> quote, "as a a function from row to task"]
     RecordNeeded t_bad -> unwords ["Cannot use", display t_bad |> quote, "as a record"]
@@ -47,18 +48,9 @@ instance Display TypeError where
     ReferenceNeeded t_bad -> unwords ["Cannot use", display t_bad |> quote, "as a reference"]
     TaskNeeded t_bad -> unwords ["Cannot use", display t_bad |> quote, "as a task"]
     BasicNeeded t_bad -> unwords ["Cannot use", display t_bad |> quote, "as a basic type"]
-    DoubleField r_double r_orig -> unwords ["Double occurense of label", display r_double |> quote, "in row", display r_orig |> quote]
+    DoubleFields r_double r_orig -> unwords ["Double occurense of label", display r_double |> quote, "in row", display r_orig |> quote]
     EmptyChoice -> unwords ["Choice is empty"]
     HoleFound g -> unlines ["Found hole of type _ in context", display g |> indent 2]
-    MatchError e -> display e
-
-data MatchError
-  = RecordMismatch (Row Match) Ty
-  | UnpackMismatch Ty
-  deriving (Debug)
-
-instance Display MatchError where
-  display = \case
     RecordMismatch ms t -> unwords ["Matching against", display ms, "needs", display t, "to be a record type"]
     UnpackMismatch t -> unwords ["Unpacking needs", display t, "to be a record type"]
 
@@ -67,7 +59,7 @@ instance Display MatchError where
 type Context = HashMap Name Ty
 
 class Check a where
-  check :: Members '[Error TypeError, Error MatchError, Output Text] r => Context -> a -> Sem r Ty
+  check :: Members '[Error TypeError, Output Text] r => Context -> a -> Sem r Ty
 
 instance Check Expression where
   check g = \case
@@ -84,7 +76,7 @@ instance Check Expression where
           t2 <- check g e2
           if t' == t2
             then pure t
-            else throw <| ArgumentMismatch t' t2
+            else throw <| ArgumentError t' t2
         _ -> throw <| FunctionNeeded t1
     ---- Branches
     IfThenElse e1 e2 e3 -> do
@@ -95,7 +87,7 @@ instance Check Expression where
           t3 <- check g e3
           if t2 == t3
             then pure t2
-            else throw <| BranchMismatch t2 t3
+            else throw <| BranchError t2 t3
         _ -> throw <| BoolNeeded t1
     ---- Records
     Record es -> traverse (check g) es ||> TRecord
@@ -126,10 +118,10 @@ instance Check Task where
     View _ e -> check g e ||= needBasic ||= returnValue
     Watch _ e -> check g e ||= outofReference ||= returnValue
     Done e -> check g e ||= outofRecord ||> TTask
-    Pair ss -> traverse go ss ||= unite ||> TTask
-    Choose ss -> traverse go ss ||= intersect ||> TTask
-    Branch bs -> traverse go' bs ||= intersect ||> TTask
-    Select bs -> traverse go'' bs ||= intersect ||> TTask
+    Pair ss -> traverse subcheck ss ||= unite ||> TTask
+    Choose ss -> traverse subcheck ss ||= intersect ||> TTask
+    Branch bs -> traverse subcheck' bs ||= intersect ||> TTask
+    Select bs -> traverse subcheck'' bs ||= intersect ||> TTask
     Execute x a -> do
       t_x <- HashMap.lookup x g |> note (UnknownVariable x)
       case t_x of
@@ -137,7 +129,7 @@ instance Check Task where
           t_a <- check g a
           if r' == t_a
             then pure t
-            else throw <| ArgumentMismatch r' t_a
+            else throw <| ArgumentError r' t_a
         _ -> throw <| FunctionNeeded t_x
     Hole _ -> throw <| HoleFound g --TODO: how to handle holes?
     Share e -> check g e ||= outofBasic ||> TReference ||= returnValue
@@ -147,44 +139,28 @@ instance Check Task where
       b2 <- check g e2
       if b1 == b2
         then pure (TRecord [])
-        else throw (AssignMismatch b1 b2)
+        else throw (AssignError b1 b2)
     where
-      go s = check g s ||= outofTask
-      go' (e, s) = do
+      subcheck s = check g s ||= outofTask
+      subcheck' (e, s) = do
         t_e <- check g e
         case t_e of
-          TPrimitive TBool -> go s
+          TPrimitive TBool -> subcheck s
           _ -> throw <| BoolNeeded t_e
-      go'' (_, e, s) = go' (e, s)
+      subcheck'' (_, e, s) = subcheck' (e, s)
 
--- go f acc s = check g s ||= outofTask ||> f acc
--- go' f acc (e, s) = do
---   t_e <- check g e
---   case t_e of
---     TPrimitive TBool -> go f acc s
---     _ -> throw <| BoolNeeded t_e
--- go'' f acc (_, e, s) = go' f acc (e, s)
-
-unite :: (Members '[Error TypeError] r) => List (Row Ty) -> Sem r (Row Ty)
-unite rs = go [] rs
+unite :: (Members '[Error TypeError] r, Fold t) => t (Row Ty) -> Sem r (Row Ty)
+unite = gather go []
   where
-    go :: (Members '[Error TypeError] r) => Row Ty -> List (Row Ty) -> Sem r (Row Ty)
-    go acc = \case
-      [] -> pure acc
-      r : rest ->
-        let d = HashMap.keysSet r `HashSet.intersection` HashMap.keysSet acc
-         in if null d
-              then go (acc \/ r) rest
-              else throw <| DoubleField d r
+    go :: (Members '[Error TypeError] r) => Row Ty -> Row Ty -> Sem r (Row Ty)
+    go acc r =
+      let d = HashMap.keysSet r `HashSet.intersection` HashMap.keysSet acc
+       in if null d
+            then pure <| acc \/ r
+            else throw <| DoubleFields d r
 
 intersect :: (Members '[Error TypeError] r) => List (Row a) -> Sem r (Row a)
-intersect = \case
-  [] -> throw <| EmptyChoice
-  r : rs -> go r rs
-  where
-    go acc = \case
-      [] -> pure acc
-      r : rest -> go (acc /\ r) rest
+intersect rs = foldr1 (/\) rs |> note EmptyChoice
 
 needBasic :: (Members '[Error TypeError] r) => Ty -> Sem r Ty
 needBasic t
@@ -216,28 +192,28 @@ returnValue t = pure <| TTask ["value" ~> t]
 
 ---- Matcher -------------------------------------------------------------------
 
-match :: (Members '[Error MatchError, Output Text] r) => Match -> Ty -> Sem r Context
+match :: (Members '[Error TypeError, Output Text] r) => Match -> Ty -> Sem r Context
 match m t = case m of
   MIgnore -> pure []
   MBind x -> pure [x ~> t]
   MRecord ms -> do
     case t of
-      TRecord r -> HashMap.intersectionWith (,) ms r |> gather go []
+      TRecord r -> HashMap.intersectionWith (,) ms r |> traverse (uncurry match) ||= unite
       _ -> throw <| RecordMismatch ms t
-    where
-      go acc (mx, tx) = match mx tx ||> (\/) acc
   MUnpack -> do
     case t of
       TRecord r -> pure r
       _ -> throw <| UnpackMismatch t
 
+---- Executing -----------------------------------------------------------------
+
+execute :: Sem '[Error TypeError, Output o] a -> Either TypeError a
+execute = runError >> ignoreOutput >> run
+
+executeVerbose :: Sem '[Error TypeError, Output o] a -> (List o, Either TypeError a)
+executeVerbose = runError >> runOutputList >> run
+
 ---- Helpers -------------------------------------------------------------------
-
-execute :: Sem '[Error MatchError, Error TypeError, Output o] a -> Either TypeError a
-execute = mapError MatchError >> runError >> ignoreOutput >> run
-
-executeVerbose :: Sem '[Error MatchError, Error TypeError, Output o] a -> (List o, Either TypeError a)
-executeVerbose = mapError MatchError >> runError >> runOutputList >> run
 
 (\/) :: (Hash k) => HashMap k v -> HashMap k v -> HashMap k v
 (\/) = HashMap.union
