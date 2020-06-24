@@ -1,6 +1,7 @@
 module Task.Script.Syntax
   ( -- * Synonyms
     Row,
+    Labels,
     Name,
     Label,
     Message,
@@ -36,6 +37,8 @@ import qualified Data.HashMap.Strict as HashMap
 ---- Synonyms ------------------------------------------------------------------
 
 type Row a = HashMap Label a
+
+type Labels = HashSet Label
 
 type Name = Text
 
@@ -146,7 +149,7 @@ data Expression
   | Apply Expression Expression
   | Variable Name
   | IfThenElse Expression Expression Expression
-  | Case Expression (List (Label, Match, Expression))
+  | Case Expression (Row (Match, Expression))
   | Record (Row Expression)
   | Variant Label Expression Ty
   | Nil Ty

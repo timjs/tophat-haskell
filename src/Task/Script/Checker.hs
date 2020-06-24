@@ -21,6 +21,7 @@ data TypeError
   | ArgumentError Ty Ty
   | VariantError Label Ty Ty
   | BranchError Ty Ty
+  | BranchesError (Row Ty)
   | AssignError Ty Ty
   | ListError Ty Ty
   | FunctionNeeded Ty
@@ -31,7 +32,9 @@ data TypeError
   | ReferenceNeeded Ty
   | TaskNeeded Ty
   | BasicNeeded Ty
-  | DoubleFields (HashSet Label) (Row Ty)
+  | UnknownLabels Labels Labels
+  | DoubleLabels Labels Labels
+  | EmptyCase
   | EmptyChoice
   | HoleFound Context
   | RecordMismatch (Row Match) Ty
@@ -47,6 +50,7 @@ instance Display TypeError where
     ArgumentError t_exp t_act -> unlines ["This function needs it argument to be of type", display t_exp |> quote |> indent 2, ", but it is of type", display t_act |> quote |> indent 2]
     VariantError l t_exp t_act -> unwords ["This variant with label", display l |> quote, "needs it argument to be of type", display t_exp |> quote, ", but it is of type", display t_act |> quote]
     BranchError t_then t_else -> unlines ["This conditional's then-branch has type", display t_then |> quote |> indent 2, ", while the else-branch has type", display t_else |> quote |> indent 2]
+    BranchesError ts -> unwords ["This case expression has branches of different types", display ts |> quote]
     AssignError t_ref t_val -> unlines ["This assignment tries to store something of type", display t_val |> quote |> indent 2, "into a reference of type", display t_ref |> quote |> indent 2]
     ListError t_head t_tail -> unlines ["This element has type", display t_head |> quote |> indent 2, "but the list if of type", display t_tail |> quote |> indent 2]
     FunctionNeeded t_bad -> unwords ["Cannot use", display t_bad |> quote, "as a function"]
@@ -58,8 +62,10 @@ instance Display TypeError where
     ReferenceNeeded t_bad -> unwords ["Cannot use", display t_bad |> quote, "as a reference"]
     TaskNeeded t_bad -> unwords ["Cannot use", display t_bad |> quote, "as a task"]
     BasicNeeded t_bad -> unwords ["Cannot use", display t_bad |> quote, "as a basic type"]
-    DoubleFields r_double r_orig -> unwords ["Double occurense of label", display r_double |> quote, "in row", display r_orig |> quote]
-    EmptyChoice -> unwords ["Choice is empty"]
+    UnknownLabels r_diff r_orig -> unwords ["Labels", display r_diff |> quote, "are not part of row", display r_orig |> quote]
+    DoubleLabels r_double r_orig -> unwords ["Double occurence of label", display r_double |> quote, "in row", display r_orig |> quote]
+    EmptyCase -> unwords ["This case expression has no branches"]
+    EmptyChoice -> unwords ["This choice task has no branches"]
     HoleFound g -> unlines ["Found hole of type _ in context", display g |> indent 2]
     RecordMismatch ms t -> unwords ["Matching against", display ms, "needs", display t, "to be a record type"]
     UnpackMismatch t -> unwords ["Unpacking needs", display t, "to be a record type"]
@@ -99,6 +105,16 @@ instance Check Expression where
             then pure t2
             else throw <| BranchError t2 t3
         _ -> throw <| BoolNeeded t1
+    Case e0 bs -> do
+      t0 <- check g e0
+      case t0 of
+        TVariant r -> do
+          bs' <- merge r bs --NOTE be aware of order: r is a subset of bs
+          ts <- for bs' \(t, (m, e)) -> do
+            d <- match m t
+            check (g \/ d) e
+          smash ts
+        _ -> throw <| VariantNeeded t0
     ---- Records & Variants
     Record es -> traverse (check g) es ||> TRecord
     Variant l e t -> case t of
@@ -180,18 +196,32 @@ instance Check Task where
           _ -> throw <| BoolNeeded t_e
       subcheck'' (_, e, s) = subcheck' (e, s)
 
-unite :: (Members '[Error TypeError] r, Fold t) => t (Row Ty) -> Sem r (Row Ty)
+unite :: (Members '[Error TypeError] r, Fold t) => t (Row a) -> Sem r (Row a)
 unite = gather go []
   where
-    go :: (Members '[Error TypeError] r) => Row Ty -> Row Ty -> Sem r (Row Ty)
+    go :: (Members '[Error TypeError] r) => Row a -> Row a -> Sem r (Row a)
     go acc r =
-      let d = HashMap.keysSet r `HashSet.intersection` HashMap.keysSet acc
-       in if null d
+      let is = HashMap.keysSet r `HashSet.intersection` HashMap.keysSet acc
+       in if null is
             then pure <| acc \/ r
-            else throw <| DoubleFields d r
+            else throw <| DoubleLabels is (HashMap.keysSet r)
 
-intersect :: (Members '[Error TypeError] r) => List (Row a) -> Sem r (Row a)
+intersect :: (Members '[Error TypeError] r, Fold t) => t (Row a) -> Sem r (Row a)
 intersect rs = foldr1 (/\) rs |> note EmptyChoice
+
+merge :: (Members '[Error TypeError] r) => Row a -> Row b -> Sem r (Row (a, b))
+merge r1 r2
+  | HashMap.null ds = pure <| HashMap.intersectionWith (,) r1 r2
+  | otherwise = throw <| UnknownLabels (HashMap.keysSet ds) (HashMap.keysSet r2)
+  where
+    ds = r1 // r2
+
+smash :: (Members '[Error TypeError] r) => Row Ty -> Sem r Ty
+smash r = case HashMap.elems r of
+  [] -> throw <| EmptyCase
+  t : ts
+    | all (t ==) ts -> pure t
+    | otherwise -> throw <| BranchesError r
 
 needBasic :: (Members '[Error TypeError] r) => Ty -> Sem r Ty
 needBasic t
@@ -229,7 +259,7 @@ match m t = case m of
   MBind x -> pure [x ~> t]
   MRecord ms -> do
     case t of
-      TRecord r -> HashMap.intersectionWith (,) ms r |> traverse (uncurry match) ||= unite
+      TRecord r -> merge ms r ||= traverse (uncurry match) ||= unite
       _ -> throw <| RecordMismatch ms t
   MUnpack -> do
     case t of
@@ -251,3 +281,6 @@ executeVerbose = runError >> runOutputList >> run
 
 (/\) :: (Hash k) => HashMap k v -> HashMap k w -> HashMap k v
 (/\) = HashMap.intersection
+
+(//) :: (Hash k) => HashMap k v -> HashMap k w -> HashMap k v
+(//) = HashMap.difference
