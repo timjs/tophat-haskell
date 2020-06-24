@@ -44,8 +44,8 @@ module Prelude
     Display (..),
 
     -- * Functions
-    length,
     (~>),
+    withDefault,
     getTextLn,
 
     -- ** Text
@@ -75,6 +75,8 @@ module Prelude
     -- hush,
 
     -- ** Folds
+    length,
+    same,
     intercalate,
     surroundMap,
     surround,
@@ -183,6 +185,7 @@ import Relude hiding
     first,
     foldlM,
     forever,
+    fromMaybe,
     getLine,
     gets,
     id,
@@ -325,9 +328,14 @@ instance Display SomeTypeRep where
 
 ---- Functions -----------------------------------------------------------------
 
-length :: Fold f => f a -> Nat
-length = Relude.length >> fromIntegral
-{-# INLINE length #-}
+withDefault :: a -> Maybe a -> a
+withDefault = Relude.fromMaybe
+
+same :: (Eq a) => List a -> Bool
+same = \case
+  [] -> True
+  x : xs -> all (x ==) xs
+{-# INLINE same #-}
 
 infix 0 ~>
 
@@ -423,6 +431,10 @@ error = Left
 --   empty = Left neutral
 
 ---- Foldables
+
+length :: (Fold t) => t a -> Nat
+length = Relude.length >> fromIntegral
+{-# INLINE length #-}
 
 -- | Fold a data structure, accumulating values in some `Monoid`,
 -- | combining adjacent elements using the specified separator.
