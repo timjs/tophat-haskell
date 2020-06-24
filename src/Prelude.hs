@@ -84,6 +84,9 @@ module Prelude
     gather,
     -- gather1,
 
+    -- ** Traversals
+    for,
+
     -- ** Monoids
     (++),
     neutral,
@@ -522,6 +525,11 @@ foldr1 f xs = foldr mf Nothing xs
     mf x m = Just <| case m of
       Nothing -> x
       Just y -> f x y
+
+---- Traversals
+
+for :: (Traverse t, Bind m) => t a -> (a -> m b) -> m (t b)
+for = Relude.forM
 
 ---- Monoids
 
