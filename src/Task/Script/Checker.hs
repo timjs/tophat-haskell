@@ -22,10 +22,12 @@ data TypeError
   | VariantError Label Ty Ty
   | BranchError Ty Ty
   | AssignError Ty Ty
+  | ListError Ty Ty
   | FunctionNeeded Ty
   | BoolNeeded Ty
   | RecordNeeded Ty
   | VariantNeeded Ty
+  | ListNeeded Ty
   | ReferenceNeeded Ty
   | TaskNeeded Ty
   | BasicNeeded Ty
@@ -46,10 +48,12 @@ instance Display TypeError where
     VariantError l t_exp t_act -> unwords ["This variant with label", display l |> quote, "needs it argument to be of type", display t_exp |> quote, ", but it is of type", display t_act |> quote]
     BranchError t_then t_else -> unlines ["This conditional's then-branch has type", display t_then |> quote |> indent 2, ", while the else-branch has type", display t_else |> quote |> indent 2]
     AssignError t_ref t_val -> unlines ["This assignment tries to store something of type", display t_val |> quote |> indent 2, "into a reference of type", display t_ref |> quote |> indent 2]
+    ListError t_head t_tail -> unlines ["This element has type", display t_head |> quote |> indent 2, "but the list if of type", display t_tail |> quote |> indent 2]
     FunctionNeeded t_bad -> unwords ["Cannot use", display t_bad |> quote, "as a function"]
     -- BindNeeded t_bad -> unwords ["Cannot use", display t_bad |> quote, "as a a function from row to task"]
     RecordNeeded t_bad -> unwords ["Cannot use", display t_bad |> quote, "as a record"]
     VariantNeeded t_bad -> unwords ["Cannot use", display t_bad |> quote, "as a variant"]
+    ListNeeded t_bad -> unwords ["Cannot use", display t_bad |> quote, "as a list"]
     BoolNeeded t_bad -> unwords ["Cannot use", display t_bad |> quote, "as a boolean"]
     ReferenceNeeded t_bad -> unwords ["Cannot use", display t_bad |> quote, "as a reference"]
     TaskNeeded t_bad -> unwords ["Cannot use", display t_bad |> quote, "as a task"]
@@ -107,6 +111,17 @@ instance Check Expression where
               else throw <| VariantError l t' t_e
           Nothing -> throw <| UnknownLabel l t
       _ -> throw <| VariantNeeded t
+    ---- Lists
+    Nil t -> pure <| TList t
+    Cons e1 e2 -> do
+      t1 <- check g e1
+      t2 <- check g e2
+      case t2 of
+        TList t' ->
+          if t2 == t'
+            then pure t2
+            else throw <| ListError t1 t2
+        _ -> throw <| ListNeeded t2
     ---- Constants
     Constant (B _) -> pure <| TPrimitive TBool
     Constant (I _) -> pure <| TPrimitive TInt

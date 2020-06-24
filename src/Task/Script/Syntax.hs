@@ -47,6 +47,7 @@ type Message = Text
 
 data Ty
   = TFunction Ty Ty
+  | TList Ty
   | TRecord (Row Ty)
   | TVariant (Row Ty)
   | TReference BasicTy
@@ -57,6 +58,7 @@ data Ty
 instance Display Ty where
   display = \case
     TFunction t1 t2 -> unwords [display t1, "->", display t2] |> between '(' ')'
+    TList t -> unwords ["List", display t]
     TRecord r -> display r
     TVariant r -> display r
     TReference t -> unwords ["Ref", display t]
@@ -96,13 +98,15 @@ instance Display PrimTy where
     TString -> "String"
 
 data BasicTy
-  = BRecord (Row BasicTy)
+  = BList BasicTy
+  | BRecord (Row BasicTy)
   | BVariant (Row BasicTy)
   | BPrimitive PrimTy
   deriving (Eq, Ord, Debug)
 
 instance Display BasicTy where
   display = \case
+    BList t -> unwords ["List", display t]
     BRecord r -> display r
     BVariant r -> HashMap.toList r |> map (\(k, v) -> display k ++ ":" ++ display v) |> intercalate "," |> between '<' '>'
     BPrimitive p -> display p
@@ -110,6 +114,9 @@ instance Display BasicTy where
 ofType :: Ty -> Maybe BasicTy
 ofType = \case
   TPrimitive p -> Just <| BPrimitive p
+  TList t
+    | Just t' <- ofType t -> Just <| BList t'
+    | otherwise -> Nothing
   TRecord r
     | Just ts <- traverse ofType r -> Just <| BRecord ts
     | otherwise -> Nothing
@@ -122,6 +129,7 @@ ofType = \case
 
 ofBasic :: BasicTy -> Ty
 ofBasic = \case
+  BList t -> TList <| ofBasic t
   BRecord r -> TRecord <| map ofBasic r
   BVariant r -> TVariant <| map ofBasic r
   BPrimitive p -> TPrimitive p
@@ -141,6 +149,8 @@ data Expression
   | Case Expression (List (Label, Match, Expression))
   | Record (Row Expression)
   | Variant Label Expression Ty
+  | Nil Ty
+  | Cons Expression Expression
   | Constant Constant
   deriving (Eq, Ord, Debug)
 
