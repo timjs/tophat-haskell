@@ -16,17 +16,18 @@ ui ::
   Task h a ->
   Sem r Text
 ui = \case
-  Editor a e -> ui' a e
+  Edit a e -> ui' a e
   Done _ -> pure "■ …"
   Pair t1 t2 -> pure (\l r -> unwords [l, " ⧓ ", r]) -< ui t1 -< ui t2
   Choose t1 t2 -> pure (\l r -> unwords [l, " ◆ ", r]) -< ui t1 -< ui t2
   Fail -> pure "↯"
   Trans _ t -> ui t
-  Step t1 e2 -> pure go -< ui t1 -< do
-    mv1 <- value t1
-    case mv1 of
-      Nothing -> pure []
-      Just v1 -> pure <| options (e2 v1)
+  Step t1 e2 ->
+    pure go -< ui t1 -< do
+      mv1 <- value t1
+      case mv1 of
+        Nothing -> pure []
+        Just v1 -> pure <| options (e2 v1)
     where
       go s ls
         | null ls = concat [s, " ▶…"]
@@ -53,8 +54,8 @@ value ::
   Task h a ->
   Sem r (Maybe a)
 value = \case
-  Editor Unnamed _ -> pure Nothing
-  Editor (Named _) e -> value' e
+  Edit Unnamed _ -> pure Nothing
+  Edit (Named _) e -> value' e
   Trans f t -> pure (map f) -< value t
   Pair t1 t2 -> pure (><) -< value t1 -< value t2
   Done v -> pure (Just v)
@@ -81,7 +82,7 @@ failing ::
   Task h a ->
   Bool
 failing = \case
-  Editor _ e -> failing' e
+  Edit _ e -> failing' e
   Trans _ t2 -> failing t2
   Pair t1 t2 -> failing t1 && failing t2
   Done _ -> False
@@ -107,8 +108,8 @@ watching ::
   Task h a ->
   List (Some (Ref h)) -- There is no need for any effects.
 watching = \case
-  Editor Unnamed _ -> []
-  Editor (Named _) e -> watching' e
+  Edit Unnamed _ -> []
+  Edit (Named _) e -> watching' e
   Trans _ t2 -> watching t2
   Pair t1 t2 -> watching t1 `union` watching t2
   Done _ -> []
@@ -140,7 +141,7 @@ options ::
   Task h a -> -- There is no need for any effects.
   List Option
 options = \case
-  Editor n (Select ts) -> options' ts |> map (Option n)
+  Edit n (Select ts) -> options' ts |> map (Option n)
   Trans _ t2 -> options t2
   Step t1 _ -> options t1
   -- Step t1 e2 -> pure (++) -< options t1 -< do
@@ -168,21 +169,22 @@ inputs ::
   Task h a ->
   Sem r (List (Input Dummy))
 inputs t = case t of
-  Editor Unnamed _ -> pure []
-  Editor (Named n) (Select ts) -> options' ts |> map (ISelect n) |> pure
-  Editor (Named n) e -> inputs' e |> map (IEnter n) |> pure
+  Edit Unnamed _ -> pure []
+  Edit (Named n) (Select ts) -> options' ts |> map (ISelect n) |> pure
+  Edit (Named n) e -> inputs' e |> map (IEnter n) |> pure
   Trans _ t2 -> inputs t2
   Pair t1 t2 -> pure (++) -< inputs t1 -< inputs t2
   Done _ -> pure []
   Choose t1 t2 -> pure (++) -< inputs t1 -< inputs t2
   Fail -> pure []
-  Step t1 e2 -> pure (++) -< inputs t1 -< do
-    mv1 <- value t1
-    case mv1 of
-      Nothing -> pure []
-      Just v1 -> do
-        let t2 = e2 v1
-        options t2 |> map fromOption |> pure
+  Step t1 e2 ->
+    pure (++) -< inputs t1 -< do
+      mv1 <- value t1
+      case mv1 of
+        Nothing -> pure []
+        Just v1 -> do
+          let t2 = e2 v1
+          options t2 |> map fromOption |> pure
   Assert _ -> pure []
   Share _ -> pure []
   Assign _ _ -> pure []

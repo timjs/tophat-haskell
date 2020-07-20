@@ -64,7 +64,7 @@ data Task h t where
   ---- Editors
 
   -- | Editors, named and unnamed
-  Editor :: Name -> Editor h t -> Task h t
+  Edit :: Name -> Editor h t -> Task h t
   ---- Parallels
 
   -- | Composition of two tasks.
@@ -126,7 +126,7 @@ type Label =
   Text
 
 new :: Editor h t -> Task h t
-new e = Editor Unnamed e
+new e = Edit Unnamed e
 
 ---- Builtins ------------------------------------------------------------------
 
@@ -178,6 +178,7 @@ parallel [] = pure []
 parallel (t : ts) = t >< parallel ts >>= \(x, xs) -> pure (x : xs) --XXX order of parens?
 
 choose :: List (Task h a) -> Task h a
+-- choose xs = xs .\ fail <| (<|>)
 choose = foldr (<|>) fail
 
 branch :: List (Bool, Task h a) -> Task h a
@@ -214,7 +215,7 @@ forever t1 = t1 >>= \_ -> forever t1
 
 instance Display (Task h t) where
   display = \case
-    Editor n e -> concat [display e |> between '(' ')', "^", display n]
+    Edit n e -> concat [display e |> between '(' ')', "^", display n]
     Pair t1 t2 -> unwords [display t1, "><", display t2] |> between '(' ')'
     Done _ -> "Done _"
     Choose t1 t2 -> unwords [display t1, "<|>", display t2] |> between '(' ')'

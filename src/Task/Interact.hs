@@ -11,8 +11,8 @@ import Task (Task)
 import Task.Input (Concrete, Input)
 import qualified Task.Input as Input
 import qualified Task.Observe as Task
-import qualified Task.Run as Task
 import Task.Run (NotApplicable, Steps)
+import qualified Task.Run as Task
 
 ---- Looping -------------------------------------------------------------------
 

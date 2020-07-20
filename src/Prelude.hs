@@ -63,6 +63,7 @@ module Prelude
     (/<),
 
     -- ** Vectors
+
     -- Vector,
     -- only,
     -- index,
@@ -75,6 +76,8 @@ module Prelude
     -- hush,
 
     -- ** Folds
+    (/.),
+    (.\),
     length,
     same,
     intercalate,
@@ -126,6 +129,7 @@ module Prelude
     pureDefault,
 
     -- ** Selectives
+
     -- Selective (branch, select, biselect),
     -- check,
     -- when,
@@ -155,21 +159,9 @@ import qualified Data.HashSet as HashSet
 import qualified Data.Text as Text
 import Data.Type.Equality
 import Relude hiding
-  ( ($),
-    ($>),
-    (&),
-    (*>),
-    (++),
-    (++),
-    (.),
-    (<$),
-    (<$>),
-    (<&>),
-    (<*),
-    -- (<>),
+  ( -- (<>),
     -- (<*>),
-    (=<<),
-    (>>),
+
     Any,
     MonadFail (..),
     Nat,
@@ -207,6 +199,18 @@ import Relude hiding
     traceShow,
     traceShowId,
     when,
+    ($),
+    ($>),
+    (&),
+    (*>),
+    (++),
+    (.),
+    (<$),
+    (<$>),
+    (<&>),
+    (<*),
+    (=<<),
+    (>>),
   )
 import qualified Relude
 import Type.Reflection (SomeTypeRep (..), TypeRep, someTypeRep, typeOf, typeRep)
@@ -435,6 +439,16 @@ error = Left
 
 ---- Foldables
 
+infix 4 /.
+
+infix 4 .\
+
+(/.) :: (Fold t) => b -> t a -> (b -> a -> b) -> b
+(/.) x xs f = foldl' f x xs
+
+(.\) :: (Fold t) => t a -> b -> (a -> b -> b) -> b
+(.\) xs x f = foldr f x xs
+
 length :: (Fold t) => t a -> Nat
 length = Relude.length >> fromIntegral
 {-# INLINE length #-}
@@ -522,9 +536,10 @@ gather = Relude.foldlM
 foldr1 :: (Fold t) => (a -> a -> a) -> t a -> Maybe a
 foldr1 f xs = foldr mf Nothing xs
   where
-    mf x m = Just <| case m of
-      Nothing -> x
-      Just y -> f x y
+    mf x m =
+      Just <| case m of
+        Nothing -> x
+        Just y -> f x y
 
 ---- Traversals
 

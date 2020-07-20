@@ -102,10 +102,10 @@ normalise t = case t of
   Done _ -> pure t
   Fail -> pure t
   ---- Editors
-  Editor Unnamed e -> do
+  Edit Unnamed e -> do
     n <- supply
-    pure <| Editor (Named n) e
-  Editor (Named _) _ -> pure t
+    pure <| Edit (Named n) e
+  Edit (Named _) _ -> pure t
   ---- Checks
   Assert p -> do
     pure <| Done p
@@ -143,23 +143,25 @@ handle ::
   Sem (Writer (List (Some (Ref h))) ': Error NotApplicable ': r) (Task h a)
 handle t i = case t of
   ---- Editors
-  Editor n e -> case i of
+  Edit n e -> case i of
     IOption n' l -> case e of
-      Select ts
-        | n == n' -> case HashMap.lookup l ts of
-          Nothing -> throw <| CouldNotFind l
-          Just t' -> do
-            let os = options t
-            if Option n l `elem` os
-              then pure t'
-              else throw <| CouldNotGoTo l
-        | otherwise -> throw <| CouldNotMatch n n'
+      Select ts ->
+        if n == n'
+          then case HashMap.lookup l ts of
+            Nothing -> throw <| CouldNotFind l
+            Just t' -> do
+              let os = options t
+              if Option n l `elem` os
+                then pure t'
+                else throw <| CouldNotGoTo l
+          else throw <| CouldNotMatch n n'
       _ -> throw <| CouldNotHandle i
-    IEnter m b'
-      | n == Named m -> do
-        e' <- handle' b' e
-        pure <| Editor n e'
-      | otherwise -> throw <| CouldNotMatch n (Named m)
+    IEnter m b' ->
+      if n == Named m
+        then do
+          e' <- handle' b' e
+          pure <| Edit n e'
+        else throw <| CouldNotMatch n (Named m)
   ---- Pass
   Trans e1 t2 -> do
     t2' <- handle t2 i
