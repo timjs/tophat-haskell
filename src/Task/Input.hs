@@ -165,6 +165,7 @@ parseConcrete val
   | Just v <- scan val :: Maybe Unit = okay <| Concrete v
   | Just v <- scan val :: Maybe Bool = okay <| Concrete v
   | Just v <- scan val :: Maybe Int = okay <| Concrete v
+  | Just v <- scan val :: Maybe (Int, Int) = okay <| Concrete v
   | Just v <- scan val :: Maybe Double = okay <| Concrete v
   | Just v <- scan val :: Maybe Text = okay <| Concrete v
   | Just v <- scan val :: Maybe [Bool] = okay <| Concrete v

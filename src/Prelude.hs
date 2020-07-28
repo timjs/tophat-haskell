@@ -344,7 +344,7 @@ same = \case
   x : xs -> all (x ==) xs
 {-# INLINE same #-}
 
-infix 0 ~>
+infixr 0 ~>
 
 (~>) :: a -> b -> (a, b)
 (~>) = (,)
@@ -585,7 +585,7 @@ infixr 9 >>
 {-# INLINE (|>) #-}
 
 (.) :: a -> (a -> b) -> b
-(.) = flip (<|)
+(.) = (|>)
 {-# INLINE (.) #-}
 
 (<<) :: (b -> c) -> (a -> b) -> a -> c

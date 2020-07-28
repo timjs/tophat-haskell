@@ -64,7 +64,7 @@ temperature' (c, f) = forever do
     Left c' -> pure (c', c2f c')
     Right f' -> pure (f2c f', f')
 
--- with shares, we do not need any recursion.
+-- With shares, we do not need any recursion.
 -- Recursion on editing is built in.
 -- However, we need a way to transform our view on shares: lenses!
 temperature'' :: (Reflect h) => Double -> Task h Double

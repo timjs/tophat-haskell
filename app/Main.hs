@@ -2,6 +2,7 @@ module Main where
 
 import Task
 import Task.Interact
+import Prelude hiding (repeat)
 
 main :: IO ()
 main =
@@ -342,10 +343,9 @@ numbers = do
 numbers' :: (Reflect h) => Task h (List Int)
 numbers' = do
   r <- share ([] :: List Int)
-  (edit_ r >< watch r) >>@ exit_
+  ((), ns) <- repeat (edit_ r >< watch r)
+  view ns
   where
-    exit_ ((), ns) =
-      view ns
     edit_ r =
       do select
         [ ("Prepend", prepend_ r),

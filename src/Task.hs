@@ -23,6 +23,7 @@ module Task
     -- ** Derived
     parallel,
     choose,
+    guard,
     branch,
     assert,
     (<?>),
@@ -30,6 +31,7 @@ module Task
     (>>*),
     (>**),
     forever,
+    repeat,
     (>>@),
 
     -- * Reexports
@@ -40,8 +42,10 @@ module Task
 where
 
 import Data.Basic
+import qualified Data.HashMap.Strict as HashMap
 import Data.Some
 import Data.Store
+import Prelude hiding (guard, repeat)
 
 ---- Tasks ---------------------------------------------------------------------
 
@@ -181,6 +185,11 @@ choose :: List (Task h a) -> Task h a
 -- choose xs = xs .\ fail <| (<|>)
 choose = foldr (<|>) fail
 
+guard :: HashMap Label (Bool, Task h a) -> Task h a
+guard = select << HashMap.foldrWithKey go []
+  where
+    go l (b, t) = HashMap.insert l (if b then t else fail)
+
 branch :: List (Bool, Task h a) -> Task h a
 branch [] = fail
 branch ((b, t) : rs) = if b then t else branch rs
@@ -207,6 +216,9 @@ infixl 1 >**
 
 forever :: Task h a -> Task h Void
 forever t1 = t1 >>= \_ -> forever t1
+
+repeat :: Task h a -> Task h a
+repeat t1 = t1 >>= \x -> select ["Repeat" ~> repeat t1, "Exit" ~> pure x]
 
 (>>@) :: Task h a -> (a -> Task h b) -> Task h b
 (>>@) t1 e2 = t1 >>= \x -> select ["Repeat" ~> t1 >>@ e2, "Exit" ~> e2 x]

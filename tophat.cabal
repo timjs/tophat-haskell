@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: caee25fb10f6d2eb82782ae9d5794656d2de9f19e096815bb1e8a3e26f146842
+-- hash: 4239d7343521cf29010757e71e15db0d2bf908fe5b63a301f6a89d099a2a28d2
 
 name:           tophat
 version:        0.1.0.0
@@ -65,6 +65,7 @@ library
 executable tophat
   main-is: Main.hs
   other-modules:
+      Bigger
       Guis
       Paths_tophat
   hs-source-dirs:
