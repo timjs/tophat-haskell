@@ -161,13 +161,17 @@ parseConcrete val
   | otherwise = error <| unwords ["!! Error parsing value", display val |> quote]
 
 parse :: Text -> Either Text (Input Concrete)
-parse t = case Text.words t of
-  ["help"] -> error usage
-  ["h"] -> error usage
-  [i, x] -> do
-    n <- parseId i
-    map (Pick n) (parseLabel x) ++ map (Insert n) (parseConcrete x) --NOTE: should be `<|>`, but we've got some strange import of `Error` getting in the way
-  [x] -> do
+parse t
+  | ("help", _) <- b = error usage
+  | ("h", _) <- b = error usage
+  | (x, r) <- b,
+    Text.null r = do
     l <- parseLabel x
     okay <| Prepick l
-  _ -> error <| unwords ["!!", display t |> quote, "is not a valid command, type `help` for more info"]
+  | (i, r) <- b = do
+    let x = Text.strip r
+    n <- parseId i
+    map (Pick n) (parseLabel x) ++ map (Insert n) (parseConcrete x) --NOTE: should be `<|>`, but we've got some strange import of `Error` getting in the way
+    -- _ -> error <| unwords ["!!", display t |> quote, "is not a valid command, type `help` for more info"]
+  where
+    b = Text.breakOn " " t
