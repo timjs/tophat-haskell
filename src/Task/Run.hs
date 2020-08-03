@@ -21,7 +21,7 @@ data Steps
   | DidNormalise Text
   | DidBalance Text
   | DidStart Text
-  | DidCalculateOptions (List Option) Text
+  | DidCalculateOptions (List (Input Dummy)) Text
   | DidFinish
 
 instance Display Steps where
@@ -40,7 +40,7 @@ data NotApplicable
   | CouldNotChangeRef SomeTypeRep SomeTypeRep
   | CouldNotGoTo Label
   | CouldNotFind Label
-  | CouldNotSelect
+  | CouldNotPick
   | CouldNotContinue
   | CouldNotHandle (Input Concrete)
   | CouldNotHandleValue Concrete
@@ -52,7 +52,7 @@ instance Display NotApplicable where
     CouldNotChangeRef r c -> unwords ["Could not change value because cell", display r |> quote, "does not contain", display c |> quote]
     CouldNotGoTo l -> unwords ["Could not pick label", display l |> quote, "because it leads to an empty task"]
     CouldNotFind l -> unwords ["Could not find label", display l |> quote, "in the possible options"]
-    CouldNotSelect -> unwords ["Could not pick because there is nothing to pick from in this task"]
+    CouldNotPick -> unwords ["Could not pick because there is nothing to pick from in this task"]
     CouldNotContinue -> unwords ["Could not continue because there is no value to continue with"]
     CouldNotHandle i -> unwords ["Could not handle input", display i |> quote]
     CouldNotHandleValue b -> unwords ["Could not handle new editor value", display b |> quote, "for readonly editor"]
@@ -103,8 +103,8 @@ normalise t = case t of
   Fail -> pure t
   ---- Editors
   Edit Unnamed e -> do
-    n <- supply
-    pure <| Edit (Named n) e
+    k <- supply
+    pure <| Edit (Named k) e
   Edit (Named _) _ -> pure t
   ---- Checks
   Assert p -> do
@@ -135,6 +135,28 @@ normalise t = case t of
 
 ---- Handling ------------------------------------------------------------------
 
+pick ::
+  forall h r a.
+  Task h a ->
+  Label ->
+  Sem (Error NotApplicable ': r) (Task h a)
+pick t l = case t of
+  Edit n (Select ts) ->
+    case HashMap.lookup l ts of
+      Nothing -> throw <| CouldNotFind l
+      Just t' -> do
+        let os = options t
+        if Option n l `elem` os
+          then pure t'
+          else throw <| CouldNotGoTo l
+  Trans e1 t2 -> do
+    t2' <- pick t2 l
+    pure <| Trans e1 t2'
+  Step t1 e2 -> do
+    t1' <- pick t1 l
+    pure <| Step t1' e2
+  _ -> throw CouldNotPick
+
 handle ::
   forall h r a.
   Members '[Alloc h, Read h, Write h] r =>
@@ -144,24 +166,18 @@ handle ::
 handle t i = case t of
   ---- Editors
   Edit n e -> case i of
-    IOption n' l -> case e of
-      Select ts ->
+    Option n' l -> case e of
+      Select _ ->
         if n == n'
-          then case HashMap.lookup l ts of
-            Nothing -> throw <| CouldNotFind l
-            Just t' -> do
-              let os = options t
-              if Option n l `elem` os
-                then pure t'
-                else throw <| CouldNotGoTo l
+          then raise <| pick t l -- H-Select
           else throw <| CouldNotMatch n n'
       _ -> throw <| CouldNotHandle i
-    IEnter m b' ->
-      if n == Named m
+    Insert k b' ->
+      if n == Named k
         then do
           e' <- handle' b' e
-          pure <| Edit n e'
-        else throw <| CouldNotMatch n (Named m)
+          pure <| Edit n e' -- H-Edit
+        else throw <| CouldNotMatch n (Named k)
   ---- Pass
   Trans e1 t2 -> do
     t2' <- handle t2 i
@@ -170,13 +186,15 @@ handle t i = case t of
     et1' <- try <| handle t1 i
     case et1' of
       Right t1' -> pure <| Step t1' e2 -- H-Step
-      Left _ -> do
-        mv1 <- raise <| raise <| value t1
-        case mv1 of
-          Nothing -> throw CouldNotContinue
-          Just v1 -> do
-            let t2 = e2 v1
-            handle t2 i -- H-StepCont
+      Left _ -> case i of
+        Prepick l -> do
+          mv1 <- raise <| raise <| value t1
+          case mv1 of
+            Nothing -> throw CouldNotContinue
+            Just v1 -> do
+              let t2 = e2 v1
+              raise <| pick t2 l -- H-Preselect
+        _ -> throw CouldNotPick
   Pair t1 t2 -> do
     et1' <- try <| handle t1 i
     case et1' of

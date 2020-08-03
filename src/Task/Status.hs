@@ -65,7 +65,7 @@ status = \case
   Choose t1 t2 -> pure (<|>) -< status t1 -< status t2
   Trans f t -> pure (map f) -< status t
   -- From the rest we do not know anything. --
-  Pick _ -> pure Stepping
+  Option _ -> pure Stepping
   Step _ _ -> pure Stepping
   Forever _ -> pure Stepping
 -}

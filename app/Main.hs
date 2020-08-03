@@ -244,7 +244,7 @@ updateFutureL :: Task h Int
 updateFutureL = (fourtytwo >>= \_ -> select ["A" ~> view (1 :: Int)]) >>= \_ -> select ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)]
 
 mixedFutureR :: Task h Int
-mixedFutureR = (enterInt >>= \_ -> fourtytwo) >>= \_ -> select ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)]
+mixedFutureR = enterInt >>= (\_ -> fourtytwo >>= \_ -> select ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)])
 
 mixedFutureL :: Task h Int
 mixedFutureL = (enterInt >>= \_ -> fourtytwo) >>= \_ -> select ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)]

@@ -4,10 +4,8 @@ module Task.Input
     Dummy,
     dummy,
     Input (..),
-    pattern ISelect,
-    pattern IPreselect,
-    Option (..),
-    fromOption,
+    pattern Pick,
+    pattern Prepick,
     usage,
     parse,
   )
@@ -17,9 +15,9 @@ import qualified Data.Char as Char
 import qualified Data.Text as Text
 import Task (Basic, Label, Name (..))
 
----- Actions -------------------------------------------------------------------
+---- Inputs --------------------------------------------------------------------
 
----- Concrete actions
+---- Concrete inputs
 
 data Concrete :: Type where
   Concrete :: Basic b => b -> Concrete
@@ -33,7 +31,7 @@ instance Display Concrete where
   display = \case
     Concrete x -> display x
 
----- Symbolic actions
+---- Symbolic inputs
 
 data Symbolic :: Type where
   Symbolic :: Basic b => Proxy b -> Symbolic
@@ -50,33 +48,33 @@ instance Display Symbolic where
       where
         beta = typeOfProxy p
 
----- Dummy actions
+---- Dummy inputs
 
 type Dummy = Symbolic
 
 dummy :: Basic b => Proxy b -> Dummy
 dummy p = Symbolic p
 
----- Inputs --------------------------------------------------------------------
+---- Inputs
 
 data Input b
-  = IEnter Nat b
-  | IOption Name Label
+  = Insert Nat b
+  | Option Name Label
   deriving (Eq, Debug, Functor, Foldable, Traversable)
 
-{-# COMPLETE IEnter, ISelect, IPreselect #-}
+{-# COMPLETE Insert, Pick, Prepick #-}
 
-pattern ISelect :: Nat -> Label -> Input b
-pattern ISelect n l = IOption (Named n) l
+pattern Pick :: Nat -> Label -> Input b
+pattern Pick n l = Option (Named n) l
 
-pattern IPreselect :: Label -> Input b
-pattern IPreselect l = IOption Unnamed l
+pattern Prepick :: Label -> Input b
+pattern Prepick l = Option Unnamed l
 
 instance Display b => Display (Input b) where
   display = \case
-    IEnter n b -> unwords [display n, display b]
-    ISelect n l -> unwords [display n, display l]
-    IPreselect l -> display l
+    Insert n b -> unwords [display n, display b]
+    Pick n l -> unwords [display n, display l]
+    Prepick l -> display l
 
 ---- Action view
 
@@ -84,38 +82,26 @@ instance Display b => Display (Input b) where
 --   = AValue b
 --   | ALabel Label
 
--- {-# COMPLETE ISend, IPreselect #-}
+-- {-# COMPLETE ISend, Prepick #-}
 -- pattern ISend :: Nat -> Action b -> Input b
 -- pattern ISend n a <- (action -> Just (n, a))
 
 -- action:: Input b -> Maybe (Nat, Action b)
 -- action= \case
---   IEnter n b -> Just (n, AValue b)
---   ISelect n l -> Just (n, ALabel l)
---   IPreselect _ -> Nothing
-
----- Options -------------------------------------------------------------------
-
-data Option
-  = Option Name Label
-  deriving (Eq, Ord, Debug, Scan)
-
-instance Display Option where
-  display (Option n l) = concat [display l, "^", display n]
-
-fromOption :: Option -> Input b
-fromOption (Option n l) = IOption n l
+--   Insert n b -> Just (n, AValue b)
+--   Pick n l -> Just (n, ALabel l)
+--   Prepick _ -> Nothing
 
 ---- Conformance ---------------------------------------------------------------
 
 -- dummyfy :: Action -> Dummy
 -- dummyfy = \case
---   IEnter x -> AEnter (proxyOf x)
---   ISelect l -> ASelect l
+--   Insert x -> AEnter (proxyOf x)
+--   Pick l -> ASelect l
 
 -- reify :: Dummy -> Gen (List Action)
--- reify (AEnter l)  = map IEnter <$> vectorOf 5 (arbitraryOf l)
--- reify (ASelect l)   = pure [ ISelect l ]
+-- reify (AEnter l)  = map Insert <$> vectorOf 5 (arbitraryOf l)
+-- reify (ASelect l)   = pure [ Pick l ]
 
 -- strip :: Input Action -> Input Dummy
 -- strip = map dummyfy
@@ -180,8 +166,8 @@ parse t = case Text.words t of
   ["h"] -> error usage
   [i, x] -> do
     n <- parseId i
-    map (ISelect n) (parseLabel x) ++ map (IEnter n) (parseConcrete x) --NOTE: should be `<|>`, but we've got some strange import of `Error` getting in the way
+    map (Pick n) (parseLabel x) ++ map (Insert n) (parseConcrete x) --NOTE: should be `<|>`, but we've got some strange import of `Error` getting in the way
   [x] -> do
     l <- parseLabel x
-    okay <| IPreselect l
+    okay <| Prepick l
   _ -> error <| unwords ["!!", display t |> quote, "is not a valid command, type `help` for more info"]

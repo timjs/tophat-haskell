@@ -139,9 +139,9 @@ watching' = \case
 -- | * We can't return a `HashMap _ (Task  a)` because deeper tasks can be of different types!
 options ::
   Task h a -> -- There is no need for any effects.
-  List Option
+  List (Input Dummy)
 options = \case
-  Edit n (Select ts) -> options' ts |> map (Option n)
+  Edit n (Select ts) -> labels ts |> map (Option n)
   Trans _ t2 -> options t2
   Step t1 _ -> options t1
   -- Step t1 e2 -> pure (++) -< options t1 -< do
@@ -159,10 +159,10 @@ options = \case
 -- |
 -- | Notes:
 -- | * Goes one level deep!
-options' ::
+labels ::
   HashMap Label (Task h a) -> -- There is no need for any effects.
   List Label
-options' = HashMap.keys << HashMap.filter (not << failing)
+labels = HashMap.keys << HashMap.filter (not << failing)
 
 inputs ::
   Members '[Alloc h, Read h] r => -- We need `Alloc` and `Read` because we call `value`.
@@ -170,8 +170,7 @@ inputs ::
   Sem r (List (Input Dummy))
 inputs t = case t of
   Edit Unnamed _ -> pure []
-  Edit (Named n) (Select ts) -> options' ts |> map (ISelect n) |> pure
-  Edit (Named n) e -> inputs' e |> map (IEnter n) |> pure
+  Edit (Named k) e -> pure <| inputs' k e
   Trans _ t2 -> inputs t2
   Pair t1 t2 -> pure (++) -< inputs t1 -< inputs t2
   Done _ -> pure []
@@ -184,21 +183,22 @@ inputs t = case t of
         Nothing -> pure []
         Just v1 -> do
           let t2 = e2 v1
-          options t2 |> map fromOption |> pure
+          pure <| options t2
   Assert _ -> pure []
   Share _ -> pure []
   Assign _ _ -> pure []
 
 inputs' ::
   forall h a.
+  Nat ->
   Editor h a ->
-  List Dummy
-inputs' t = case t of
-  Enter -> [dummy beta]
-  Update _ -> [dummy beta]
+  List (Input Dummy)
+inputs' k t = case t of
+  Enter -> [Insert k <| dummy beta]
+  Update _ -> [Insert k <| dummy beta]
   View _ -> []
-  Select _ -> [] --NOTE: selections do not have `IEnter` actions and are handles separately
-  Change _ -> [dummy beta]
+  Select ts -> labels ts |> map (Pick k)
+  Change _ -> [Insert k <| dummy beta]
   Watch _ -> []
   where
     beta = Proxy :: Proxy a
