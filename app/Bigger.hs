@@ -29,3 +29,18 @@ textEditor = do
       | (a, rest) <- Text.splitAt x t,
         (b, c) <- Text.splitAt (y - x) rest =
         a ++ m ++ b ++ m ++ c
+
+---- Chat session --------------------------------------------------------------
+
+chatSession :: Reflect h => Task h (((Text, ()), (Text, ())), (Text, ()))
+chatSession = do
+  history <- share ""
+  chat "Tim" history >< chat "Nico" history >< chat "Markus" history
+  where
+    chat :: Text -> Store h Text -> Task h (Text, ())
+    chat name history =
+      watch history >< repeat (enter >>* ["Send" ~> append history name])
+
+    append :: Store h Text -> Text -> Text -> Task h ()
+    append history name msg =
+      history <<= \h -> h ++ "\n" ++ name ++ ": '" ++ msg ++ "'"
