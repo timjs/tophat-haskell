@@ -95,23 +95,22 @@ normalise t = case t of
           Just _ -> pure t2' -- N-ChooseRight
           Nothing -> pure <| Choose t1' t2' -- N-ChooseNone
 
-  ---- Congruences
+  ---- Converge
   Trans f t2 -> pure (Trans f) -< normalise t2
   Pair t1 t2 -> pure Pair -< normalise t1 -< normalise t2
   ---- Ready
   Done _ -> pure t
   Fail -> pure t
-  ---- Editors
+  ---- Name
   Edit Unnamed e -> do
     k <- supply
     pure <| Edit (Named k) e
   Edit (Named _) _ -> pure t
-  ---- Checks
+  ---- Resolve
   Assert p -> do
     pure <| Done p
-  ---- References
   Share b -> do
-    l <- Store.alloc b --XXX: raise?
+    l <- Store.alloc b
     pure <| Done l
   Assign b s@(Store _ r) -> do
     Store.write b s
@@ -175,7 +174,7 @@ handle t i = case t of
     Insert k b' ->
       if n == Named k
         then do
-          e' <- handle' b' e
+          e' <- insert e b'
           pure <| Edit n e' -- H-Edit
         else throw <| CouldNotMatch n (Named k)
   ---- Pass
@@ -212,13 +211,13 @@ handle t i = case t of
         ---- Rest
   _ -> throw <| CouldNotHandle i
 
-handle' ::
+insert ::
   forall h r a.
   Members '[Read h, Write h] r =>
-  Concrete ->
   Editor h a -> -- NOTE: `Select` does not return an `Editor`...
+  Concrete ->
   Sem (Writer (List (Some (Ref h))) ': Error NotApplicable ': r) (Editor h a)
-handle' c@(Concrete b') = \case
+insert e c@(Concrete b') = case e of
   Enter
     | Just Refl <- b' ~: beta -> pure <| Update b'
     | otherwise -> throw <| CouldNotChangeVal (SomeTypeRep beta) (someTypeOf b')
