@@ -259,7 +259,7 @@ instance Functor (Task h) where
 
 instance Monoidal (Task h) where
   (><) = Pair
-  skip = Done ()
+  none = Done ()
 
 instance Applicative (Task h) where
   pure = Done

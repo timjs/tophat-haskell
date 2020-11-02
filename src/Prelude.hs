@@ -107,8 +107,8 @@ module Prelude
     -- ** Functors
     (<||),
     (||>),
-    -- (<|.),
-    -- (.|>),
+    (-||),
+    (||-),
     map,
 
     -- ** Applicatives
@@ -124,7 +124,7 @@ module Prelude
     (>->),
 
     -- ** Monoidals
-    Monoidal ((><), skip, (>|), (|<)),
+    Monoidal ((><), none, (>|), (|<)),
     applyDefault,
     pureDefault,
 
@@ -135,8 +135,8 @@ module Prelude
     -- when,
 
     -- ** Monads
-    (||=),
-    (=||),
+    (|=),
+    (=|),
     MonadZero,
     fail,
 
@@ -248,7 +248,7 @@ type Fold = Relude.Foldable
 
 type Traverse = Relude.Traversable
 
----- Groups, Modules, Torsors -
+---- Groups, Modules, Torsors
 
 infixr 5 ~~
 
@@ -614,17 +614,17 @@ map = Relude.fmap
 (||>) = flip (Relude.<$>)
 {-# INLINE (||>) #-}
 
--- infixl 4 <|.
+infixl 4 -||
 
--- infixl 4 .|>
+infixl 4 ||-
 
--- (<|.) :: Functor f => a -> f b -> f a
--- (<|.) = (Relude.<$)
--- {-# INLINE (<|.) #-}
+(-||) :: Functor f => a -> f b -> f a
+(-||) = (Relude.<$)
+{-# INLINE (-||) #-}
 
--- (.|>) :: Functor f => f a -> b -> f b
--- (.|>) = (Relude.$>)
--- {-# INLINE (.|>) #-}
+(||-) :: Functor f => f a -> b -> f b
+(||-) = (Relude.$>)
+{-# INLINE (||-) #-}
 
 ---- Applicatives
 
@@ -692,8 +692,8 @@ class Applicative f => Monoidal f where
   (><) :: f a -> f b -> f (a, b)
   (><) x y = pure (,) -< x -< y
 
-  skip :: f ()
-  skip = pure ()
+  none :: f ()
+  none = pure ()
 
   (>|) :: f a -> f b -> f a
   (>|) x y = pure fst -< x >< y
@@ -705,7 +705,7 @@ applyDefault :: Monoidal f => f (a -> b) -> f a -> f b
 applyDefault fg fx = pure (\(g, x) -> g x) -< fg >< fx
 
 pureDefault :: Monoidal f => a -> f a
-pureDefault x = map (const x) skip
+pureDefault x = map (const x) none
 
 instance Monoidal Maybe
 
@@ -740,17 +740,17 @@ when p t = check p t (pure ())
 
 type Bind = Monad
 
-infixl 1 ||=
+infixl 1 |=
 
-infixr 1 =||
+infixr 1 =|
 
-(||=) :: (Monad m) => m a -> (a -> m b) -> m b
-(||=) = (Relude.>>=)
-{-# INLINE (||=) #-}
+(|=) :: (Monad m) => m a -> (a -> m b) -> m b
+(|=) = (Relude.>>=)
+{-# INLINE (|=) #-}
 
-(=||) :: (Monad m) => (a -> m b) -> m a -> m b
-(=||) = (Relude.=<<)
-{-# INLINE (=||) #-}
+(=|) :: (Monad m) => (a -> m b) -> m a -> m b
+(=|) = (Relude.=<<)
+{-# INLINE (=|) #-}
 
 -- | A safe alternative for MonadFail.
 -- |

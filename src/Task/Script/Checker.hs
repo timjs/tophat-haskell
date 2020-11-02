@@ -160,15 +160,15 @@ instance Check Statement where
 instance Check Task where
   check g = \case
     Enter b _ -> ofBasic b |> returnValue
-    Update _ e -> check g e ||= needBasic ||= returnValue
-    Change _ e -> check g e ||= outofReference ||= returnValue
-    View _ e -> check g e ||= needBasic ||= returnValue
-    Watch _ e -> check g e ||= outofReference ||= returnValue
-    Done e -> check g e ||= outofRecord ||> TTask
-    Pair ss -> traverse subcheck ss ||= unite ||> TTask
-    Choose ss -> traverse subcheck ss ||= intersect ||> TTask
-    Branch bs -> traverse subcheck' bs ||= intersect ||> TTask
-    Select bs -> traverse subcheck'' bs ||= intersect ||> TTask
+    Update _ e -> check g e |= needBasic |= returnValue
+    Change _ e -> check g e |= outofReference |= returnValue
+    View _ e -> check g e |= needBasic |= returnValue
+    Watch _ e -> check g e |= outofReference |= returnValue
+    Done e -> check g e |= outofRecord ||> TTask
+    Pair ss -> traverse subcheck ss |= unite ||> TTask
+    Choose ss -> traverse subcheck ss |= intersect ||> TTask
+    Branch bs -> traverse subcheck' bs |= intersect ||> TTask
+    Select bs -> traverse subcheck'' bs |= intersect ||> TTask
     Execute x a -> do
       t_x <- HashMap.lookup x g |> note (UnknownVariable x)
       case t_x of
@@ -179,7 +179,7 @@ instance Check Task where
             else throw <| ArgumentError r' t_a
         _ -> throw <| FunctionNeeded t_x
     Hole _ -> throw <| HoleFound g --TODO: how to handle holes?
-    Share e -> check g e ||= outofBasic ||> TReference ||= returnValue
+    Share e -> check g e |= outofBasic ||> TReference |= returnValue
     Assign e1 e2 -> do
       t1 <- check g e1
       b1 <- outofReference t1
@@ -188,7 +188,7 @@ instance Check Task where
         then pure (TRecord [])
         else throw (AssignError b1 b2)
     where
-      subcheck s = check g s ||= outofTask
+      subcheck s = check g s |= outofTask
       subcheck' (e, s) = do
         t_e <- check g e
         case t_e of
@@ -259,7 +259,7 @@ match m t = case m of
   MBind x -> pure [x ~> t]
   MRecord ms -> do
     case t of
-      TRecord r -> merge ms r ||= traverse (uncurry match) ||= unite
+      TRecord r -> merge ms r |= traverse (uncurry match) |= unite
       _ -> throw <| RecordMismatch ms t
   MUnpack -> do
     case t of
