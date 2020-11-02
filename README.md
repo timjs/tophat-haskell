@@ -14,16 +14,21 @@ Semantics, including all observations, can be found in [Data.Task.Run](https://g
 
 [Main](https://github.com/timjs/tophat-haskell/blob/master/src/Main.hs) includes a couple of examples which can be executed.
 
+## Dependencies
+
+* GHC 8.8
+* Cabal 3.2
 
 ## Building
 
-Clone the repository and build it by running Cabal's `new` commands:
+Clone the repository and build it by running Cabal.
+You'll need Cabal version 3 for new style builds!
 
 ```sh
 git clone https://github.com/timjs/tophat-haskell.git
 cd tophat-haskell
-cabal new-build
-cabal new-run
+cabal build
+cabal run
 ```
 
-You'll need GHC-8.6 or newer.
+Tested with GHC-8.8 and Cabal 3.2.
