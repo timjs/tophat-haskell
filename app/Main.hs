@@ -254,6 +254,12 @@ parallelFuture = do
   _ <- enterInt
   select ["A" ~> view (1 :: Int)] >< select ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)]
 
+troubledFuture :: Task h (Int, Int)
+troubledFuture =
+  t >< t
+  where
+    t = view (0 :: Int) >>= \_ -> select ["A" ~> view (42 :: Int)]
+
 nestedFuture :: Task h Int
 nestedFuture = do
   _ <- enterInt
@@ -347,7 +353,7 @@ numbers' = do
   view ns
   where
     edit_ r =
-      do select
+      select
         [ ("Prepend", prepend_ r),
           ("Clear", clear_ r),
           ("Change", change_ r)

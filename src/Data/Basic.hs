@@ -11,7 +11,7 @@ import Data.Aeson (FromJSON, ToJSON)
 -- |
 -- | They should be:
 -- | * `Display` to show them in a user interface.
--- | * `Parse` to parse them from input.
+-- | * `Scan` to parse them from input.
 -- | * `Reflect` to match input type and editor type witch each other.
 -- |
 -- | It is defined as a class synonym instead of a type synonym to let GHC
