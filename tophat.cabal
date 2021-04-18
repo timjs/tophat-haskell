@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 69941d0e8716e919ae6c9dce286c2cecf8c46910678509f4fbf30352ac6657cc
+-- hash: db083786ad6a263af65c8f13b79a3eee69104fac81d0facc993f362b35047296
 
 name:           tophat
 version:        0.2.0.0
@@ -53,7 +53,8 @@ library
   default-extensions: EmptyDataDecls EmptyCase FlexibleContexts FlexibleInstances InstanceSigs MultiParamTypeClasses LambdaCase MultiWayIf NamedFieldPuns TupleSections NumericUnderscores DeriveGeneric DeriveFunctor DeriveFoldable DeriveTraversable DerivingVia StandaloneDeriving BangPatterns KindSignatures TypeOperators MonadComprehensions BinaryLiterals NegativeLiterals NoStarIsType BlockArguments ScopedTypeVariables TypeApplications PartialTypeSignatures NamedWildCards OverloadedStrings OverloadedLists ConstraintKinds RankNTypes DefaultSignatures PatternSynonyms PatternGuards FunctionalDependencies UndecidableInstances GADTs ExistentialQuantification DataKinds PolyKinds TypeFamilies TypeFamilyDependencies QuantifiedConstraints StrictData
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -O2 -flate-specialise -fspecialise-aggressively -fplugin=Polysemy.Plugin
   build-depends:
-      base-noprelude >=4.12 && <5
+      aeson
+    , base-noprelude >=4.12 && <5
     , lens-simple
     , polysemy >=1.4.0 && <1.5.0
     , polysemy-plugin
@@ -73,7 +74,8 @@ executable tophat
   default-extensions: EmptyDataDecls EmptyCase FlexibleContexts FlexibleInstances InstanceSigs MultiParamTypeClasses LambdaCase MultiWayIf NamedFieldPuns TupleSections NumericUnderscores DeriveGeneric DeriveFunctor DeriveFoldable DeriveTraversable DerivingVia StandaloneDeriving BangPatterns KindSignatures TypeOperators MonadComprehensions BinaryLiterals NegativeLiterals NoStarIsType BlockArguments ScopedTypeVariables TypeApplications PartialTypeSignatures NamedWildCards OverloadedStrings OverloadedLists ConstraintKinds RankNTypes DefaultSignatures PatternSynonyms PatternGuards FunctionalDependencies UndecidableInstances GADTs ExistentialQuantification DataKinds PolyKinds TypeFamilies TypeFamilyDependencies QuantifiedConstraints StrictData
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -O2 -flate-specialise -fspecialise-aggressively -fplugin=Polysemy.Plugin -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base-noprelude >=4.12 && <5
+      aeson
+    , base-noprelude >=4.12 && <5
     , lens-simple
     , polysemy >=1.4.0 && <1.5.0
     , polysemy-plugin
