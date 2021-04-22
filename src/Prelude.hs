@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -Wno-orphans -Wno-deprecations #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 
 module Prelude
   ( -- * Reexports
@@ -61,6 +62,7 @@ module Prelude
     -- ** HashSets
     (=<),
     (/<),
+    keys,
 
     -- ** Vectors
 
@@ -395,6 +397,9 @@ infix 4 /<
 (/<) x = not << HashSet.member x
 {-# INLINE (/<) #-}
 
+keys :: List (a, b) -> List a
+keys = map fst -- >> HashSet.fromList
+
 ---- Vectors
 
 -- only :: a -> Vector a
@@ -534,7 +539,7 @@ gather = Relude.foldlM
 -- gahter1 f = foldr go
 
 foldr1 :: (Fold t) => (a -> a -> a) -> t a -> Maybe a
-foldr1 f xs = foldr mf Nothing xs
+foldr1 f = foldr mf Nothing
   where
     mf x m =
       Just <| case m of
