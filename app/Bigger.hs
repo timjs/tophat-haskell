@@ -2,7 +2,6 @@ module Bigger where
 
 import qualified Data.Text as Text
 import Task
-import Task.Interact
 import Prelude hiding (guard, repeat)
 
 ---- Text editor ---------------------------------------------------------------
