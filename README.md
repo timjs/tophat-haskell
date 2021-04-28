@@ -16,10 +16,8 @@ Semantics, including all observations, can be found in [Data.Task.Run](https://g
 
 ## Dependencies
 
-* GHC 8.8
-* Cabal 3.2
-
-(The [Polysemy plugin](https://hackage.haskell.org/package/polysemy-plugin) does not work well with GHC 8.10 yet, therefore we recommend GHC 8.8.)
+* GHC >= 8.8
+* Cabal >= 3.0
 
 ## Building
 
@@ -33,4 +31,5 @@ cabal build
 cabal run
 ```
 
-Tested with GHC-8.8 and Cabal 3.2.
+Tested with GHC-8.8 and Cabal 3.2,
+and with GHC-8.10 and Cabal 3.4.

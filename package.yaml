@@ -11,17 +11,21 @@ copyright:           BSD3
 
 
 extra-source-files:
-- README.md
+  - README.md
 
 
 dependencies:
-  - base-noprelude >= 4.12 && < 5
+  - name: base
+    version: ">= 4.12 && < 5"
+    mixin:
+      - hiding (Prelude)
   - relude >= 0.5 && < 1
-  - polysemy >= 1.4.0 && < 1.5.0
+  - polysemy >= 1.5.0 && < 2
   - polysemy-plugin
   - text
   - unordered-containers
   - lens-simple
+  - aeson
 
 
 default-extensions:
@@ -67,6 +71,7 @@ default-extensions:
 
   # Prelude and overloading:
   # - NoImplicitPrelude
+  # - PackageImports
   - OverloadedStrings
   - OverloadedLists
 
