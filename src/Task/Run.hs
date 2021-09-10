@@ -31,7 +31,7 @@ instance Display Steps where
     DidBalance t -> unwords ["Rebalanced to:", display t]
     DidStart t -> unwords ["Started with:", display t]
     DidCalculateOptions os t -> unwords ["Future options before normalising", display os, "for task", display t]
-    DidFinish -> "Lift!"
+    DidFinish -> "Done!"
 
 data NotApplicable
   = CouldNotMatch Name Name
