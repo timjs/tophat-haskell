@@ -62,13 +62,13 @@ oneStep' =
   update 0 >>? \x ->
     inc x
 
-oneStep'' :: Task h Int
-oneStep'' = do
-  x <- update 0
-  select
-    [ "Increase" ~> inc x,
-      "Decrease" ~> dec x
-    ]
+-- oneStep'' :: Task h Int
+-- oneStep'' = do
+--   x <- update 0
+--   select
+--     [ "Increase" ~> inc x,
+--       "Decrease" ~> dec x
+--     ]
 
 oneStep''' :: Task h Int
 oneStep''' =
@@ -148,7 +148,7 @@ pick3 = pick2 <?> view 3
 
 pick3' :: Task h Int
 pick3' =
-  select
+  pick
     [ "A" ~> view 1,
       "B" ~> view 2,
       "C" ~> view 3
@@ -187,7 +187,7 @@ actions'' = do
 guards :: Task h Text
 guards = do
   x <- enter
-  select
+  pick
     [ "A" ~> if x >= (10 :: Int) then view "large" else fail,
       "B" ~> if x >= (100 :: Int) then view "very large" else fail
     ]
@@ -223,49 +223,48 @@ branch'' = do
 
 branch''' :: Task h Text
 branch''' = do
-  x <- update (1 :: Int)
-  select
-    [ "Div3" ~> if x `mod` 3 == 0 then view "multiple of 3" else fail,
-      "Div5" ~> if x `mod` 5 == 0 then view "multiple of 5" else fail
-    ]
+  update (1 :: Int)
+    >>* [ "Div3" ~> \x -> if x `mod` 3 == 0 then view "multiple of 3" else fail,
+          "Div5" ~> \x -> if x `mod` 5 == 0 then view "multiple of 5" else fail
+        ]
 
 ---- Future
 
 enterFutureR :: Task h Int
-enterFutureR = enterInt >>= \_ -> (select ["A" ~> view (1 :: Int)] >>= \_ -> select ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)])
+enterFutureR = enterInt >>= \_ -> (pick ["A" ~> view (1 :: Int)] >>= \_ -> pick ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)])
 
 enterFutureL :: Task h Int
-enterFutureL = (enterInt >>= \_ -> select ["A" ~> view (1 :: Int)]) >>= \_ -> select ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)]
+enterFutureL = (enterInt >>= \_ -> pick ["A" ~> view (1 :: Int)]) >>= \_ -> pick ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)]
 
 updateFutureR :: Task h Int
-updateFutureR = fourtytwo >>= \_ -> (select ["A" ~> view (1 :: Int)] >>= \_ -> select ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)])
+updateFutureR = fourtytwo >>= \_ -> (pick ["A" ~> view (1 :: Int)] >>= \_ -> pick ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)])
 
 updateFutureL :: Task h Int
-updateFutureL = (fourtytwo >>= \_ -> select ["A" ~> view (1 :: Int)]) >>= \_ -> select ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)]
+updateFutureL = (fourtytwo >>= \_ -> pick ["A" ~> view (1 :: Int)]) >>= \_ -> pick ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)]
 
 mixedFutureR :: Task h Int
-mixedFutureR = enterInt >>= (\_ -> fourtytwo >>= \_ -> select ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)])
+mixedFutureR = enterInt >>= (\_ -> fourtytwo >>= \_ -> pick ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)])
 
 mixedFutureL :: Task h Int
-mixedFutureL = (enterInt >>= \_ -> fourtytwo) >>= \_ -> select ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)]
+mixedFutureL = (enterInt >>= \_ -> fourtytwo) >>= \_ -> pick ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)]
 
 parallelFuture :: Task h (Int, Int)
 parallelFuture = do
   _ <- enterInt
-  select ["A" ~> view (1 :: Int)] >< select ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)]
+  pick ["A" ~> view (1 :: Int)] >< pick ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)]
 
 troubledFuture :: Task h (Int, Int)
 troubledFuture =
   t >< t
   where
-    t = view (0 :: Int) >>= \_ -> select ["A" ~> view (42 :: Int)]
+    t = view (0 :: Int) >>= \_ -> pick ["A" ~> view (42 :: Int)]
 
 nestedFuture :: Task h Int
 nestedFuture = do
   _ <- enterInt
-  select
+  pick
     [ "A" ~> view (1 :: Int),
-      "B" ~> select ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)]
+      "B" ~> pick ["A" ~> view (2 :: Int), "B" ~> view (3 :: Int)]
     ]
 
 ---- Shared Data
@@ -353,7 +352,7 @@ numbers' = do
   view ns
   where
     edit_ r =
-      select
+      pick
         [ ("Prepend", prepend_ r),
           ("Clear", clear_ r),
           ("Change", change_ r)
@@ -368,7 +367,7 @@ numbers' = do
       -- Compare this with iTasks: `watch` should be before the external step because you cannot specify the `watch` inside the step list!
       n <- map (length >> fromIntegral) (watch r)
       i <- enter
-      select
+      pick
         [ "Delete" ~> if i < n then delete_ r i else fail,
           "Replace" ~> if i < n then replace_ r i else fail
         ]

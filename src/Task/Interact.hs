@@ -7,12 +7,12 @@ import Polysemy.Interact
 import Polysemy.Log
 import Polysemy.Mutate
 import Polysemy.Supply
-import Task (Task)
 import Task.Input (Concrete, Input)
 import qualified Task.Input as Input
 import qualified Task.Observe as Task
 import Task.Run (NotApplicable, Steps)
 import qualified Task.Run as Task
+import Task.Syntax (Task)
 
 ---- Looping -------------------------------------------------------------------
 
@@ -57,7 +57,6 @@ loop t = do
             printLn message
             getUserInput
 
--- taskToIO ::
 -- taskToIO :: Task 'Global a1 -> IO a2
 taskToIO :: Task RealWorld a1 -> IO a2
 taskToIO =
