@@ -48,7 +48,7 @@ instance Alternative Status where
 status :: Collaborative r m => Task m a -> m (Status a)
 status = \case
   -- Valued editors are `Producing` a value... --
-  Done v -> pure (Producing v)
+  Lift v -> pure (Producing v)
   Update v -> pure (Producing v)
   View v -> pure (Producing v)
   -- ...as do shared editors. --

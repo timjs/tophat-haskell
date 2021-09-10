@@ -59,7 +59,7 @@ data Task h t where
   -- | Composition of two tasks.
   Pair :: Task h a -> Task h b -> Task h (a, b)
   -- | Internal, unrestricted and hidden editor
-  Done :: t -> Task h t
+  Lift :: t -> Task h t
   -- | Internal choice between two tasks.
   Choose :: Task h t -> Task h t -> Task h t
   -- | The failing task
@@ -112,7 +112,7 @@ data NormalTask h t where
   NormalSelect :: Id -> NormalTask h a -> Assoc Label (a -> Task h t) -> NormalTask h t
   ---- Parallels
   NormalPair :: NormalTask h a -> NormalTask h b -> NormalTask h (a, b)
-  NormalDone :: t -> NormalTask h t
+  NormalLift :: t -> NormalTask h t
   NormalChoose :: NormalTask h t -> NormalTask h t -> NormalTask h t
   NormalFail :: NormalTask h t
   ---- Steps
@@ -124,7 +124,7 @@ unnormal = \case
   NormalEdit k e -> Edit (Named k) e
   NormalSelect k t ts -> Select (Named k) (unnormal t) ts
   NormalPair t1 t2 -> Pair (unnormal t1) (unnormal t2)
-  NormalDone e -> Done e
+  NormalLift e -> Lift e
   NormalChoose t1 t2 -> Choose (unnormal t1) (unnormal t2)
   NormalFail -> Fail
   NormalTrans e1 t2 -> Trans e1 (unnormal t2)
@@ -137,7 +137,7 @@ instance Display (Task h t) where
     Edit n e -> concat [display e |> between '(' ')', "^", display n]
     Select n t ts -> concat [display t, " >>?", display (keys ts), "^", display n] |> between '(' ')'
     Pair t1 t2 -> unwords [display t1, "><", display t2] |> between '(' ')'
-    Done _ -> "Done _"
+    Lift _ -> "Lift _"
     Choose t1 t2 -> unwords [display t1, "<|>", display t2] |> between '(' ')'
     Fail -> "Fail"
     Trans _ t -> unwords ["Trans _", display t]
@@ -169,10 +169,10 @@ instance Functor (Task h) where
 
 instance Monoidal (Task h) where
   (><) = Pair
-  none = Done ()
+  none = Lift ()
 
 instance Applicative (Task h) where
-  pure = Done
+  pure = Lift
   (<*>) = applyDefault
 
 -- instance Selective (Task h) where

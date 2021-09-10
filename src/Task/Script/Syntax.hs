@@ -204,7 +204,7 @@ data Task
   | View Message Expression
   | Watch Message Expression
   | -- Basics
-    Done Expression
+    Lift Expression
   | Pair (List Statement)
   | Choose (List Statement)
   | Branch (List (Expression, Statement))
