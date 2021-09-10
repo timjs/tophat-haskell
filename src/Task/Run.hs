@@ -91,11 +91,13 @@ normalise t = case t of
 
   ---- Select
   Select Unnamed t1 es -> do
+    t1' <- normalise t1
     k <- supply
-    normalise <| Select (Named k) t1 es
+    pure <| Select (Named k) t1' es
   Select (Named k) t1 es -> do
     t1' <- normalise t1
     pure <| Select (Named k) t1' es
+
   ---- Converge
   Trans f t2 -> pure (Trans f) -< normalise t2
   Pair t1 t2 -> pure Pair -< normalise t1 -< normalise t2
@@ -149,7 +151,7 @@ handle t i = case t of
         then do
           mv1 <- value t1
           case mv1 of
-            Nothing -> throw <| CouldNotPick
+            Nothing -> throw <| CouldNotContinue
             Just v1 -> case lookup l cs of
               Nothing -> throw <| CouldNotFind l
               Just el ->
@@ -163,6 +165,7 @@ handle t i = case t of
     Insert _ _ -> do
       t1' <- handle t1 i
       pure <| Select n t1' cs
+
   ---- Editors
   Edit n e -> case i of
     Insert k b' ->
@@ -195,7 +198,8 @@ handle t i = case t of
       Left _ -> do
         t2' <- handle t2 i
         pure <| Choose t1 t2' -- H-ChoosSecond
-        ---- Rest
+
+  ---- Rest
   _ -> throw <| CouldNotHandle i
 
 insert ::
