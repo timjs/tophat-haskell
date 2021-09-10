@@ -164,7 +164,7 @@ instance Check Task where
     Change _ e -> check g e |= outofReference |= returnValue
     View _ e -> check g e |= needBasic |= returnValue
     Watch _ e -> check g e |= outofReference |= returnValue
-    Done e -> check g e |= outofRecord ||> TTask
+    Lift e -> check g e |= outofRecord ||> TTask
     Pair ss -> traverse subcheck ss |= unite ||> TTask
     Choose ss -> traverse subcheck ss |= intersect ||> TTask
     Branch bs -> traverse subcheck' bs |= intersect ||> TTask

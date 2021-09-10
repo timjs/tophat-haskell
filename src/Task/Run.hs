@@ -31,7 +31,7 @@ instance Display Steps where
     DidBalance t -> unwords ["Rebalanced to:", display t]
     DidStart t -> unwords ["Started with:", display t]
     DidCalculateOptions os t -> unwords ["Future options before normalising", display os, "for task", display t]
-    DidFinish -> "Done!"
+    DidFinish -> "Lift!"
 
 data NotApplicable
   = CouldNotMatch Name Name
@@ -100,7 +100,7 @@ normalise t = case t of
   Trans f t2 -> pure (Trans f) -< normalise t2
   Pair t1 t2 -> pure Pair -< normalise t1 -< normalise t2
   ---- Ready
-  Done _ -> pure t
+  Lift _ -> pure t
   Fail -> pure t
   ---- Name
   Edit Unnamed e -> do
@@ -109,14 +109,14 @@ normalise t = case t of
   Edit (Named _) _ -> pure t
   ---- Resolve
   Assert p -> do
-    pure <| Done p
+    pure <| Lift p
   Share b -> do
     l <- Store.alloc b
-    pure <| Done l
+    pure <| Lift l
   Assign b s@(Store _ r) -> do
     Store.write b s
     tell [pack r]
-    pure <| Done ()
+    pure <| Lift ()
 
 -- balance :: Task h a -> Task h a
 -- balance t = case t of
@@ -245,7 +245,7 @@ fixate t = do
       log Info <| DidStabilise (length ds) (length ws)
       -- let t''' = balance t''
       -- log Info <| DidBalance (display t''')
-      pure t'' -- F-Done
+      pure t'' -- F-Lift
     _ -> do
       log Info <| DidNotStabilise (length ds) (length ws) (length os)
       fixate <| pure t'' -- F-Loop

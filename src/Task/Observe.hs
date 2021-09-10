@@ -17,7 +17,7 @@ ui ::
 ui = \case
   Edit n e -> ui' n e
   Select n t1 ts -> pure (\l -> concat [l, " ▷^", display n, " ", display <| keys ts]) -< ui t1
-  Done _ -> pure "■ …"
+  Lift _ -> pure "■ …"
   Pair t1 t2 -> pure (\l r -> unwords [l, " ⧓ ", r]) -< ui t1 -< ui t2
   Choose t1 t2 -> pure (\l r -> unwords [l, " ◆ ", r]) -< ui t1 -< ui t2
   Fail -> pure "↯"
@@ -49,7 +49,7 @@ value = \case
   Select _ _ _ -> pure Nothing
   Trans f t -> pure (map f) -< value t
   Pair t1 t2 -> pure (><) -< value t1 -< value t2
-  Done v -> pure (Just v)
+  Lift v -> pure (Just v)
   Choose t1 t2 -> pure (<|>) -< value t1 -< value t2
   Fail -> pure Nothing
   Step _ _ -> pure Nothing
@@ -76,7 +76,7 @@ failing = \case
   Select _ t1 _ -> failing t1
   Trans _ t2 -> failing t2
   Pair t1 t2 -> failing t1 && failing t2
-  Done _ -> False
+  Lift _ -> False
   Choose t1 t2 -> failing t1 && failing t2
   Fail -> True
   Step t1 _ -> failing t1
@@ -93,7 +93,7 @@ watching = \case
   Select _ t1 _ -> watching t1
   Trans _ t2 -> watching t2
   Pair t1 t2 -> watching t1 `union` watching t2
-  Done _ -> []
+  Lift _ -> []
   Choose t1 t2 -> watching t1 `union` watching t2
   Fail -> []
   Step t1 _ -> watching t1
@@ -127,7 +127,7 @@ inputs t = case t of
         Just v1 -> pure [Decide k l | (l, e) <- ts, not <| failing (e v1)]
   Trans _ t2 -> inputs t2
   Pair t1 t2 -> pure (++) -< inputs t1 -< inputs t2
-  Done _ -> pure []
+  Lift _ -> pure []
   Choose t1 t2 -> pure (++) -< inputs t1 -< inputs t2
   Fail -> pure []
   Step t1 _ -> inputs t1

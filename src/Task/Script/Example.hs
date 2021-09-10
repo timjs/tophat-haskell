@@ -59,6 +59,6 @@ enter_passenger =
     <| Select
       [ ( "Continue",
           Constant (B True),
-          Task <| Done (Record ["passengers" ~> Variable "passengers"])
+          Task <| Lift (Record ["passengers" ~> Variable "passengers"])
         )
       ]
