@@ -1,6 +1,5 @@
 module Task.Run where
 
-import qualified Data.HashMap.Strict as HashMap
 import Data.List (intersect, union)
 import qualified Data.Store as Store
 import Polysemy
@@ -9,9 +8,9 @@ import Polysemy.Log
 import Polysemy.Mutate
 import Polysemy.Supply
 import Polysemy.Writer
-import Task
 import Task.Input
 import Task.Observe
+import Task.Syntax
 
 ---- Logs and Errors -----------------------------------------------------------
 
@@ -21,7 +20,7 @@ data Steps
   | DidNormalise Text
   | DidBalance Text
   | DidStart Text
-  | DidCalculateOptions (List (Input Dummy)) Text
+  | DidCalculateOptions (List (Input Abstract)) Text
   | DidFinish
 
 instance Display Steps where
@@ -75,12 +74,7 @@ normalise t = case t of
         let t2 = e2 v1
         if failing t2
           then pure stay -- N-StepFail
-          else do
-            let os = options t2
-            log Info <| DidCalculateOptions os (display t2)
-            if not <| null <| os
-              then pure stay -- N-StepWait
-              else normalise t2 -- N-StepCont
+          else normalise t2 -- N-StepCont
 
   ---- Choose
   Choose t1 t2 -> do
@@ -95,6 +89,13 @@ normalise t = case t of
           Just _ -> pure t2' -- N-ChooseRight
           Nothing -> pure <| Choose t1' t2' -- N-ChooseNone
 
+  ---- Select
+  Select Unnamed t1 es -> do
+    k <- supply
+    normalise <| Select (Named k) t1 es
+  Select (Named k) t1 es -> do
+    t1' <- normalise t1
+    pure <| Select (Named k) t1' es
   ---- Converge
   Trans f t2 -> pure (Trans f) -< normalise t2
   Pair t1 t2 -> pure Pair -< normalise t1 -< normalise t2
@@ -134,28 +135,6 @@ normalise t = case t of
 
 ---- Handling ------------------------------------------------------------------
 
-pick ::
-  forall h r a.
-  Task h a ->
-  Label ->
-  Sem (Error NotApplicable ': r) (Task h a)
-pick t l = case t of
-  Edit n (Select ts) ->
-    case HashMap.lookup l ts of
-      Nothing -> throw <| CouldNotFind l
-      Just t' -> do
-        let os = options t
-        if Option n l `elem` os
-          then pure t'
-          else throw <| CouldNotGoTo l
-  Trans e1 t2 -> do
-    t2' <- pick t2 l
-    pure <| Trans e1 t2'
-  Step t1 e2 -> do
-    t1' <- pick t1 l
-    pure <| Step t1' e2
-  _ -> throw CouldNotPick
-
 handle ::
   forall h r a.
   Members '[Alloc h, Read h, Write h] r =>
@@ -163,20 +142,36 @@ handle ::
   Input Concrete ->
   Sem (Writer (List (Some (Ref h))) ': Error NotApplicable ': r) (Task h a)
 handle t i = case t of
+  ---- Selections
+  Select n t1 cs -> case i of
+    Decide k l ->
+      if n == Named k
+        then do
+          mv1 <- value t1
+          case mv1 of
+            Nothing -> throw <| CouldNotPick
+            Just v1 -> case lookup l cs of
+              Nothing -> throw <| CouldNotFind l
+              Just el ->
+                let tl = el v1
+                 in if failing tl
+                      then throw <| CouldNotGoTo l
+                      else pure <| tl
+        else do
+          t1' <- handle t1 i
+          pure <| Select n t1' cs
+    Insert _ _ -> do
+      t1' <- handle t1 i
+      pure <| Select n t1' cs
   ---- Editors
   Edit n e -> case i of
-    Option n' l -> case e of
-      Select _ ->
-        if n == n'
-          then raise <| pick t l -- H-Select
-          else throw <| CouldNotMatch n n'
-      _ -> throw <| CouldNotHandle i
     Insert k b' ->
       if n == Named k
         then do
           e' <- insert e b'
           pure <| Edit n e' -- H-Edit
         else throw <| CouldNotMatch n (Named k)
+    Decide _ _ -> throw <| CouldNotHandle i
   ---- Pass
   Trans e1 t2 -> do
     t2' <- handle t2 i
@@ -185,15 +180,7 @@ handle t i = case t of
     et1' <- try <| handle t1 i
     case et1' of
       Right t1' -> pure <| Step t1' e2 -- H-Step
-      Left _ -> case i of
-        Prepick l -> do
-          mv1 <- raise <| raise <| value t1
-          case mv1 of
-            Nothing -> throw CouldNotContinue
-            Just v1 -> do
-              let t2 = e2 v1
-              raise <| pick t2 l -- H-Preselect
-        _ -> throw CouldNotPick
+      Left x -> throw x
   Pair t1 t2 -> do
     et1' <- try <| handle t1 i
     case et1' of

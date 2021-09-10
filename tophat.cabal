@@ -4,7 +4,7 @@ cabal-version: 2.0
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 28d3e34a5204684854c172d03632340a2e7dc8d9ff4c1d1734d6b079c37c010d
+-- hash: 1403ca65d48f41d5df863882e685cd2fa42d9f0098bc2d12f66c66f15f0a2e1e
 
 name:           tophat
 version:        0.2.0.0
@@ -46,6 +46,7 @@ library
       Task.Script.Syntax
       Task.Simulate
       Task.Status
+      Task.Syntax
   other-modules:
       Paths_tophat
   hs-source-dirs:

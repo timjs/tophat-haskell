@@ -1,11 +1,7 @@
 module Task.Input
   ( Concrete (..),
-    Symbolic (..),
-    Dummy,
-    dummy,
+    Abstract (..),
     Input (..),
-    pattern Pick,
-    pattern Prepick,
     usage,
     parse,
   )
@@ -13,7 +9,7 @@ where
 
 import qualified Data.Char as Char
 import qualified Data.Text as Text
-import Task (Basic, Label, Name (..))
+import Task.Syntax (Basic, Id, Label)
 
 ---- Inputs --------------------------------------------------------------------
 
@@ -31,50 +27,34 @@ instance Display Concrete where
   display = \case
     Concrete x -> display x
 
----- Symbolic inputs
+---- Abstract inputs
 
-data Symbolic :: Type where
-  Symbolic :: Basic b => Proxy b -> Symbolic
+data Abstract :: Type where
+  Abstract :: Basic b => Proxy b -> Abstract
 
-instance Eq Symbolic where
-  Symbolic x == Symbolic y
+instance Eq Abstract where
+  Abstract x == Abstract y
     -- NOTE: We're comparing proxies, they are always equal when the types are equal.
     | Just Refl <- x ~= y = True
     | otherwise = False
 
-instance Display Symbolic where
+instance Display Abstract where
   display = \case
-    Symbolic p -> concat ["<", display beta, ">"]
+    Abstract p -> concat ["<", display beta, ">"]
       where
         beta = typeOfProxy p
-
----- Dummy inputs
-
-type Dummy = Symbolic
-
-dummy :: Basic b => Proxy b -> Dummy
-dummy p = Symbolic p
 
 ---- Inputs
 
 data Input b
-  = Insert Nat b
-  | Option Name Label
+  = Insert Id b
+  | Decide Id Label
   deriving (Eq, Debug, Functor, Foldable, Traversable)
-
-{-# COMPLETE Insert, Pick, Prepick #-}
-
-pattern Pick :: Nat -> Label -> Input b
-pattern Pick n l = Option (Named n) l
-
-pattern Prepick :: Label -> Input b
-pattern Prepick l = Option Unnamed l
 
 instance Display b => Display (Input b) where
   display = \case
     Insert n b -> unwords [display n, display b]
-    Pick n l -> unwords [display n, display l]
-    Prepick l -> display l
+    Decide n l -> unwords [display n, display l]
 
 ---- Action view
 
@@ -136,9 +116,9 @@ usage =
       "    Start With A Capital Letter"
     ]
 
-parseId :: Text -> Either Text Nat
+parseId :: Text -> Either Text Id
 parseId t
-  | Just v <- scan t :: Maybe Nat = okay v
+  | Just v <- scan t :: Maybe Id = okay v
   | otherwise = error <| unwords ["!!", display t |> quote, "is not a proper id"]
 
 parseLabel :: Text -> Either Text Label
@@ -164,14 +144,10 @@ parse :: Text -> Either Text (Input Concrete)
 parse t
   | ("help", _) <- b = error usage
   | ("h", _) <- b = error usage
-  | (x, r) <- b,
-    Text.null r = do
-    l <- parseLabel x
-    okay <| Prepick l
   | (i, r) <- b = do
     let x = Text.strip r
-    n <- parseId i
-    map (Pick n) (parseLabel x) ++ map (Insert n) (parseConcrete x) --NOTE: should be `<|>`, but we've got some strange import of `Error` getting in the way
+    k <- parseId i
+    map (Decide k) (parseLabel x) ++ map (Insert k) (parseConcrete x) --NOTE: should be `<|>`, but we've got some strange import of `Error` getting in the way
     -- _ -> error <| unwords ["!!", display t |> quote, "is not a valid command, type `help` for more info"]
   where
     b = Text.breakOn " " t

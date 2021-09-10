@@ -8,6 +8,7 @@ module Polysemy.Abort
     abort,
 
     -- * Interpretations
+
     -- runAbort,
     abortToError,
     abortToNonDet,

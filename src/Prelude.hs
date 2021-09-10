@@ -1,5 +1,5 @@
-{-# OPTIONS_GHC -Wno-orphans -Wno-deprecations #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# OPTIONS_GHC -Wno-orphans -Wno-deprecations #-}
 
 module Prelude
   ( -- * Reexports
@@ -15,6 +15,7 @@ module Prelude
     Nat32,
     Nat64,
     List,
+    Assoc,
     Cons,
     NonEmpty (..),
     -- Vector,
@@ -62,6 +63,9 @@ module Prelude
     -- ** HashSets
     (=<),
     (/<),
+
+    -- ** Lists
+    lookup,
     keys,
 
     -- ** Vectors
@@ -158,6 +162,7 @@ where
 
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.HashSet as HashSet
+import Data.List (lookup)
 import qualified Data.Text as Text
 import Data.Type.Equality
 import Relude hiding
@@ -235,6 +240,8 @@ type Nat32 = Relude.Word32
 type Nat64 = Relude.Word64
 
 type List = []
+
+type Assoc k v = List (k, v)
 
 type Cons = NonEmpty
 
@@ -397,8 +404,9 @@ infix 4 /<
 (/<) x = not << HashSet.member x
 {-# INLINE (/<) #-}
 
-keys :: List (a, b) -> List a
-keys = map fst -- >> HashSet.fromList
+keys :: Assoc k v -> List k
+-- keys = HashMap.keys >> HashSet.fromList
+keys = map fst
 
 ---- Vectors
 
