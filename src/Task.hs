@@ -1,6 +1,7 @@
 module Task
   ( Task,
     Store,
+    focus,
 
     -- ** Editors
     enter,
@@ -35,6 +36,7 @@ module Task
   )
 where
 
+import Data.Store (focus)
 import Task.Syntax (Basic, Editor (..), Label, Name (..), Store, Task (..))
 import Prelude hiding (guard, repeat)
 
