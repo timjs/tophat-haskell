@@ -13,12 +13,11 @@ textEditor = do
   repeat <| edit s_t s_r
   where
     edit :: Store h Text -> Store h (Int, Int) -> Task h ()
-    edit s_t s_r = do
-      (t, r) <- change s_t >< change s_r
-      guard
-        [ "Bold" ~> hasSelection r t ~> s_t <<= makeup "*" r,
-          "Italic" ~> hasSelection r t ~> s_t <<= makeup "/" r
-        ]
+    edit s_t s_r =
+      change s_t >< change s_r
+        >** [ ("Bold", (\(t, r) -> hasSelection r t, \(_, r) -> s_t <<= makeup "*" r)),
+              ("Italic", (\(t, r) -> hasSelection r t, \(_, r) -> s_t <<= makeup "/" r))
+            ]
 
     hasSelection :: (Int, Int) -> Text -> Bool
     hasSelection (x, y) t = 0 <= x && x < y && y < Text.length t

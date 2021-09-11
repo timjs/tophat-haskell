@@ -7,12 +7,11 @@ import Task
 
 -- This is not part of the TopHat language (recursion!)
 counter :: Int -> Task h Void
-counter start = do
-  count <- view start
-  select
-    [ ("Increment", counter <| succ count),
-      ("Decrement", counter <| pred count)
-    ]
+counter start =
+  view start
+    >>* [ ("Increment", counter << succ),
+          ("Decrement", counter << pred)
+        ]
 
 -- `forever` is not a proper (monadic) fixpoint combinator,
 -- so we cannot feed new pure values into our task.
@@ -30,11 +29,10 @@ counter'' :: (Reflect h) => Int -> Task h Void
 counter'' start = do
   c <- share start
   forever do
-    _ <- watch c
-    select
-      [ ("Increment", c <<= succ),
-        ("Decrement", c <<= pred)
-      ]
+    watch c
+      >>* [ ("Increment", \_ -> c <<= succ),
+            ("Decrement", \_ -> c <<= pred)
+          ]
 
 -- Temperature conversion ------------------------------------------------------
 
