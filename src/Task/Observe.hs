@@ -11,7 +11,7 @@ import Task.Syntax
 -- NOTE: Normalisation should never happen in any observation, they are immediate.
 
 ui ::
-  Members '[Alloc h, Read h] r => -- We need `Alloc` because `Value` needs it.
+  (Members '[Alloc h, Read h] r) => -- We need `Alloc` because `Value` needs it.
   Task h a ->
   Sem r Text
 ui = \case
@@ -28,7 +28,7 @@ ui = \case
   Assign b _ -> pure <| unwords ["…", ":=", display b]
 
 ui' ::
-  Members '[Read h] r => -- We need `Read` to read from references.
+  (Members '[Read h] r) => -- We need `Read` to read from references.
   Name ->
   Editor h b ->
   Sem r Text
@@ -40,7 +40,7 @@ ui' n = \case
   Watch l -> pure (\b -> concat ["⧈^", display n, " [ ", display b, " ]"]) -< Store.read l
 
 value ::
-  Members '[Alloc h, Read h] r => -- We need `Alloc` to allocate a fresh store to continue with.
+  (Members '[Alloc h, Read h] r) => -- We need `Alloc` to allocate a fresh store to continue with.
   Task h a ->
   Sem r (Maybe a)
 value = \case
@@ -58,7 +58,7 @@ value = \case
   Assign _ _ -> pure (Just ())
 
 value' ::
-  Members '[Read h] r => -- We need `Read` to read from references.
+  (Members '[Read h] r) => -- We need `Read` to read from references.
   Editor h a ->
   Sem r (Maybe a)
 value' = \case
@@ -112,7 +112,7 @@ watching' = \case
   Watch (Store _ r) -> [pack r]
 
 inputs ::
-  Members '[Alloc h, Read h] r => -- We need `Alloc` and `Read` because we call `value`.
+  (Members '[Alloc h, Read h] r) => -- We need `Alloc` and `Read` because we call `value`.
   Task h a ->
   Sem r (List (Input Abstract))
 inputs t = case t of

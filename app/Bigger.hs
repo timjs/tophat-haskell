@@ -6,7 +6,7 @@ import Prelude hiding (guard, repeat)
 
 ---- Text editor ---------------------------------------------------------------
 
-textEditor :: Reflect h => Task h ()
+textEditor :: (Reflect h) => Task h ()
 textEditor = do
   s_t <- share "Edit me :-)"
   s_r <- share (0, 0)
@@ -14,7 +14,8 @@ textEditor = do
   where
     edit :: Store h Text -> Store h (Int, Int) -> Task h ()
     edit s_t s_r =
-      change s_t >< change s_r
+      change s_t
+        >< change s_r
         >** [ ("Bold", (\(t, r) -> hasSelection r t, \(_, r) -> s_t <<= makeup "*" r)),
               ("Italic", (\(t, r) -> hasSelection r t, \(_, r) -> s_t <<= makeup "/" r))
             ]
@@ -26,11 +27,11 @@ textEditor = do
     makeup m (x, y) t
       | (a, rest) <- Text.splitAt x t,
         (b, c) <- Text.splitAt (y - x) rest =
-        a ++ m ++ b ++ m ++ c
+          a ++ m ++ b ++ m ++ c
 
 ---- Chat session --------------------------------------------------------------
 
-chatSession :: Reflect h => Task h (((Text, ()), (Text, ())), (Text, ()))
+chatSession :: (Reflect h) => Task h (((Text, ()), (Text, ())), (Text, ()))
 chatSession = do
   history <- share ""
   chat "Tim" history >< chat "Nico" history >< chat "Markus" history

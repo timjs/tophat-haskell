@@ -17,7 +17,7 @@ import Task.Syntax (Task)
 ---- Looping -------------------------------------------------------------------
 
 loop ::
-  Members '[Interact, Abort, Log Steps, Log NotApplicable, Supply Nat, Alloc h, Read h, Write h] r =>
+  (Members '[Interact, Abort, Log Steps, Log NotApplicable, Supply Nat, Alloc h, Read h, Write h] r) =>
   Task h a ->
   Sem r b
 loop t = do
@@ -25,7 +25,7 @@ loop t = do
   go t'
   where
     go ::
-      Members '[Interact, Abort, Log Steps, Log NotApplicable, Supply Nat, Alloc h, Read h, Write h] r =>
+      (Members '[Interact, Abort, Log Steps, Log NotApplicable, Supply Nat, Alloc h, Read h, Write h] r) =>
       Task h a ->
       Sem r b
     go t' = do
@@ -43,7 +43,7 @@ loop t = do
           t'' <- Task.interact input t'
           go t''
     getUserInput ::
-      Members '[Interact, Abort] r =>
+      (Members '[Interact, Abort] r) =>
       Sem r (Input Concrete)
     getUserInput = do
       print ">> "

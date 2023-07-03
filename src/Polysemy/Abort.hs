@@ -44,7 +44,7 @@ makeSem ''Abort
 -- through providing a function for transforming any aborture
 -- to an exception.
 abortToError ::
-  Member (Error e) r =>
+  (Member (Error e) r) =>
   e ->
   Sem (Abort ': r) a ->
   Sem r a
@@ -57,7 +57,7 @@ abortToError x = interpret \case
 -- | Transform a 'Abort' effect into a 'NonDet' effect,
 -- through mapping any aborture to 'empty'.
 abortToNonDet ::
-  Member NonDet r =>
+  (Member NonDet r) =>
   Sem (Abort ': r) a ->
   Sem r a
 abortToNonDet = interpret \case

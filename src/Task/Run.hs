@@ -59,9 +59,9 @@ instance Display NotApplicable where
 ---- Normalising ---------------------------------------------------------------
 
 normalise ::
-  Members '[Log Steps, Supply Nat, Alloc h, Read h, Write h] r =>
+  (Members '[Log Steps, Supply Nat, Alloc h, Read h, Write h] r) =>
   Task h a ->
-  Sem (Writer (List (Some (Ref h))) ': r) (Task h a) --NOTE: Here we're constructing a concrete stack. I don't know if that's the best way to go...
+  Sem (Writer (List (Some (Ref h))) ': r) (Task h a) -- NOTE: Here we're constructing a concrete stack. I don't know if that's the best way to go...
 normalise t = case t of
   ---- Step
   Step t1 e2 -> do
@@ -139,7 +139,7 @@ normalise t = case t of
 
 handle ::
   forall h r a.
-  Members '[Alloc h, Read h, Write h] r =>
+  (Members '[Alloc h, Read h, Write h] r) =>
   Task h a ->
   Input Concrete ->
   Sem (Writer (List (Some (Ref h))) ': Error NotApplicable ': r) (Task h a)
@@ -204,7 +204,7 @@ handle t i = case t of
 
 insert ::
   forall h r a.
-  Members '[Read h, Write h] r =>
+  (Members '[Read h, Write h] r) =>
   Editor h a -> -- NOTE: `Select` does not return an `Editor`...
   Concrete ->
   Sem (Writer (List (Some (Ref h))) ': Error NotApplicable ': r) (Editor h a)
@@ -222,9 +222,9 @@ insert e c@(Concrete b') = case e of
   Change s@(Store _ r)
     -- NOTE: As in the `Update` case above, we check for type equality.
     | Just Refl <- b' ~: beta -> do
-      Store.write b' s
-      tell [pack r]
-      pure <| Change s
+        Store.write b' s
+        tell [pack r]
+        pure <| Change s
     | otherwise -> throw <| CouldNotChangeRef (someTypeOf r) (someTypeOf b')
     where
       beta = typeRep :: TypeRep a
@@ -234,7 +234,7 @@ insert e c@(Concrete b') = case e of
 ---- Fixation ------------------------------------------------------------------
 
 fixate ::
-  Members '[Log Steps, Supply Nat, Alloc h, Read h, Write h] r =>
+  (Members '[Log Steps, Supply Nat, Alloc h, Read h, Write h] r) =>
   Sem (Writer (List (Some (Ref h))) ': r) (Task h a) ->
   Sem r (Task h a)
 fixate t = do
@@ -257,7 +257,7 @@ fixate t = do
 ---- Initialisation ------------------------------------------------------------
 
 initialise ::
-  Members '[Log Steps, Supply Nat, Alloc h, Read h, Write h] r =>
+  (Members '[Log Steps, Supply Nat, Alloc h, Read h, Write h] r) =>
   Task h a ->
   Sem r (Task h a)
 initialise t = do
@@ -267,7 +267,7 @@ initialise t = do
 ---- Interaction ---------------------------------------------------------------
 
 interact ::
-  Members '[Log Steps, Log NotApplicable, Supply Nat, Alloc h, Read h, Write h] r =>
+  (Members '[Log Steps, Log NotApplicable, Supply Nat, Alloc h, Read h, Write h] r) =>
   Input Concrete ->
   Task h a ->
   Sem r (Task h a)
@@ -277,7 +277,7 @@ interact i t = do
     Left e -> do
       log Warning e
       pure t
-    Right (_, t') -> fixate <| pure t' --XXX: forget delta?!
+    Right (_, t') -> fixate <| pure t' -- XXX: forget delta?!
 
 {-
 execute ::

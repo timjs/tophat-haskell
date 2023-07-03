@@ -16,7 +16,7 @@ import Task.Syntax (Basic, Id, Label)
 ---- Concrete inputs
 
 data Concrete :: Type where
-  Concrete :: Basic b => b -> Concrete
+  Concrete :: (Basic b) => b -> Concrete
 
 instance Eq Concrete where
   Concrete x == Concrete y
@@ -30,7 +30,7 @@ instance Display Concrete where
 ---- Abstract inputs
 
 data Abstract :: Type where
-  Abstract :: Basic b => Proxy b -> Abstract
+  Abstract :: (Basic b) => Proxy b -> Abstract
 
 instance Eq Abstract where
   Abstract x == Abstract y
@@ -51,7 +51,7 @@ data Input b
   | Decide Id Label
   deriving (Eq, Debug, Functor, Foldable, Traversable)
 
-instance Display b => Display (Input b) where
+instance (Display b) => Display (Input b) where
   display = \case
     Insert n b -> unwords [display n, display b]
     Decide n l -> unwords [display n, display l]
@@ -145,9 +145,9 @@ parse t
   | ("help", _) <- b = error usage
   | ("h", _) <- b = error usage
   | (i, r) <- b = do
-    let x = Text.strip r
-    k <- parseId i
-    map (Decide k) (parseLabel x) ++ map (Insert k) (parseConcrete x) --NOTE: should be `<|>`, but we've got some strange import of `Error` getting in the way
-    -- _ -> error <| unwords ["!!", display t |> quote, "is not a valid command, type `help` for more info"]
+      let x = Text.strip r
+      k <- parseId i
+      map (Decide k) (parseLabel x) ++ map (Insert k) (parseConcrete x) -- NOTE: should be `<|>`, but we've got some strange import of `Error` getting in the way
+      -- _ -> error <| unwords ["!!", display t |> quote, "is not a valid command, type `help` for more info"]
   where
     b = Text.breakOn " " t

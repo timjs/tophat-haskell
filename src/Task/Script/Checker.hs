@@ -75,7 +75,7 @@ instance Display TypeError where
 type Context = HashMap Name Ty
 
 class Check a where
-  check :: Members '[Error TypeError, Output Text] r => Context -> a -> Sem r Ty
+  check :: (Members '[Error TypeError, Output Text] r) => Context -> a -> Sem r Ty
 
 instance Check Expression where
   check g = \case
@@ -109,7 +109,7 @@ instance Check Expression where
       t0 <- check g e0
       case t0 of
         TVariant r -> do
-          bs' <- merge r bs --NOTE be aware of order: r is a subset of bs
+          bs' <- merge r bs -- NOTE be aware of order: r is a subset of bs
           ts <- for bs' \(t, (m, e)) -> do
             d <- match m t
             check (g \/ d) e
@@ -178,7 +178,7 @@ instance Check Task where
             then pure t
             else throw <| ArgumentError r' t_a
         _ -> throw <| FunctionNeeded t_x
-    Hole _ -> throw <| HoleFound g --TODO: how to handle holes?
+    Hole _ -> throw <| HoleFound g -- TODO: how to handle holes?
     Share e -> check g e |= outofBasic ||> TReference |= returnValue
     Assign e1 e2 -> do
       t1 <- check g e1

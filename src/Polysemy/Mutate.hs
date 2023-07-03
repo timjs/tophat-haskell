@@ -63,7 +63,7 @@ makeSem ''Alloc
 
 ---- Operators -----------------------------------------------------------------
 
-mutate :: Members '[Read h, Write h] r => (a -> a) -> STRef h a -> Sem r ()
+mutate :: (Members '[Read h, Write h] r) => (a -> a) -> STRef h a -> Sem r ()
 mutate f r = do
   x <- read r
   write (f x) r
@@ -72,10 +72,10 @@ infixl 1 <<-
 
 infixl 1 <<=
 
-(<<-) :: Members '[Read h, Write h] r => STRef h a -> a -> Sem r ()
+(<<-) :: (Members '[Read h, Write h] r) => STRef h a -> a -> Sem r ()
 (<<-) = flip write
 
-(<<=) :: Members '[Read h, Write h] r => STRef h a -> (a -> a) -> Sem r ()
+(<<=) :: (Members '[Read h, Write h] r) => STRef h a -> (a -> a) -> Sem r ()
 (<<=) = flip mutate
 
 ---- Bundle --------------------------------------------------------------------
@@ -98,28 +98,28 @@ alloc' = sendBundle << alloc
 
 ---- In IO
 
-readToIO :: Member (Embed IO) r => Sem (Read RealWorld ': r) a -> Sem r a
+readToIO :: (Member (Embed IO) r) => Sem (Read RealWorld ': r) a -> Sem r a
 readToIO = interpret \case
   Read loc -> embed <| stToIO <| readSTRef loc
 
-writeToIO :: Member (Embed IO) r => Sem (Write RealWorld ': r) a -> Sem r a
+writeToIO :: (Member (Embed IO) r) => Sem (Write RealWorld ': r) a -> Sem r a
 writeToIO = interpret \case
   Write val loc -> embed <| stToIO <| writeSTRef loc val
 
-allocToIO :: Member (Embed IO) r => Sem (Alloc RealWorld ': r) a -> Sem r a
+allocToIO :: (Member (Embed IO) r) => Sem (Alloc RealWorld ': r) a -> Sem r a
 allocToIO = interpret \case
   Alloc val -> embed <| stToIO <| newSTRef val
 
 ---- In ST
 
-readToST :: Member (Embed (ST h)) r => Sem (Read h ': r) a -> Sem r a
+readToST :: (Member (Embed (ST h)) r) => Sem (Read h ': r) a -> Sem r a
 readToST = interpret \case
   Read loc -> embed <| readSTRef loc
 
-writeToST :: Member (Embed (ST h)) r => Sem (Write h ': r) a -> Sem r a
+writeToST :: (Member (Embed (ST h)) r) => Sem (Write h ': r) a -> Sem r a
 writeToST = interpret \case
   Write val loc -> embed <| writeSTRef loc val
 
-allocToST :: Member (Embed (ST h)) r => Sem (Alloc h ': r) a -> Sem r a
+allocToST :: (Member (Embed (ST h)) r) => Sem (Alloc h ': r) a -> Sem r a
 allocToST = interpret \case
   Alloc val -> embed <| newSTRef val
