@@ -172,7 +172,6 @@ import Relude hiding
     Any,
     MonadFail (..),
     Nat,
-    Option (..),
     Read,
     Show,
     State,
@@ -261,7 +260,7 @@ type Traverse = Relude.Traversable
 
 infixr 5 ~~
 
-class Monoid a => Group a where
+class (Monoid a) => Group a where
   invert :: a -> a
   invert x = neutral ~~ x
 
@@ -271,7 +270,7 @@ class Monoid a => Group a where
 class (Group a, Num s) => Module a s | a -> s where
   scale :: s -> a -> a
 
-class Group d => Torsor a d | a -> d where
+class (Group d) => Torsor a d | a -> d where
   diff :: a -> a -> d
   adjust :: d -> a -> a
 
@@ -279,7 +278,7 @@ class Group d => Torsor a d | a -> d where
 
 type Scan = Relude.Read
 
-scan :: Scan a => Text -> Maybe a
+scan :: (Scan a) => Text -> Maybe a
 scan = Relude.readMaybe << chars
 {-# INLINE scan #-}
 
@@ -287,11 +286,11 @@ scan = Relude.readMaybe << chars
 
 type Debug = Relude.Show
 
-debug :: Debug a => a -> Text
+debug :: (Debug a) => a -> Text
 debug = Relude.show
 {-# INLINE debug #-}
 
-spy :: Debug a => Text -> a -> a
+spy :: (Debug a) => Text -> a -> a
 spy m x = Relude.traceShow (debug m ++ ": " ++ debug x) x
 {-# INLINE spy #-}
 
@@ -359,7 +358,7 @@ infixr 0 ~>
 (~>) = (,)
 {-# INLINE (~>) #-}
 
-getTextLn :: MonadIO m => m Text
+getTextLn :: (MonadIO m) => m Text
 getTextLn = Relude.getLine
 {-# INLINE getTextLn #-}
 
@@ -386,7 +385,7 @@ indent n t = Text.replicate n " " ++ t
 
 ---- HashMaps
 
-forWithKey :: Applicative f => HashMap k v -> (k -> v -> f w) -> f (HashMap k w)
+forWithKey :: (Applicative f) => HashMap k v -> (k -> v -> f w) -> f (HashMap k w)
 forWithKey = flip HashMap.traverseWithKey
 {-# INLINE forWithKey #-}
 
@@ -396,11 +395,11 @@ infix 4 =<
 
 infix 4 /<
 
-(=<) :: Hash a => a -> HashSet a -> Bool
+(=<) :: (Hash a) => a -> HashSet a -> Bool
 (=<) = HashSet.member
 {-# INLINE (=<) #-}
 
-(/<) :: Hash a => a -> HashSet a -> Bool
+(/<) :: (Hash a) => a -> HashSet a -> Bool
 (/<) x = not << HashSet.member x
 {-# INLINE (/<) #-}
 
@@ -481,7 +480,7 @@ length = Relude.length >> fromIntegral
 -- | > intercalate [1] [[2, 3], [4, 5], [6, 7]]
 -- | = [2, 3, 1, 4, 5, 1, 6, 7]
 -- | ```
-intercalate :: Fold f => Monoid m => m -> f m -> m
+intercalate :: (Fold f, Monoid m) => m -> f m -> m
 intercalate sep = foldl' go (True, neutral) >> snd
   where
     go (True, _) x = (False, x)
@@ -505,7 +504,7 @@ intercalate sep = foldl' go (True, neutral) >> snd
 -- | > surroundMap "*" show [1, 2, 3]
 -- | = "*1*2*3*"
 -- | ```
-surroundMap :: Fold f => Semigroup m => m -> (a -> m) -> f a -> m
+surroundMap :: (Fold f, Semigroup m) => m -> (a -> m) -> f a -> m
 surroundMap d t f = appEndo (foldMap joined f) d
   where
     joined a = Endo \m -> d <> t a <> m
@@ -528,7 +527,7 @@ surroundMap d t f = appEndo (foldMap joined f) d
 -- | > surround "*" ["1", "2", "3"]
 -- | = "*1*2*3*"
 -- | ```
-surround :: forall f m. Fold f => Semigroup m => m -> f m -> m
+surround :: forall f m. (Fold f, Semigroup m) => m -> f m -> m
 surround d = surroundMap d identity
 {-# INLINE surround #-}
 
@@ -563,15 +562,15 @@ for = Relude.forM
 
 infixr 5 ++
 
-(++) :: Relude.Semigroup s => s -> s -> s
+(++) :: (Relude.Semigroup s) => s -> s -> s
 (++) = (Relude.<>)
 {-# INLINE (++) #-}
 
-neutral :: Monoid m => m
+neutral :: (Monoid m) => m
 neutral = Relude.mempty
 {-# INLINE neutral #-}
 
-concat :: Monoid m => List m -> m
+concat :: (Monoid m) => List m -> m
 concat = Relude.mconcat
 {-# INLINE concat #-}
 
@@ -615,15 +614,15 @@ infixl 4 <||
 
 infixl 1 ||>
 
-map :: Functor f => (a -> b) -> f a -> f b
+map :: (Functor f) => (a -> b) -> f a -> f b
 map = Relude.fmap
 {-# INLINE map #-}
 
-(<||) :: Functor f => (a -> b) -> f a -> f b
+(<||) :: (Functor f) => (a -> b) -> f a -> f b
 (<||) = map
 {-# INLINE (<||) #-}
 
-(||>) :: Functor f => f a -> (a -> b) -> f b
+(||>) :: (Functor f) => f a -> (a -> b) -> f b
 (||>) = flip (Relude.<$>)
 {-# INLINE (||>) #-}
 
@@ -631,11 +630,11 @@ infixl 4 -||
 
 infixl 4 ||-
 
-(-||) :: Functor f => a -> f b -> f a
+(-||) :: (Functor f) => a -> f b -> f a
 (-||) = (Relude.<$)
 {-# INLINE (-||) #-}
 
-(||-) :: Functor f => f a -> b -> f b
+(||-) :: (Functor f) => f a -> b -> f b
 (||-) = (Relude.$>)
 {-# INLINE (||-) #-}
 
@@ -653,43 +652,43 @@ infixl 4 |-
 
 infixl 4 -|
 
-(-<) :: Applicative f => f (a -> b) -> f a -> f b
+(-<) :: (Applicative f) => f (a -> b) -> f a -> f b
 (-<) = (Relude.<*>)
 {-# INLINE (-<) #-}
 
-(>-) :: Applicative f => f a -> f (a -> b) -> f b
+(>-) :: (Applicative f) => f a -> f (a -> b) -> f b
 (>-) = flip (-<)
 {-# INLINE (>-) #-}
 
-(-|) :: Applicative f => f a -> f b -> f a
+(-|) :: (Applicative f) => f a -> f b -> f a
 (-|) = (Relude.<*)
 {-# INLINE (-|) #-}
 
-(|-) :: Applicative f => f a -> f b -> f b
+(|-) :: (Applicative f) => f a -> f b -> f b
 (|-) = (Relude.*>)
 {-# INLINE (|-) #-}
 
-lift0 :: Applicative f => a -> f a
+lift0 :: (Applicative f) => a -> f a
 lift0 = pure
 {-# INLINE lift0 #-}
 
-lift1 :: Functor f => (a -> b) -> f a -> f b
+lift1 :: (Functor f) => (a -> b) -> f a -> f b
 lift1 = map
 {-# INLINE lift1 #-}
 
-lift2 :: Applicative f => (a -> b -> c) -> f a -> f b -> f c
+lift2 :: (Applicative f) => (a -> b -> c) -> f a -> f b -> f c
 lift2 = Relude.liftA2
 {-# INLINE lift2 #-}
 
-lift3 :: Applicative f => (a -> b -> c -> d) -> f a -> f b -> f c -> f d
+lift3 :: (Applicative f) => (a -> b -> c -> d) -> f a -> f b -> f c -> f d
 lift3 = Relude.liftA3
 {-# INLINE lift3 #-}
 
-(<-<) :: Applicative f => f (b -> c) -> f (a -> b) -> f (a -> c)
+(<-<) :: (Applicative f) => f (b -> c) -> f (a -> b) -> f (a -> c)
 f <-< g = pure (<<) -< f -< g
 {-# INLINE (<-<) #-}
 
-(>->) :: Applicative f => f (a -> b) -> f (b -> c) -> f (a -> c)
+(>->) :: (Applicative f) => f (a -> b) -> f (b -> c) -> f (a -> c)
 (>->) = flip (<-<)
 {-# INLINE (>->) #-}
 
@@ -701,7 +700,7 @@ infixl 6 >|
 
 infixl 6 |<
 
-class Applicative f => Monoidal f where
+class (Applicative f) => Monoidal f where
   (><) :: f a -> f b -> f (a, b)
   (><) x y = pure (,) -< x -< y
 
@@ -714,10 +713,10 @@ class Applicative f => Monoidal f where
   (|<) :: f a -> f b -> f b
   (|<) x y = pure snd -< x >< y
 
-applyDefault :: Monoidal f => f (a -> b) -> f a -> f b
+applyDefault :: (Monoidal f) => f (a -> b) -> f a -> f b
 applyDefault fg fx = pure (\(g, x) -> g x) -< fg >< fx
 
-pureDefault :: Monoidal f => a -> f a
+pureDefault :: (Monoidal f) => a -> f a
 pureDefault x = map (const x) none
 
 instance Monoidal Maybe
@@ -778,7 +777,7 @@ instance MonadZero Maybe
 
 instance MonadZero List
 
-fail :: Alternative m => m a
+fail :: (Alternative m) => m a
 fail = empty
 
 -- instance (Relude.MonadFail m, MonadPlus m) => MonadZero (StateT s m)
@@ -807,9 +806,9 @@ proxyOf :: a -> Proxy a
 proxyOf _ = Proxy
 {-# INLINE proxyOf #-}
 
-typeOfProxy :: forall a. Typeable a => Proxy a -> TypeRep a
+typeOfProxy :: forall a. (Typeable a) => Proxy a -> TypeRep a
 typeOfProxy _ = typeRep
 
-someTypeOf :: Typeable a => a -> SomeTypeRep
+someTypeOf :: (Typeable a) => a -> SomeTypeRep
 someTypeOf = someTypeRep << proxyOf
 {-# INLINE someTypeOf #-}

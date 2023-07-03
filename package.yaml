@@ -1,5 +1,5 @@
 name:                tophat
-version:             0.2.0.0
+version:             0.3.0.0
 #synopsis:
 description:         Please see the README on GitHub at <https://github.com/timjs/tophat-haskell#readme>
 github:              "timjs/tophat-haskell"
@@ -16,15 +16,12 @@ extra-source-files:
 
 dependencies:
   - name: base
-    version: ">= 4.12 && < 5"
     mixin:
       - hiding (Prelude)
-  - relude >= 0.5 && < 1
+  - relude >= 1.2 && < 2
   - polysemy >= 1.5.0 && < 2
   - polysemy-plugin
-  - text
-  - unordered-containers
-  - lens-simple
+  - lens-family-core
   - aeson
 
 

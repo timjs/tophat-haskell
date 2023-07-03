@@ -9,13 +9,15 @@ module Data.Store
     read,
     write,
     focus,
+    iso,
     _identity,
   )
 where
 
 import Control.Monad.ST (RealWorld)
 import Data.STRef (STRef)
-import Lens.Simple (Lens', iso, set, view)
+import Lens.Family (LensLike, LensLike', set, under, view)
+import Lens.Family.Unchecked (adapter)
 import Polysemy
 import Polysemy.Mutate (Alloc, Read, Write)
 import qualified Polysemy.Mutate as Mutate
@@ -62,6 +64,11 @@ write x (Store l r) = do
   Mutate.mutate (set l x) r
 
 ---- Focussing -----------------------------------------------------------------
+
+type Lens' s a = forall f. (Functor f) => LensLike' f s a
+
+iso :: (Functor f) => (s -> a) -> (b -> t) -> LensLike f s t a b
+iso f g = under <| adapter f g
 
 _identity :: Lens' a a
 _identity = iso identity identity

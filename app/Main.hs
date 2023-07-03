@@ -40,6 +40,7 @@ append :: Text -> Text -> Task h Text
 append x y =
   view (x ++ y)
 
+{-
 ---- Steps
 
 pureStep :: Task h Int
@@ -61,6 +62,10 @@ oneStep' :: Task h Int
 oneStep' =
   update 0 >>? \x ->
     inc x
+
+oneStep'' =
+  update 0
+    >>* ["Continue" ~> \x -> inc x]
 
 -- oneStep'' :: Task h Int
 -- oneStep'' = do
@@ -392,3 +397,4 @@ rep 0 y (_ : xs) = y : xs
 rep n y (x : xs)
   | n >= 0 = x : rep (pred n) y xs
   | otherwise = []
+ -}

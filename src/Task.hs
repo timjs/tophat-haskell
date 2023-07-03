@@ -2,6 +2,7 @@ module Task
   ( Task,
     Store,
     focus,
+    iso,
 
     -- ** Editors
     enter,
@@ -18,6 +19,7 @@ module Task
 
     -- ** Derived
     parallel,
+    conditionally,
     choose,
     branch,
     pick,
@@ -36,7 +38,7 @@ module Task
   )
 where
 
-import Data.Store (focus)
+import Data.Store (focus, iso)
 import Task.Syntax (Basic, Editor (..), Label, Name (..), Store, Task (..))
 import Prelude hiding (guard, repeat)
 
@@ -88,9 +90,18 @@ infixl 1 <<=
 
 ---- Derived -------------------------------------------------------------------
 
-parallel :: List (Task h a) -> Task h (List a)
-parallel [] = pure []
-parallel (t : ts) = t >< parallel ts >>= \(x, xs) -> pure (x : xs) --XXX order of parens?
+list :: List (Task h a) -> Task h (List a)
+-- list [] = pure []
+-- list (t : ts) = uncurry (:) <|| (t >< list ts)
+list = foldr go (pure [])
+  where
+    go t ts = uncurry (:) <|| t >< ts
+
+parallel :: (List a -> Bool) -> (List a -> b) -> List (Task h a) -> Task h b
+parallel p f ts = list ts >>= \xs -> if p xs then pure <| f xs else fail
+
+conditionally :: (List a -> Bool) -> List (Task h a) -> Task h (List a)
+conditionally p ts = list ts >>= \xs -> if p xs then pure xs else fail
 
 choose :: List (Task h a) -> Task h a
 -- choose xs = xs .\ fail <| (<|>)
@@ -131,7 +142,7 @@ forever :: Task h a -> Task h Void
 forever t1 = t1 >>= \_ -> forever t1
 
 repeat :: Task h a -> Task h a
-repeat t1 = select t1 ["Repeat" ~> \_ -> repeat t1, "Exit" ~> pure]
+repeat t1 = t1 >>* ["Repeat" ~> \_ -> repeat t1, "Exit" ~> pure]
 
 -- infixl 1 >>@
 

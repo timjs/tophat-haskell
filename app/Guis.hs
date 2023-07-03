@@ -1,6 +1,5 @@
 module Guis where
 
-import Lens.Simple (iso)
 import Task
 
 -- Counter ---------------------------------------------------------------------
