@@ -66,7 +66,7 @@ select = Select Unnamed
 
 ---- Shares
 
-share :: (Basic a, Reflect h) => a -> Task h (Store h a)
+share :: (Basic a, Typeable h) => a -> Task h (Store h a)
 share = Share
 
 watch :: (Basic a) => Store h a -> Task h a

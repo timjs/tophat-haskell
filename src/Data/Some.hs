@@ -6,12 +6,12 @@ module Data.Some
 where
 
 data Some f where
-  Some :: (Reflect (f a), Eq (f a)) => f a -> Some f
+  Some :: (Typeable (f a), Eq (f a)) => f a -> Some f
 
-pack :: forall f a. (Reflect (f a), Eq (f a)) => f a -> Some f
+pack :: forall f a. (Typeable (f a), Eq (f a)) => f a -> Some f
 pack = Some
 
-unpack :: forall f a. (Reflect (f a)) => Some f -> Maybe (f a)
+unpack :: forall f a. (Typeable (f a)) => Some f -> Maybe (f a)
 unpack (Some x)
   | Just Refl <- x ~: r = Just x
   | otherwise = Nothing

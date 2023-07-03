@@ -32,7 +32,7 @@ type Ref = STRef
 -- | Isn't it?
 -- |
 -- | **Note**
--- | `s` should be `Reflect` to store it as `Someref`.
+-- | `s` should be `Typeable` to store it as `Someref`.
 -- |
 -- | **Important!**
 -- | When using Polysemy, the `Read`, `Write`, and `Alloc` effects range over a heap `h`.
@@ -47,9 +47,9 @@ type Ref = STRef
 -- | In past days, we used a type class with fundep, which deduced the reference type from the monad `m`.
 -- | But now we don't know in which (final) `m` we're going to interpret `Sem r`!
 data Store h a where
-  Store {- exists s -} :: (Reflect h, Reflect s) => Lens' s a -> Ref h s -> Store h a
+  Store {- exists s -} :: (Typeable h, Typeable s) => Lens' s a -> Ref h s -> Store h a
 
-alloc :: (Member (Alloc h) r, Reflect h, Reflect a) => a -> Sem r (Store h a)
+alloc :: (Member (Alloc h) r, Typeable h, Typeable a) => a -> Sem r (Store h a)
 alloc x = do
   r <- Mutate.alloc x
   pure <| Store _identity r

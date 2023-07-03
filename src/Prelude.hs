@@ -22,14 +22,18 @@ module Prelude
     -- Vector,
 
     -- * Classes
-    Hash,
-    Reflect,
-    Fold,
-    Traverse,
-    Bind,
-    Coerce,
 
-    -- ** Groups, Modules, Torsors
+    -- Hash,
+    -- Typeable,
+    -- Foldable,
+    -- Traversable,
+    -- Map,
+    -- Apply,
+    -- Choose,
+    -- Monad,
+    -- Coerce,
+
+    -- ** Group, Module, Torsor
     Group (..),
     Module (..),
     Torsor (..),
@@ -47,9 +51,12 @@ module Prelude
     Display (..),
 
     -- * Functions
-    (~>),
-    withDefault,
+
+    -- ** IO
     getTextLn,
+
+    -- ** Tuples
+    (~>),
 
     -- ** Text
     chars,
@@ -58,16 +65,16 @@ module Prelude
     quote,
     indent,
 
+    -- ** Lists
+    lookup,
+    keys,
+
     -- ** HashMaps
     forWithKey,
 
     -- ** HashSets
     (=<),
     (/<),
-
-    -- ** Lists
-    lookup,
-    keys,
 
     -- ** Vectors
 
@@ -76,15 +83,15 @@ module Prelude
     -- index,
     -- update,
 
-    -- ** Errors
-    okay,
-    error,
-    -- note,
-    -- hush,
+    -- ** Maybes
+    withDefault,
+
+    -- ** Eithers
+    throw,
+    note,
+    hush,
 
     -- ** Folds
-    (/.),
-    (.\),
     length,
     same,
     intercalate,
@@ -97,7 +104,7 @@ module Prelude
     -- ** Traversals
     for,
 
-    -- ** Monoids
+    -- ** Combines
     (++),
     neutral,
     concat,
@@ -196,6 +203,7 @@ import Relude hiding
     liftA2,
     liftA3,
     map,
+    mconcat,
     mempty,
     pass,
     print,
@@ -247,17 +255,24 @@ type Cons = NonEmpty
 
 ---- Classes -------------------------------------------------------------------
 
+{-
+type Calc = Relude.Num
+
 type Hash a = (Eq a, Relude.Hashable a)
 
 type Reflect = Relude.Typeable
 
 type Coerce = Relude.Coercible
 
-type Fold = Relude.Foldable
-
 type Traverse = Relude.Traversable
 
----- Groups, Modules, Torsors
+type Map = Relude.Functor
+
+type Apply = Relude.Applicative
+
+type Choose = Relude.Alternative
+-}
+---- Group, Module, Torsor ----
 
 infixr 5 ~~
 
@@ -275,7 +290,7 @@ class (Group d) => Torsor a d | a -> d where
   diff :: a -> a -> d
   adjust :: d -> a -> a
 
----- Scanning
+---- Scan ----
 
 type Scan = Relude.Read
 
@@ -283,7 +298,7 @@ scan :: (Scan a) => Text -> Maybe a
 scan = Relude.readMaybe << chars
 {-# INLINE scan #-}
 
----- Debugging
+---- Debug ----
 
 type Debug = Relude.Show
 
@@ -344,14 +359,19 @@ instance Display SomeTypeRep where
 
 ---- Functions -----------------------------------------------------------------
 
-withDefault :: a -> Maybe a -> a
-withDefault = Relude.fromMaybe
-
 same :: (Eq a) => List a -> Bool
 same = \case
   [] -> True
   x : xs -> all (x ==) xs
 {-# INLINE same #-}
+
+---- IO ----
+
+getTextLn :: (MonadIO m) => m Text
+getTextLn = Relude.getLine
+{-# INLINE getTextLn #-}
+
+---- Tuples ----
 
 infixr 0 ~>
 
@@ -359,11 +379,21 @@ infixr 0 ~>
 (~>) = (,)
 {-# INLINE (~>) #-}
 
-getTextLn :: (MonadIO m) => m Text
-getTextLn = Relude.getLine
-{-# INLINE getTextLn #-}
+---- Booleans
 
----- Text
+{-
+infixr 3 &&&
+
+infixr 2 |||
+
+(&&&) :: forall a. (a -> Bool) -> (a -> Bool) -> a -> Bool
+(&&&) f g x = f x && g x
+
+(|||) :: forall a. (a -> Bool) -> (a -> Bool) -> a -> Bool
+(|||) f g x = f x || g x
+-}
+
+---- Text ----
 
 chars :: Text -> List Char
 chars = Text.unpack
@@ -384,31 +414,33 @@ quote = between '"' '"'
 indent :: Int -> Text -> Text
 indent n t = Text.replicate n " " ++ t
 
----- HashMaps
-
-forWithKey :: (Applicative f) => HashMap k v -> (k -> v -> f w) -> f (HashMap k w)
-forWithKey = flip HashMap.traverseWithKey
-{-# INLINE forWithKey #-}
-
----- HashSets
-
-infix 4 =<
-
-infix 4 /<
-
-(=<) :: (Hash a) => a -> HashSet a -> Bool
-(=<) = HashSet.member
-{-# INLINE (=<) #-}
-
-(/<) :: (Hash a) => a -> HashSet a -> Bool
-(/<) x = not << HashSet.member x
-{-# INLINE (/<) #-}
+---- Lists ----
 
 keys :: Assoc k v -> List k
 -- keys = HashMap.keys >> HashSet.fromList
 keys = map fst
 
----- Vectors
+---- HashMaps ----
+
+forWithKey :: (Applicative f) => HashMap k v -> (k -> v -> f w) -> f (HashMap k w)
+forWithKey = flip HashMap.traverseWithKey
+{-# INLINE forWithKey #-}
+
+---- HashSets ----
+
+infix 4 =<
+
+infix 4 /<
+
+(=<) :: (Hashable a) => a -> HashSet a -> Bool
+(=<) = HashSet.member
+{-# INLINE (=<) #-}
+
+(/<) :: (Hashable a) => a -> HashSet a -> Bool
+(/<) x = not << HashSet.member x
+{-# INLINE (/<) #-}
+
+---- Vectors ----
 
 -- only :: a -> Vector a
 -- only = Vector.singleton
@@ -419,23 +451,24 @@ keys = map fst
 -- update :: Nat -> a -> Vector a -> Vector a
 -- update (Nat i) x xs = (Vector.//) xs [ ( i, x ) ]
 
----- Errors
+---- Maybes ----
 
-okay :: a -> Either e a
-okay = Right
-{-# INLINE okay #-}
+withDefault :: a -> Maybe a -> a
+withDefault = Relude.fromMaybe
 
-error :: e -> Either e a
-error = Left
-{-# INLINE error #-}
+---- Eithers ----
 
--- note :: a -> Maybe b -> Either a b
--- note = maybeToRight
--- {-# INLINE note #-}
+throw :: e -> Either e a
+throw = Left
+{-# INLINE throw #-}
 
--- hush :: Either l r -> Maybe r
--- hush = rightToMaybe
--- {-# INLINE hush #-}
+note :: a -> Maybe b -> Either a b
+note = maybeToRight
+{-# INLINE note #-}
+
+hush :: Either l r -> Maybe r
+hush = rightToMaybe
+{-# INLINE hush #-}
 
 -- type Result = Either
 
@@ -450,23 +483,22 @@ error = Left
 
 --   empty = Left neutral
 
----- Folds
+---- Folds ----
 
-infix 4 /.
+-- infix 4 /.
+-- infix 4 .\
 
-infix 4 .\
+-- (/.) :: (Foldable t) => b -> t a -> (b -> a -> b) -> b
+-- (/.) x xs f = foldl' f x xs
 
-(/.) :: (Fold t) => b -> t a -> (b -> a -> b) -> b
-(/.) x xs f = foldl' f x xs
+-- (.\) :: (Foldable t) => t a -> b -> (a -> b -> b) -> b
+-- (.\) xs x f = foldr f x xs
 
-(.\) :: (Fold t) => t a -> b -> (a -> b -> b) -> b
-(.\) xs x f = foldr f x xs
-
-length :: (Fold t) => t a -> Nat
+length :: (Foldable t) => t a -> Nat
 length = Relude.length >> fromIntegral
 {-# INLINE length #-}
 
--- | Fold a data structure, accumulating values in some `Monoid`,
+-- | Foldable a data structure, accumulating values in some `Monoid`,
 -- | combining adjacent elements using the specified separator.
 -- |
 -- | For example:
@@ -481,7 +513,7 @@ length = Relude.length >> fromIntegral
 -- | > intercalate [1] [[2, 3], [4, 5], [6, 7]]
 -- | = [2, 3, 1, 4, 5, 1, 6, 7]
 -- | ```
-intercalate :: (Fold f, Monoid m) => m -> f m -> m
+intercalate :: (Foldable f, Monoid m) => m -> f m -> m
 intercalate sep = foldl' go (True, neutral) >> snd
   where
     go (True, _) x = (False, x)
@@ -505,7 +537,7 @@ intercalate sep = foldl' go (True, neutral) >> snd
 -- | > surroundMap "*" show [1, 2, 3]
 -- | = "*1*2*3*"
 -- | ```
-surroundMap :: (Fold f, Semigroup m) => m -> (a -> m) -> f a -> m
+surroundMap :: (Foldable f, Semigroup m) => m -> (a -> m) -> f a -> m
 surroundMap d t f = appEndo (foldMap joined f) d
   where
     joined a = Endo \m -> d <> t a <> m
@@ -528,25 +560,25 @@ surroundMap d t f = appEndo (foldMap joined f) d
 -- | > surround "*" ["1", "2", "3"]
 -- | = "*1*2*3*"
 -- | ```
-surround :: forall f m. (Fold f, Semigroup m) => m -> f m -> m
+surround :: forall f m. (Foldable f, Semigroup m) => m -> f m -> m
 surround d = surroundMap d identity
 {-# INLINE surround #-}
 
-gather :: (Fold t, Bind m) => (b -> a -> m b) -> b -> t a -> m b
+gather :: (Foldable t, Monad m) => (b -> a -> m b) -> b -> t a -> m b
 gather = Relude.foldlM
 
 -- gather f b0 = foldr go (pure b0)
 -- where
 --   go a mb = mb >>= flip f a
 
--- gather1 :: (Bind m, Fold t) => (a -> a -> m a) -> t a -> Maybe (m a)
+-- gather1 :: (Monad m, Foldable t) => (a -> a -> m a) -> t a -> Maybe (m a)
 -- gather1 :: (Monad m, Foldable t1) => (b -> t2 -> m b) -> b -> t1 t2 -> m b
--- gather1 :: (Fold t, Bind m) => (a -> m a -> m a) -> t (m a) -> m (Maybe a)
--- gather1 :: (Fold t, Bind m) => (a -> a -> m a) -> t a -> m (Maybe a)
+-- gather1 :: (Foldable t, Monad m) => (a -> m a -> m a) -> t (m a) -> m (Maybe a)
+-- gather1 :: (Foldable t, Monad m) => (a -> a -> m a) -> t a -> m (Maybe a)
 -- gather1 f = foldr1 (\a ma -> _) >> sequence
 -- gahter1 f = foldr go
 
-foldr1 :: (Fold t) => (a -> a -> a) -> t a -> Maybe a
+foldr1 :: (Foldable t) => (a -> a -> a) -> t a -> Maybe a
 foldr1 f = foldr mf Nothing
   where
     mf x m =
@@ -554,16 +586,16 @@ foldr1 f = foldr mf Nothing
         Nothing -> x
         Just y -> f x y
 
----- Traversals
+---- Traversals ----
 
-for :: (Traverse t, Bind m) => t a -> (a -> m b) -> m (t b)
+for :: (Traversable t, Monad m) => t a -> (a -> m b) -> m (t b)
 for = Relude.forM
 
----- Monoids
+---- Combines ----
 
 infixr 5 ++
 
-(++) :: (Relude.Semigroup s) => s -> s -> s
+(++) :: (Semigroup s) => s -> s -> s
 (++) = (Relude.<>)
 {-# INLINE (++) #-}
 
@@ -577,7 +609,7 @@ concat = Relude.mconcat
 
 ---- Operators -----------------------------------------------------------------
 
----- Functions
+---- Functions ----
 
 infixr 0 <|
 
@@ -609,7 +641,7 @@ f << g = \x -> f (g x)
 (>>) = flip (<<)
 {-# INLINE (>>) #-}
 
----- Functors
+---- Functors ----
 
 infixl 4 <||
 
@@ -639,7 +671,7 @@ infixl 4 ||-
 (||-) = (Relude.$>)
 {-# INLINE (||-) #-}
 
----- Applicatives
+---- Applicatives ----
 
 infixr 1 <-<
 
@@ -693,7 +725,7 @@ f <-< g = pure (<<) -< f -< g
 (>->) = flip (<-<)
 {-# INLINE (>->) #-}
 
----- Monoidals
+---- Monoidals ----
 
 infixl 6 ><
 
@@ -726,7 +758,7 @@ instance Monoidal (Either e)
 
 instance Monoidal IO
 
------ Selectives
+----- Selectives ----
 {-
 class Applicative f => Selective f where
   branch :: f (Either a b) -> f (a -> c) -> f (b -> c) -> f c
@@ -749,9 +781,7 @@ when :: Selective f => f Bool -> f Unit -> f Unit
 when p t = check p t (pure ())
 -}
 
----- Monads
-
-type Bind = Monad
+---- Monads ----
 
 infixl 1 |=
 

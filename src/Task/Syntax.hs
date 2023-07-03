@@ -80,7 +80,7 @@ data Task h t where
   -- because we need to mark them dirty and match those with watched references.
 
   -- | Create new reference of type `t`
-  Share :: (Basic t, Reflect h) => t -> Task h (Store h t)
+  Share :: (Basic t, Typeable h) => t -> Task h (Store h t)
   -- | Assign to a reference of type `t` to a given value
   Assign :: (Basic a) => a -> Store h a -> Task h ()
 

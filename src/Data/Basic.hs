@@ -18,6 +18,6 @@ import Data.Aeson (FromJSON, ToJSON)
 -- | give better error messges.
 -- |
 -- | FIXME: Maybe also 'Arbitrary' and `Coarbitrary` ?
-class (Display a, Scan a, Eq a, Reflect a, ToJSON a, FromJSON a) => Basic a
+class (Display a, Scan a, Eq a, Typeable a, ToJSON a, FromJSON a) => Basic a
 
-instance (Display a, Scan a, Eq a, Reflect a, ToJSON a, FromJSON a) => Basic a
+instance (Display a, Scan a, Eq a, Typeable a, ToJSON a, FromJSON a) => Basic a
