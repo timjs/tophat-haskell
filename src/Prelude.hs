@@ -14,6 +14,7 @@ module Prelude
     Nat16,
     Nat32,
     Nat64,
+    Relude.String,
     List,
     Assoc,
     Cons,
@@ -449,7 +450,7 @@ error = Left
 
 --   empty = Left neutral
 
----- Foldables
+---- Folds
 
 infix 4 /.
 
