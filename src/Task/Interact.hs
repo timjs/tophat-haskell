@@ -52,7 +52,7 @@ loop t = do
         "quit" -> abort
         "q" -> abort
         _ -> case Input.parse line of
-          Right input -> pure input
+          Right input -> done input
           Left message -> do
             printLn message
             getUserInput

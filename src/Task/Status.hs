@@ -33,7 +33,7 @@ instance Monoidal Status where
   _ >< _ = Stepping
 
 instance Applicative Status where
-  pure = pureDefault
+  done = pureDefault
   (<*>) = applyDefault
 
 instance Alternative Status where
@@ -48,24 +48,24 @@ instance Alternative Status where
 status :: Collaborative r m => Task m a -> m (Status a)
 status = \case
   -- Valued editors are `Producing` a value... --
-  Lift v -> pure (Producing v)
-  Update v -> pure (Producing v)
-  View v -> pure (Producing v)
+  Lift v -> done (Producing v)
+  Update v -> done (Producing v)
+  View v -> done (Producing v)
   -- ...as do shared editors. --
-  Share v -> pure Producing -< share v
-  Assign _ _ -> pure (Producing ())
-  Change l -> pure Producing -< watch l
-  Watch l -> pure Producing -< watch l
+  Share v -> done Producing -<< share v
+  Assign _ _ -> done (Producing ())
+  Change l -> done Producing -<< watch l
+  Watch l -> done Producing -<< watch l
   -- Unvalued editors are `Asking` for a value. --
-  Enter -> pure Asking
+  Enter -> done Asking
   -- Fail is obviously `Failing`... --
-  Fail -> pure Failing
+  Fail -> done Failing
   -- Combinations pair or choose one of the possibilities. --
-  Pair t1 t2 -> pure (><) -< status t1 -< status t2
-  Choose t1 t2 -> pure (<|>) -< status t1 -< status t2
-  Trans f t -> pure (map f) -< status t
+  Pair t1 t2 -> done (><) -<< status t1 -<< status t2
+  Choose t1 t2 -> done (<|>) -<< status t1 -<< status t2
+  Trans f t -> done (map f) -<< status t
   -- From the rest we do not know anything. --
-  Option _ -> pure Stepping
-  Step _ _ -> pure Stepping
-  Forever _ -> pure Stepping
+  Option _ -> done Stepping
+  Step _ _ -> done Stepping
+  Forever _ -> done Stepping
 -}

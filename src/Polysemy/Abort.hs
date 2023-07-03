@@ -35,7 +35,7 @@ makeSem ''Abort
 --   Sem (Abort ': r) a ->
 --   Sem r a
 -- runAbort a = interpret \case
---   Abort -> pure Nothing
+--   Abort -> done Nothing
 -- {-# INLINE runAbort #-}
 
 ------------------------------------------------------------------------------

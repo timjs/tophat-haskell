@@ -69,11 +69,11 @@ normalise t = case t of
     let stay = Step t1' e2
     mv1 <- raise <| value t1'
     case mv1 of
-      Nothing -> pure stay -- N-StepNone
+      Nothing -> done stay -- N-StepNone
       Just v1 -> do
         let t2 = e2 v1
         if failing t2
-          then pure stay -- N-StepFail
+          then done stay -- N-StepFail
           else normalise t2 -- N-StepCont
 
   ---- Choose
@@ -81,44 +81,44 @@ normalise t = case t of
     t1' <- normalise t1
     mv1 <- raise <| value t1'
     case mv1 of
-      Just _ -> pure t1' -- N-ChooseLeft
+      Just _ -> done t1' -- N-ChooseLeft
       Nothing -> do
         t2' <- normalise t2
         mv2 <- raise <| value t2'
         case mv2 of
-          Just _ -> pure t2' -- N-ChooseRight
-          Nothing -> pure <| Choose t1' t2' -- N-ChooseNone
+          Just _ -> done t2' -- N-ChooseRight
+          Nothing -> done <| Choose t1' t2' -- N-ChooseNone
 
   ---- Select
   Select Unnamed t1 es -> do
     t1' <- normalise t1
     k <- supply
-    pure <| Select (Named k) t1' es
+    done <| Select (Named k) t1' es
   Select (Named k) t1 es -> do
     t1' <- normalise t1
-    pure <| Select (Named k) t1' es
+    done <| Select (Named k) t1' es
 
   ---- Converge
-  Trans f t2 -> pure (Trans f) -< normalise t2
-  Pair t1 t2 -> pure Pair -< normalise t1 -< normalise t2
+  Trans f t2 -> done (Trans f) -<< normalise t2
+  Pair t1 t2 -> done Pair -<< normalise t1 -<< normalise t2
   ---- Ready
-  Lift _ -> pure t
-  Fail -> pure t
+  Lift _ -> done t
+  Fail -> done t
   ---- Name
   Edit Unnamed e -> do
     k <- supply
-    pure <| Edit (Named k) e
-  Edit (Named _) _ -> pure t
+    done <| Edit (Named k) e
+  Edit (Named _) _ -> done t
   ---- Resolve
   Assert p -> do
-    pure <| Lift p
+    done <| Lift p
   Share b -> do
     l <- Store.alloc b
-    pure <| Lift l
+    done <| Lift l
   Assign b s@(Store _ r) -> do
     Store.write b s
     tell [pack r]
-    pure <| Lift ()
+    done <| Lift ()
 
 -- balance :: Task h a -> Task h a
 -- balance t = case t of
@@ -158,13 +158,13 @@ handle t i = case t of
                 let tl = el v1
                  in if failing tl
                       then throw <| CouldNotGoTo l
-                      else pure <| tl
+                      else done <| tl
         else do
           t1' <- handle t1 i
-          pure <| Select n t1' cs
+          done <| Select n t1' cs
     Insert _ _ -> do
       t1' <- handle t1 i
-      pure <| Select n t1' cs
+      done <| Select n t1' cs
 
   ---- Editors
   Edit n e -> case i of
@@ -172,32 +172,32 @@ handle t i = case t of
       if n == Named k
         then do
           e' <- insert e b'
-          pure <| Edit n e' -- H-Edit
+          done <| Edit n e' -- H-Edit
         else throw <| CouldNotMatch n (Named k)
     Decide _ _ -> throw <| CouldNotHandle i
   ---- Pass
   Trans e1 t2 -> do
     t2' <- handle t2 i
-    pure <| Trans e1 t2'
+    done <| Trans e1 t2'
   Step t1 e2 -> do
     et1' <- try <| handle t1 i
     case et1' of
-      Right t1' -> pure <| Step t1' e2 -- H-Step
+      Right t1' -> done <| Step t1' e2 -- H-Step
       Left x -> throw x
   Pair t1 t2 -> do
     et1' <- try <| handle t1 i
     case et1' of
-      Right t1' -> pure <| Pair t1' t2 -- H-PairFirst
+      Right t1' -> done <| Pair t1' t2 -- H-PairFirst
       Left _ -> do
         t2' <- handle t2 i
-        pure <| Pair t1 t2' -- H-PairSecond
+        done <| Pair t1 t2' -- H-PairSecond
   Choose t1 t2 -> do
     et1' <- try <| handle t1 i
     case et1' of
-      Right t1' -> pure <| Choose t1' t2 -- H-ChooseFirst
+      Right t1' -> done <| Choose t1' t2 -- H-ChooseFirst
       Left _ -> do
         t2' <- handle t2 i
-        pure <| Choose t1 t2' -- H-ChoosSecond
+        done <| Choose t1 t2' -- H-ChoosSecond
 
   ---- Rest
   _ -> throw <| CouldNotHandle i
@@ -210,21 +210,21 @@ insert ::
   Sem (Writer (List (Some (Ref h))) ': Error NotApplicable ': r) (Editor h a)
 insert e c@(Concrete b') = case e of
   Enter
-    | Just Refl <- b' ~: beta -> pure <| Update b'
+    | Just Refl <- b' ~: beta -> done <| Update b'
     | otherwise -> throw <| CouldNotChangeVal (SomeTypeRep beta) (someTypeOf b')
     where
       beta = typeRep :: TypeRep a
   Update b
     -- NOTE: Here we check if `b` and `b'` have the same type.
     -- If this is the case, it would be inhabited by `Refl :: a :~: b`, where `b` is the type of the value inside `Update`.
-    | Just Refl <- b ~= b' -> pure <| Update b'
+    | Just Refl <- b ~= b' -> done <| Update b'
     | otherwise -> throw <| CouldNotChangeVal (someTypeOf b) (someTypeOf b')
   Change s@(Store _ r)
     -- NOTE: As in the `Update` case above, we check for type equality.
     | Just Refl <- b' ~: beta -> do
         Store.write b' s
         tell [pack r]
-        pure <| Change s
+        done <| Change s
     | otherwise -> throw <| CouldNotChangeRef (someTypeOf r) (someTypeOf b')
     where
       beta = typeRep :: TypeRep a
@@ -249,10 +249,10 @@ fixate t = do
       log Info <| DidStabilise (length ds) (length ws)
       -- let t''' = balance t''
       -- log Info <| DidBalance (display t''')
-      pure t'' -- F-Lift
+      done t'' -- F-Lift
     _ -> do
       log Info <| DidNotStabilise (length ds) (length ws) (length os)
-      fixate <| pure t'' -- F-Loop
+      fixate <| done t'' -- F-Loop
 
 ---- Initialisation ------------------------------------------------------------
 
@@ -262,7 +262,7 @@ initialise ::
   Sem r (Task h a)
 initialise t = do
   log Info <| DidStart (display t)
-  fixate (pure t)
+  fixate (done t)
 
 ---- Interaction ---------------------------------------------------------------
 
@@ -276,8 +276,8 @@ interact i t = do
   case xt of
     Left e -> do
       log Warning e
-      pure t
-    Right (_, t') -> fixate <| pure t' -- XXX: forget delta?!
+      done t
+    Right (_, t') -> fixate <| done t' -- XXX: forget delta?!
 
 {-
 execute ::

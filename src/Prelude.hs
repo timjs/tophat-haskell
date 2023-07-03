@@ -87,9 +87,9 @@ module Prelude
     withDefault,
 
     -- ** Eithers
-    throw,
-    note,
-    hush,
+    error,
+    -- note,
+    -- hush,
 
     -- ** Folds
     length,
@@ -119,26 +119,32 @@ module Prelude
     (>>),
 
     -- ** Functors
-    (<||),
-    (||>),
-    (-||),
-    (||-),
+    (<-<),
+    (>->),
+    -- (<<-),
+    -- (->>),
     map,
 
     -- ** Applicatives
-    (-<),
-    (>-),
-    (-|),
-    (|-),
+    (-<<),
+    (>>-),
+    (-<-),
+    (->-),
+    (Relude.<*>),
+    Relude.pure,
+    done,
     lift0,
     lift1,
     lift2,
     lift3,
-    (<-<),
-    (>->),
+    -- (<-<),
+    -- (>->),
+
+    -- ** Alternatives
+    fail,
 
     -- ** Monoidals
-    Monoidal ((><), none, (>|), (|<)),
+    Monoidal ((<&>), (&>), (<&), none),
     applyDefault,
     pureDefault,
 
@@ -149,10 +155,8 @@ module Prelude
     -- when,
 
     -- ** Monads
-    (|=),
-    (=|),
+    Relude.return,
     MonadZero,
-    fail,
 
     -- * Types and Proxys
     (~=),
@@ -174,10 +178,7 @@ import Data.List (lookup)
 import qualified Data.Text as Text
 import Data.Type.Equality
 import Relude hiding
-  ( -- (<>),
-    -- (<*>),
-
-    Any,
+  ( Any,
     MonadFail (..),
     Nat,
     Read,
@@ -207,7 +208,9 @@ import Relude hiding
     mempty,
     pass,
     print,
+    pure,
     readMaybe,
+    return,
     second,
     show,
     trace,
@@ -224,6 +227,8 @@ import Relude hiding
     (<$>),
     (<&>),
     (<*),
+    (<*>),
+    (<>),
     (=<<),
     (>>),
   )
@@ -458,17 +463,17 @@ withDefault = Relude.fromMaybe
 
 ---- Eithers ----
 
-throw :: e -> Either e a
-throw = Left
-{-# INLINE throw #-}
+error :: e -> Either e a
+error = Left
+{-# INLINE error #-}
 
-note :: a -> Maybe b -> Either a b
-note = maybeToRight
-{-# INLINE note #-}
+-- note :: a -> Maybe b -> Either a b
+-- note = maybeToRight
+-- {-# INLINE note #-}
 
-hush :: Either l r -> Maybe r
-hush = rightToMaybe
-{-# INLINE hush #-}
+-- hush :: Either l r -> Maybe r
+-- hush = rightToMaybe
+-- {-# INLINE hush #-}
 
 -- type Result = Either
 
@@ -540,7 +545,7 @@ intercalate sep = foldl' go (True, neutral) >> snd
 surroundMap :: (Foldable f, Semigroup m) => m -> (a -> m) -> f a -> m
 surroundMap d t f = appEndo (foldMap joined f) d
   where
-    joined a = Endo \m -> d <> t a <> m
+    joined a = Endo \m -> d ++ t a ++ m
 {-# INLINE surroundMap #-}
 
 -- | `fold` but with each element surrounded by some fixed value.
@@ -567,7 +572,7 @@ surround d = surroundMap d identity
 gather :: (Foldable t, Monad m) => (b -> a -> m b) -> b -> t a -> m b
 gather = Relude.foldlM
 
--- gather f b0 = foldr go (pure b0)
+-- gather f b0 = foldr go (done b0)
 -- where
 --   go a mb = mb >>= flip f a
 
@@ -643,66 +648,64 @@ f << g = \x -> f (g x)
 
 ---- Functors ----
 
-infixl 4 <||
+infixl 4 <-<
 
-infixl 1 ||>
+infixl 1 >->
 
 map :: (Functor f) => (a -> b) -> f a -> f b
 map = Relude.fmap
 {-# INLINE map #-}
 
-(<||) :: (Functor f) => (a -> b) -> f a -> f b
-(<||) = map
-{-# INLINE (<||) #-}
+(<-<) :: (Functor f) => (a -> b) -> f a -> f b
+(<-<) = map
+{-# INLINE (<-<) #-}
 
-(||>) :: (Functor f) => f a -> (a -> b) -> f b
-(||>) = flip (Relude.<$>)
-{-# INLINE (||>) #-}
+(>->) :: (Functor f) => f a -> (a -> b) -> f b
+(>->) = flip (Relude.<$>)
+{-# INLINE (>->) #-}
 
-infixl 4 -||
+-- infixl 4 <<-
+-- infixl 4 ->>
 
-infixl 4 ||-
+-- (<<-) :: (Functor f) => a -> f b -> f a
+-- (<<-) = (Relude.<$)
+-- {-# INLINE (<<-) #-}
 
-(-||) :: (Functor f) => a -> f b -> f a
-(-||) = (Relude.<$)
-{-# INLINE (-||) #-}
-
-(||-) :: (Functor f) => f a -> b -> f b
-(||-) = (Relude.$>)
-{-# INLINE (||-) #-}
+-- (->>) :: (Functor f) => f a -> b -> f b
+-- (->>) = (Relude.$>)
+-- {-# INLINE (->>) #-}
 
 ---- Applicatives ----
 
-infixr 1 <-<
+infixl 4 >>-
 
-infixr 1 >->
+infixl 4 -<<
 
-infixl 4 >-
+infixl 4 ->-
 
-infixl 4 -<
+infixl 4 -<-
 
-infixl 4 |-
+(-<<) :: (Applicative f) => f (a -> b) -> f a -> f b
+(-<<) = (Relude.<*>)
+{-# INLINE (-<<) #-}
 
-infixl 4 -|
+(>>-) :: (Applicative f) => f a -> f (a -> b) -> f b
+(>>-) = flip (-<<)
+{-# INLINE (>>-) #-}
 
-(-<) :: (Applicative f) => f (a -> b) -> f a -> f b
-(-<) = (Relude.<*>)
-{-# INLINE (-<) #-}
+(-<-) :: (Applicative f) => f a -> f b -> f a
+(-<-) = (Relude.<*)
+{-# INLINE (-<-) #-}
 
-(>-) :: (Applicative f) => f a -> f (a -> b) -> f b
-(>-) = flip (-<)
-{-# INLINE (>-) #-}
+(->-) :: (Applicative f) => f a -> f b -> f b
+(->-) = (Relude.*>)
+{-# INLINE (->-) #-}
 
-(-|) :: (Applicative f) => f a -> f b -> f a
-(-|) = (Relude.<*)
-{-# INLINE (-|) #-}
-
-(|-) :: (Applicative f) => f a -> f b -> f b
-(|-) = (Relude.*>)
-{-# INLINE (|-) #-}
+done :: (Applicative f) => a -> f a
+done = Relude.pure
 
 lift0 :: (Applicative f) => a -> f a
-lift0 = pure
+lift0 = Relude.pure
 {-# INLINE lift0 #-}
 
 lift1 :: (Functor f) => (a -> b) -> f a -> f b
@@ -717,37 +720,42 @@ lift3 :: (Applicative f) => (a -> b -> c -> d) -> f a -> f b -> f c -> f d
 lift3 = Relude.liftA3
 {-# INLINE lift3 #-}
 
-(<-<) :: (Applicative f) => f (b -> c) -> f (a -> b) -> f (a -> c)
-f <-< g = pure (<<) -< f -< g
-{-# INLINE (<-<) #-}
+-- (<-<) :: (Applicative f) => f (b -> c) -> f (a -> b) -> f (a -> c)
+-- f <-< g = done (<<) -<< f -<< g
+-- {-# INLINE (<-<) #-}
 
-(>->) :: (Applicative f) => f (a -> b) -> f (b -> c) -> f (a -> c)
-(>->) = flip (<-<)
-{-# INLINE (>->) #-}
+-- (>->) :: (Applicative f) => f (a -> b) -> f (b -> c) -> f (a -> c)
+-- (>->) = flip (<-<)
+-- {-# INLINE (>->) #-}
+
+---- Alternatives ----
+
+fail :: (Alternative m) => m a
+fail = empty
 
 ---- Monoidals ----
 
-infixl 6 ><
+infixl 6 <&>
 
-infixl 6 >|
+infixl 6 <&
 
-infixl 6 |<
+infixl 6 &>
 
 class (Applicative f) => Monoidal f where
-  (><) :: f a -> f b -> f (a, b)
-  (><) x y = pure (,) -< x -< y
+  (<&>) :: f a -> f b -> f (a, b)
+  (<&>) x y = done (,) -<< x -<< y
 
   none :: f ()
-  none = pure ()
+  none = done ()
 
-  (>|) :: f a -> f b -> f a
-  (>|) x y = pure fst -< x >< y
+  (<&) :: f a -> f b -> f a
+  (<&) x y = done fst -<< x <&> y
 
-  (|<) :: f a -> f b -> f b
-  (|<) x y = pure snd -< x >< y
+  (&>) :: f a -> f b -> f b
+  (&>) x y = done snd -<< x <&> y
 
 applyDefault :: (Monoidal f) => f (a -> b) -> f a -> f b
-applyDefault fg fx = pure (\(g, x) -> g x) -< fg >< fx
+applyDefault fg fx = done (\(g, x) -> g x) -<< fg <&> fx
 
 pureDefault :: (Monoidal f) => a -> f a
 pureDefault x = map (const x) none
@@ -760,40 +768,28 @@ instance Monoidal IO
 
 ----- Selectives ----
 {-
-class Applicative f => Selective f where
+class (Applicative f) => Selective f where
   branch :: f (Either a b) -> f (a -> c) -> f (b -> c) -> f c
   branch p x y = map (map Left) p `select` map (map Right) x `select` y
 
   select :: f (Either a b) -> f (a -> b) -> f b
-  select x y = branch x y (pure identity)
+  select x y = branch x y (done identity)
 
   biselect :: f (Either a b) -> f (Either a c) -> f (Either a (b, c))
-  biselect x y = select (map Left << swp <|| x) ((\e a -> map (a,) e) <|| y)
+  biselect x y = select (map Left << swp <-< x) ((\e a -> map (a,) e) <-< y)
     where
       swp = either Right Left
 
-check :: Selective f => f Bool -> f a -> f a -> f a
+check :: (Selective f) => f Bool -> f a -> f a -> f a
 check p t e = branch (map go p) (map const t) (map const e)
   where
     go x = if x then Right () else Left ()
 
-when :: Selective f => f Bool -> f Unit -> f Unit
-when p t = check p t (pure ())
+when :: (Selective f) => f Bool -> f Unit -> f Unit
+when p t = check p t (done ())
 -}
 
 ---- Monads ----
-
-infixl 1 |=
-
-infixr 1 =|
-
-(|=) :: (Monad m) => m a -> (a -> m b) -> m b
-(|=) = (Relude.>>=)
-{-# INLINE (|=) #-}
-
-(=|) :: (Monad m) => (a -> m b) -> m a -> m b
-(=|) = (Relude.=<<)
-{-# INLINE (=|) #-}
 
 -- | A safe alternative for MonadFail.
 -- |
@@ -807,9 +803,6 @@ class (Monad m, Relude.MonadFail m, Alternative m) => MonadZero m
 instance MonadZero Maybe
 
 instance MonadZero List
-
-fail :: (Alternative m) => m a
-fail = empty
 
 -- instance (Relude.MonadFail m, MonadPlus m) => MonadZero (StateT s m)
 

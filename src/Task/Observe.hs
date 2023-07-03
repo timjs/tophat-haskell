@@ -16,16 +16,16 @@ ui ::
   Sem r Text
 ui = \case
   Edit n e -> ui' n e
-  Select n t1 ts -> pure (\l -> concat [l, " ▷^", display n, " ", display <| keys ts]) -< ui t1
-  Lift _ -> pure "■ …"
-  Pair t1 t2 -> pure (\l r -> unwords [l, " ⧓ ", r]) -< ui t1 -< ui t2
-  Choose t1 t2 -> pure (\l r -> unwords [l, " ◆ ", r]) -< ui t1 -< ui t2
-  Fail -> pure "↯"
+  Select n t1 ts -> done (\l -> concat [l, " ▷^", display n, " ", display <| keys ts]) -<< ui t1
+  Lift _ -> done "■ …"
+  Pair t1 t2 -> done (\l r -> unwords [l, " ⧓ ", r]) -<< ui t1 -<< ui t2
+  Choose t1 t2 -> done (\l r -> unwords [l, " ◆ ", r]) -<< ui t1 -<< ui t2
+  Fail -> done "↯"
   Trans _ t -> ui t
-  Step t1 _ -> pure (\l -> concat [l, " ▶…"]) -< ui t1
-  Assert _ -> pure <| unwords ["assert", "…"]
-  Share b -> pure <| unwords ["share", display b]
-  Assign b _ -> pure <| unwords ["…", ":=", display b]
+  Step t1 _ -> done (\l -> concat [l, " ▶…"]) -<< ui t1
+  Assert _ -> done <| unwords ["assert", "…"]
+  Share b -> done <| unwords ["share", display b]
+  Assign b _ -> done <| unwords ["…", ":=", display b]
 
 ui' ::
   (Members '[Read h] r) => -- We need `Read` to read from references.
@@ -33,40 +33,40 @@ ui' ::
   Editor h b ->
   Sem r Text
 ui' n = \case
-  Enter -> pure <| concat ["□^", display n, " [ ] "]
-  Update b -> pure <| concat ["⊟^", display n, " [ ", display b, " ]"]
-  View b -> pure <| concat ["⧇^", display n, " [ ", display b, " ]"]
-  Change l -> pure (\b -> concat ["^⊞", display n, " [ ", display b, " ]"]) -< Store.read l
-  Watch l -> pure (\b -> concat ["⧈^", display n, " [ ", display b, " ]"]) -< Store.read l
+  Enter -> done <| concat ["□^", display n, " [ ] "]
+  Update b -> done <| concat ["⊟^", display n, " [ ", display b, " ]"]
+  View b -> done <| concat ["⧇^", display n, " [ ", display b, " ]"]
+  Change l -> done (\b -> concat ["^⊞", display n, " [ ", display b, " ]"]) -<< Store.read l
+  Watch l -> done (\b -> concat ["⧈^", display n, " [ ", display b, " ]"]) -<< Store.read l
 
 value ::
   (Members '[Alloc h, Read h] r) => -- We need `Alloc` to allocate a fresh store to continue with.
   Task h a ->
   Sem r (Maybe a)
 value = \case
-  Edit Unnamed _ -> pure Nothing
+  Edit Unnamed _ -> done Nothing
   Edit (Named _) e -> value' e
-  Select _ _ _ -> pure Nothing
-  Trans f t -> pure (map f) -< value t
-  Pair t1 t2 -> pure (><) -< value t1 -< value t2
-  Lift v -> pure (Just v)
-  Choose t1 t2 -> pure (<|>) -< value t1 -< value t2
-  Fail -> pure Nothing
-  Step _ _ -> pure Nothing
-  Assert b -> pure (Just b)
-  Share b -> pure Just -< Store.alloc b
-  Assign _ _ -> pure (Just ())
+  Select _ _ _ -> done Nothing
+  Trans f t -> done (map f) -<< value t
+  Pair t1 t2 -> done (<&>) -<< value t1 -<< value t2
+  Lift v -> done (Just v)
+  Choose t1 t2 -> done (<|>) -<< value t1 -<< value t2
+  Fail -> done Nothing
+  Step _ _ -> done Nothing
+  Assert b -> done (Just b)
+  Share b -> done Just -<< Store.alloc b
+  Assign _ _ -> done (Just ())
 
 value' ::
   (Members '[Read h] r) => -- We need `Read` to read from references.
   Editor h a ->
   Sem r (Maybe a)
 value' = \case
-  Enter -> pure Nothing
-  Update b -> pure (Just b)
-  View b -> pure (Just b)
-  Change l -> pure Just -< Store.read l
-  Watch l -> pure Just -< Store.read l
+  Enter -> done Nothing
+  Update b -> done (Just b)
+  View b -> done (Just b)
+  Change l -> done Just -<< Store.read l
+  Watch l -> done Just -<< Store.read l
 
 failing ::
   Task h a ->
@@ -116,24 +116,24 @@ inputs ::
   Task h a ->
   Sem r (List (Input Abstract))
 inputs t = case t of
-  Edit Unnamed _ -> pure []
-  Edit (Named k) e -> pure <| inputs' k e
-  Select Unnamed _ _ -> pure []
+  Edit Unnamed _ -> done []
+  Edit (Named k) e -> done <| inputs' k e
+  Select Unnamed _ _ -> done []
   Select (Named k) t1 ts ->
-    pure (++) -< inputs t1 -< do
+    done (++) -<< inputs t1 -<< do
       mv1 <- value t1
       case mv1 of
-        Nothing -> pure []
-        Just v1 -> pure [Decide k l | (l, e) <- ts, not <| failing (e v1)]
+        Nothing -> done []
+        Just v1 -> done [Decide k l | (l, e) <- ts, not <| failing (e v1)]
   Trans _ t2 -> inputs t2
-  Pair t1 t2 -> pure (++) -< inputs t1 -< inputs t2
-  Lift _ -> pure []
-  Choose t1 t2 -> pure (++) -< inputs t1 -< inputs t2
-  Fail -> pure []
+  Pair t1 t2 -> done (++) -<< inputs t1 -<< inputs t2
+  Lift _ -> done []
+  Choose t1 t2 -> done (++) -<< inputs t1 -<< inputs t2
+  Fail -> done []
   Step t1 _ -> inputs t1
-  Assert _ -> pure []
-  Share _ -> pure []
-  Assign _ _ -> pure []
+  Assert _ -> done []
+  Share _ -> done []
+  Assign _ _ -> done []
 
 inputs' ::
   forall h a.

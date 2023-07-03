@@ -168,7 +168,7 @@ instance Functor (Task h) where
   fmap = Trans
 
 instance Monoidal (Task h) where
-  (><) = Pair
+  (<&>) = Pair
   none = Lift ()
 
 instance Applicative (Task h) where

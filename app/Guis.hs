@@ -13,18 +13,18 @@ counter start =
         ]
 
 -- `forever` is not a proper (monadic) fixpoint combinator,
--- so we cannot feed new pure values into our task.
+-- so we cannot feed new done values into our task.
 -- Otherwise we could do:
 --   counter' :: Int -> Task h Int
 --   counter' start = loop start \count -> do
 --     _ <- view count
 --     pick
---       [ ( "Increment", pure <| succ count )
---       , ( "Decrement", pure <| pred count )
+--       [ ( "Increment", done <| succ count )
+--       , ( "Decrement", done <| pred count )
 --       ]
 
 -- Therefore we need a share!
-counter'' :: (Reflect h) => Int -> Task h Void
+counter'' :: (Typeable h) => Int -> Task h Void
 counter'' start = do
   c <- share start
   forever do
@@ -58,16 +58,16 @@ temperature' :: (Double, Double) -> Task h Void
 temperature' (c, f) = forever do
   n <- map Left (update c) <|> map Right (update f)
   case n of
-    Left c' -> pure (c', c2f c')
-    Right f' -> pure (f2c f', f')
+    Left c' -> done (c', c2f c')
+    Right f' -> done (f2c f', f')
 
 -- With shares, we do not need any recursion.
 -- Recursion on editing is built in.
 -- However, we need a way to transform our view on shares: lenses!
-temperature'' :: (Reflect h) => Double -> Task h Double
+temperature'' :: (Typeable h) => Double -> Task h Double
 temperature'' c = do
   r <- share c
-  change r |< change (focus (iso c2f f2c) r)
+  change r <& change (focus (iso c2f f2c) r)
 
 -- Flight booker ---------------------------------------------------------------
 {-
@@ -81,8 +81,8 @@ book = do
   flight <- enter
   pick
     [ ( "Continue", case flight of
-        Left _ -> pure flight
-        Right ( d1, d2 ) -> if d1 < d2 then pure flight else empty
+        Left _ -> done flight
+        Right ( d1, d2 ) -> if d1 < d2 then done flight else empty
       )
     ]
 -}

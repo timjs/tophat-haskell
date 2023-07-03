@@ -91,17 +91,17 @@ infixl 1 <<=
 ---- Derived -------------------------------------------------------------------
 
 list :: List (Task h a) -> Task h (List a)
--- list [] = pure []
--- list (t : ts) = uncurry (:) <|| (t >< list ts)
-list = foldr go (pure [])
+-- list [] = done []
+-- list (t : ts) = uncurry (:) <-< (t >< list ts)
+list = foldr go (done [])
   where
-    go t ts = uncurry (:) <|| t >< ts
+    go t ts = uncurry (:) <-< t <&> ts
 
 parallel :: (List a -> Bool) -> (List a -> b) -> List (Task h a) -> Task h b
-parallel p f ts = list ts >>= \xs -> if p xs then pure <| f xs else fail
+parallel p f ts = list ts >>= \xs -> if p xs then done <| f xs else fail
 
 conditionally :: (List a -> Bool) -> List (Task h a) -> Task h (List a)
-conditionally p ts = list ts >>= \xs -> if p xs then pure xs else fail
+conditionally p ts = list ts >>= \xs -> if p xs then done xs else fail
 
 choose :: List (Task h a) -> Task h a
 -- choose xs = xs .\ fail <| (<|>)
@@ -131,7 +131,7 @@ infixl 3 <?>
 (>>?) t1 e2 = t1 >>* ["Continue" ~> e2]
 
 pick :: Assoc Label (Task h a) -> Task h a
-pick ts = pure () >>* [(l, const t) | (l, t) <- ts]
+pick ts = done () >>* [(l, const t) | (l, t) <- ts]
 
 (<?>) :: Task h a -> Task h a -> Task h a
 (<?>) t1 t2 = pick ["Left" ~> t1, "Right" ~> t2]
@@ -142,7 +142,7 @@ forever :: Task h a -> Task h Void
 forever t1 = t1 >>= \_ -> forever t1
 
 repeat :: Task h a -> Task h a
-repeat t1 = t1 >>* ["Repeat" ~> \_ -> repeat t1, "Exit" ~> pure]
+repeat t1 = t1 >>* ["Repeat" ~> \_ -> repeat t1, "Exit" ~> done]
 
 -- infixl 1 >>@
 

@@ -41,7 +41,7 @@ interactToInputOutput = reinterpret2 \case
 
 -- runInteract :: List Text -> Sem (Interact ': r) a -> Sem r (List Text, a)
 -- runInteract is =
---   interactToInputOutput >> runInputStream is >> runOutputMonoid pure
+--   interactToInputOutput >> runInputStream is >> runOutputMonoid done
 
 -- runInputStream ::
 --   Stream i ->
@@ -53,11 +53,11 @@ interactToInputOutput = reinterpret2 \case
 --     case s of
 --       Just (x, xs) -> do
 --         put xs
---         pure (Just x)
---       Nothing -> pure Nothing
+--         done (Just x)
+--       Nothing -> done Nothing
 -- {-# INLINE runInputStream #-}
 
--- runOutputMonoid pure -- For each PrintLn in our program, consume an output by appending it to the list in a ([Text], a)
+-- runOutputMonoid done -- For each PrintLn in our program, consume an output by appending it to the list in a ([Text], a)
 --   << runInputList is -- Treat each element of our list of Texts as a line of input
 --   << reinterpret2 \case
 --     -- Reinterpret our effect in terms of Input and Output

@@ -84,14 +84,14 @@ instance Check Expression where
     Lambda m t e -> do
       d <- match m t
       t' <- check (g \/ d) e
-      pure <| TFunction t t'
+      done <| TFunction t t'
     Apply e1 e2 -> do
       t1 <- check g e1
       case t1 of
         TFunction t' t -> do
           t2 <- check g e2
           if t' == t2
-            then pure t
+            then done t
             else throw <| ArgumentError t' t2
         _ -> throw <| FunctionNeeded t1
     ---- Branches
@@ -102,7 +102,7 @@ instance Check Expression where
           t2 <- check g e2
           t3 <- check g e3
           if t2 == t3
-            then pure t2
+            then done t2
             else throw <| BranchError t2 t3
         _ -> throw <| BoolNeeded t1
     Case e0 bs -> do
@@ -116,35 +116,35 @@ instance Check Expression where
           smash ts
         _ -> throw <| VariantNeeded t0
     ---- Records & Variants
-    Record es -> traverse (check g) es ||> TRecord
+    Record es -> traverse (check g) es >-> TRecord
     Variant l e t -> case t of
       TVariant r -> do
         t_e <- check g e
         case HashMap.lookup l r of
           Just t' ->
             if t_e == t'
-              then pure t
+              then done t
               else throw <| VariantError l t' t_e
           Nothing -> throw <| UnknownLabel l t
       _ -> throw <| VariantNeeded t
     ---- Lists
-    Nil t -> pure <| TList t
+    Nil t -> done <| TList t
     Cons e1 e2 -> do
       t1 <- check g e1
       t2 <- check g e2
       case t2 of
         TList t' ->
           if t2 == t'
-            then pure t2
+            then done t2
             else throw <| ListError t1 t2
         _ -> throw <| ListNeeded t2
     ---- Constants
-    Constant (B _) -> pure <| TPrimitive TBool
-    Constant (I _) -> pure <| TPrimitive TInt
-    Constant (S _) -> pure <| TPrimitive TString
+    Constant (B _) -> done <| TPrimitive TBool
+    Constant (I _) -> done <| TPrimitive TInt
+    Constant (S _) -> done <| TPrimitive TString
 
 instance Check Argument where
-  check g (ARecord es) = traverse (check g) es ||> TRecord
+  check g (ARecord es) = traverse (check g) es >-> TRecord
 
 instance Check Statement where
   check g = \case
@@ -160,35 +160,35 @@ instance Check Statement where
 instance Check Task where
   check g = \case
     Enter b _ -> ofBasic b |> returnValue
-    Update _ e -> check g e |= needBasic |= returnValue
-    Change _ e -> check g e |= outofReference |= returnValue
-    View _ e -> check g e |= needBasic |= returnValue
-    Watch _ e -> check g e |= outofReference |= returnValue
-    Lift e -> check g e |= outofRecord ||> TTask
-    Pair ss -> traverse subcheck ss |= unite ||> TTask
-    Choose ss -> traverse subcheck ss |= intersect ||> TTask
-    Branch bs -> traverse subcheck' bs |= intersect ||> TTask
-    Select bs -> traverse subcheck'' bs |= intersect ||> TTask
+    Update _ e -> check g e >>= needBasic >>= returnValue
+    Change _ e -> check g e >>= outofReference >>= returnValue
+    View _ e -> check g e >>= needBasic >>= returnValue
+    Watch _ e -> check g e >>= outofReference >>= returnValue
+    Lift e -> check g e >>= outofRecord >-> TTask
+    Pair ss -> traverse subcheck ss >>= unite >-> TTask
+    Choose ss -> traverse subcheck ss >>= intersect >-> TTask
+    Branch bs -> traverse subcheck' bs >>= intersect >-> TTask
+    Select bs -> traverse subcheck'' bs >>= intersect >-> TTask
     Execute x a -> do
       t_x <- HashMap.lookup x g |> note (UnknownVariable x)
       case t_x of
         TFunction r' t -> do
           t_a <- check g a
           if r' == t_a
-            then pure t
+            then done t
             else throw <| ArgumentError r' t_a
         _ -> throw <| FunctionNeeded t_x
     Hole _ -> throw <| HoleFound g -- TODO: how to handle holes?
-    Share e -> check g e |= outofBasic ||> TReference |= returnValue
+    Share e -> check g e >>= outofBasic >-> TReference >>= returnValue
     Assign e1 e2 -> do
       t1 <- check g e1
       b1 <- outofReference t1
       b2 <- check g e2
       if b1 == b2
-        then pure (TRecord [])
+        then done (TRecord [])
         else throw (AssignError b1 b2)
     where
-      subcheck s = check g s |= outofTask
+      subcheck s = check g s >>= outofTask
       subcheck' (e, s) = do
         t_e <- check g e
         case t_e of
@@ -196,22 +196,22 @@ instance Check Task where
           _ -> throw <| BoolNeeded t_e
       subcheck'' (_, e, s) = subcheck' (e, s)
 
-unite :: (Members '[Error TypeError] r, Fold t) => t (Row a) -> Sem r (Row a)
+unite :: (Members '[Error TypeError] r, Foldable t) => t (Row a) -> Sem r (Row a)
 unite = gather go []
   where
     go :: (Members '[Error TypeError] r) => Row a -> Row a -> Sem r (Row a)
     go acc r =
       let is = HashMap.keysSet r `HashSet.intersection` HashMap.keysSet acc
        in if null is
-            then pure <| acc \/ r
+            then done <| acc \/ r
             else throw <| DoubleLabels is (HashMap.keysSet r)
 
-intersect :: (Members '[Error TypeError] r, Fold t) => t (Row a) -> Sem r (Row a)
+intersect :: (Members '[Error TypeError] r, Foldable t) => t (Row a) -> Sem r (Row a)
 intersect rs = foldr1 (/\) rs |> note EmptyChoice
 
 merge :: (Members '[Error TypeError] r) => Row a -> Row b -> Sem r (Row (a, b))
 merge r1 r2
-  | HashMap.null ds = pure <| HashMap.intersectionWith (,) r1 r2
+  | HashMap.null ds = done <| HashMap.intersectionWith (,) r1 r2
   | otherwise = throw <| UnknownLabels (HashMap.keysSet ds) (HashMap.keysSet r2)
   where
     ds = r1 // r2
@@ -220,50 +220,50 @@ smash :: (Members '[Error TypeError] r) => Row Ty -> Sem r Ty
 smash r = case HashMap.elems r of
   [] -> throw <| EmptyCase
   t : ts
-    | all (t ==) ts -> pure t
+    | all (t ==) ts -> done t
     | otherwise -> throw <| BranchesError r
 
 needBasic :: (Members '[Error TypeError] r) => Ty -> Sem r Ty
 needBasic t
-  | isBasic t = pure t
+  | isBasic t = done t
   | otherwise = throw <| BasicNeeded t
 
 outofBasic :: (Members '[Error TypeError] r) => Ty -> Sem r BasicTy
 outofBasic t
-  | Just b <- ofType t = pure b
+  | Just b <- ofType t = done b
   | otherwise = throw <| BasicNeeded t
 
 outofRecord :: (Members '[Error TypeError] r) => Ty -> Sem r (Row Ty)
 outofRecord t
-  | Just r <- ofRecord t = pure r
+  | Just r <- ofRecord t = done r
   | otherwise = throw <| RecordNeeded t
 
 outofReference :: (Members '[Error TypeError] r) => Ty -> Sem r Ty
 outofReference t
-  | Just b <- ofReference t = pure <| ofBasic b
+  | Just b <- ofReference t = done <| ofBasic b
   | otherwise = throw <| ReferenceNeeded t
 
 outofTask :: (Members '[Error TypeError] r) => Ty -> Sem r (Row Ty)
 outofTask t
-  | Just r <- ofTask t = pure r
+  | Just r <- ofTask t = done r
   | otherwise = throw <| TaskNeeded t
 
 returnValue :: (Monad m) => Ty -> m Ty
-returnValue t = pure <| TTask ["value" ~> t]
+returnValue t = done <| TTask ["value" ~> t]
 
 ---- Matcher -------------------------------------------------------------------
 
 match :: (Members '[Error TypeError, Output Text] r) => Match -> Ty -> Sem r Context
 match m t = case m of
-  MIgnore -> pure []
-  MBind x -> pure [x ~> t]
+  MIgnore -> done []
+  MBind x -> done [x ~> t]
   MRecord ms -> do
     case t of
-      TRecord r -> merge ms r |= traverse (uncurry match) |= unite
+      TRecord r -> merge ms r >>= traverse (uncurry match) >>= unite
       _ -> throw <| RecordMismatch ms t
   MUnpack -> do
     case t of
-      TRecord r -> pure r
+      TRecord r -> done r
       _ -> throw <| UnpackMismatch t
 
 ---- Executing -----------------------------------------------------------------
@@ -276,11 +276,11 @@ executeVerbose = runError >> runOutputList >> run
 
 ---- Helpers -------------------------------------------------------------------
 
-(\/) :: (Hash k) => HashMap k v -> HashMap k v -> HashMap k v
+(\/) :: (Hashable k) => HashMap k v -> HashMap k v -> HashMap k v
 (\/) = HashMap.union
 
-(/\) :: (Hash k) => HashMap k v -> HashMap k w -> HashMap k v
+(/\) :: (Hashable k) => HashMap k v -> HashMap k w -> HashMap k v
 (/\) = HashMap.intersection
 
-(//) :: (Hash k) => HashMap k v -> HashMap k w -> HashMap k v
+(//) :: (Hashable k) => HashMap k v -> HashMap k w -> HashMap k v
 (//) = HashMap.difference

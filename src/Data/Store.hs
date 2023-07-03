@@ -52,12 +52,12 @@ data Store h a where
 alloc :: (Member (Alloc h) r, Typeable h, Typeable a) => a -> Sem r (Store h a)
 alloc x = do
   r <- Mutate.alloc x
-  pure <| Store _identity r
+  done <| Store _identity r
 
 read :: (Member (Read h) r) => Store h a -> Sem r a
 read (Store l r) = do
   s <- Mutate.read r
-  pure <| view l s
+  done <| view l s
 
 write :: (Members '[Read h, Write h] r) => a -> Store h a -> Sem r ()
 write x (Store l r) = do

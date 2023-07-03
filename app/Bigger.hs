@@ -6,7 +6,7 @@ import Prelude hiding (guard, repeat)
 
 ---- Text editor ---------------------------------------------------------------
 
-textEditor :: (Reflect h) => Task h ()
+textEditor :: (Typeable h) => Task h ()
 textEditor = do
   s_t <- share "Edit me :-)"
   s_r <- share (0, 0)
@@ -15,10 +15,10 @@ textEditor = do
     edit :: Store h Text -> Store h (Int, Int) -> Task h ()
     edit s_t s_r =
       change s_t
-        >< change s_r
-        >** [ ("Bold", (\(t, r) -> hasSelection r t, \(_, r) -> s_t <<= makeup "*" r)),
-              ("Italic", (\(t, r) -> hasSelection r t, \(_, r) -> s_t <<= makeup "/" r))
-            ]
+        <&> change s_r
+          >** [ ("Bold", (\(t, r) -> hasSelection r t, \(_, r) -> s_t <<= makeup "*" r)),
+                ("Italic", (\(t, r) -> hasSelection r t, \(_, r) -> s_t <<= makeup "/" r))
+              ]
 
     hasSelection :: (Int, Int) -> Text -> Bool
     hasSelection (x, y) t = 0 <= x && x < y && y < Text.length t
@@ -31,14 +31,14 @@ textEditor = do
 
 ---- Chat session --------------------------------------------------------------
 
-chatSession :: (Reflect h) => Task h (((Text, ()), (Text, ())), (Text, ()))
+chatSession :: (Typeable h) => Task h (((Text, ()), (Text, ())), (Text, ()))
 chatSession = do
   history <- share ""
-  chat "Tim" history >< chat "Nico" history >< chat "Markus" history
+  chat "Tim" history <&> chat "Nico" history <&> chat "Markus" history
   where
     chat :: Text -> Store h Text -> Task h (Text, ())
     chat name history =
-      watch history >< repeat (enter >>* ["Send" ~> append history name])
+      watch history <&> repeat (enter >>* ["Send" ~> append history name])
 
     append :: Store h Text -> Text -> Text -> Task h ()
     append history name msg =
