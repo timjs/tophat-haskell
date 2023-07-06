@@ -91,8 +91,8 @@ normalise t = case t of
 
   ---- Select
   Select Unnamed t1 es -> do
-    t1' <- normalise t1
     k <- supply
+    t1' <- normalise t1
     done <| Select (Named k) t1' es
   Select (Named k) t1 es -> do
     t1' <- normalise t1
