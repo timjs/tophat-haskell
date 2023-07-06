@@ -91,12 +91,23 @@ normalise t = case t of
 
   ---- Select
   Select Unnamed t1 es -> do
-    t1' <- normalise t1
     k <- supply
+    t1' <- normalise t1
     done <| Select (Named k) t1' es
   Select (Named k) t1 es -> do
     t1' <- normalise t1
     done <| Select (Named k) t1' es
+
+  ---- Pool
+  Pool Unnamed t0 ts -> do
+    k <- supply
+    t0' <- normalise t0
+    ts' <- traverse normalise ts
+    done <| Pool (Named k) t0' ts'
+  Pool (Named k) t0 ts -> do
+    t0' <- normalise t0
+    ts' <- traverse normalise ts
+    done <| Pool (Named k) t0' ts'
 
   ---- Converge
   Trans f t2 -> done (Trans f) -<< normalise t2

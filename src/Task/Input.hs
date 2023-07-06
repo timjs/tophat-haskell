@@ -2,6 +2,7 @@ module Task.Input
   ( Concrete (..),
     Abstract (..),
     Input (..),
+    Action (..),
     usage,
     parse,
   )
@@ -9,11 +10,35 @@ where
 
 import qualified Data.Char as Char
 import qualified Data.Text as Text
-import Task.Syntax (Basic, Id, Label)
+import Task.Syntax (Basic, Id, Ix, Label)
 
 ---- Inputs --------------------------------------------------------------------
 
----- Concrete inputs
+data Input b
+  = Send Id (Action b)
+  deriving (Eq, Debug, Functor, Foldable, Traversable)
+
+data Action b
+  = Insert b
+  | Decide Label
+  | Duplicate Ix
+  | Terminate Ix
+  | Start
+  deriving (Eq, Debug, Functor, Foldable, Traversable)
+
+instance (Display b) => Display (Input b) where
+  display = \case
+    Send k a -> unwords [display k, display a]
+
+instance (Display b) => Display (Action b) where
+  display = \case
+    Insert b -> display b
+    Decide l -> "/" ++ display l
+    Duplicate i -> "+" ++ display i
+    Terminate i -> "-" ++ display i
+    Start -> "*"
+
+---- Concrete ----
 
 data Concrete :: Type where
   Concrete :: (Basic b) => b -> Concrete
@@ -27,7 +52,7 @@ instance Display Concrete where
   display = \case
     Concrete x -> display x
 
----- Abstract inputs
+---- Abstract ----
 
 data Abstract :: Type where
   Abstract :: (Basic b) => Proxy b -> Abstract
@@ -43,34 +68,6 @@ instance Display Abstract where
     Abstract p -> concat ["<", display beta, ">"]
       where
         beta = typeOfProxy p
-
----- Inputs
-
-data Input b
-  = Insert Id b
-  | Decide Id Label
-  deriving (Eq, Debug, Functor, Foldable, Traversable)
-
-instance (Display b) => Display (Input b) where
-  display = \case
-    Insert n b -> unwords [display n, display b]
-    Decide n l -> unwords [display n, display l]
-
----- Action view
-
--- data Action b
---   = AValue b
---   | ALabel Label
-
--- {-# COMPLETE ISend, Prepick #-}
--- pattern ISend :: Nat -> Action b -> Input b
--- pattern ISend n a <- (action -> Just (n, a))
-
--- action:: Input b -> Maybe (Nat, Action b)
--- action= \case
---   Insert n b -> Just (n, AValue b)
---   Pick n l -> Just (n, ALabel l)
---   Prepick _ -> Nothing
 
 ---- Conformance ---------------------------------------------------------------
 
@@ -95,16 +92,21 @@ usage :: Text
 usage =
   unlines
     [ ":: Possible inputs are:",
-      "    <id> <value> : enter <value> into editor <id>",
-      "    <id> <label> : select one of the possible options from editor <id>",
-      "    <label>      : continue with one of the possible options",
-      "    help, h      : show this message",
-      "    quit, q      : quit",
+      "    <id> <action> : send <action> to editor <id>",
+      "    help, h       : show this message",
+      "    quit, q       : quit",
       "",
-      "where ids have the form:",
-      "    2, 37, …",
+      "where <action> is one of:",
+      "    <value>       : input <value>",
+      "    <label>       : select one of the possible options",
+      "    +<ix>         : duplicate task at position <ix>",
+      "    -<ix>         : terminate task at position <ix>",
+      "    *             : start new task in pool",
       "",
-      "values can be:",
+      "where <id>s and <ix>s have the form:",
+      "    0, 2, 37, …",
+      "",
+      "and <value>s can be:",
       "    ()           : Unit",
       "    True, False  : Booleans",
       -- "    +0, +1, …    : Naturals",
@@ -112,19 +114,28 @@ usage =
       "    \"Hello\", …   : Strings",
       "    [ <value>, ] : List of values",
       "",
-      "and labels:",
+      "and <label>s:",
       "    Start With A Capital Letter"
     ]
 
-parseId :: Text -> Either Text Id
-parseId t
-  | Just v <- scan t :: Maybe Id = done v
-  | otherwise = error <| unwords ["!!", display t |> quote, "is not a proper id"]
+parseNat :: Text -> Either Text Nat
+parseNat t
+  | Just v <- scan t :: Maybe Nat = done v
+  | otherwise = error <| unwords ["!!", display t |> quote, "is not a proper id or ix"]
 
 parseLabel :: Text -> Either Text Label
 parseLabel t
   | Just (c, _) <- Text.uncons t, Char.isUpper c = done <| t
   | otherwise = error <| unwords ["!!", display t |> quote, "is not a proper label"]
+
+parseAction :: Text -> Either Text (Action Concrete)
+parseAction t
+  | Just (c, r) <- Text.uncons t = case c of
+      '+' -> map Duplicate (parseNat r)
+      '-' -> map Terminate (parseNat r)
+      '*' -> done Start
+      _ -> map Decide (parseLabel r) ++ map Insert (parseConcrete t) -- NOTE: could be `<|>`, but has no general `empty` instance
+  | otherwise = error <| unwords ["!!", display t |> quote, "is not a proper action"]
 
 parseConcrete :: Text -> Either Text Concrete
 parseConcrete val
@@ -145,9 +156,8 @@ parse t
   | ("help", _) <- b = error usage
   | ("h", _) <- b = error usage
   | (i, r) <- b = do
-      let x = Text.strip r
-      k <- parseId i
-      map (Decide k) (parseLabel x) ++ map (Insert k) (parseConcrete x) -- NOTE: should be `<|>`, but we've got some strange import of `Error` getting in the way
-      -- _ -> error <| unwords ["!!", display t |> quote, "is not a valid command, type `help` for more info"]
+      k <- parseNat i
+      a <- parseAction (Text.strip r)
+      done <| Send k a
   where
     b = Text.breakOn " " t
