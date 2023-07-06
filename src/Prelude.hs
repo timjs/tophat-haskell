@@ -124,6 +124,7 @@ module Prelude
     -- (<<-),
     -- (->>),
     map,
+    Relude.fmap,
 
     -- ** Applicatives
     (-<<),
@@ -193,6 +194,7 @@ import Relude hiding
     concat,
     error,
     first,
+    fmap,
     foldlM,
     forever,
     fromMaybe,
