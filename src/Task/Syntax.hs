@@ -1,7 +1,7 @@
 module Task.Syntax
   ( -- * Types
     Task (..),
-    -- NormalTask (..),
+    NormalTask (..),
     Editor (..),
     Name (..),
     Label,
@@ -12,6 +12,9 @@ module Task.Syntax
     module Data.Basic,
     module Data.Some,
     module Data.Store,
+
+    -- * Converts
+    unnormal,
   )
 where
 

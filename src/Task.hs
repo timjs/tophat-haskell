@@ -17,6 +17,9 @@ module Task
     (<<-),
     (<<=),
 
+    -- ** Pools
+    pool,
+
     -- ** Derived
     parallel,
     conditionally,
@@ -46,6 +49,9 @@ import Prelude hiding (guard, repeat)
 
 assert :: Bool -> Task h Bool
 assert = Assert
+
+pool :: Task h a -> Task h (List a)
+pool t = Pool Unnamed t []
 
 ---- Editors
 
@@ -139,7 +145,7 @@ pick ts = done () >>* [(l, const t) | (l, t) <- ts]
 ---- Repeats
 
 forever :: Task h a -> Task h Void
-forever t1 = t1 >>= \_ -> forever t1
+forever t1 = t1 >>= const (forever t1)
 
 repeat :: Task h a -> Task h a
 repeat t1 = t1 >>* ["Repeat" ~> \_ -> repeat t1, "Exit" ~> done]

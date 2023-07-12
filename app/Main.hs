@@ -7,7 +7,7 @@ import Prelude hiding (repeat)
 
 main :: IO ()
 main =
-  taskToIO (add 3 4)
+  taskToIO booking
 
 ---- Examples ------------------------------------------------------------------
 ---- NOTE: Tasks ending with a quote need user input

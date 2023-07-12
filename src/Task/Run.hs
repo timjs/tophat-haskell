@@ -34,7 +34,7 @@ instance Display Steps where
     DidFinish -> "Done!"
 
 data NotApplicable
-  = CouldNotMatch Name Name
+  = CouldNotMatch Id Id
   | CouldNotChangeVal SomeTypeRep SomeTypeRep
   | CouldNotChangeRef SomeTypeRep SomeTypeRep
   | CouldNotGoTo Label
@@ -61,12 +61,12 @@ instance Display NotApplicable where
 normalise ::
   (Members '[Log Steps, Supply Nat, Alloc h, Read h, Write h] r) =>
   Task h a ->
-  Sem (Writer (List (Some (Ref h))) ': r) (Task h a) -- NOTE: Here we're constructing a concrete stack. I don't know if that's the best way to go...
+  Sem (Writer (List (Some (Ref h))) ': r) (NormalTask h a) -- NOTE: Here we're constructing a concrete stack. I don't know if that's the best way to go...
 normalise t = case t of
   ---- Step
   Step t1 e2 -> do
     t1' <- normalise t1
-    let stay = Step t1' e2
+    let stay = NormalStep t1' e2
     mv1 <- raise <| value t1'
     case mv1 of
       Nothing -> done stay -- N-StepNone
@@ -87,49 +87,49 @@ normalise t = case t of
         mv2 <- raise <| value t2'
         case mv2 of
           Just _ -> done t2' -- N-ChooseRight
-          Nothing -> done <| Choose t1' t2' -- N-ChooseNone
+          Nothing -> done <| NormalChoose t1' t2' -- N-ChooseNone
 
   ---- Select
   Select Unnamed t1 es -> do
     k <- supply
     t1' <- normalise t1
-    done <| Select (Named k) t1' es
+    done <| NormalSelect k t1' es
   Select (Named k) t1 es -> do
     t1' <- normalise t1
-    done <| Select (Named k) t1' es
+    done <| NormalSelect k t1' es
 
   ---- Pool
   Pool Unnamed t0 ts -> do
     k <- supply
     t0' <- normalise t0
     ts' <- traverse normalise ts
-    done <| Pool (Named k) t0' ts'
+    done <| NormalPool k t0' ts'
   Pool (Named k) t0 ts -> do
     t0' <- normalise t0
     ts' <- traverse normalise ts
-    done <| Pool (Named k) t0' ts'
+    done <| NormalPool k t0' ts'
 
   ---- Converge
-  Trans f t2 -> done (Trans f) -<< normalise t2
-  Pair t1 t2 -> done Pair -<< normalise t1 -<< normalise t2
+  Trans f t2 -> done (NormalTrans f) -<< normalise t2
+  Pair t1 t2 -> done NormalPair -<< normalise t1 -<< normalise t2
   ---- Ready
-  Lift _ -> done t
-  Fail -> done t
+  Lift v -> done <| NormalLift v
+  Fail -> done <| NormalFail
   ---- Name
   Edit Unnamed e -> do
     k <- supply
-    done <| Edit (Named k) e
-  Edit (Named _) _ -> done t
+    done <| NormalEdit k e
+  Edit (Named k) e -> done <| NormalEdit k e
   ---- Resolve
   Assert p -> do
-    done <| Lift p
+    done <| NormalLift p
   Share b -> do
     l <- Store.alloc b
-    done <| Lift l
+    done <| NormalLift l
   Assign b s@(Store _ r) -> do
     Store.write b s
     tell [pack r]
-    done <| Lift ()
+    done <| NormalLift ()
 
 -- balance :: Task h a -> Task h a
 -- balance t = case t of
@@ -151,15 +151,15 @@ normalise t = case t of
 handle ::
   forall h r a.
   (Members '[Alloc h, Read h, Write h] r) =>
-  Task h a ->
+  NormalTask h a ->
   Input Concrete ->
   Sem (Writer (List (Some (Ref h))) ': Error NotApplicable ': r) (Task h a)
-handle t i = case t of
+handle t i@(Send k0 a) = case t of
   ---- Selections
-  Select n t1 cs -> case i of
-    Decide k l ->
-      if n == Named k
-        then do
+  NormalSelect k t1 cs ->
+    if k0 == k
+      then case a of
+        Decide l -> do
           mv1 <- value t1
           case mv1 of
             Nothing -> throw <| CouldNotContinue
@@ -170,45 +170,45 @@ handle t i = case t of
                  in if failing tl
                       then throw <| CouldNotGoTo l
                       else done <| tl
-        else do
+        _ -> do
           t1' <- handle t1 i
-          done <| Select n t1' cs
-    Insert _ _ -> do
-      t1' <- handle t1 i
-      done <| Select n t1' cs
+          done <| Select (Named k) t1' cs
+      else do
+        t1' <- handle t1 i
+        done <| Select (Named k) t1' cs
 
   ---- Editors
-  Edit n e -> case i of
-    Insert k b' ->
-      if n == Named k
-        then do
+  NormalEdit k e ->
+    if k0 == k
+      then case a of
+        Insert b' -> do
           e' <- insert e b'
-          done <| Edit n e' -- H-Edit
-        else throw <| CouldNotMatch n (Named k)
-    Decide _ _ -> throw <| CouldNotHandle i
+          done <| Edit (Named k) e' -- H-Edit
+        _ -> throw <| CouldNotHandle i
+      else throw <| CouldNotMatch k0 k
   ---- Pass
-  Trans e1 t2 -> do
+  NormalTrans e1 t2 -> do
     t2' <- handle t2 i
     done <| Trans e1 t2'
-  Step t1 e2 -> do
+  NormalStep t1 e2 -> do
     et1' <- try <| handle t1 i
     case et1' of
       Right t1' -> done <| Step t1' e2 -- H-Step
       Left x -> throw x
-  Pair t1 t2 -> do
+  NormalPair t1 t2 -> do
     et1' <- try <| handle t1 i
     case et1' of
-      Right t1' -> done <| Pair t1' t2 -- H-PairFirst
+      Right t1' -> done <| Pair t1' (unnormal t2) -- H-PairFirst
       Left _ -> do
         t2' <- handle t2 i
-        done <| Pair t1 t2' -- H-PairSecond
-  Choose t1 t2 -> do
+        done <| Pair (unnormal t1) t2' -- H-PairSecond
+  NormalChoose t1 t2 -> do
     et1' <- try <| handle t1 i
     case et1' of
-      Right t1' -> done <| Choose t1' t2 -- H-ChooseFirst
+      Right t1' -> done <| Choose t1' (unnormal t2) -- H-ChooseFirst
       Left _ -> do
         t2' <- handle t2 i
-        done <| Choose t1 t2' -- H-ChoosSecond
+        done <| Choose (unnormal t1) t2' -- H-ChoosSecond
 
   ---- Rest
   _ -> throw <| CouldNotHandle i
@@ -247,7 +247,7 @@ insert e c@(Concrete b') = case e of
 fixate ::
   (Members '[Log Steps, Supply Nat, Alloc h, Read h, Write h] r) =>
   Sem (Writer (List (Some (Ref h))) ': r) (Task h a) ->
-  Sem r (Task h a)
+  Sem r (NormalTask h a)
 fixate t = do
   (d, t') <- runWriter t
   (d', t'') <- normalise t' |> runWriter
@@ -263,14 +263,14 @@ fixate t = do
       done t'' -- F-Lift
     _ -> do
       log Info <| DidNotStabilise (length ds) (length ws) (length os)
-      fixate <| done t'' -- F-Loop
+      fixate <| done (unnormal t'') -- F-Loop
 
 ---- Initialisation ------------------------------------------------------------
 
 initialise ::
   (Members '[Log Steps, Supply Nat, Alloc h, Read h, Write h] r) =>
   Task h a ->
-  Sem r (Task h a)
+  Sem r (NormalTask h a)
 initialise t = do
   log Info <| DidStart (display t)
   fixate (done t)
@@ -280,8 +280,8 @@ initialise t = do
 interact ::
   (Members '[Log Steps, Log NotApplicable, Supply Nat, Alloc h, Read h, Write h] r) =>
   Input Concrete ->
-  Task h a ->
-  Sem r (Task h a)
+  NormalTask h a ->
+  Sem r (NormalTask h a)
 interact i t = do
   xt <- handle t i |> runWriter |> runError
   case xt of

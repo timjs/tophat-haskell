@@ -12,7 +12,7 @@ import qualified Task.Input as Input
 import qualified Task.Observe as Task
 import Task.Run (NotApplicable, Steps)
 import qualified Task.Run as Task
-import Task.Syntax (Task)
+import Task.Syntax (NormalTask, Task)
 
 ---- Looping -------------------------------------------------------------------
 
@@ -26,12 +26,12 @@ loop t = do
   where
     go ::
       (Members '[Interact, Abort, Log Steps, Log NotApplicable, Supply Nat, Alloc h, Read h, Write h] r) =>
-      Task h a ->
+      NormalTask h a ->
       Sem r b
     go t' = do
       printLn neutral
-      ui <- Task.ui t'
-      printLn ui
+      r <- Task.render t'
+      printLn r
       inputs <- Task.inputs t'
       if null inputs
         then do

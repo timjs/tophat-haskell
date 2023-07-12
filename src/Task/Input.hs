@@ -21,9 +21,9 @@ data Input b
 data Action b
   = Insert b
   | Decide Label
-  | Duplicate Ix
-  | Terminate Ix
-  | Start
+  | Fork Ix
+  | Kill Ix
+  | Init
   deriving (Eq, Debug, Functor, Foldable, Traversable)
 
 instance (Display b) => Display (Input b) where
@@ -34,9 +34,9 @@ instance (Display b) => Display (Action b) where
   display = \case
     Insert b -> display b
     Decide l -> "/" ++ display l
-    Duplicate i -> "+" ++ display i
-    Terminate i -> "-" ++ display i
-    Start -> "*"
+    Fork i -> "+" ++ display i
+    Kill i -> "-" ++ display i
+    Init -> "*"
 
 ---- Concrete ----
 
@@ -131,9 +131,9 @@ parseLabel t
 parseAction :: Text -> Either Text (Action Concrete)
 parseAction t
   | Just (c, r) <- Text.uncons t = case c of
-      '+' -> map Duplicate (parseNat r)
-      '-' -> map Terminate (parseNat r)
-      '*' -> done Start
+      '+' -> map Fork (parseNat r)
+      '-' -> map Kill (parseNat r)
+      '*' -> done Init
       _ -> map Decide (parseLabel r) ++ map Insert (parseConcrete t) -- NOTE: could be `<|>`, but has no general `empty` instance
   | otherwise = error <| unwords ["!!", display t |> quote, "is not a proper action"]
 
