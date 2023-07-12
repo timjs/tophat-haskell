@@ -1,5 +1,6 @@
 module Main where
 
+import qualified Data.List as List
 import Task
 import Task.Interact
 import Prelude hiding (repeat)
@@ -398,3 +399,59 @@ rep n y (x : xs)
   | n >= 0 = x : rep (pred n) y xs
   | otherwise = []
  -}
+
+---- Flight booking ------------------------------------------------------------
+
+type Name = String
+
+type Age = Int
+
+type Passenger = (Name, Age)
+
+type Passengers = List Passenger
+
+type Seat = (Int, Char)
+
+type Seats = List Seat
+
+booking :: (Typeable h) => Task h Seats
+booking = do
+  free <- share [(r, s) | r <- [1 .. 10], s <- ['A' .. 'D']]
+  watch free <& pool (book free)
+
+book :: Store h Seats -> Task h (Passengers, Seats)
+book free = do
+  ps <- enter
+  if allValid ps
+    then chooseSeats ps free
+    else fail
+
+allValid :: Passengers -> Bool
+allValid ps = all valid ps && any adult ps
+
+valid :: Passenger -> Bool
+valid (n, a) = n /= "" && a >= 0
+
+adult :: Passenger -> Bool
+adult (_, a) = a >= 18
+
+chooseSeats :: Passengers -> Store h Seats -> Task h (Passengers, Seats)
+chooseSeats ps free = do
+  ss <- enter
+  c <- correct ss free
+  if c && length ps == length ss
+    then confirmBooking ps ss free
+    else fail
+
+correct :: Seats -> Store h Seats -> Task h Bool
+correct ss free = do
+  fs <- watch free
+  done <| List.intersect ss fs == ss
+
+confirmBooking :: Passengers -> Seats -> Store h Seats -> Task h (Passengers, Seats)
+confirmBooking ps ss free = do
+  free <<= difference ss
+  view (ps, ss)
+
+difference :: (Eq a) => List a -> List a -> List a
+difference = foldr List.delete
