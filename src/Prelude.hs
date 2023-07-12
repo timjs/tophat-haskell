@@ -4,6 +4,7 @@
 module Prelude
   ( -- * Reexports
     module Relude,
+    module Data.Witherable,
     -- module Control.Newtype,
     module Data.Type.Equality,
 
@@ -178,6 +179,7 @@ import qualified Data.HashSet as HashSet
 import Data.List (lookup)
 import qualified Data.Text as Text
 import Data.Type.Equality
+import Data.Witherable
 import Relude hiding
   ( Any,
     MonadFail (..),
@@ -191,8 +193,10 @@ import Relude hiding
     Word32,
     Word64,
     Word8,
+    catMaybes,
     concat,
     error,
+    filter,
     first,
     fmap,
     foldlM,
@@ -200,14 +204,18 @@ import Relude hiding
     fromMaybe,
     getLine,
     gets,
+    hashNub,
     id,
     intercalate,
     length,
     liftA2,
     liftA3,
     map,
+    mapMaybe,
     mconcat,
     mempty,
+    ordNub,
+    ordNubOn,
     pass,
     print,
     pure,
@@ -337,6 +345,9 @@ instance Display Int where
 
 instance Display Double where
   display = debug
+
+instance Display Char where
+  display = Text.singleton
 
 instance Display Text where
   display = identity

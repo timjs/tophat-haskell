@@ -19,6 +19,7 @@ dependencies:
     mixin:
       - hiding (Prelude)
   - relude >= 1.2 && < 2
+  - witherable >= 0.4 && < 1
   - polysemy >= 1.5.0 && < 2
   - polysemy-plugin
   - lens-family-core

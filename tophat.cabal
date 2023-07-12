@@ -4,7 +4,7 @@ cabal-version: 2.0
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: e0518f8551c90451147a73d3351994b601420d8300c008668bdff44ed305d4aa
+-- hash: 9385d10ab20ac353f8cf7d1b66ed25ef72b5922dcc99812c1dbc49dcae849ce1
 
 name:           tophat
 version:        0.3.0.0
@@ -108,6 +108,7 @@ library
     , polysemy >=1.5.0 && <2
     , polysemy-plugin
     , relude >=1.2 && <2
+    , witherable >=0.4 && <1
   mixins:
       base hiding (Prelude)
   default-language: Haskell2010
@@ -178,6 +179,7 @@ executable tophat
     , polysemy-plugin
     , relude >=1.2 && <2
     , tophat
+    , witherable >=0.4 && <1
   mixins:
       base hiding (Prelude)
   default-language: Haskell2010
