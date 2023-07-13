@@ -21,8 +21,8 @@ data Input b
 data Action b
   = Insert b
   | Decide Label
-  | Fork Ix
-  | Kill Ix
+  | -- | Fork Ix
+    Kill Ix
   | Init
   deriving (Eq, Debug, Functor, Foldable, Traversable)
 
@@ -34,7 +34,7 @@ instance (Display b) => Display (Action b) where
   display = \case
     Insert b -> display b
     Decide l -> "/" ++ display l
-    Fork i -> "+" ++ display i
+    -- Fork i -> "+" ++ display i
     Kill i -> "-" ++ display i
     Init -> "*"
 
@@ -109,8 +109,8 @@ usage =
       "and <value>s can be:",
       "    ()           : Unit",
       "    True, False  : Booleans",
-      -- "    +0, +1, …    : Naturals",
-      "    1, -42, …    : Integers",
+      "    0, 1, …      : Naturals",
+      "    +1, -42, …   : Integers",
       "    \"Hello\", …   : Strings",
       "    [ <value>, ] : List of values",
       "",
@@ -131,25 +131,34 @@ parseLabel t
 parseAction :: Text -> Either Text (Action Concrete)
 parseAction t
   | Just (c, r) <- Text.uncons t = case c of
-      '+' -> map Fork (parseNat r)
+      -- '+' -> map Fork (parseNat r)
       '-' -> map Kill (parseNat r)
       '*' -> done Init
       _ -> map Decide (parseLabel r) ++ map Insert (parseConcrete t) -- NOTE: could be `<|>`, but has no general `empty` instance
   | otherwise = error <| unwords ["!!", display t |> quote, "is not a proper action"]
 
 parseConcrete :: Text -> Either Text Concrete
-parseConcrete val
-  | Just v <- scan val :: Maybe Unit = done <| Concrete v
-  | Just v <- scan val :: Maybe Bool = done <| Concrete v
-  | Just v <- scan val :: Maybe Int = done <| Concrete v
-  | Just v <- scan val :: Maybe (Int, Int) = done <| Concrete v
-  | Just v <- scan val :: Maybe Double = done <| Concrete v
-  | Just v <- scan val :: Maybe Text = done <| Concrete v
-  | Just v <- scan val :: Maybe [Bool] = done <| Concrete v
-  | Just v <- scan val :: Maybe [Int] = done <| Concrete v
-  | Just v <- scan val :: Maybe [Double] = done <| Concrete v
-  | Just v <- scan val :: Maybe [Text] = done <| Concrete v
-  | otherwise = error <| unwords ["!! Error parsing value", display val |> quote]
+parseConcrete t
+  | Just v <- scan t :: Maybe Unit = done <| Concrete v
+  | Just v <- scan t :: Maybe Bool = done <| Concrete v
+  | Just (s, r) <- Text.uncons t, s == '+' || s == '-', Just v <- scan r :: Maybe Int = done <| Concrete v
+  | Just v <- scan t :: Maybe Nat = done <| Concrete v
+  | Just v <- scan t :: Maybe Char = done <| Concrete v
+  | Just v <- scan t :: Maybe Double = done <| Concrete v
+  | Just v <- scan t :: Maybe Text = done <| Concrete v
+  | Just v <- scan t :: Maybe [Bool] = done <| Concrete v
+  | Just v <- scan t :: Maybe [Int] = done <| Concrete v
+  | Just v <- scan t :: Maybe [Char] = done <| Concrete v
+  | Just v <- scan t :: Maybe [Double] = done <| Concrete v
+  | Just v <- scan t :: Maybe [Text] = done <| Concrete v
+  | Just v <- scan t :: Maybe [(Text, Nat)] = done <| Concrete v
+  | Just v <- scan t :: Maybe [(Nat, Char)] = done <| Concrete v
+  | Just v <- scan t :: Maybe (Bool, Bool) = done <| Concrete v
+  | Just v <- scan t :: Maybe (Int, Int) = done <| Concrete v
+  | Just v <- scan t :: Maybe (Char, Char) = done <| Concrete v
+  | Just v <- scan t :: Maybe (Double, Double) = done <| Concrete v
+  | Just v <- scan t :: Maybe (Text, Text) = done <| Concrete v
+  | otherwise = error <| unwords ["!! Error parsing value", display t |> quote]
 
 parse :: Text -> Either Text (Input Concrete)
 parse t

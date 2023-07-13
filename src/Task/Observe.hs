@@ -18,7 +18,7 @@ render ::
 render = \case
   NormalEdit k e -> render' k e
   NormalSelect k t1 cs -> done (\l -> concat [l, " ▷^", display k, " ", display <| keys cs]) -<< render t1
-  NormalPool k _ ts -> done (\is -> unwords ["⋈^", display k, display is]) -<< traverse render ts
+  NormalPool k _ ts -> done (\is -> concat ["⋈^", display k, " ", display is]) -<< traverse render ts
   NormalLift _ -> done "■ …"
   NormalPair t1 t2 -> done (\l r -> unwords [l, " ⧓ ", r]) -<< render t1 -<< render t2
   NormalChoose t1 t2 -> done (\l r -> unwords [l, " ◆ ", r]) -<< render t1 -<< render t2
@@ -33,10 +33,11 @@ render' ::
   Sem r Text
 render' n = \case
   Enter -> done <| concat ["□^", display n, " [ ] "]
-  Update b -> done <| concat ["⊟^", display n, " [ ", display b, " ]"]
-  View b -> done <| concat ["⧇^", display n, " [ ", display b, " ]"]
-  Change l -> done (\b -> concat ["^⊞", display n, " [ ", display b, " ]"]) -<< Store.read l
-  Watch l -> done (\b -> concat ["⧈^", display n, " [ ", display b, " ]"]) -<< Store.read l
+  -- Note: use `debug` here to render "" in Strings
+  Update b -> done <| concat ["⊟^", display n, " [ ", debug b, " ]"]
+  View b -> done <| concat ["⧇^", display n, " [ ", debug b, " ]"]
+  Change l -> done (\b -> concat ["^⊞", display n, " [ ", debug b, " ]"]) -<< Store.read l
+  Watch l -> done (\b -> concat ["⧈^", display n, " [ ", debug b, " ]"]) -<< Store.read l
 
 value ::
   (Members '[Alloc h, Read h] r) => -- We need `Alloc` to allocate a fresh store to continue with.
@@ -119,7 +120,8 @@ inputs t = case t of
         Just v1 -> done [Send k (Decide l) | (l, e) <- ts, not <| failing (e v1)]
   NormalPool k _ ts -> do
     let l = length ts
-    let is = map (Send k) ([Init] ++ [Fork i | i <- [1 .. l]] ++ [Kill i | i <- [1 .. l]])
+    -- let is = map (Send k) ([Init] ++ [Fork i | i <- [1 .. l]] ++ [Kill i | i <- [1 .. l]])
+    let is = map (Send k) (Init : [Kill i | i <- [0 .. l - 1]])
     is' <- concat <-< traverse inputs ts
     done <| is ++ is'
   NormalTrans _ t2 -> inputs t2
