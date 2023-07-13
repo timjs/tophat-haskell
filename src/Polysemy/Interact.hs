@@ -30,8 +30,12 @@ makeSem ''Interact
 interactToIO :: (Member (Embed IO) r) => Sem (Interact ': r) a -> Sem r a
 interactToIO = interpret \case
   ScanLn -> embed getTextLn
-  PrintLn msg -> embed <| putTextLn msg
-  Print msg -> embed <| putText msg
+  PrintLn msg -> embed do
+    putTextLn msg
+    hFlush stdout
+  Print msg -> embed do
+    putText msg
+    hFlush stdout
 
 interactToInputOutput :: Sem (Interact ': r) a -> Sem ((Input Text) ': (Output Text) ': r) a
 interactToInputOutput = reinterpret2 \case
