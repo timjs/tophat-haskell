@@ -361,13 +361,13 @@ instance (Display a, Display b) => Display (a, b) where
   display (a, b) = display a ++ "," ++ display b |> between '(' ')'
 
 instance (Display a) => Display (List a) where
-  display = map display >> intercalate "," >> between '[' ']'
+  display = map display >> intercalate ", " >> between '[' ']'
 
 instance (Display k, Display v) => Display (HashMap k v) where
-  display = HashMap.toList >> map (\(k, v) -> display k ++ ":" ++ display v) >> intercalate "," >> between '{' '}'
+  display = HashMap.toList >> map (\(k, v) -> display k ++ ": " ++ display v) >> intercalate ", " >> between '{' '}'
 
 instance (Display v) => Display (HashSet v) where
-  display = HashSet.toList >> map display >> intercalate "," >> between '{' '}'
+  display = HashSet.toList >> map display >> intercalate ", " >> between '{' '}'
 
 instance Display (TypeRep a) where
   display = debug
@@ -754,21 +754,25 @@ infixl 6 <&
 
 infixl 6 &>
 
-class (Applicative f) => Monoidal f where
+class (Functor f) => Monoidal f where
   (<&>) :: f a -> f b -> f (a, b)
+  default (<&>) :: (Applicative f) => f a -> f b -> f (a, b)
   (<&>) x y = done (,) -<< x -<< y
 
   none :: f ()
+  default none :: (Applicative f) => f ()
   none = done ()
 
   (<&) :: f a -> f b -> f a
-  (<&) x y = done fst -<< x <&> y
+  (<&) x y = x <&> y >-> fst
 
   (&>) :: f a -> f b -> f b
-  (&>) x y = done snd -<< x <&> y
+  (&>) x y = x <&> y >-> snd
 
 applyDefault :: (Monoidal f) => f (a -> b) -> f a -> f b
-applyDefault fg fx = done (\(g, x) -> g x) -<< fg <&> fx
+applyDefault fg fx = fg <&> fx >-> ap
+  where
+    ap (g, x) = g x
 
 pureDefault :: (Monoidal f) => a -> f a
 pureDefault x = map (const x) none
