@@ -21,6 +21,7 @@ module Task
     pool,
 
     -- ** Derived
+    enter',
     parallel,
     conditionally,
     choose,
@@ -96,6 +97,8 @@ infixl 1 <<=
 
 ---- Derived -------------------------------------------------------------------
 
+---- Parallels
+
 list :: List (Task h a) -> Task h (List a)
 -- list [] = done []
 -- list (t : ts) = uncurry (:) <-< (t >< list ts)
@@ -116,6 +119,11 @@ choose = foldr (<|>) fail
 branch :: List (Bool, Task h a) -> Task h a
 branch [] = fail
 branch ((b, t) : rs) = if b then t else branch rs
+
+---- Editors
+
+enter' :: (Basic t) => Text -> Task h t
+enter' m = view m &> enter
 
 ---- Selections
 

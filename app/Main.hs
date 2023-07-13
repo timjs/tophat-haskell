@@ -402,15 +402,15 @@ rep n y (x : xs)
 
 ---- Flight booking ------------------------------------------------------------
 
-type Name = String
+type Name = Text
 
-type Age = Int
+type Age = Nat
 
 type Passenger = (Name, Age)
 
 type Passengers = List Passenger
 
-type Seat = (Int, Char)
+type Seat = (Nat, Char)
 
 type Seats = List Seat
 
@@ -421,32 +421,31 @@ booking = do
 
 book :: Store h Seats -> Task h (Passengers, Seats)
 book free = do
-  ps <- enter
+  ps <- enter' "Passenger details"
   if allValid ps
     then chooseSeats ps free
     else fail
 
 allValid :: Passengers -> Bool
-allValid ps = all valid ps && any adult ps
+allValid ps = all isValid ps && any isAdult ps
 
-valid :: Passenger -> Bool
-valid (n, a) = n /= "" && a >= 0
+isValid :: Passenger -> Bool
+isValid (n, a) = n /= "" && a >= 0
 
-adult :: Passenger -> Bool
-adult (_, a) = a >= 18
+isAdult :: Passenger -> Bool
+isAdult (_, a) = a >= 18
 
 chooseSeats :: Passengers -> Store h Seats -> Task h (Passengers, Seats)
 chooseSeats ps free = do
-  ss <- enter
-  c <- correct ss free
-  if c && length ps == length ss
+  -- Warn: Be aware of the need of the parallel here! Will otherwise hang on the step after the watch.
+  (fs, ss) <- watch free <&> enter' "Seats selection"
+  if isCorrect ss fs && length ps == length ss
     then confirmBooking ps ss free
     else fail
 
-correct :: Seats -> Store h Seats -> Task h Bool
-correct ss free = do
-  fs <- watch free
-  done <| List.intersect ss fs == ss
+isCorrect :: Seats -> Seats -> Bool
+isCorrect ss fs = do
+  List.intersect ss fs == ss
 
 confirmBooking :: Passengers -> Seats -> Store h Seats -> Task h (Passengers, Seats)
 confirmBooking ps ss free = do
@@ -454,4 +453,4 @@ confirmBooking ps ss free = do
   view (ps, ss)
 
 difference :: (Eq a) => List a -> List a -> List a
-difference = foldr List.delete
+difference = flip <| foldr List.delete
