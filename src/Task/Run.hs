@@ -101,13 +101,11 @@ normalise t = case t of
   ---- Pool
   Pool Unnamed t0 ts -> do
     k <- supply
-    t0' <- normalise t0
     ts' <- traverse normalise ts
-    done <| NormalPool k t0' ts'
+    done <| NormalPool k t0 ts'
   Pool (Named k) t0 ts -> do
-    t0' <- normalise t0
     ts' <- traverse normalise ts
-    done <| NormalPool k t0' ts'
+    done <| NormalPool k t0 ts'
 
   ---- Converge
   Trans f t2 -> done (NormalTrans f) -<< normalise t2
@@ -156,9 +154,8 @@ handle ::
   Sem (Writer (List (Some (Ref h))) ': Error NotApplicable ': r) (Task h a)
 handle t i@(Send k0 a) = case t of
   ---- Selections
-  NormalSelect k t1 cs ->
-    if k0 == k
-      then case a of
+  NormalSelect k t1 cs
+    | k0 == k -> case a of
         Decide l -> do
           mv1 <- value t1
           case mv1 of
@@ -173,19 +170,30 @@ handle t i@(Send k0 a) = case t of
         _ -> do
           t1' <- handle t1 i
           done <| Select (Named k) t1' cs
-      else do
+    | otherwise -> do
         t1' <- handle t1 i
         done <| Select (Named k) t1' cs
-
+  ---- Pools
+  NormalPool k t0 ts
+    | k0 == k -> case a of
+        Init -> doneWith (map unnormal >> append t0)
+        Kill j -> doneWith (remove j >> map unnormal)
+        -- Fork j -> doneWith (duplicate j >> map unnormal)
+        _ -> throw <| CouldNotHandle i
+    | otherwise -> do
+        ts' <- tryMap (flip handle i) unnormal (CouldNotHandle i) ts ---XXX
+        -- ts' <- gather (flip handle i) ts ---XXX
+        doneWith (const ts')
+    where
+      doneWith f = done <| Pool (Named k) t0 (f ts)
   ---- Editors
-  NormalEdit k e ->
-    if k0 == k
-      then case a of
+  NormalEdit k e
+    | k0 == k -> case a of
         Insert b' -> do
           e' <- insert e b'
           done <| Edit (Named k) e' -- H-Edit
         _ -> throw <| CouldNotHandle i
-      else throw <| CouldNotMatch k0 k
+    | otherwise -> throw <| CouldNotMatch k0 k
   ---- Pass
   NormalTrans e1 t2 -> do
     t2' <- handle t2 i
@@ -212,6 +220,17 @@ handle t i@(Send k0 a) = case t of
 
   ---- Rest
   _ -> throw <| CouldNotHandle i
+
+-- NOTE: Could probably be written as a paramorphism
+tryMap :: (Member (Error e) r) => (a -> Sem r b) -> (a -> b) -> e -> [a] -> Sem r [b]
+tryMap _ _ e [] = throw e
+tryMap f t e (x : xs) = do
+  ex' <- try <| f x
+  case ex' of
+    Right x' -> done <| x' : map t xs
+    Left _ -> do
+      xs' <- tryMap f t e xs
+      done <| t x : xs'
 
 insert ::
   forall h r a.
@@ -306,3 +325,18 @@ execute events task = initialise task >>= go events
         result <- value task'
         putTextLn <| display result
 -}
+
+---- Helpers -------------------------------------------------------------------
+
+append :: a -> List a -> List a
+append x xs = xs ++ [x]
+
+remove :: Nat -> List a -> List a
+remove _ [] = []
+remove 0 (_ : xs) = xs
+remove j (x : xs) = x : remove (j - 1) xs
+
+duplicate :: Nat -> List a -> List a
+duplicate _ [] = []
+duplicate 0 (x : xs) = x : x : xs
+duplicate j (x : xs) = x : duplicate (j - 1) xs

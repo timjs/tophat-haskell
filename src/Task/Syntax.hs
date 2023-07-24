@@ -123,7 +123,7 @@ data NormalTask h t where
   ---- Editors
   NormalEdit :: Id -> Editor h t -> NormalTask h t
   NormalSelect :: Id -> NormalTask h a -> Assoc Label (a -> Task h t) -> NormalTask h t
-  NormalPool :: Id -> NormalTask h t -> List (NormalTask h t) -> NormalTask h (List t)
+  NormalPool :: Id -> Task h t -> List (NormalTask h t) -> NormalTask h (List t)
   ---- Parallels
   NormalPair :: NormalTask h a -> NormalTask h b -> NormalTask h (a, b)
   NormalLift :: t -> NormalTask h t
@@ -137,7 +137,7 @@ unnormal :: NormalTask h a -> Task h a
 unnormal = \case
   NormalEdit k e -> Edit (Named k) e
   NormalSelect k t cs -> Select (Named k) (unnormal t) cs
-  NormalPool k t ts -> Pool (Named k) (unnormal t) (map unnormal ts)
+  NormalPool k t ts -> Pool (Named k) t (map unnormal ts)
   NormalPair t1 t2 -> Pair (unnormal t1) (unnormal t2)
   NormalLift e -> Lift e
   NormalChoose t1 t2 -> Choose (unnormal t1) (unnormal t2)
@@ -151,7 +151,7 @@ instance Display (Task h t) where
   display = \case
     Edit n e -> concat [display e |> between '(' ')', "^", display n]
     Select n t cs -> concat [display t, " >>?", display (keys cs), "^", display n] |> between '(' ')'
-    Pool n t ts -> concat [display t, " <+> ", "^", display n |> between '(' ')', display ts] |> between '(' ')'
+    Pool n _ ts -> concat ["Pool^", display n, " ", display ts] |> between '(' ')'
     Pair t1 t2 -> unwords [display t1, "<&>", display t2] |> between '(' ')'
     Lift _ -> "Lift _"
     Choose t1 t2 -> unwords [display t1, "<|>", display t2] |> between '(' ')'
@@ -168,8 +168,9 @@ instance Display (NormalTask h a) where
 instance Display (Editor h a) where
   display = \case
     Enter -> "Enter"
-    Update v -> unwords ["Update", display v] |> between '(' ')'
-    View v -> unwords ["View", display v] |> between '(' ')'
+    -- Note: use `debug` here to render "" around strings
+    Update v -> unwords ["Update", debug v] |> between '(' ')'
+    View v -> unwords ["View", debug v] |> between '(' ')'
     Watch _ -> unwords ["Watch", "_"]
     Change _ -> unwords ["Change", "_"]
 
