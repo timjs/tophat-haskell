@@ -11,10 +11,6 @@ module Prelude
     -- * Types
     Unit,
     Nat,
-    Nat8,
-    Nat16,
-    Nat32,
-    Nat64,
     Relude.String,
     List,
     Assoc,
@@ -252,15 +248,31 @@ import Type.Reflection (SomeTypeRep (..), TypeRep, someTypeRep, typeOf, typeRep)
 
 type Unit = ()
 
-type Nat = Relude.Word
+newtype Nat = Nat Relude.Word
+  deriving (Eq, Ord, Enum, Debug, Scan) via Relude.Word
 
-type Nat8 = Relude.Word8
+instance Num Nat where
+  (Nat n) + (Nat m) = Nat (n + m)
+  (Nat n) * (Nat m) = Nat (n * m)
 
-type Nat16 = Relude.Word16
+  (Nat n) - (Nat m)
+    | n <= m = Nat 0
+    | otherwise = Nat (n - m)
+  negate (Nat _) = Nat 0
 
-type Nat32 = Relude.Word32
+  signum (Nat 0) = 0
+  signum (Nat _) = 1
 
-type Nat64 = Relude.Word64
+  abs = identity
+
+  fromInteger i
+    | i <= 0 = Nat 0
+    | otherwise = Nat (fromInteger i)
+
+-- type Nat8 = Relude.Word8
+-- type Nat16 = Relude.Word16
+-- type Nat32 = Relude.Word32
+-- type Nat64 = Relude.Word64
 
 type List = []
 
@@ -338,10 +350,12 @@ instance Display Bool where
   display = debug
 
 instance Display Nat where
-  display = debug
+  display (Nat n) = debug n
 
 instance Display Int where
-  display = debug
+  display n
+    | n > 0 = "+" ++ debug n
+    | otherwise = debug n
 
 instance Display Double where
   display = debug
@@ -516,7 +530,7 @@ length :: (Foldable t) => t a -> Nat
 length = Relude.length >> fromIntegral
 {-# INLINE length #-}
 
--- | Foldable a data structure, accumulating values in some `Monoid`,
+-- | Fold a data structure, accumulating values in some `Monoid`,
 -- | combining adjacent elements using the specified separator.
 -- |
 -- | For example:
@@ -582,7 +596,7 @@ surround :: forall f m. (Foldable f, Semigroup m) => m -> f m -> m
 surround d = surroundMap d identity
 {-# INLINE surround #-}
 
-gather :: (Foldable t, Monad m) => (b -> a -> m b) -> b -> t a -> m b
+gather :: (Foldable f, Monad m) => (b -> a -> m b) -> b -> f a -> m b
 gather = Relude.foldlM
 
 -- gather f b0 = foldr go (done b0)
