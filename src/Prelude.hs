@@ -20,15 +20,21 @@ module Prelude
 
     -- * Classes
 
+    -- Calc,
     -- Hash,
-    -- Typeable,
-    -- Foldable,
-    -- Traversable,
+    -- Reflect,
+    -- Coerce,
+    -- Fold,
+    -- Traverse,
     -- Map,
     -- Apply,
     -- Choose,
-    -- Monad,
-    -- Coerce,
+    -- Bind,
+    -- Invert
+    -- Scale
+    -- Diff
+    Serialise,
+    Deserialise,
 
     -- ** Group, Module, Torsor
     Group (..),
@@ -170,6 +176,7 @@ module Prelude
   )
 where
 
+import Data.Aeson (FromJSON, ToJSON)
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.HashSet as HashSet
 import Data.List (lookup)
@@ -249,7 +256,7 @@ import Type.Reflection (SomeTypeRep (..), TypeRep, someTypeRep, typeOf, typeRep)
 type Unit = ()
 
 newtype Nat = Nat Relude.Word
-  deriving (Eq, Ord, Enum, Debug, Scan) via Relude.Word
+  deriving (Eq, Ord, Debug, Scan, Enum, Serialise, Deserialise) via Relude.Word
 
 instance Num Nat where
   (Nat n) + (Nat m) = Nat (n + m)
@@ -281,24 +288,31 @@ type Assoc k v = List (k, v)
 type Cons = NonEmpty
 
 ---- Classes -------------------------------------------------------------------
-
 {-
 type Calc = Relude.Num
 
 type Hash a = (Eq a, Relude.Hashable a)
 
 type Reflect = Relude.Typeable
-
 type Coerce = Relude.Coercible
 
+type Fold = Relude.Foldable
 type Traverse = Relude.Traversable
 
 type Map = Relude.Functor
-
 type Apply = Relude.Applicative
-
 type Choose = Relude.Alternative
+type Bind = Relude.Monad
+
+type Invert = Group
+type Scale = Module
+type Diff = Torsor
 -}
+
+type Serialise = ToJSON
+
+type Deserialise = FromJSON
+
 ---- Group, Module, Torsor ----
 
 infixr 5 ~~
@@ -350,11 +364,11 @@ instance Display Bool where
   display = debug
 
 instance Display Nat where
-  display (Nat n) = debug n
+  display = debug
 
 instance Display Int where
   display n
-    | n > 0 = "+" ++ debug n
+    | n >= 0 = "+" ++ debug n
     | otherwise = debug n
 
 instance Display Double where

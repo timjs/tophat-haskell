@@ -147,14 +147,14 @@ parseConcrete t
   | Just v <- scan t :: Maybe Double = done <| Concrete v
   | Just v <- scan t :: Maybe Text = done <| Concrete v
   | Just v <- scan t :: Maybe [Bool] = done <| Concrete v
-  | Just v <- scan t :: Maybe [Int] = done <| Concrete v
+  | Just v <- scan t :: Maybe [Nat] = done <| Concrete v
   | Just v <- scan t :: Maybe [Char] = done <| Concrete v
   | Just v <- scan t :: Maybe [Double] = done <| Concrete v
   | Just v <- scan t :: Maybe [Text] = done <| Concrete v
   | Just v <- scan t :: Maybe [(Text, Nat)] = done <| Concrete v
   | Just v <- scan t :: Maybe [(Nat, Char)] = done <| Concrete v
   | Just v <- scan t :: Maybe (Bool, Bool) = done <| Concrete v
-  | Just v <- scan t :: Maybe (Int, Int) = done <| Concrete v
+  | Just v <- scan t :: Maybe (Nat, Nat) = done <| Concrete v
   | Just v <- scan t :: Maybe (Char, Char) = done <| Concrete v
   | Just v <- scan t :: Maybe (Double, Double) = done <| Concrete v
   | Just v <- scan t :: Maybe (Text, Text) = done <| Concrete v
