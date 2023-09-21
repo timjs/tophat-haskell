@@ -6,13 +6,13 @@ This is the Haskell implementation of the language.
 
 ## Language and semantics
 
-The language is specified as a GADT in [Data.Task](https://github.com/timjs/tophat-haskell/blob/master/src/Data/Task.hs).
-Semantics, including all observations, can be found in [Data.Task.Run](https://github.com/timjs/tophat-haskell/blob/master/src/Data/Task/Run.hs).
+The language is specified as a GADT in [Task](https://github.com/timjs/tophat-haskell/blob/master/src/Task.hs).
+Semantics, including all observations, can be found in [Task.Run](https://github.com/timjs/tophat-haskell/blob/master/src/Task/Run.hs).
 
 
 ## Examples
 
-[Main](https://github.com/timjs/tophat-haskell/blob/master/src/Main.hs) includes a couple of examples which can be executed.
+[app/Main.hs](https://github.com/timjs/tophat-haskell/blob/master/app/Main.hs) includes a couple of examples which can be executed.
 
 ## Dependencies
 
