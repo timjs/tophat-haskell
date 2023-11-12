@@ -120,8 +120,7 @@ inputs t = case t of
         Just v1 -> done [Send k (Decide l) | (l, e) <- ts, not <| failing (e v1)]
   NormalPool k _ ts -> do
     let l = length ts
-    let js = if l == 0 then [] else [0 .. l - 1]
-    let is = map (Send k) (Init : [Kill j | j <- js])
+    let is = map (Send k) (Init : [Kill j | j <- [1 .. l]])
     is' <- concat <-< traverse inputs ts
     done <| is ++ is'
   NormalTrans _ t2 -> inputs t2

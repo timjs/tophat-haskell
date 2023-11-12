@@ -99,7 +99,7 @@ usage =
       "where <action> is one of:",
       "    <value>       : input <value>",
       "    <label>       : select one of the possible options",
-      "    +<ix>         : duplicate task at position <ix>",
+      -- "    +<ix>         : duplicate task at position <ix>",
       "    -<ix>         : terminate task at position <ix>",
       "    *             : start new task in pool",
       "",
