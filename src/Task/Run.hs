@@ -177,7 +177,7 @@ handle t i@(Send k0 a) = case t of
   NormalPool k t0 ts
     | k0 == k -> case a of
         Init -> doneWith (map unnormal >> append t0)
-        Kill j -> doneWith (remove j >> map unnormal)
+        Kill j -> doneWith (remove (j - 1) >> map unnormal)
         -- Fork j -> doneWith (duplicate j >> map unnormal)
         _ -> throw <| CouldNotHandle i
     | otherwise -> do
