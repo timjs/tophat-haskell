@@ -33,8 +33,10 @@ module Prelude
     -- Invert
     -- Scale
     -- Diff
-    Serialise,
-    Deserialise,
+    -- Serialise,
+    -- Deserialise,
+    ToJSON,
+    FromJSON,
 
     -- ** Group, Module, Torsor
     Group (..),
@@ -256,7 +258,7 @@ import Type.Reflection (SomeTypeRep (..), TypeRep, someTypeRep, typeOf, typeRep)
 type Unit = ()
 
 newtype Nat = Nat Relude.Word
-  deriving (Eq, Ord, Debug, Scan, Enum, Serialise, Deserialise) via Relude.Word
+  deriving (Eq, Ord, Debug, Scan, Enum, ToJSON, FromJSON) via Relude.Word
 
 instance Num Nat where
   (Nat n) + (Nat m) = Nat (n + m)
@@ -289,6 +291,9 @@ type Cons = NonEmpty
 
 ---- Classes -------------------------------------------------------------------
 {-
+type Debug = Show
+type Scan = Read
+
 type Calc = Relude.Num
 
 type Hash a = (Eq a, Relude.Hashable a)
@@ -304,14 +309,15 @@ type Apply = Relude.Applicative
 type Choose = Relude.Alternative
 type Bind = Relude.Monad
 
+type Semicombine = Semigroup
+type Combine = Monoid
 type Invert = Group
 type Scale = Module
 type Diff = Torsor
--}
 
 type Serialise = ToJSON
-
 type Deserialise = FromJSON
+-}
 
 ---- Group, Module, Torsor ----
 
