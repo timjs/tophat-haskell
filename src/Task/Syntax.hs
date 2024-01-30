@@ -96,6 +96,8 @@ data Task h t where
   Share :: (Basic t, Typeable h) => t -> Task h (Store h t)
   -- | Assign to a reference of type `t` to a given value
   Assign :: (Basic a) => a -> Store h a -> Task h ()
+  -- | Reflect the value of a Task in a Reference
+  Reflect :: (Basic a) => Store h (Maybe a) -> Task h a -> Task h a
 
 -- NOTE:
 -- We could choose to replace `Share` and `Assign` and with a general `Lift` constructor,
@@ -132,6 +134,8 @@ data NormalTask h t where
   ---- Steps
   NormalTrans :: (a -> t) -> NormalTask h a -> NormalTask h t
   NormalStep :: NormalTask h a -> (a -> Task h t) -> NormalTask h t
+  ---- Stores
+  NormalReflect :: (Basic a) => Store h (Maybe a) -> NormalTask h a -> NormalTask h a
 
 unnormal :: NormalTask h a -> Task h a
 unnormal = \case
@@ -144,6 +148,7 @@ unnormal = \case
   NormalFail -> Fail
   NormalTrans e1 t2 -> Trans e1 (unnormal t2)
   NormalStep t1 e2 -> Step (unnormal t1) e2
+  NormalReflect r t -> Reflect r (unnormal t)
 
 ---- Display -------------------------------------------------------------------
 
@@ -161,6 +166,7 @@ instance Display (Task h t) where
     Assert b -> unwords ["Assert", display b]
     Share v -> unwords ["Share", display v]
     Assign v _ -> unwords ["_", ":=", display v]
+    Reflect _ t -> unwords ["Reflect _", display t]
 
 instance Display (NormalTask h a) where
   display = unnormal >> display

@@ -14,6 +14,7 @@ module Task
     share,
     watch,
     change,
+    reflect,
     (<<-),
     (<<=),
 
@@ -81,6 +82,9 @@ watch l = new (Watch l)
 
 change :: (Basic a) => Store h a -> Task h a
 change l = new (Change l)
+
+reflect :: (Basic a) => Store h (Maybe a) -> Task h a -> Task h a
+reflect = Reflect
 
 infixl 1 <<-
 

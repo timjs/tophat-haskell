@@ -25,6 +25,7 @@ render = \case
   NormalFail -> done "↯"
   NormalTrans _ t -> render t
   NormalStep t1 _ -> done (\l -> concat [l, " ▶…"]) -<< render t1
+  NormalReflect _ t -> render t
 
 render' ::
   (Members '[Read h] r) => -- We need `Read` to read from references.
@@ -53,6 +54,7 @@ value = \case
   NormalChoose t1 t2 -> done (<|>) -<< value t1 -<< value t2
   NormalFail -> done Nothing
   NormalStep _ _ -> done Nothing
+  NormalReflect _ t -> value t -- Invariant: Store.read s == value t
 
 value' ::
   (Members '[Read h] r) => -- We need `Read` to read from references.
@@ -81,6 +83,7 @@ failing = \case
   Assert _ -> False
   Share _ -> False
   Assign _ _ -> False
+  Reflect _ t -> failing t
 
 watching ::
   NormalTask h a ->
@@ -95,6 +98,7 @@ watching = \case
   NormalChoose t1 t2 -> watching t1 `union` watching t2
   NormalFail -> []
   NormalStep t1 _ -> watching t1
+  NormalReflect (Store _ r) t -> pack r : watching t
 
 watching' ::
   Editor h a ->
@@ -129,6 +133,7 @@ inputs t = case t of
   NormalChoose t1 t2 -> done (++) -<< inputs t1 -<< inputs t2
   NormalFail -> done []
   NormalStep t1 _ -> inputs t1
+  NormalReflect _ t2 -> inputs t2
 
 inputs' ::
   forall h a.

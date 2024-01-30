@@ -107,8 +107,13 @@ normalise t = case t of
     ts' <- traverse normalise ts
     done <| NormalPool k t0 ts'
 
-  ---- Converge
+  ---- Convert
   Trans f t2 -> done (NormalTrans f) -<< normalise t2
+  Reflect r1 t2 -> do
+    t2' <- normalise t2
+    v' <- value t2'
+    Store.write v' r1
+    done <| NormalReflect r1 t2'
   Pair t1 t2 -> done NormalPair -<< normalise t1 -<< normalise t2
   ---- Ready
   Lift v -> done <| NormalLift v
@@ -198,6 +203,9 @@ handle t i@(Send k0 a) = case t of
   NormalTrans e1 t2 -> do
     t2' <- handle t2 i
     done <| Trans e1 t2'
+  NormalReflect r1 t2 -> do
+    t2' <- handle t2 i
+    done <| Reflect r1 t2'
   NormalStep t1 e2 -> do
     et1' <- try <| handle t1 i
     case et1' of
