@@ -386,6 +386,11 @@ instance Display Char where
 instance Display Text where
   display = identity
 
+instance (Display a) => Display (Maybe a) where
+  display = \case
+    Nothing -> "Nothing"
+    Just v -> "Just " ++ display v
+
 instance (Display e, Display a) => Display (Either e a) where
   display = \case
     Left e -> "Error: " ++ display e

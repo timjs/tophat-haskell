@@ -29,6 +29,9 @@ module Task
     branch,
     pick,
     assert,
+    feedForward,
+    feedSideways,
+    feedBidirectional,
 
     -- *** Selections
     (>>*),
@@ -100,6 +103,32 @@ infixl 1 <<=
   r <<- f x
 
 ---- Derived -------------------------------------------------------------------
+
+---- Sequential
+
+censor :: Task h a -> Task h b
+censor t = t >>= const fail
+
+---- Reflect
+
+feedForward :: (Typeable h, Basic a) => Task h a -> (Store h (Maybe a) -> Task h b) -> Task h b
+feedForward t f = do
+    r <- share Nothing
+    censor (reflect r t) <|> f r
+
+feedSideways :: (Typeable h, Basic a) => Task h a -> (Store h (Maybe a) -> Task h b) -> Task h a
+feedSideways t f = do
+    r <- share Nothing
+    reflect r t <|> censor (f r)
+
+feedBidirectional :: (Typeable h, Basic a, Basic b)
+    => (Store h (Maybe b) -> Task h a)
+    -> (Store h (Maybe a) -> Task h b)
+    -> Task h (a, b)
+feedBidirectional fa fb = do
+    ra <- share Nothing
+    rb <- share Nothing
+    reflect ra (fa rb) <&> reflect rb (fb ra)
 
 ---- Parallels
 
