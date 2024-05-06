@@ -109,11 +109,12 @@ normalise t = case t of
 
   ---- Convert
   Trans f t2 -> done (NormalTrans f) -<< normalise t2
-  Reflect r1 t2 -> do
-    t2' <- normalise t2
-    v' <- value t2'
-    Store.write v' r1
-    done <| NormalReflect r1 t2'
+  Reflect s1@(Store _ r1) t2 -> do
+    n2 <- normalise t2
+    v2' <- value n2
+    Store.write v2' s1
+    tell [pack r1]
+    done <| NormalReflect s1 n2
   Pair t1 t2 -> done NormalPair -<< normalise t1 -<< normalise t2
   ---- Ready
   Lift v -> done <| NormalLift v
